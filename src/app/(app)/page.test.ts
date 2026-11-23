@@ -96,6 +96,19 @@ describe('l’Accueil : les demandes de Leon et les brouillons prêts', () => {
     });
   });
 
+  it('une demande à laquelle elle a répondu reste sur la carte, le temps que Leon écrive', async () => {
+    const repondue = { ...DEMANDE, repondue: true };
+    vi.mocked(readHomeBrouillons).mockResolvedValue({ demandes: [repondue], prets: [] });
+
+    const { elements } = await home();
+
+    expect(elements.find((element) => element.type === DraftQuestionsCard)?.props).toEqual({
+      demandes: [repondue],
+      prets: [],
+      max: 1000,
+    });
+  });
+
   it('un brouillon prêt, sans demande : la carte se montre à la même place, avec lui', async () => {
     vi.mocked(readHomeBrouillons).mockResolvedValue({ demandes: [], prets: [PRET] });
 

@@ -16,6 +16,7 @@ vi.mock('@/app/(app)/settings/actions', () => ({
   answerQuestionsAction: vi.fn(),
   discardBrouillonAction: vi.fn(),
 }));
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 const id = (n: number) => `${String(n).padStart(8, '0')}-1111-4111-8111-111111111111`;
 const DEVIS: HomeDemande = {
@@ -169,6 +170,60 @@ describe('DraftQuestionsCard : les demandes de Leon sur l’Accueil', () => {
     ])
       expect(words, one).toContain(one);
     expect(render([DEVIS], 'en')).toContain('<ul aria-label="Leon needs you"');
+  });
+});
+
+describe('DraftQuestionsCard : ses réponses envoyées, Leon écrit', () => {
+  const REPONDUE: HomeDemande = { ...DEVIS, repondue: true };
+  const row = (html: string, one: HomeDemande) =>
+    html
+      .split('<li class="px-3')
+      .find((part) => part.includes(`id="demande-${one.id}"`))
+      ?.split('</li>')[0] ?? '';
+
+  it('la demande ne disparaît pas : à sa place, la ligne dit que Leon écrit sa réponse à ce correspondant, avec la date du mail et le fil', () => {
+    const html = render([REPONDUE]);
+    const words = text(html);
+
+    expect(words).toContain('Leon écrit votre réponse à Léa Roy. Le brouillon arrivera ici.');
+    expect(words).not.toContain('J’ai besoin de vous');
+    expect(words).toContain('Reçu le 10 nov. 2026');
+    expect(html).toContain('href="https://mail.google.test/2"');
+    // Toujours parmi les demandes de Leon, à la place de la sienne.
+    expect(html).toContain('<ul aria-label="Leon a besoin de vous"');
+    expect(count(html, '<li class="px-3')).toBe(1);
+  });
+
+  it('plus de question à l’écran : « Actualiser » pour voir arriver le brouillon, et « Écarter » pour la fermer tout de suite', () => {
+    const html = render([REPONDUE]);
+
+    expect(html).not.toMatch(/<fieldset|<input|<textarea/);
+    expect(text(html)).not.toMatch(
+      /Voulez-vous voir mes questions|Acceptez-vous|Envoyer mes réponses/,
+    );
+    expect(buttons(row(html, REPONDUE))).toEqual(['Actualiser', 'Écarter']);
+    // Les deux gestes rappellent les mots de la ligne, qui prennent le focus quand ses réponses partent.
+    expect(count(html, `aria-describedby="demande-${REPONDUE.id}"`)).toBe(2);
+    expect(html).toContain(`<div id="demande-${REPONDUE.id}" tabindex="-1"`);
+  });
+
+  it('une demande répondue et une qui l’attend, chacune à sa place, dans l’ordre reçu', () => {
+    const html = render([REPONDUE, CONTRAT]);
+
+    expect(buttons(row(html, REPONDUE))).toEqual(['Actualiser', 'Écarter']);
+    expect(buttons(row(html, CONTRAT))).toEqual(['Oui', 'Non', 'Suivant', 'Écarter']);
+    expect(html.indexOf(`id="demande-${REPONDUE.id}"`)).toBeLessThan(
+      html.indexOf(`id="demande-${CONTRAT.id}"`),
+    );
+  });
+
+  it('en anglais, et sans nom de correspondant, les mêmes mots', () => {
+    const html = render([{ ...CONTRAT, repondue: true }], 'en');
+
+    expect(text(html)).toContain(
+      'Leon is writing your reply to your correspondent. The draft will show up here.',
+    );
+    expect(buttons(html)).toEqual(['Refresh', 'Dismiss']);
   });
 });
 

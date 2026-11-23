@@ -364,7 +364,6 @@
     "noAnswer": "No answer",
     "change": "Change",
     "send": "Send my answers",
-    "sent": "Leon is writing your draft. You’ll find it in Settings › Work profile and, with Gmail, in your drafts.",
     "writing": "Leon is writing your reply to {name}. The draft will show up here.",
     "discard": "Dismiss",
     "gone": "This request is no longer open.",

@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import {
   type Dispatch,
@@ -225,6 +226,9 @@ export function Questions({
 // Une demande de Leon : le correspondant, la date du mail reçu, le fil lié à son outil, puis « Voulez-vous voir mes
 // questions ? ». « Oui » les ouvre, une par une ; « Non » écarte la demande, comme « Écarter » un brouillon. Rien ne
 // part d'ici : ses réponses servent à écrire le brouillon, qu'elle relira.
+// Ses réponses envoyées, la demande ne disparaît pas : à sa place, la ligne dit que Leon écrit sa réponse, tant que le
+// brouillon n'est pas là (portrait/brouillons.ts), avec « Actualiser » pour le voir arriver et « Écarter » pour la
+// fermer tout de suite, y compris quand le brouillon ne vient pas.
 function Demande({
   demande,
   max,
@@ -237,7 +241,9 @@ function Demande({
   const t = useTranslations('draftQuestions');
   const f = useTranslations('fiche');
   const locale = useLocale();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [sent, setSent] = useState(false);
   const [flow, dispatch] = useReducer(flowReducer, demande.choix, startFlow);
   const [sending, startSending] = useTransition();
   const [discarding, startDiscarding] = useTransition();
@@ -245,24 +251,34 @@ function Demande({
   const words = `demande-${demande.id}`;
   const ask = `demande-${demande.id}-voir`;
   const panel = `demande-${demande.id}-questions`;
+  // Leon écrit : elle a répondu, ici à l'instant ou avant ce chargement de l'Accueil.
+  const writing = demande.repondue || sent;
 
-  // Le focus suit ce qui se montre : la première question après « Oui », puis chaque étape.
+  // Le focus suit ce qui se montre : la première question après « Oui », chaque étape, puis les mots de la ligne quand
+  // ses réponses sont parties (le bouton qui l'avait s'en va).
   // biome-ignore lint/correctness/useExhaustiveDependencies: l'étape change ce que porte l'identifiant
   useEffect(() => {
-    if (open) document.getElementById(`${panel}-etape`)?.focus();
-  }, [open, flow.step, panel]);
+    if (sent) document.getElementById(words)?.focus();
+    else if (open) document.getElementById(`${panel}-etape`)?.focus();
+  }, [open, sent, flow.step, panel, words]);
 
   const send = () =>
     run(
       startSending,
       () =>
         answerQuestionsAction({ id: demande.id, reponses: answersOf(demande.choix, flow.picks) }),
-      () => {
-        toast.success(t('sent'));
+      () => setSent(true),
+    );
+  const discard = () =>
+    run(
+      startDiscarding,
+      () => discardBrouillonAction(demande.id),
+      (result) => {
+        // Leon écrivait, et son brouillon venait d'être déposé : écarté dans Leon, mais resté dans sa boîte.
+        if (result.resteDansGmail) toast.error(t('discardedKeptInGmail'));
         onGone();
       },
     );
-  const discard = () => run(startDiscarding, () => discardBrouillonAction(demande.id), onGone);
 
   return (
     <li className="px-3 py-3.5">
@@ -271,8 +287,14 @@ function Demande({
           {nb(f('errorFailed'))}
         </Notice>
       )}
-      <div id={words} className="grid gap-1 text-body [overflow-wrap:anywhere] text-fg">
-        <p className="font-medium">{t('needYou', { name: demande.from ?? t('someone') })}</p>
+      <div
+        id={words}
+        tabIndex={-1}
+        className="grid gap-1 text-body [overflow-wrap:anywhere] text-fg outline-none"
+      >
+        <p className="font-medium">
+          {t(writing ? 'writing' : 'needYou', { name: demande.from ?? t('someone') })}
+        </p>
         <p className="text-label text-muted">
           <time dateTime={demande.receivedAt.toISOString()}>
             {t('received', { date: formatDate(demande.receivedAt, locale) })}
@@ -282,43 +304,68 @@ function Demande({
       <div className="mt-2">
         <SourceThing source={demande.source} />
       </div>
-      {/* « Oui » : la question posée laisse la place aux siennes. */}
-      <div hidden={open} className="mt-3 flex flex-wrap items-center gap-2">
-        <p id={ask} className="mr-1 text-body text-fg">
-          {t('ask')}
-        </p>
-        <Button
-          size="sm"
-          variant="quiet"
-          aria-describedby={`${ask} ${words}`}
-          disabled={discarding}
-          onClick={() => setOpen(true)}
-        >
-          {t('yes')}
-        </Button>
-        <Button
-          size="sm"
-          variant="quiet"
-          aria-describedby={`${ask} ${words}`}
-          loading={discarding}
-          onClick={discard}
-        >
-          {t('no')}
-        </Button>
-      </div>
-      <Questions
-        id={panel}
-        words={words}
-        demande={demande}
-        flow={flow}
-        dispatch={dispatch}
-        max={max}
-        hidden={!open}
-        sending={sending}
-        discarding={discarding}
-        onSend={send}
-        onDiscard={discard}
-      />
+      {writing ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            variant="quiet"
+            aria-describedby={words}
+            disabled={discarding}
+            onClick={() => router.refresh()}
+          >
+            {f('refresh')}
+          </Button>
+          <Button
+            size="sm"
+            variant="quiet"
+            aria-describedby={words}
+            loading={discarding}
+            onClick={discard}
+          >
+            {t('discard')}
+          </Button>
+        </div>
+      ) : (
+        <>
+          {/* « Oui » : la question posée laisse la place aux siennes. */}
+          <div hidden={open} className="mt-3 flex flex-wrap items-center gap-2">
+            <p id={ask} className="mr-1 text-body text-fg">
+              {t('ask')}
+            </p>
+            <Button
+              size="sm"
+              variant="quiet"
+              aria-describedby={`${ask} ${words}`}
+              disabled={discarding}
+              onClick={() => setOpen(true)}
+            >
+              {t('yes')}
+            </Button>
+            <Button
+              size="sm"
+              variant="quiet"
+              aria-describedby={`${ask} ${words}`}
+              loading={discarding}
+              onClick={discard}
+            >
+              {t('no')}
+            </Button>
+          </div>
+          <Questions
+            id={panel}
+            words={words}
+            demande={demande}
+            flow={flow}
+            dispatch={dispatch}
+            max={max}
+            hidden={!open}
+            sending={sending}
+            discarding={discarding}
+            onSend={send}
+            onDiscard={discard}
+          />
+        </>
+      )}
     </li>
   );
 }
@@ -402,9 +449,12 @@ function Pret({ draft, onGone }: { draft: FicheBrouillon; onGone: () => void }) 
 /**
  * Ce que l'agent « Brouillons de réponse » a pour elle, sur l'Accueil (portrait/brouillons.ts). D'abord les demandes de
  * Leon : quand une information ou une décision lui manque pour répondre à un mail, il pose ses questions ici, tout de
- * suite, au lieu de laisser un blanc dans le brouillon. Puis les brouillons prêts. Trois au plus de chaque sorte, les
- * plus récents d'abord. Répondue ou écartée, une ligne s'en va sans attendre que l'Accueil soit relu. `max` vient du
- * serveur (brouillon-prompt.ts). Le focus ne tombe jamais sur <body> : il va au titre de l'Accueil quand une ligne part.
+ * suite, au lieu de laisser un blanc dans le brouillon ; ses réponses envoyées, la même ligne dit qu'il écrit. Puis les
+ * brouillons prêts. Trois au plus de chaque sorte, les plus récents d'abord. Écartée, une ligne s'en va sans attendre
+ * que l'Accueil soit relu, et le focus va au titre de l'Accueil plutôt que sur <body>. `max` vient du serveur
+ * (brouillon-prompt.ts).
+ * shortcut: après « Actualiser », la ligne d'une demande dont le brouillon est arrivé s'en va avec le bouton qui avait
+ * le focus, comme l'état « Leon construit votre fiche » des réglages ; à reprendre si l'essai au clavier le demande.
  */
 export function DraftQuestionsCard({
   demandes,
@@ -416,29 +466,33 @@ export function DraftQuestionsCard({
   max: number;
 }) {
   const t = useTranslations('draftQuestions');
+  // Les lignes parties d'ici, par sorte : une demande et le brouillon qui la suit portent le même identifiant.
   const [gone, setGone] = useState<string[]>([]);
-  const here = <T extends { id: string }>(rows: T[]) =>
-    rows.filter((one) => !gone.includes(one.id));
-  const leave = (id: string) => () => {
+  const leave = (key: string) => () => {
     document.getElementById(HOME_TITLE_ID)?.focus();
-    setGone((ids) => [...ids, id]);
+    setGone((keys) => [...keys, key]);
   };
-  const open = here(demandes);
-  const ready = here(prets);
+  const open = demandes.filter((one) => !gone.includes(`demande-${one.id}`));
+  const ready = prets.filter((one) => !gone.includes(`brouillon-${one.id}`));
   if (open.length + ready.length === 0) return null;
   return (
     <GlassCard className="mt-6 max-w-[772px] divide-y divide-line p-1.5">
       {open.length > 0 && (
         <ul aria-label={t('title')} className="divide-y divide-line">
           {open.map((demande) => (
-            <Demande key={demande.id} demande={demande} max={max} onGone={leave(demande.id)} />
+            <Demande
+              key={demande.id}
+              demande={demande}
+              max={max}
+              onGone={leave(`demande-${demande.id}`)}
+            />
           ))}
         </ul>
       )}
       {ready.length > 0 && (
         <ul aria-label={t('readyTitle')} className="divide-y divide-line">
           {ready.map((draft) => (
-            <Pret key={draft.id} draft={draft} onGone={leave(draft.id)} />
+            <Pret key={draft.id} draft={draft} onGone={leave(`brouillon-${draft.id}`)} />
           ))}
         </ul>
       )}

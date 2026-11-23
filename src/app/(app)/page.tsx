@@ -136,9 +136,7 @@ async function Home({ ctx }: { ctx: TenantContext }) {
     optional('accueil.semaine', readWeek(ctx)),
     optional('accueil.brouillons', readHomeBrouillons(ctx)),
   ]);
-  // La carte ne sait pas encore dire que Leon écrit : elle ne reçoit que les demandes sans réponse.
-  const demandes = (brouillons?.demandes ?? []).filter((one) => !one.repondue);
-  const prets = brouillons?.prets ?? [];
+  const { demandes, prets } = brouillons ?? { demandes: [], prets: [] };
   const [questions] = await Promise.all([
     modelAvailable ? askSuggestions(member) : [],
     // un point montré a vieilli : il sera à jour à la prochaine visite (le plafond du jour borne la dépense)
@@ -171,7 +169,7 @@ async function Home({ ctx }: { ctx: TenantContext }) {
         fact={first && briefingFact(first.sections)}
         sources={first ? viewOf(first) : undefined}
       />
-      {/* Leon a besoin d'elle, ou un brouillon est prêt : dit tout de suite, sous le bonjour, avant tout le reste. */}
+      {/* Leon a besoin d'elle, écrit sa réponse, ou un brouillon est prêt : dit tout de suite, sous le bonjour. */}
       {demandes.length + prets.length > 0 && (
         <DraftQuestionsCard demandes={demandes} prets={prets} max={REPONSE_MAX_CHARS} />
       )}

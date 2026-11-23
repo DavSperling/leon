@@ -14,8 +14,9 @@ import { EN_SERVICE } from './agents';
 import { hasBlank } from './brouillon-prompt';
 
 // Le dépôt d'un brouillon dans les brouillons Gmail de la personne, en réponse dans le fil, juste après qu'un passage
-// l'a écrit (brouillons.ts). C'est la seule écriture de Leon dans une boîte : un brouillon de plus. Rien n'est envoyé,
-// et rien n'y est supprimé ni modifié, pas même ce brouillon quand elle l'écarte dans Leon.
+// l'a écrit (brouillons.ts), et son retrait quand elle l'écarte dans Leon (withdrawBrouillon). Ce sont les seules
+// écritures de Leon dans une boîte : un brouillon de plus, puis ce même brouillon de moins. Rien n'est envoyé, et rien
+// d'autre n'y est supprimé ni modifié.
 //
 // Un brouillon est déposé si, et seulement si :
 // - il est complet : son texte ne porte aucun blanc entre crochets (hasBlank). Un brouillon incomplet reste dans Leon
@@ -42,11 +43,23 @@ import { hasBlank } from './brouillon-prompt';
 // shortcut: une seule tentative, à l'écriture du brouillon, pour ne pas payer une requête à chaque passage ; un dépôt
 // manqué ne se rattrape pas, à retenter (une fois, plus tard) si les journaux en montrent souvent.
 
+type Deps = { fetchImpl?: typeof fetch }; // tests
+
+// Sa boîte Gmail, celle qui a relevé le fil : une connexion qu'elle a branchée elle-même, par Pipedream, et qui n'est
+// pas en pause. Null sinon : ni la boîte d'un collègue, ni une autre de ses boîtes.
+async function gmailOf(ctx: TenantContext, connectionId: string | null, deps: Deps) {
+  const connection = (await loadMyConnections(ctx, 'gmail')).find((one) => one.id === connectionId);
+  const config = gmailConnector.configSchema.safeParse(connection?.config);
+  return config.success
+    ? gmailClient(connectorHttp('gmail', gmailConnector, config.data, deps))
+    : null;
+}
+
 // `to` : l'adresse de l'auteur du mail reçu. Rend true quand le brouillon est déposé.
 export async function depositBrouillon(
   ctx: TenantContext,
   draft: { id: string; to: string },
-  deps: { fetchImpl?: typeof fetch } = {}, // tests
+  deps: Deps = {},
 ): Promise<boolean> {
   try {
     const [row] = await withTenant(ctx, (tx) =>
@@ -87,13 +100,8 @@ export async function depositBrouillon(
     const messageId = /^message:(.+)$/.exec(row.message)?.[1];
     const threadId = /^thread:(.+)$/.exec(row.thread)?.[1];
     if (!messageId || !threadId) return false;
-    const connection = (await loadMyConnections(ctx, 'gmail')).find(
-      (one) => one.id === row.connectionId,
-    );
-    const config = gmailConnector.configSchema.safeParse(connection?.config);
-    if (!config.success) return false;
-
-    const client = gmailClient(connectorHttp('gmail', gmailConnector, config.data, deps));
+    const client = await gmailOf(ctx, row.connectionId, deps);
+    if (!client) return false;
     const headers = await client.replyHeaders(threadId, messageId);
     // Depuis la relève, elle a répondu ou supprimé le mail, ou on lui a récrit : rien à déposer, et ce n'est pas un échec.
     if (!headers) return false;
@@ -117,6 +125,51 @@ export async function depositBrouillon(
   } catch (error) {
     // Des identifiants seulement : les erreurs du client HTTP portent un message fixe, jamais une réponse de Gmail.
     logError('brouillons.deposit_failed', error, { userId: ctx.userId, brouillonId: draft.id });
+    return false;
+  }
+}
+
+// Retire de Gmail le brouillon que Leon y a déposé, une fois qu'elle l'a écarté dans Leon (discardBrouillon) : un
+// brouillon écarté ne doit plus pouvoir partir de sa boîte. La suppression est définitive, même si elle l'a retouché
+// dans Gmail entre-temps. Seul un brouillon écarté, à elle, et déposé par Leon est supprimé : jamais un autre message.
+// Rend true quand il ne reste rien de Leon dans sa boîte pour ce brouillon (rien n'y était déposé, il vient d'être
+// supprimé, ou il n'y était déjà plus). Rend false quand il y reste : sa boîte débranchée ou en pause, ou une
+// suppression qui échoue, journalisée sans rien de capté. L'écran le lui dit alors.
+// shortcut: une seule tentative, comme le dépôt ; un brouillon resté dans Gmail ne se retire plus d'ici.
+export async function withdrawBrouillon(
+  ctx: TenantContext,
+  id: string,
+  deps: Deps = {},
+): Promise<boolean> {
+  try {
+    const mine = and(
+      eq(brouillons.tenantId, ctx.tenantId),
+      eq(brouillons.userId, ctx.userId),
+      eq(brouillons.id, id),
+    );
+    const [row] = await withTenant(ctx, (tx) =>
+      tx
+        .select({
+          brouillonGmail: brouillons.brouillonGmail,
+          ecarteLe: brouillons.ecarteLe,
+          connectionId: sources.connectionId,
+        })
+        .from(brouillons)
+        .innerJoin(
+          sources,
+          and(eq(sources.tenantId, brouillons.tenantId), eq(sources.id, brouillons.sourceId)),
+        )
+        .where(mine),
+    );
+    if (!row?.ecarteLe) return false;
+    if (row.brouillonGmail === null) return true;
+    const client = await gmailOf(ctx, row.connectionId, deps);
+    if (!client) return false;
+    await client.deleteDraft(row.brouillonGmail);
+    await withTenant(ctx, (tx) => tx.update(brouillons).set({ brouillonGmail: null }).where(mine));
+    return true;
+  } catch (error) {
+    logError('brouillons.withdraw_failed', error, { userId: ctx.userId, brouillonId: id });
     return false;
   }
 }

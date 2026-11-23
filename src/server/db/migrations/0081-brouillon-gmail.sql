@@ -1,7 +1,7 @@
 -- 0081-brouillon-gmail.sql : un brouillon complet est aussi déposé dans les brouillons Gmail de la personne, en réponse
 -- dans le fil (portrait/brouillon-depot.ts). La colonne garde l'identifiant du brouillon Gmail créé, nul tant que rien
--- n'est déposé : elle sert à ne jamais déposer deux fois, et à dire à l'écran qu'il est déposé. Rien n'est envoyé, et
--- Leon ne supprime ni ne modifie rien dans sa boîte : cet identifiant ne sert à aucune autre requête.
+-- n'est déposé : elle sert à ne jamais déposer deux fois, à dire à l'écran qu'il est déposé, et à le retirer de Gmail
+-- quand elle l'écarte dans Leon. Rien n'est envoyé, et Leon ne supprime ni ne modifie rien d'autre dans sa boîte.
 alter table brouillons
   add column brouillon_gmail text check (char_length(brouillon_gmail) between 1 and 200);
 

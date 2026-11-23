@@ -1106,11 +1106,12 @@
     "agentSaved": "Answer saved.",
     "agentGone": "This agent is no longer suggested to you. The profile was reloaded.",
     "draftsTitle": "Drafts ready",
-    "draftsHint": "Nothing is sent. With Gmail, a complete draft is also saved to your drafts; copy the others from here. Dismissing a draft doesn’t remove it from Gmail.",
+    "draftsHint": "Nothing is sent. With Gmail, a complete draft is also saved to your drafts; copy the others from here. Dismissing a draft also removes it from Gmail.",
     "draftReceived": "Received on {date}",
     "draftDeposited": "Saved to your Gmail drafts",
     "discard": "Dismiss",
     "discarded": "Draft dismissed.",
+    "discardedKeptInGmail": "Draft dismissed. Leon couldn’t remove it from Gmail: delete it from your Gmail drafts.",
     "draftGone": "This draft no longer exists. The profile was reloaded.",
     "agents": {
       "suite-reunion": {

@@ -442,15 +442,15 @@ describe('FicheSection : les brouillons prêts', () => {
     const titles = [...html.matchAll(/<h2[^>]*>([^<]+)<\/h2>/g)].map((match) => match[1]);
 
     expect(titles).toEqual(['Ma fiche', 'Brouillons prêts', 'Rôle', 'Tâches répétées']);
-    // Rien n'est envoyé ; un brouillon complet est aussi dans ses brouillons Gmail, où « Écarter » ne touche à rien.
+    // Rien n'est envoyé ; un brouillon complet est aussi dans ses brouillons Gmail, d'où « Écarter » le retire aussi.
     expect(text(html)).toContain(
-      'Rien n’est envoyé. Avec Gmail, un brouillon complet est aussi déposé dans vos brouillons ; les autres se copient d’ici. Écarter un brouillon ne le retire pas de Gmail.',
+      'Rien n’est envoyé. Avec Gmail, un brouillon complet est aussi déposé dans vos brouillons ; les autres se copient d’ici. Écarter un brouillon le retire aussi de Gmail.',
     );
     expect(text(html)).not.toContain('ni écrit dans votre boîte');
     const english = text(render(WITH_DRAFTS, 'en'));
     expect(english).toContain('Drafts ready');
     expect(english).toContain(
-      'Nothing is sent. With Gmail, a complete draft is also saved to your drafts; copy the others from here. Dismissing a draft doesn’t remove it from Gmail.',
+      'Nothing is sent. With Gmail, a complete draft is also saved to your drafts; copy the others from here. Dismissing a draft also removes it from Gmail.',
     );
   });
 

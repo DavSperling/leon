@@ -52,7 +52,9 @@ export const errorOf = (code: string): ErrorKey =>
   code === 'introuvable' ? 'errorNotFound' : code === 'invalide' ? 'errorInvalid' : 'errorFailed';
 
 // Un appel qui échoue (réseau) est une erreur comme une autre.
-const attempt = async (call: () => Promise<Result>): Promise<Result> => {
+const attempt = async <T extends Result>(
+  call: () => Promise<T>,
+): Promise<T | { error: 'echec' }> => {
   try {
     return await call();
   } catch {
@@ -313,7 +315,7 @@ function Sources({ id, sources }: { id: string; sources: Array<FicheSource & { i
 
 // Un brouillon de réponse prêt : le correspondant, la date du mail reçu, le fil lié à son outil, le texte du brouillon
 // tel quel, « Copier » et « Écarter ». Rien ne part d'ici, et rien ne s'y modifie : elle colle le texte dans sa réponse,
-// ou le retrouve dans ses brouillons Gmail quand il y est déposé. « Écarter » ne touche pas à sa boîte.
+// ou le retrouve dans ses brouillons Gmail quand il y est déposé. « Écarter » le retire aussi de Gmail.
 function Brouillon({ draft, onGone }: { draft: FicheBrouillon; onGone: () => void }) {
   const t = useTranslations('fiche');
   const locale = useLocale();
@@ -328,7 +330,9 @@ function Brouillon({ draft, onGone }: { draft: FicheBrouillon; onGone: () => voi
       const gone = 'error' in result && result.error === 'introuvable';
       setFailed('error' in result && !gone);
       if ('ok' in result) {
-        toast.success(t('discarded'));
+        // Écarté dans Leon, mais resté dans sa boîte : elle doit le savoir, il peut encore en partir.
+        if (result.resteDansGmail) toast.error(t('discardedKeptInGmail'));
+        else toast.success(t('discarded'));
         onGone();
       }
       if (gone) {

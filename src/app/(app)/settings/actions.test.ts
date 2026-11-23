@@ -19,6 +19,7 @@ import { sendDeletionEmails } from '@/server/email/account-deleted';
 import { logError } from '@/server/log';
 import { correctLesson, retireLesson, writeLesson } from '@/server/memory/lessons';
 import { readMemoryVersion, restoreMemoryVersion } from '@/server/memory/memory-section';
+import { withdrawBrouillon } from '@/server/portrait/brouillon-depot';
 import { discardBrouillon } from '@/server/portrait/brouillons';
 import { correctFields, retireLine } from '@/server/portrait/fiche';
 import { answerProposal } from '@/server/portrait/propositions';
@@ -103,6 +104,7 @@ vi.mock('@/server/memory/memory-section', () => ({
   readMemoryVersion: vi.fn(),
   restoreMemoryVersion: vi.fn(),
 }));
+vi.mock('@/server/portrait/brouillon-depot', () => ({ withdrawBrouillon: vi.fn() }));
 vi.mock('@/server/portrait/brouillons', () => ({ discardBrouillon: vi.fn() }));
 vi.mock('@/server/portrait/fiche', () => ({ correctFields: vi.fn(), retireLine: vi.fn() }));
 vi.mock('@/server/portrait/propositions', () => ({ answerProposal: vi.fn() }));
@@ -1174,10 +1176,14 @@ describe('les actions de l’onglet « Ma fiche »', () => {
     expect(answerProposal).not.toHaveBeenCalled();
   });
 
-  it('écarter : son brouillon ne se montre plus ; celui d’un autre, ou déjà écarté, est introuvable', async () => {
+  it('écarter : son brouillon ne se montre plus et quitte Gmail ; celui d’un autre, ou déjà écarté, est introuvable', async () => {
     vi.mocked(discardBrouillon).mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+    vi.mocked(withdrawBrouillon).mockResolvedValueOnce(true);
 
-    await expect(discardBrouillonAction(LIGNE)).resolves.toEqual({ ok: true });
+    await expect(discardBrouillonAction(LIGNE)).resolves.toEqual({
+      ok: true,
+      resteDansGmail: false,
+    });
     expect(revalidatePath).toHaveBeenCalledTimes(1);
     await expect(discardBrouillonAction(LIGNE)).resolves.toEqual({ error: 'introuvable' });
 
@@ -1185,6 +1191,19 @@ describe('les actions de l’onglet « Ma fiche »', () => {
       [ctx, LIGNE],
       [ctx, LIGNE],
     ]);
+    // Rien n'est retiré de sa boîte pour un brouillon qui n'a pas été écarté.
+    expect(vi.mocked(withdrawBrouillon).mock.calls).toEqual([[ctx, LIGNE]]);
+    expect(revalidatePath).toHaveBeenCalledTimes(1);
+  });
+
+  it('écarter : quand Leon n’a pas pu le retirer de Gmail, le brouillon est écarté et l’écran le saura', async () => {
+    vi.mocked(discardBrouillon).mockResolvedValueOnce(true);
+    vi.mocked(withdrawBrouillon).mockResolvedValueOnce(false);
+
+    await expect(discardBrouillonAction(LIGNE)).resolves.toEqual({
+      ok: true,
+      resteDansGmail: true,
+    });
     expect(revalidatePath).toHaveBeenCalledTimes(1);
   });
 
@@ -1193,6 +1212,7 @@ describe('les actions de l’onglet « Ma fiche »', () => {
     async (id) => {
       await expect(discardBrouillonAction(id as never)).resolves.toEqual({ error: 'invalide' });
       expect(discardBrouillon).not.toHaveBeenCalled();
+      expect(withdrawBrouillon).not.toHaveBeenCalled();
     },
   );
 

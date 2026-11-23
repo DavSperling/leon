@@ -169,7 +169,8 @@ export async function readBrouillons(ctx: TenantContext): Promise<ReadyBrouillon
 }
 
 // L'écarte : il ne se montre plus, et son mail reste traité (aucun autre brouillon ne lui sera écrit). Rend false s'il
-// n'est pas à la personne, ou déjà écarté.
+// n'est pas à la personne, ou déjà écarté. Celui que Leon avait déposé dans ses brouillons Gmail en est retiré ensuite,
+// hors d'ici (brouillon-depot.ts, withdrawBrouillon).
 export async function discardBrouillon(ctx: TenantContext, id: string): Promise<boolean> {
   if (!z.uuid().safeParse(id).success) return false;
   const discarded = await withTenant(ctx, (tx) =>

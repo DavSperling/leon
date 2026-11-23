@@ -56,6 +56,7 @@ import {
   restoreMemoryVersion,
 } from '@/server/memory/memory-section';
 import { AGENTS, type AgentId } from '@/server/portrait/agents';
+import { withdrawBrouillon } from '@/server/portrait/brouillon-depot';
 import { discardBrouillon } from '@/server/portrait/brouillons';
 import { correctFields, retireLine } from '@/server/portrait/fiche';
 import { answerProposal } from '@/server/portrait/propositions';
@@ -782,16 +783,17 @@ export async function answerAgentAction(input: {
   return { ok: true };
 }
 
-// « Écarter » un brouillon de réponse prêt : il ne se montre plus. Celui d'un autre, ou déjà écarté, est
-// « introuvable ». Rien n'est envoyé, et rien ne change dans sa boîte : un brouillon déposé dans ses brouillons Gmail
-// y reste, elle le supprime elle-même (portrait/brouillon-depot.ts).
+// « Écarter » un brouillon de réponse prêt : il ne se montre plus, et celui que Leon avait déposé dans ses brouillons
+// Gmail en est retiré (portrait/brouillon-depot.ts). Celui d'un autre, ou déjà écarté, est « introuvable ». Rien n'est
+// envoyé. `resteDansGmail` : Leon n'a pas pu le retirer de sa boîte, et l'écran le lui dit.
 export async function discardBrouillonAction(
   id: string,
-): Promise<{ ok: true } | { error: FicheError }> {
+): Promise<{ ok: true; resteDansGmail: boolean } | { error: FicheError }> {
   const ctx = await requireUserContext();
   const parsed = z.uuid().safeParse(id);
   if (!parsed.success) return { error: 'invalide' };
   if (!(await discardBrouillon(ctx, parsed.data))) return { error: 'introuvable' };
+  const withdrawn = await withdrawBrouillon(ctx, parsed.data);
   revalidatePath('/settings');
-  return { ok: true };
+  return { ok: true, resteDansGmail: !withdrawn };
 }

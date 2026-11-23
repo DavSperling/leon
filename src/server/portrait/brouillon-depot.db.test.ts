@@ -8,7 +8,7 @@ import { adminDb, adminPool } from '@/test/db';
 import { type FakeCall, type FakeRoute, fakeFetch } from '@/test/fake-fetch';
 import { createTestTenant } from '@/test/fixtures';
 import { LEA, mailThread, received } from '@/test/mail-threads';
-import { depositBrouillon } from './brouillon-depot';
+import { depositBrouillon, withdrawBrouillon } from './brouillon-depot';
 
 vi.mock('@/server/pipeline/queue');
 
@@ -408,4 +408,112 @@ describe('depositBrouillon : un dépôt qui échoue', () => {
     expect(await stored(id)).toMatchObject({ brouillonGmail: null });
     expect(String(errors.mock.calls[0]?.[2])).toContain('Pipedream is unreachable');
   });
+});
+
+// « Écarter » retire aussi de Gmail le brouillon que Leon y a déposé : la seule suppression de Leon dans une boîte.
+describe('withdrawBrouillon : un brouillon écarté quitte ses brouillons Gmail', () => {
+  const deleteRoute = (over: Partial<FakeRoute> = {}): FakeRoute => ({
+    method: 'DELETE',
+    url: proxied(`${GMAIL}/drafts/`),
+    json: {},
+    ...over,
+  });
+  // Un brouillon déposé (identifiant « r/1 » chez Gmail), puis écarté par elle, sauf `discarded: false`.
+  async function deposited(ctx: TenantContext, discarded = true): Promise<string> {
+    const { id } = await drafted(ctx, COMPLET, { connectionId: await gmailOf(ctx) });
+    await adminPool.query(
+      `update brouillons set brouillon_gmail = 'r/1', ecarte_le = case when $2 then now() end where id = $1`,
+      [id, discarded],
+    );
+    return id;
+  }
+
+  it('supprime chez Gmail le brouillon déposé, par sa boîte à elle, et oublie son identifiant', async () => {
+    const [julie] = await team();
+    const id = await deposited(julie);
+    const fetchImpl = fakeFetch([TOKEN, deleteRoute()]);
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    expect(await withdrawBrouillon(julie, id, { fetchImpl })).toBe(true);
+
+    const [, remove] = fetchImpl.calls;
+    expect(fetchImpl.calls).toHaveLength(2);
+    expect(remove?.method).toBe('DELETE');
+    expect(target(remove)).toBe(`${GMAIL}/drafts/r%2F1`);
+    expect(new URL(remove?.url ?? CONNECT).searchParams.get('account_id')).toBe('apn_gm1');
+    expect(await stored(id)).toMatchObject({ brouillonGmail: null, ecarteLe: expect.any(Date) });
+    expect(errors).not.toHaveBeenCalled();
+  });
+
+  it('un brouillon qui n’est plus dans Gmail (envoyé ou supprimé par elle) : plus rien à retirer', async () => {
+    const [julie] = await team();
+    const id = await deposited(julie);
+    const fetchImpl = fakeFetch([TOKEN, deleteRoute({ status: 404 })]);
+
+    expect(await withdrawBrouillon(julie, id, { fetchImpl })).toBe(true);
+
+    expect(await stored(id)).toMatchObject({ brouillonGmail: null });
+  });
+
+  it('un brouillon écarté qui n’avait pas été déposé : aucune requête', async () => {
+    const [julie] = await team();
+    const { id } = await drafted(julie, A_TROU, { connectionId: await gmailOf(julie) });
+    await adminPool.query('update brouillons set ecarte_le = now() where id = $1', [id]);
+    const fetchImpl = fakeFetch([]);
+
+    expect(await withdrawBrouillon(julie, id, { fetchImpl })).toBe(true);
+
+    expect(fetchImpl.calls).toHaveLength(0);
+  });
+
+  it.each([
+    [
+      'un brouillon qu’elle n’a pas écarté',
+      async (julie: TenantContext) => ({ who: julie, id: await deposited(julie, false) }),
+    ],
+    [
+      'le brouillon d’une autre, même avec sa propre boîte',
+      async (julie: TenantContext, paul: TenantContext) => {
+        await gmailOf(paul);
+        return { who: paul, id: await deposited(julie) };
+      },
+    ],
+    [
+      'sa boîte mise en pause depuis',
+      async (julie: TenantContext) => {
+        const id = await deposited(julie);
+        await adminPool.query("update connections set status = 'paused' where tenant_id = $1", [
+          julie.tenantId,
+        ]);
+        return { who: julie, id };
+      },
+    ],
+  ])('%s : rien n’est supprimé, aucune requête', async (_, setup) => {
+    const [julie, paul] = await team();
+    const { who, id } = await setup(julie, paul);
+    const fetchImpl = fakeFetch([]);
+
+    expect(await withdrawBrouillon(who, id, { fetchImpl })).toBe(false);
+
+    expect(fetchImpl.calls).toHaveLength(0);
+    expect(await stored(id)).toMatchObject({ brouillonGmail: 'r/1' });
+  });
+
+  it.each([403, 500])(
+    'une suppression qui échoue (%s) : il reste dans Gmail, et Leon le sait',
+    async (status) => {
+      const [julie] = await team();
+      const id = await deposited(julie);
+      const fetchImpl = fakeFetch([TOKEN, deleteRoute({ status })]);
+      const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      expect(await withdrawBrouillon(julie, id, { fetchImpl })).toBe(false);
+
+      // Une seule tentative, et rien de capté au journal.
+      expect(fetchImpl.calls.filter((call) => call.method === 'DELETE')).toHaveLength(1);
+      expect(await stored(id)).toMatchObject({ brouillonGmail: 'r/1', ecarteLe: expect.any(Date) });
+      expect(errors.mock.calls.map((args) => args[1])).toEqual(['brouillons.withdraw_failed']);
+      expect(JSON.stringify(errors.mock.calls)).not.toMatch(/Devis|lea@client|Bonjour/);
+    },
+  );
 });

@@ -440,8 +440,14 @@ describe('MailView : un mail du panneau', () => {
 
   it('une réponse que Leon écrit : la phrase qui le dit, « Actualiser » et « Écarter » ; plus de question', () => {
     const html = mailView(REPONDUE);
+    const words = `demande-${REPONDUE.id}`;
 
     expect(html).toContain('<span class="mark is-working">J’écris votre réponse.</span>');
+    // Au dernier mail, l'envoi ne laisse que le focus sur l'en-tête : il dit aussi que Leon écrit.
+    expect(html).toContain(
+      `<div id="${words}" tabindex="-1" data-autofocus="" aria-describedby="place ${words}-ecrit"`,
+    );
+    expect(html).toContain(`<p id="${words}-ecrit"`);
     expect(buttons(html)).toEqual(['Actualiser', 'Écarter']);
     expect(html).not.toMatch(/<fieldset|<input|<textarea/);
     expect(text(html)).not.toMatch(/Acceptez-vous|Envoyer mes réponses/);

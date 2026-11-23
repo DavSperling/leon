@@ -405,7 +405,8 @@ export function MailView({
         id={words}
         tabIndex={-1}
         data-autofocus={hidden ? undefined : ''}
-        aria-describedby={place}
+        // Leon l'écrit : l'en-tête, qui reprend le focus après l'envoi, le dit aussi.
+        aria-describedby={mail.sorte === 'ecrit' ? `${place ?? ''} ${words}-ecrit` : place}
         className="grid gap-1 [overflow-wrap:anywhere] text-fg outline-none"
       >
         <h3 className="text-lead font-semibold">{from ?? t('someone')}</h3>
@@ -462,7 +463,7 @@ export function MailView({
         ) : (
           <div className="grid gap-3">
             {/* En cours : le trait ambre du kit passe une fois sous les mots. */}
-            <p className="text-body text-fg">
+            <p id={`${words}-ecrit`} className="text-body text-fg">
               <span className="mark is-working">{t('writing')}</span>
             </p>
             <div className="flex flex-wrap items-center gap-2">

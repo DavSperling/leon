@@ -5,6 +5,7 @@ import { listConnections } from '@/server/connectors/connections';
 import { lignesFiche } from '@/server/db/schema/portrait';
 import { withTenant } from '@/server/db/with-tenant';
 import { briefingSources } from '@/server/discussion/citation-sources';
+import { EN_SERVICE } from './agents';
 import { type ReadyBrouillon, readBrouillons } from './brouillons';
 import { type FicheLine, readFiche } from './fiche';
 import { type Proposal, readProposals } from './propositions';
@@ -92,9 +93,12 @@ export async function readFicheScreen(ctx: TenantContext): Promise<FicheScreen> 
       return source ? [[id, source]] : [];
     }),
   );
+  // Ses brouillons ne se montrent que tant qu'elle dit oui à l'agent et qu'il lui est proposé. Après un « non », ils
+  // restent en base : un nouveau « oui » les remontre sans rappeler le modèle.
+  const wanted = agents.some((one) => one.agent === EN_SERVICE && one.oui);
   const brouillons = ready.flatMap(({ sourceId, ...one }) => {
     const source = found.get(sourceId);
-    return source ? [{ ...one, source }] : [];
+    return wanted && source ? [{ ...one, source }] : [];
   });
   return { etat, lines, sources, agents, brouillons };
 }

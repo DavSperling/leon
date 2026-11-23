@@ -41,12 +41,30 @@ async function seedLine(
     tenantId: ctx.tenantId,
     userId: ctx.userId,
     provenance: line.genre === 'role' || line.genre === 'tache' ? 'synthese' : 'calcul',
-    mails: line.genre === 'rythme' ? 12 : null,
+    mails: line.genre === 'role' || line.genre === 'tache' ? null : 12,
     acl: [ctx.userId],
   });
 }
 const RYTHME = { genre: 'rythme' as const, cle: '', valeur: { mailsParSemaine: 12 } };
 const ROLE = { genre: 'role' as const, cle: '', valeur: { texte: 'Commerciale.' } };
+const side = { medianeMinutes: 42, reponses: 3 };
+const DELAI = {
+  genre: 'delai-reponse' as const,
+  cle: '',
+  valeur: { tous: side, interne: side, externe: side },
+};
+
+// Sa boîte Gmail branchée par elle et une fiche qui compte une réponse : l'agent « Brouillons de réponse » lui est
+// proposé, et elle lui a répondu.
+async function answered(ctx: TenantContext, oui = true): Promise<void> {
+  await seedConnection(ctx, { provider: 'gmail' });
+  await seedLine(ctx, DELAI);
+  await adminPool.query(
+    `insert into reponses_agent (tenant_id, user_id, agent, oui, acl)
+     values ($1, $2, 'brouillon-reponse', $3, array[$2::uuid])`,
+    [ctx.tenantId, ctx.userId, oui],
+  );
+}
 
 describe('readFicheScreen : où en est la fiche', () => {
   it('sans fiche ni boîte à elle, il lui faut une boîte : celle d’un collègue ou un autre outil ne comptent pas', async () => {
@@ -189,6 +207,8 @@ describe('readFicheScreen : les brouillons prêts', () => {
 
   it('l’écran reçoit, pour chacun, le correspondant, le fil lié à son outil, la date du mail reçu et le texte : rien d’autre', async () => {
     const [julie, paul] = await people();
+    await answered(julie);
+    await answered(paul);
     const older = await seedBrouillon(julie, 'Contrat', 5);
     const recent = await seedBrouillon(julie, 'Devis 2027', 2);
     await seedBrouillon(julie, 'Écarté', 1, { ecarte: true });
@@ -225,6 +245,7 @@ describe('readFicheScreen : les brouillons prêts', () => {
 
   it('un brouillon dont le fil a bougé ou a disparu ne part pas vers l’écran', async () => {
     const [julie] = await people();
+    await answered(julie);
     const moved = await seedBrouillon(julie, 'Elle a répondu', 3);
     const gone = await seedBrouillon(julie, 'Fil supprimé', 2);
     await seedBrouillon(julie, 'Intact', 1);
@@ -240,6 +261,25 @@ describe('readFicheScreen : les brouillons prêts', () => {
     const screen = await readFicheScreen(julie);
 
     expect(screen.brouillons.map((one) => one.source.title)).toEqual(['Intact']);
+  });
+
+  it('sans son oui à l’agent, ses brouillons ne partent pas vers l’écran ; un nouveau oui les remontre', async () => {
+    const [julie, paul] = await people();
+    await answered(julie, false);
+    await seedBrouillon(julie, 'Devis', 1);
+    // Paul n'a jamais répondu à l'agent, qui ne lui est pas proposé.
+    await seedBrouillon(paul, 'Jamais répondu', 1);
+
+    expect((await readFicheScreen(julie)).brouillons).toEqual([]);
+    expect((await readFicheScreen(paul)).brouillons).toEqual([]);
+
+    await adminPool.query('update reponses_agent set oui = true where user_id = $1', [
+      julie.userId,
+    ]);
+
+    expect((await readFicheScreen(julie)).brouillons.map((one) => one.texte)).toEqual([
+      'Brouillon pour Devis.',
+    ]);
   });
 });
 

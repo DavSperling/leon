@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm';
+import { type SQL, sql } from 'drizzle-orm';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { epochToDate, LAST_TS_SQL, textArray } from '@/server/search/filters-sql';
@@ -22,6 +22,14 @@ import { MAIL_KINDS, MESSAGE, PART, SENT_MAIL_DAYS, sentTurns, TEAM } from './se
 // shortcut: ses envois automatiques (facts.ts, handWritten) comptent ici comme des mails envoyés, le tri se faisant en
 // SQL sans lire leur texte : l'adresse qui reçoit ses notifications passe pour un correspondant, à écarter ici si de
 // vraies boîtes le montrent.
+//
+// Le mail d'un inconnu (unknownMails) passe les mêmes conditions, sauf une, retournée : il vient de quelqu'un à qui
+// elle n'a PAS écrit dans ces mails envoyés. Un mail est donc soit d'un correspondant, soit d'un inconnu, jamais les
+// deux. Il ne part pas au modèle : l'accueil lui demande d'abord si elle veut une réponse (brouillons.ts,
+// answerUnknownMail). Et seulement s'il est marqué « pas automatique » à la relève (0085) : un tour au fait inconnu ne
+// se propose jamais.
+// shortcut: les mails d'inconnus ne se proposent qu'avec Gmail, la relève d'Outlook ne disant pas s'ils sont
+// automatiques ; à lire dans Outlook (ses en-têtes) si une boîte Outlook en a besoin.
 
 const WAITING_DAYS = 7;
 // Passé cet âge du mail, Leon n'attend plus ses réponses : ni question posée à l'accueil, ni second appel.
@@ -118,50 +126,98 @@ async function withMessages<M extends { sourceId: string; message: string }>(
   });
 }
 
+// Ce que les mails qui attendent ont en commun, sous les alias `s` (le fil) et `l` (son dernier tour), avec `sent`,
+// ses mails envoyés : tout sauf la condition qui les dit d'un correspondant ou d'un inconnu. `l` : un mail coupé en
+// plusieurs tours les date tous pareil, n'importe lequel donne son message, son auteur, ses destinataires et le fait
+// de la relève. Deux messages à la même date : le plus grand identifiant, ici, dans la lecture du fil plus bas et à
+// l'écran (readShown, brouillons.ts). Une adresse d'auteur est exigée : c'est à elle que la réponse irait.
+function waiting(ctx: TenantContext, now: Date, columns: SQL): SQL {
+  const since = new Date(now.getTime() - WAITING_DAYS * DAY_MS).toISOString();
+  const sentSince = new Date(now.getTime() - SENT_MAIL_DAYS * DAY_MS);
+  return sql`
+    with sent as (
+      select lower(t.author_email) as address, t.recipients_to || t.recipients_cc as recipients
+      from turns t
+      join sources s on s.tenant_id = t.tenant_id and s.id = t.source_id
+      where ${sentTurns(ctx, sentSince)}
+    )
+    select ${columns}
+    from sources s
+    cross join lateral (select ${LAST_TS_SQL} as last_ts) a
+    cross join lateral (
+      select substring(t.external_id from ${MESSAGE}) as message, lower(t.author_email) as address,
+             t.author_name, t.author_email, t.author_side, t.recipients_to, t.automated, t.ts
+      from turns t
+      where t.tenant_id = s.tenant_id and t.source_id = s.id
+      order by t.ts desc, substring(t.external_id from ${MESSAGE}) desc
+      limit 1
+    ) l
+    where s.tenant_id = ${ctx.tenantId} and s.owner_user_id = ${ctx.userId}
+      and s.kind = any(${textArray(MAIL_KINDS)}) and s.metadata->>'nature' = 'fil'
+      and a.last_ts >= ${since}::timestamptz and l.ts >= ${since}::timestamptz
+      and l.message is not null and l.address is not null
+      and l.author_side is distinct from ${TEAM}
+      and not exists (select 1 from sent where sent.address = l.address)
+      and l.recipients_to && array(select address from sent where address is not null)
+      and not exists (
+        select 1 from brouillons b
+        where b.tenant_id = s.tenant_id and b.source_id = s.id
+          and b.user_id = ${ctx.userId} and b.message = l.message)`;
+}
+// Elle a écrit à l'auteur du mail, en « à » ou en copie, dans ses mails envoyés : un correspondant.
+const CORRESPONDENT = sql`exists (select 1 from sent where l.address = any(sent.recipients))`;
+
 export async function readWaitingMails(
   ctx: TenantContext,
   now = new Date(),
 ): Promise<WaitingMail[]> {
-  const since = new Date(now.getTime() - WAITING_DAYS * DAY_MS).toISOString();
-  const sentSince = new Date(now.getTime() - SENT_MAIL_DAYS * DAY_MS);
   return withTenant(ctx, async (tx) => {
-    // `l` : le dernier tour du fil. Un mail coupé en plusieurs tours les date tous pareil : n'importe lequel donne son
-    // message, son auteur et ses destinataires. Deux messages à la même date : le plus grand identifiant, ici, dans
-    // la lecture du fil plus bas et à l'écran (readShown, brouillons.ts).
     const { rows: mails } = await tx.execute<Omit<WaitingMail, 'messages'>>(sql`
-      with sent as (
-        select lower(t.author_email) as address, t.recipients_to || t.recipients_cc as recipients
-        from turns t
-        join sources s on s.tenant_id = t.tenant_id and s.id = t.source_id
-        where ${sentTurns(ctx, sentSince)}
-      )
-      select s.id as "sourceId", l.message, l.address as "from", s.title as subject
-      from sources s
-      cross join lateral (select ${LAST_TS_SQL} as last_ts) a
-      cross join lateral (
-        select substring(t.external_id from ${MESSAGE}) as message, lower(t.author_email) as address,
-               t.author_side, t.recipients_to, t.ts
-        from turns t
-        where t.tenant_id = s.tenant_id and t.source_id = s.id
-        order by t.ts desc, substring(t.external_id from ${MESSAGE}) desc
-        limit 1
-      ) l
-      where s.tenant_id = ${ctx.tenantId} and s.owner_user_id = ${ctx.userId}
-        and s.kind = any(${textArray(MAIL_KINDS)}) and s.metadata->>'nature' = 'fil'
-        and a.last_ts >= ${since}::timestamptz and l.ts >= ${since}::timestamptz
-        and l.message is not null
-        and l.author_side is distinct from ${TEAM}
-        and not exists (select 1 from sent where sent.address = l.address)
-        and l.recipients_to && array(select address from sent where address is not null)
-        and exists (select 1 from sent where l.address = any(sent.recipients))
-        and not exists (
-          select 1 from brouillons b
-          where b.tenant_id = s.tenant_id and b.source_id = s.id
-            and b.user_id = ${ctx.userId} and b.message = l.message)
+      ${waiting(ctx, now, sql`s.id as "sourceId", l.message, l.address as "from", s.title as subject`)}
+        and ${CORRESPONDENT}
       order by l.ts desc, s.id
       limit ${WAITING_MAX}`);
     return withMessages(tx, ctx, mails);
   });
+}
+
+// Les mails d'inconnus qui l'attendent (plus haut), dans une requête qui rend `columns` : tous, ou ce seul mail
+// (`only`, son fil et son message). L'accueil les lit (readUnknownMails), et sa réponse s'écrit d'après eux
+// (brouillons.ts, answerUnknownMail).
+export const unknownMails = (
+  ctx: TenantContext,
+  now: Date,
+  columns: SQL,
+  only?: { sourceId: string; message: string },
+): SQL => sql`
+  ${waiting(ctx, now, columns)}
+    and not ${CORRESPONDENT} and l.automated is false
+    ${only ? sql`and s.id = ${only.sourceId} and l.message = ${only.message}` : sql``}`;
+
+// Le mail d'un inconnu, tel que l'accueil le montre : `from`, son nom, à défaut son adresse ; `message` sert, avec le
+// fil, à lui répondre.
+export type UnknownMail = {
+  sourceId: string;
+  message: string;
+  from: string;
+  receivedAt: Date;
+};
+
+// Les `max` mails d'inconnus qui l'attendent, les plus récents d'abord. Rien de leur texte.
+export async function readUnknownMails(
+  ctx: TenantContext,
+  max: number,
+  now = new Date(),
+): Promise<UnknownMail[]> {
+  const columns = sql`s.id as "sourceId", l.message, coalesce(l.author_name, l.author_email) as "from",
+                      extract(epoch from l.ts) as at`;
+  const { rows } = await withTenant(ctx, (tx) =>
+    tx.execute<Omit<UnknownMail, 'receivedAt'> & { at: string }>(sql`
+      ${unknownMails(ctx, now, columns)}
+      order by l.ts desc, s.id
+      limit ${max}`),
+  );
+  return rows.map(({ at, ...mail }) => ({ ...mail, receivedAt: epochToDate(at) }));
 }
 
 // Les brouillons qu'elle attend : Leon lui avait posé ses questions, elle y a répondu, et le texte reste à écrire

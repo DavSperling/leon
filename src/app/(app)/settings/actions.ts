@@ -801,7 +801,7 @@ export async function answerAgentAction(input: {
   return { ok: true };
 }
 
-// « Écarter », depuis la carte de l'accueil, un brouillon de réponse prêt ou une demande de Leon : la ligne ne se montre
+// « Écarter », depuis le panneau de l'accueil, un brouillon de réponse prêt ou une demande de Leon : la ligne ne se montre
 // plus, et le brouillon que Leon avait déposé dans ses brouillons Gmail en est retiré (portrait/brouillon-depot.ts).
 // Celle d'un autre, ou déjà écartée, est « introuvable ». Rien n'est envoyé. `resteDansGmail` : Leon n'a pas pu le
 // retirer de sa boîte, et l'écran le lui dit.
@@ -817,7 +817,7 @@ export async function discardBrouillonAction(
   return { ok: true, resteDansGmail: !withdrawn };
 }
 
-// Ses réponses aux questions de Leon, depuis la carte de l'accueil : une par question, dans le même ordre, de
+// Ses réponses aux questions de Leon, depuis le panneau de l'accueil : une par question, dans le même ordre, de
 // REPONSE_MAX_CHARS caractères au plus, vide quand elle ne sait pas ou ne veut pas en parler. Hors de ces bornes :
 // « invalide ». Une demande qui n'est pas à elle, déjà répondue, écartée, ou un autre nombre de réponses que de
 // questions : « introuvable ». Rien n'est écrit dans les deux cas. Ses réponses gardées, un passage est demandé à la
@@ -842,7 +842,7 @@ export async function answerQuestionsAction(input: {
   return { ok: true };
 }
 
-// Sa réponse au mail d'un inconnu, depuis la carte de l'accueil : « Oui », avec ses indications (REPONSE_MAX_CHARS
+// Sa réponse au mail d'un inconnu, depuis le panneau de l'accueil : « Oui », avec ses indications (REPONSE_MAX_CHARS
 // caractères au plus, vides quand elle n'en donne pas), ou « Non », qui ne garde pas d'indications. Hors de ces bornes :
 // « invalide ». Un mail qui ne l'attend plus (à une autre, d'un correspondant, automatique, déjà traité, d'un fil qui a
 // bougé, trop ancien) : « introuvable » (portrait/brouillons.ts, answerUnknownMail). Rien n'est écrit dans les deux cas.
@@ -867,7 +867,7 @@ export async function answerUnknownAction(input: {
   }
   if (!id) return { error: 'introuvable' };
   if (oui) await requestBrouillons(ctx);
-  // Pas de revalidatePath : la carte tient la ligne (« Leon écrit », avec `id`), qu'un accueil relu remplacerait par une
-  // autre, sous une autre clé, emportant le focus.
+  // Pas de revalidatePath : le panneau tient le mail (Leon écrit, avec `id`), qu'un accueil relu remplacerait par un
+  // autre, sous une autre clé, rangé à la fin du panneau.
   return { ok: true, id };
 }

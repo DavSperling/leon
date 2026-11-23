@@ -15,8 +15,8 @@ import {
 import { Section } from '@/components/verre';
 import { AboutSuggestionCard } from '@/components/verre/discussions/about-suggestion-card';
 import { AskTiles } from '@/components/verre/discussions/ask-tiles';
-import { DraftQuestionsCard } from '@/components/verre/recherche/draft-questions-card';
 import { BriefingSheet, Greeting, HomeAsk } from '@/components/verre/recherche/home';
+import { ReplyDrafts } from '@/components/verre/recherche/reply-drafts';
 import { SearchBar } from '@/components/verre/recherche/search-bar';
 import { SearchResults } from '@/components/verre/recherche/search-results';
 import { WeekCalendar } from '@/components/verre/recherche/week-calendar';
@@ -120,9 +120,9 @@ const optional = <T,>(what: string, read: Promise<T>) =>
   });
 
 /**
- * L'Accueil : le bonjour et le fait du jour, les demandes de Leon quand il a besoin d'elle pour répondre à un mail et
- * les brouillons de réponse prêts, le champ où l'on demande et ses questions à essayer, puis le point du matin (s'il y
- * en a un) et, à côté, le calendrier de la semaine et la proposition « About you ».
+ * L'Accueil : le bonjour et le fait du jour, la ligne de l'agent « Brouillons de réponse » quand il a quelque chose pour
+ * elle, le champ où l'on demande et ses questions à essayer, puis le point du matin (s'il y en a un) et, à côté, le
+ * calendrier de la semaine et la proposition « About you ».
  */
 async function Home({ ctx }: { ctx: TenantContext }) {
   const t = await getTranslations('welcome');
@@ -169,10 +169,9 @@ async function Home({ ctx }: { ctx: TenantContext }) {
         fact={first && briefingFact(first.sections)}
         sources={first ? viewOf(first) : undefined}
       />
-      {/* Leon a besoin d'elle, écrit sa réponse, ou un brouillon est prêt : dit tout de suite, sous le bonjour. */}
-      {demandes.length + prets.length > 0 && (
-        <DraftQuestionsCard demandes={demandes} prets={prets} max={REPONSE_MAX_CHARS} />
-      )}
+      {/* Leon a besoin d'elle, un brouillon est prêt, ou il écrit sa réponse : une ligne sous le bonjour, et le détail
+          dans son panneau. Toujours montée : quand le dernier mail s'en va, son panneau reste ouvert pour le dire. */}
+      <ReplyDrafts name={name} demandes={demandes} prets={prets} max={REPONSE_MAX_CHARS} />
       <HomeAsk canAsk={modelAvailable} />
       {questions.length > 0 && (
         <div className="mt-3">

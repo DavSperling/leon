@@ -351,11 +351,27 @@
     "whereNext": "You can change it anytime in <link>Settings › Profile</link>."
   },
   "draftQuestions": {
-    "title": "Leon needs you",
-    "needYou": "I need you to reply to {name}",
-    "someone": "your correspondent",
-    "ask": "Do you want to see my questions?",
-    "strangerAsk": "{name} wrote to you. Do you want a reply?",
+    "line": {
+      "questions": "{name}, I have a few questions for you.",
+      "ready": "{name}, {count, plural, one {your draft is ready} other {your # drafts are ready}}.",
+      "writing": "{name}, {count, plural, one {I’m writing your reply} other {I’m writing your # replies}}."
+    },
+    "lineAnon": {
+      "questions": "I have a few questions for you.",
+      "ready": "{count, plural, one {Your draft is ready} other {Your # drafts are ready}}.",
+      "writing": "{count, plural, one {I’m writing your reply} other {I’m writing your # replies}}."
+    },
+    "count": {
+      "toComplete": "{count, plural, one {# email to complete} other {# emails to complete}}",
+      "ready": "{count, plural, one {# draft ready} other {# drafts ready}}",
+      "writing": "{count, plural, one {# reply in progress} other {# replies in progress}}"
+    },
+    "mail": "Email {n} of {total}",
+    "previousMail": "Previous email",
+    "nextMail": "Next email",
+    "allDone": "That’s all for now.",
+    "someone": "Your correspondent",
+    "strangerAsk": "Do you want a reply?",
     "instructions": "Your instructions",
     "instructionsHelp": "What you want to reply, in a few words. You can leave it empty.",
     "prepare": "Prepare the reply",
@@ -368,14 +384,15 @@
     "noAnswer": "No answer",
     "change": "Change",
     "send": "Send my answers",
-    "writing": "Leon is writing your reply to {name}.",
+    "writing": "I’m writing your reply.",
     "discard": "Dismiss",
     "gone": "This request is no longer open.",
     "received": "Received on {date}",
-    "readyTitle": "Drafts ready",
-    "readyFor": "Draft ready to reply to {name}",
-    "deposited": "Saved to your Gmail drafts. Dismissing it also removes it from Gmail.",
-    "seeDraft": "See the draft",
+    "ready": "Draft ready",
+    "deposited": "Saved to your Gmail drafts.",
+    "confirmDiscard": "Dismiss this draft?",
+    "confirmDiscardText": "It will also be deleted from your Gmail drafts.",
+    "keep": "Keep",
     "discarded": "Draft dismissed.",
     "discardedKeptInGmail": "Draft dismissed. Leon couldn’t remove it from Gmail: delete it from your Gmail drafts.",
     "draftGone": "This draft no longer exists."

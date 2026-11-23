@@ -38,7 +38,7 @@ import { SourceThing } from './source-thing';
 // ses mails (interlocuteurs, façon d'écrire, rythme, signature) restent enregistrées, sans s'afficher. Les gestes sont
 // ceux des leçons de l'onglet Mémoire (memoire.tsx), sans la connexion récente : la fiche n'est lue que par elle.
 // Sous ses tâches, les agents de départ que Leon lui propose : un oui ou un non par agent, rien d'autre. Ce que l'agent
-// « Brouillons de réponse » lui prépare ne se montre pas ici, mais sur l'Accueil (recherche/draft-questions-card.tsx).
+// « Brouillons de réponse » lui prépare ne se montre pas ici, mais sur l'Accueil (recherche/reply-drafts.tsx).
 
 type Result = { ok: true } | { error: string };
 type ErrorKey = 'errorNotFound' | 'errorInvalid' | 'errorFailed';

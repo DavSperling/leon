@@ -351,11 +351,27 @@
     "whereNext": "Vous pourrez le modifier à tout moment dans <link>Réglages › Profil</link>."
   },
   "draftQuestions": {
-    "title": "Leon a besoin de vous",
-    "needYou": "J’ai besoin de vous pour répondre à {name}",
-    "someone": "votre correspondant",
-    "ask": "Voulez-vous voir mes questions ?",
-    "strangerAsk": "{name} vous a écrit. Voulez-vous une réponse ?",
+    "line": {
+      "questions": "{name}, j’ai quelques questions à vous poser.",
+      "ready": "{name}, {count, plural, one {votre brouillon est prêt} other {vos # brouillons sont prêts}}.",
+      "writing": "{name}, {count, plural, one {j’écris votre réponse} other {j’écris vos # réponses}}."
+    },
+    "lineAnon": {
+      "questions": "J’ai quelques questions à vous poser.",
+      "ready": "{count, plural, one {Votre brouillon est prêt} other {Vos # brouillons sont prêts}}.",
+      "writing": "{count, plural, one {J’écris votre réponse} other {J’écris vos # réponses}}."
+    },
+    "count": {
+      "toComplete": "{count, plural, one {# mail à compléter} other {# mails à compléter}}",
+      "ready": "{count, plural, one {# brouillon prêt} other {# brouillons prêts}}",
+      "writing": "{count, plural, one {# réponse en cours} other {# réponses en cours}}"
+    },
+    "mail": "Mail {n} sur {total}",
+    "previousMail": "Mail précédent",
+    "nextMail": "Mail suivant",
+    "allDone": "C’est tout pour l’instant.",
+    "someone": "Votre correspondant",
+    "strangerAsk": "Voulez-vous une réponse ?",
     "instructions": "Vos indications",
     "instructionsHelp": "Ce que vous voulez répondre, en quelques mots. Vous pouvez laisser vide.",
     "prepare": "Préparer la réponse",
@@ -368,14 +384,15 @@
     "noAnswer": "Sans réponse",
     "change": "Modifier",
     "send": "Envoyer mes réponses",
-    "writing": "Leon écrit votre réponse à {name}.",
+    "writing": "J’écris votre réponse.",
     "discard": "Écarter",
     "gone": "Cette demande n’est plus ouverte.",
     "received": "Reçu le {date}",
-    "readyTitle": "Brouillons prêts",
-    "readyFor": "Brouillon prêt pour répondre à {name}",
-    "deposited": "Déposé dans vos brouillons Gmail. « Écarter » l’en retire aussi.",
-    "seeDraft": "Voir le brouillon",
+    "ready": "Brouillon prêt",
+    "deposited": "Déposé dans vos brouillons Gmail.",
+    "confirmDiscard": "Écarter ce brouillon ?",
+    "confirmDiscardText": "Il sera aussi supprimé de vos brouillons Gmail.",
+    "keep": "Garder",
     "discarded": "Brouillon écarté.",
     "discardedKeptInGmail": "Brouillon écarté. Leon n’a pas pu le retirer de Gmail : supprimez-le dans vos brouillons Gmail.",
     "draftGone": "Ce brouillon n’existe plus."

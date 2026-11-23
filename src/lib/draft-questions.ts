@@ -1,5 +1,6 @@
-// La carte des demandes de Leon sur l'Accueil (draft-questions-card.tsx) pose ses questions une par une : où elle en
-// est, et ce qu'elle a retenu pour chacune. Module pur, que le navigateur lit : la carte ne fait qu'afficher cet état.
+// Le panneau des brouillons de réponse, sur l'Accueil (reply-drafts.tsx), pose les questions de Leon une par une : où
+// elle en est, et ce qu'elle a retenu pour chacune. Module pur, que le navigateur lit : l'écran ne fait qu'afficher cet
+// état.
 
 // « Autre » : le choix que l'écran ajoute, qui ouvre un texte libre.
 export const OTHER = 'autre';

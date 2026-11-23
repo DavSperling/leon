@@ -8,7 +8,7 @@ import {
   startFlow,
 } from './draft-questions';
 
-// La logique de la carte des demandes de Leon, sans écran : le rendu de test n'a pas de clic. Données inventées.
+// La logique des questions de Leon, sans écran : le rendu de test n'a pas de clic. Données inventées.
 
 const CHOIX = [
   ['Oui', 'Non, proposer jeudi'],

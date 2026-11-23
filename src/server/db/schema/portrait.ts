@@ -78,7 +78,8 @@ export const reponsesAgent = pgTable(
 // l'identifiant du brouillon déposé dans sa boîte Gmail (0081) et ses réponses aux questions de Leon (0082). Le texte
 // d'une ligne qui a ses questions et ses réponses ne se pose que par ecrire_brouillon, une fois ; celui de son oui au
 // mail d'un inconnu, par ecrire_inconnu (0084), une fois. Les questions et leurs choix (0083), son oui et ses
-// indications (0084) s'écrivent avec la ligne et ne changent plus.
+// indications (0084) s'écrivent avec la ligne et ne changent plus. Son issue ne se pose que par poser_issue (0086), une
+// fois.
 export const brouillons = pgTable('brouillons', {
   id: uuid('id').primaryKey().defaultRandom(),
   tenantId: uuid('tenant_id')
@@ -106,5 +107,8 @@ export const brouillons = pgTable('brouillons', {
   ecarteLe: timestamp('ecarte_le', { withTimezone: true }),
   // Le brouillon Gmail créé pour lui (portrait/brouillon-depot.ts). Nul : rien n'est déposé dans sa boîte.
   brouillonGmail: text('brouillon_gmail'),
+  // Ce qu'elle en a fait, vu sur sa réponse envoyée (0086, portrait/preferences.ts), posé une fois par poser_issue.
+  // Nul : pas encore de réponse d'elle, ou une retouche dont Leon n'a pas encore tiré la leçon.
+  issue: text('issue', { enum: ['tel-quel', 'retouche', 'reecrit'] }),
   acl: uuid('acl').array().notNull(),
 });

@@ -14,6 +14,7 @@ import { depositBrouillon } from './brouillon-depot';
 import { buildBrouillonPrompt, parseBrouillonAnswer } from './brouillon-prompt';
 import { handWritten } from './facts';
 import { lockAccount, readFiche } from './fiche';
+import { compareReplies } from './preferences';
 import { readProposals } from './propositions';
 import { MESSAGE, readSentMails, SENT_MAIL_DAYS } from './sent-mails';
 import {
@@ -52,7 +53,8 @@ export const BROUILLONS_DAILY_CAP = 20;
 const BROUILLON_MAX_TOKENS = 8000;
 const BROUILLON_TIMEOUT_MS = 90_000;
 
-// Un passage : d'abord les brouillons qu'elle attend (elle a répondu aux questions de Leon, le second appel ; ou dit
+// Un passage : en tête, sans modèle, ses réponses envoyées aux brouillons de Leon se comparent à eux (preferences.ts) ;
+// puis les brouillons qu'elle attend (elle a répondu aux questions de Leon, le second appel ; ou dit
 // « Oui » au mail d'un inconnu, son premier appel, avec ses indications), puis ses mails qui attendent (le premier
 // appel), cinq appels au modèle au plus en tout (WAITING_MAX), un par mail. Rend le
 // nombre de brouillons écrits. Ne fait rien pour un compte supprimé, ni pour qui n'a pas répondu « oui » à l'agent, ni
@@ -74,6 +76,8 @@ export async function writeBrouillons(
   const proposals = await readProposals(ctx, lines);
   if (!proposals.some((one) => one.agent === EN_SERVICE && one.oui)) return 0;
   const now = deps.now ?? new Date();
+  // En tête : ses réponses envoyées depuis le dernier passage, comparées aux brouillons de Leon (preferences.ts).
+  await compareReplies(ctx, now);
   const mails: Array<AnsweredMail | WaitingMail> = [
     ...(await readAnsweredMails(ctx)),
     ...(await readWaitingMails(ctx, now)),

@@ -21,6 +21,7 @@ import {
   answerUnknownMail,
   BROUILLONS_DAILY_CAP,
   discardBrouillon,
+  HOME_MAX,
   readShown,
   writeBrouillons,
 } from './brouillons';
@@ -1460,9 +1461,9 @@ describe('readShown : ses brouillons prêts', () => {
     expect(await shown(julie)).toEqual([DRAFT]);
   });
 
-  it('ne montre que les trois plus récents', async () => {
+  it('ne montre que les vingt plus récents', async () => {
     const [julie] = await team();
-    for (let hours = 1; hours <= 4; hours++) {
+    for (let hours = 1; hours <= HOME_MAX + 1; hours++) {
       const mail = received(ago(hours * HOUR), 'Une question.');
       const sourceId = await mailThread(julie, `Fil ${hours}`, [mail]);
       await adminPool.query(
@@ -1472,7 +1473,9 @@ describe('readShown : ses brouillons prêts', () => {
       );
     }
 
-    expect(await shown(julie)).toEqual(['Brouillon 1', 'Brouillon 2', 'Brouillon 3']);
+    expect(await shown(julie)).toEqual(
+      Array.from({ length: HOME_MAX }, (_, index) => `Brouillon ${index + 1}`),
+    );
   });
 });
 

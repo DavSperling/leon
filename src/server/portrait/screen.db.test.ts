@@ -9,6 +9,7 @@ import { adminDb, adminPool } from '@/test/db';
 import { createTestTenant, seedConnection } from '@/test/fixtures';
 import { mailThread, received, sent } from '@/test/mail-threads';
 import { seedRun } from '@/test/seed-search';
+import { HOME_MAX } from './brouillons';
 import { type FicheLine, readFiche, retireLine } from './fiche';
 import { answerProposal } from './propositions';
 import { getFicheBoss } from './queue';
@@ -287,6 +288,9 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
     };
   };
   const NOTHING = { demandes: [], prets: [] };
+  // Des heures, de `from` à `to`.
+  const hours = (from: number, to: number) =>
+    Array.from({ length: to - from + 1 }, (_, index) => from + index);
 
   it('l’accueil reçoit, pour chaque demande, le correspondant, le fil lié à son outil, la date du mail reçu, les questions avec leurs choix, et si elle y a répondu : rien d’autre', async () => {
     const [julie, paul] = await people();
@@ -411,29 +415,37 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
     expect(await titles(paul)).toEqual({ demandes: [], prets: ['Fil de Paul'] });
   });
 
-  it('trois au plus de chaque sorte, les plus récents d’abord ; sans rien pour elle, rien', async () => {
+  it('vingt au plus de chaque sorte, les plus récents d’abord : un brouillon au-delà du troisième se montre ; sans rien pour elle, rien', async () => {
     const [julie, paul] = await people();
     await answered(julie);
     await answered(paul);
-    for (const hours of [4, 1, 3, 2]) await asked(julie, `Demande ${hours}`, hours);
-    for (const hours of [8, 5, 7, 6]) await seedBrouillon(julie, `Prêt ${hours}`, hours);
+    expect(HOME_MAX).toBe(20);
+    // Écrits du plus ancien au plus récent : l'ordre rendu ne vient pas de l'ordre d'écriture.
+    for (const hour of hours(1, HOME_MAX + 1).reverse())
+      await asked(julie, `Demande ${hour}`, hour);
+    for (const hour of hours(101, 101 + HOME_MAX).reverse())
+      await seedBrouillon(julie, `Prêt ${hour}`, hour);
 
     expect(await titles(julie)).toEqual({
-      demandes: ['Demande 1', 'Demande 2', 'Demande 3'],
-      prets: ['Prêt 5', 'Prêt 6', 'Prêt 7'],
+      demandes: hours(1, HOME_MAX).map((hour) => `Demande ${hour}`),
+      prets: hours(101, 100 + HOME_MAX).map((hour) => `Prêt ${hour}`),
     });
     expect(await readHomeBrouillons(paul)).toEqual(NOTHING);
   });
 
-  it('parmi les trois demandes, celles qui attendent sa réponse passent avant celles où Leon écrit, même sur des mails plus récents', async () => {
+  it('parmi les vingt demandes, celles qui attendent sa réponse passent avant celles où Leon écrit, même sur des mails plus récents', async () => {
     const [julie] = await people();
     await answered(julie);
-    for (const hours of [1, 2, 3])
-      await asked(julie, `Répondue ${hours}`, hours, { reponses: ['Oui.', ''] });
-    for (const hours of [5, 4]) await asked(julie, `Demande ${hours}`, hours);
+    for (const hour of hours(1, HOME_MAX))
+      await asked(julie, `Répondue ${hour}`, hour, { reponses: ['Oui.', ''] });
+    for (const hour of [HOME_MAX + 2, HOME_MAX + 1]) await asked(julie, `Demande ${hour}`, hour);
 
-    // Les deux qui attendent un geste d'elle, puis la plus récente de celles où Leon écrit ; montrées par date du mail.
-    expect((await titles(julie)).demandes).toEqual(['Répondue 1', 'Demande 4', 'Demande 5']);
+    // Les deux qui attendent un geste d'elle, puis les plus récentes de celles où Leon écrit ; rendues par date du mail.
+    expect((await titles(julie)).demandes).toEqual([
+      ...hours(1, HOME_MAX - 2).map((hour) => `Répondue ${hour}`),
+      `Demande ${HOME_MAX + 1}`,
+      `Demande ${HOME_MAX + 2}`,
+    ]);
   });
 
   it('son oui au mail d’une inconnue : la ligne dit que Leon écrit, sans question, le temps du premier appel ; son non ne se montre pas', async () => {
@@ -471,15 +483,19 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
     expect(JSON.stringify(home)).not.toContain(oui.sourceId);
   });
 
-  it('parmi les trois demandes, son oui à une inconnue compte avec celles où Leon écrit, après celles qui attendent sa réponse', async () => {
+  it('parmi les vingt demandes, son oui à une inconnue compte avec celles où Leon écrit, après celles qui attendent sa réponse', async () => {
     const [julie] = await people();
     await answered(julie);
-    for (const hours of [1, 2])
-      await seedBrouillon(julie, `Oui ${hours}`, hours, { texte: null, indications: '' });
-    await asked(julie, 'Répondue 3', 3, { reponses: ['Oui.', ''] });
-    for (const hours of [5, 4]) await asked(julie, `Demande ${hours}`, hours);
+    for (const hour of hours(1, HOME_MAX - 1))
+      await seedBrouillon(julie, `Oui ${hour}`, hour, { texte: null, indications: '' });
+    await asked(julie, `Répondue ${HOME_MAX}`, HOME_MAX, { reponses: ['Oui.', ''] });
+    for (const hour of [HOME_MAX + 2, HOME_MAX + 1]) await asked(julie, `Demande ${hour}`, hour);
 
-    expect((await titles(julie)).demandes).toEqual(['Oui 1', 'Demande 4', 'Demande 5']);
+    expect((await titles(julie)).demandes).toEqual([
+      ...hours(1, HOME_MAX - 2).map((hour) => `Oui ${hour}`),
+      `Demande ${HOME_MAX + 1}`,
+      `Demande ${HOME_MAX + 2}`,
+    ]);
   });
 
   // Un mail d'une inconnue dans un fil de la personne, marqué « pas automatique » à la relève, et son adresse à elle,
@@ -528,19 +544,19 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
     expect(JSON.stringify(home)).not.toMatch(/travailler|ines@inconnue\.test/);
   });
 
-  it('les mails d’inconnues partagent les trois places des demandes : celles qui attendent un geste d’elle d’abord, les plus récentes d’abord, montrées par date', async () => {
+  it('les mails d’inconnues partagent les vingt places des demandes : celles qui attendent un geste d’elle d’abord, les plus récentes d’abord, rendues par date', async () => {
     const [julie] = await people();
     await answered(julie);
     await wroteToLea(julie);
     await asked(julie, 'Répondue 1', 1, { reponses: ['Oui.', ''] });
-    await stranger(julie, 'Inconnue 3', 3);
-    await asked(julie, 'Demande 4', 4);
-    await stranger(julie, 'Inconnue 5', 5);
-    await seedBrouillon(julie, 'Prêt', 6);
+    for (const hour of hours(2, HOME_MAX)) await stranger(julie, `Inconnue ${hour}`, hour);
+    await asked(julie, `Demande ${HOME_MAX + 1}`, HOME_MAX + 1);
+    await seedBrouillon(julie, 'Prêt', HOME_MAX + 2);
+    const strangers = hours(2, HOME_MAX).map((hour) => `Inconnue ${hour}`);
 
-    // Trois places : les trois qui attendent un geste d'elle, même sur des mails plus anciens que celle où Leon écrit.
+    // Vingt places : les vingt qui attendent un geste d'elle, même sur des mails plus anciens que celle où Leon écrit.
     expect(await titles(julie)).toEqual({
-      demandes: ['Inconnue 3', 'Demande 4', 'Inconnue 5'],
+      demandes: [...strangers, `Demande ${HOME_MAX + 1}`],
       prets: ['Prêt'],
     });
 
@@ -549,7 +565,7 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
       `update brouillons set ecarte_le = now() where user_id = $1 and questions is not null and reponses is null`,
       [julie.userId],
     );
-    expect((await titles(julie)).demandes).toEqual(['Répondue 1', 'Inconnue 3', 'Inconnue 5']);
+    expect((await titles(julie)).demandes).toEqual(['Répondue 1', ...strangers]);
   });
 
   it('la lecture des mails d’inconnues en panne : ses demandes et ses brouillons prêts se montrent, et la panne est journalisée', async () => {

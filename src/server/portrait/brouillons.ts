@@ -28,7 +28,7 @@ import {
 
 // L'agent « Brouillons de réponse », le premier en service : pour chaque mail qui attend la réponse de la personne
 // (waiting-mails.ts), un modèle écrit un brouillon comme elle l'écrirait (brouillon-prompt.ts), gardé dans sa table
-// privée (0080) et montré sur l'accueil de Leon (readShown). Quand une information ou une décision lui manque, ou que le mail lui demande de
+// privée (0080) et montré dans le panneau de l'accueil de Leon (readShown). Quand une information ou une décision lui manque, ou que le mail lui demande de
 // s'engager, il rend à la place une à trois questions, chacune avec ses choix de réponse, gardées sur la même ligne
 // sans texte (0082, 0083) : Leon l'attend. Ses réponses reçues (answerQuestions), un second appel écrit le brouillon en
 // entier, sur cette ligne.
@@ -182,9 +182,9 @@ export async function writeBrouillons(
   return written;
 }
 
-// Ce que l'accueil montre au plus, de chaque sorte (les demandes de Leon, avec les mails d'inconnus, et les brouillons
-// prêts) : les mails les plus récents.
-export const HOME_MAX = 3;
+// Ce que l'accueil lit au plus pour le panneau de l'agent, de chaque sorte (les demandes de Leon, avec les mails
+// d'inconnus, et les brouillons prêts) : les mails les plus récents.
+export const HOME_MAX = 20;
 
 export type ReadyBrouillon = {
   id: string;
@@ -213,7 +213,7 @@ export type Demande = Pick<ReadyBrouillon, 'id' | 'sourceId' | 'from' | 'receive
 // qu'elle a répondu, ou qu'un nouveau message est arrivé, la ligne ne se montre plus. À date égale, le même départage
 // que readWaitingMails. Et pas la demande d'un mail trop ancien pour un appel (readAnsweredMails) : ses réponses, ou
 // son oui, ne feraient plus rien écrire. Parmi les demandes, celles qui attendent sa réponse passent avant celles où Leon
-// écrit : elles seules attendent un geste d'elle, et trois lignes « Leon écrit » ne doivent pas les cacher.
+// écrit : elles seules attendent un geste d'elle, et des lignes « Leon écrit » ne doivent pas les cacher.
 // Un mail jugé sans réponse à donner, ou son « non » à un inconnu (ni texte, ni question, ni oui), s'écarte sur sa
 // ligne seule, avant de chercher le dernier message de son fil : ces lignes ne se montrent jamais, et leur nombre ne
 // fait que grandir.

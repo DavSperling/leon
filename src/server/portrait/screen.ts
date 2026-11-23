@@ -112,8 +112,8 @@ export type HomeBrouillons = {
 };
 
 // Ce que l'agent « Brouillons de réponse » a pour elle, pour l'accueil : les demandes de Leon et les mails d'inconnus
-// qui l'attendent (waiting-mails.ts), puis les brouillons prêts, les plus récents d'abord, trois au plus de chaque sorte
-// (brouillons.ts). Seulement tant qu'elle dit oui à l'agent et qu'il lui est proposé : après un « non », ses lignes
+// qui l'attendent (waiting-mails.ts), puis les brouillons prêts, les plus récents d'abord, HOME_MAX (vingt) au plus de
+// chaque sorte (brouillons.ts). L'accueil n'en montre qu'une ligne ; son panneau les range (lib/reply-drafts.ts). Seulement tant qu'elle dit oui à l'agent et qu'il lui est proposé : après un « non », ses lignes
 // restent en base, et un nouveau « oui » les remontre sans rappeler le modèle. Lu à chaque chargement de l'accueil : ses
 // lignes et les mails d'inconnus d'abord, sa fiche et ses outils seulement s'il y a de quoi montrer.
 export async function readHomeBrouillons(ctx: TenantContext): Promise<HomeBrouillons> {
@@ -145,8 +145,8 @@ export async function readHomeBrouillons(ctx: TenantContext): Promise<HomeBrouil
         ? [{ ...one, source: { title: source.title, url: source.url, kind: source.kind } }]
         : [];
     });
-  // Les mails d'inconnus partagent les trois places des demandes : celles qui attendent un geste d'elle se comptent
-  // d'abord, les plus récentes d'abord, et l'ordre montré reste celui de la date du mail.
+  // Les mails d'inconnus partagent les places des demandes : celles qui attendent un geste d'elle se comptent d'abord,
+  // les plus récentes d'abord, puis tout se rend par date du mail.
   const recent = (a: { receivedAt: Date }, b: { receivedAt: Date }) =>
     b.receivedAt.getTime() - a.receivedAt.getTime();
   const writing = (one: HomeDemande | HomeInconnu) => 'repondue' in one && one.repondue;

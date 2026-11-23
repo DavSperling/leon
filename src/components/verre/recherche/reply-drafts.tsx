@@ -597,6 +597,9 @@ export function ReplyDrafts({
       );
     },
     // Un brouillon déposé dans Gmail en sera supprimé pour de bon : le panneau demande d'abord.
+    // shortcut: un mail où Leon écrit est celui de l'Accueil chargé ; si son brouillon a été déposé depuis,
+    // « Écarter » le retire de Gmail sans demander (son geste vise cette réponse). Une garde dans
+    // discardBrouillonAction le jour où ça se voit.
     onDiscard: () => (confirmsDiscard(mail) ? setAsking(true) : discard(mail)),
     onRefresh: () => router.refresh(),
   });

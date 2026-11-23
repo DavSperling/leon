@@ -707,7 +707,7 @@ Le point 9 (Codex) demande d'approuver le crochet dans `/hooks`. Il vient avec C
   - `LEON_URL=https://example.com LEON_TOKEN=<jeton bien formé> ~/.leon/bin/leon search essai` reste dans le bac à sable : le serveur est injoignable. La même commande, hors de tout bac à sable, joint example.com, qui répond 405. Un préfixe de variables ne fait donc pas sortir une recherche vers un autre serveur.
   - `LEON_URL=… ~/.leon/bin/leon search essai`, sans jeton, reste aussi dedans.
   - `~/.leon/bin/leon search essai > sortie.txt` reste dedans : une redirection garde l'appel dans le bac à sable, comme le dit la doc.
-- **Une limite connue.** L'exception n'est proposée que pour la forme installée du lanceur (`installedLauncher`). Si quelqu'un passe ensuite à la forme clone (`leon setup --depot`), les entrées restent : elles exempteraient alors un lanceur qui fait tourner le code du clone, qu'un agent peut modifier. Seuls les développeurs de Leon sont concernés. La parade, à faire si besoin : la seconde écriture retire les entrées quand le lanceur n'est plus de forme installée.
+- **Le passage à la forme clone après coup** (relevé par la revue de sécurité automatique du 23/11). L'exception n'est proposée que pour la forme installée du lanceur (`installedLauncher`). Si quelqu'un passe ensuite à la forme clone (`leon setup --depot`), ou si le lanceur disparaît, l'installateur retire les entrées de Leon (et seulement elles) au passage suivant, et le dit : elles exempteraient sinon un lanceur qui fait tourner le code du clone, qu'un agent peut modifier. La même fonction (`removeSandboxEntries`) sert au retrait.
 - **Le texte d'accord** (`SANDBOX_LINES`, testé mot pour mot), montré avant la question :
 
 ```

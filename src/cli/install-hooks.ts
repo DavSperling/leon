@@ -350,6 +350,51 @@ function addSandboxEntries(settings: Json, home: string): Json {
   return next;
 }
 
+export type RemovedEntry = { event: string; command: string };
+
+// Retire de la liste `record[key]` les entrées exactes `ours` (notées sous `event`), et la liste si ce retrait l'a vidée :
+// l'installateur l'a peut-être créée. Rend true si une entrée est partie.
+function dropExact(
+  record: Json,
+  key: string,
+  ours: string[],
+  event: string,
+  removed: RemovedEntry[],
+): boolean {
+  const list = record[key];
+  if (!Array.isArray(list)) return false;
+  const kept = list.filter((entry) => !ours.includes(entry));
+  if (kept.length === list.length) return false;
+  for (const entry of list) if (ours.includes(entry)) removed.push({ event, command: entry });
+  if (kept.length === 0) delete record[key];
+  else record[key] = kept;
+  return true;
+}
+
+// Les réglages sans les entrées de Leon dans le bac à sable (`excludedCommands` et `filesystem.denyWrite`), et seulement
+// elles, sans modifier l'objet reçu : pour le retrait, et pour l'installateur quand le lanceur n'est plus de forme
+// installée (sinon l'exception ferait tourner hors du bac à sable le code d'un clone qu'un agent peut modifier).
+export function removeSandboxEntries(
+  settings: Json,
+  home: string,
+): { settings: Json; removed: RemovedEntry[] } {
+  const next = structuredClone(settings);
+  const removed: RemovedEntry[] = [];
+  const sandbox = next.sandbox;
+  if (!isRecord(sandbox)) return { settings: next, removed };
+  dropExact(sandbox, 'excludedCommands', sandboxEntries(home), 'sandbox.excludedCommands', removed);
+  const { filesystem } = sandbox;
+  const denied = 'sandbox.filesystem.denyWrite';
+  if (
+    isRecord(filesystem) &&
+    dropExact(filesystem, 'denyWrite', [SANDBOX_DENY_WRITE], denied, removed) &&
+    Object.keys(filesystem).length === 0
+  ) {
+    delete sandbox.filesystem;
+  }
+  return { settings: next, removed };
+}
+
 // `coulisses` ne se propose qu'aux outils dont la CLI relève les coulisses (outils.ts), chacun avec son texte et le nom
 // de ce qui en part dans sa question. Cursor n'en a pas : son essai est négatif (annexe 10).
 const COULISSES_TEXTS: Partial<Record<ConsentTool, { lines: readonly string[]; each: string }>> = {
@@ -1036,9 +1081,13 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
   if (plan.changes.every((change) => change.action === 'inchange')) {
     for (const line of alerts) deps.out(line);
     if (consented) {
+      const installed = await installedLauncher(options.home);
+      // Des entrées de Leon restées dans le bac à sable hors de la forme installée : la seconde écriture les retire.
+      const stale = !installed && removeSandboxEntries(settings, options.home).removed.length > 0;
       if (
         usagesToOffer('claude_code', consent, options).length === 0 &&
-        sandboxStep(settings, consent, options, await installedLauncher(options.home)) === null
+        sandboxStep(settings, consent, options, installed) === null &&
+        !stale
       ) {
         deps.out(`The Leon hooks are already in place in ${path}: nothing to do.`);
         return 0;
@@ -1137,15 +1186,23 @@ async function offerClaudeCodeUsages(options: InstallOptions, deps: InstallDeps)
   await offerSandbox(path, options, deps, installed);
   const consent = await factsConsent(options.home, 'claude_code');
   const usages = consent?.usages ?? [];
-  if (!usages.includes('rappel') && !usages.includes('passage')) return true;
+  // Hors de la forme installée (passage à la forme clone après coup), les entrées de Leon dans le bac à sable partent :
+  // elles exempteraient un lanceur qui fait tourner le code d'un clone (revue de sécurité de T67).
+  if (!usages.includes('rappel') && !usages.includes('passage') && installed) return true;
   let changes: HookChange[] = [];
   let sandboxAdded = false;
+  let sandboxRemoved = false;
   const outcome = await writeUsageHooks(
     path,
     (settings) => {
       try {
         const plan = addLeonHooks(settings, options.home, usages);
         changes = plan.changes;
+        if (!installed) {
+          const stripped = removeSandboxEntries(plan.settings, options.home);
+          sandboxRemoved = stripped.removed.length > 0;
+          return stripped.settings;
+        }
         sandboxAdded = sandboxStep(settings, consent, options, installed) === 'ajouter';
         return sandboxAdded ? addSandboxEntries(plan.settings, options.home) : plan.settings;
       } catch (error) {
@@ -1164,6 +1221,11 @@ async function offerClaudeCodeUsages(options: InstallOptions, deps: InstallDeps)
     }
     if (sandboxAdded) {
       deps.out(`Leon's read commands added to the sandbox exceptions in ${path}.`);
+    }
+    if (sandboxRemoved) {
+      deps.out(
+        `Leon's read commands removed from the sandbox exceptions in ${path}: the Leon command of this computer is no longer the installed one.`,
+      );
     }
   }
   return outcome !== 'echec';

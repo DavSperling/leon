@@ -1805,6 +1805,45 @@ describe('installHooks : l’exception du bac à sable', () => {
     expect((await readSettings()).sandbox).toEqual({ enabled: true });
   });
 
+  // Le passage à la forme clone après coup (revue de sécurité de T67) : les entrées de Leon partent, celles de
+  // l'utilisateur restent, et l'installateur le dit.
+  it.each([
+    [
+      'un lanceur de forme clone',
+      () => writeLauncher(home, { kind: 'clone', repoDir: REPO }, () => true),
+    ],
+    ['sans lanceur', () => rm(launcherPath(home))],
+  ])('retirée avec %s, même acceptée avant', async (_label, launcher) => {
+    await passageGiven();
+    await recordSandboxAnswer(home, true);
+    await writeSettings({
+      sandbox: {
+        enabled: true,
+        excludedCommands: ['gh pr *', ...leonEntries()],
+        filesystem: { denyWrite: ['/etc', '~/.leon'] },
+      },
+      hooks: {
+        SessionStart: [leonStart()],
+        SessionEnd: [leonEnd()],
+        PreToolUse: [readFirstHook()],
+      },
+    });
+    await launcher();
+
+    const run = await install({ interactive: true, answers: [] });
+
+    expect(run.code).toBe(0);
+    expect(run.questions).toEqual([]);
+    expect((await readSettings()).sandbox).toEqual({
+      enabled: true,
+      excludedCommands: ['gh pr *'],
+      filesystem: { denyWrite: ['/etc'] },
+    });
+    expect(run.output).toContain(
+      `Leon's read commands removed from the sandbox exceptions in ${settingsPath}: the Leon command of this computer is no longer the installed one.`,
+    );
+  });
+
   it('demandée juste après un oui à passage, texte d’abord ; un oui écrit les entrées exactes et range la réponse', async () => {
     await sandboxOn({ network: { allowedDomains: ['github.com'] } });
 

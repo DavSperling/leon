@@ -57,9 +57,8 @@ import {
   parseSettings,
   READ_FIRST_HOOK,
   REMINDER_HOOK,
-  SANDBOX_DENY_WRITE,
+  removeSandboxEntries,
   SETTINGS_FILE,
-  sandboxEntries,
   writeAtomically,
 } from './install-hooks';
 import { removeLauncher } from './launcher';
@@ -69,25 +68,6 @@ const README_HINT = `see the README, section "Retirer les crochets"`;
 
 export type RemovedHook = { event: string; command: string };
 
-// Retire de la liste `record[key]` les entrées exactes `ours` (notées sous `event`), et la liste si ce retrait l'a vidée :
-// l'installateur l'a peut-être créée. Rend true si une entrée est partie.
-function dropExact(
-  record: Json,
-  key: string,
-  ours: string[],
-  event: string,
-  removed: RemovedHook[],
-): boolean {
-  const list = record[key];
-  if (!Array.isArray(list)) return false;
-  const kept = list.filter((entry) => !ours.includes(entry));
-  if (kept.length === list.length) return false;
-  for (const entry of list) if (ours.includes(entry)) removed.push({ event, command: entry });
-  if (kept.length === 0) delete record[key];
-  else record[key] = kept;
-  return true;
-}
-
 // Les réglages sans les crochets de Leon (`specs` : tous par défaut, ceux de `rappel` et de `passage` compris) ni ses
 // entrées du bac à sable (`excludedCommands` et `filesystem.denyWrite`), sans modifier l'objet reçu. `home` : le dossier
 // personnel de ces entrées.
@@ -96,22 +76,7 @@ export function removeLeonHooks(
   home: string,
   specs = [...HOOKS, REMINDER_HOOK, READ_FIRST_HOOK],
 ): { settings: Json; removed: RemovedHook[] } {
-  const next = structuredClone(settings);
-  const removed: RemovedHook[] = [];
-  const sandbox = next.sandbox;
-  if (isRecord(sandbox)) {
-    const excluded = 'sandbox.excludedCommands';
-    dropExact(sandbox, 'excludedCommands', sandboxEntries(home), excluded, removed);
-    const { filesystem } = sandbox;
-    const denied = 'sandbox.filesystem.denyWrite';
-    if (
-      isRecord(filesystem) &&
-      dropExact(filesystem, 'denyWrite', [SANDBOX_DENY_WRITE], denied, removed) &&
-      Object.keys(filesystem).length === 0
-    ) {
-      delete sandbox.filesystem;
-    }
-  }
+  const { settings: next, removed } = removeSandboxEntries(settings, home);
   const hooksRoot = next.hooks;
   if (!isRecord(hooksRoot)) return { settings: next, removed };
   for (const spec of specs) {

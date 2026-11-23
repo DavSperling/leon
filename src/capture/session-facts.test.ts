@@ -473,7 +473,6 @@ describe('extractClaudeCodeFacts', () => {
     const accuses: [string, unknown][] = [
       ['SubagentHandback', { message: 'Fini.' }],
       ['StructuredOutput', { verdict: 'ok' }],
-      ['SendMessage', { to: 'main', message: 'x' }],
       ['SendUserFile', { files: ['a.md'], status: 'normal' }],
     ];
     it.each(accuses)('un sous-agent qui appelle %s %j : non externe', (name, input) => {
@@ -482,8 +481,16 @@ describe('extractClaudeCodeFacts', () => {
     it.each(accuses)('la session qui appelle %s %j : non externe', (name, input) => {
       expect(extractClaudeCodeFacts(appel('e1', name, input), RACINE).externe).toBe(false);
     });
-    it('un nom voisin d’un accusé reste externe (nom exact)', () => {
-      expect(extractClaudeCodeFacts(appel('e1', 'SendMessages', {}), RACINE).externe).toBe(true);
+    // SendMessage reste externe : la réponse d'une autre session n'est jugée par rien (décision d'Amos du 23/11).
+    it.each([
+      ['SendMessage', { to: 'autre-session', message: 'x' }],
+      ['SubagentHandbacks', {}],
+    ])('la session qui appelle %s %j : externe', (name, input) => {
+      expect(extractClaudeCodeFacts(appel('e1', name, input), RACINE).externe).toBe(true);
+    });
+    it('un sous-agent qui appelle SendMessage : externe', () => {
+      const lignes = geste('s1', 'SendMessage', { to: 'autre-session', message: 'x' });
+      expect(externe(new Map([['a1', sousAgent(...lignes)]]))).toBe(true);
     });
 
     it.each([

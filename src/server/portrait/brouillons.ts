@@ -17,6 +17,7 @@ import { lockAccount, readFiche } from './fiche';
 import { readProposals } from './propositions';
 import { MESSAGE, readSentMails, SENT_MAIL_DAYS } from './sent-mails';
 import {
+  ANSWERED_DAYS,
   type AnsweredMail,
   readAnsweredMails,
   readWaitingMails,
@@ -54,7 +55,8 @@ const BROUILLON_TIMEOUT_MS = 90_000;
 // suivant le retente, sous le même plafond. Un mail qui a son résultat (un brouillon, des questions, ou « sans
 // réponse ») n'est jamais redemandé au modèle, sauf une fois pour écrire le brouillon quand elle a répondu aux
 // questions ; et son brouillon n'est déposé qu'ici, une fois, juste après son écriture. Aucun appel pour une demande
-// qu'elle a écartée, ni pour un fil qui a bougé depuis (readAnsweredMails).
+// qu'elle a écartée, ni pour un fil qui a bougé depuis, ni pour un mail de plus de ANSWERED_DAYS jours
+// (readAnsweredMails).
 // Deux passages lancés au même instant appelleraient chacun le modèle pour le même mail, pour une seule ligne écrite :
 // la file n'en lance qu'un par personne à la fois (brouillons-queue.ts).
 export async function writeBrouillons(
@@ -224,11 +226,13 @@ export async function readBrouillons(ctx: TenantContext): Promise<ReadyBrouillon
   );
 }
 
-// Les demandes de Leon qui l'attendent, pour l'accueil : des questions, pas encore de réponses.
+// Les demandes de Leon qui l'attendent, pour l'accueil : des questions, pas encore de réponses. Pas celles d'un mail
+// trop ancien pour le second appel (readAnsweredMails) : ses réponses ne feraient plus rien écrire.
 export async function readDemandes(ctx: TenantContext): Promise<Demande[]> {
   const rows = await shownRows(
     ctx,
-    sql`b.texte is null and b.questions is not null and b.reponses is null`,
+    sql`b.texte is null and b.questions is not null and b.reponses is null
+        and l.ts >= now() - make_interval(days => ${ANSWERED_DAYS})`,
     DEMANDES_MAX,
   );
   return rows.flatMap(({ id, sourceId, from, receivedAt, questions }) =>

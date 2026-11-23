@@ -24,6 +24,8 @@ import { MAIL_KINDS, MESSAGE, PART, SENT_MAIL_DAYS, sentTurns, TEAM } from './se
 // vraies boîtes le montrent.
 
 const WAITING_DAYS = 7;
+// Passé cet âge du mail, Leon n'attend plus ses réponses : ni question posée à l'accueil, ni second appel.
+export const ANSWERED_DAYS = 30;
 // Les plus récents d'abord, par passage (un appel au modèle chacun).
 export const WAITING_MAX = 5;
 // Ce que le modèle reçoit du fil : ses derniers messages, chacun coupé.
@@ -165,7 +167,8 @@ export async function readWaitingMails(
 // Les brouillons qu'elle attend : Leon lui avait posé ses questions, elle y a répondu, et le texte reste à écrire
 // (brouillons.ts, le second appel). Ceux qu'elle n'a pas écartés, et dont le fil n'a pas bougé depuis : le mail est
 // toujours son dernier message. Les règles d'un mail qui attend ne se rejouent pas : il les passait quand Leon a posé
-// ses questions, et sa réponse peut venir plus de WAITING_DAYS jours après.
+// ses questions, et sa réponse peut venir plus de WAITING_DAYS jours après. Mais pas plus de ANSWERED_DAYS jours après
+// le mail : un second appel resté illisible se retente à chaque passage, et c'est ce qui l'arrête.
 export async function readAnsweredMails(ctx: TenantContext): Promise<AnsweredMail[]> {
   return withTenant(ctx, async (tx) => {
     const { rows: mails } = await tx.execute<Omit<AnsweredMail, 'messages'>>(sql`
@@ -182,7 +185,7 @@ export async function readAnsweredMails(ctx: TenantContext): Promise<AnsweredMai
       ) l
       where b.tenant_id = ${ctx.tenantId} and b.user_id = ${ctx.userId}
         and b.texte is null and b.reponses is not null and b.ecarte_le is null
-        and l.message = b.message
+        and l.message = b.message and l.ts >= now() - make_interval(days => ${ANSWERED_DAYS})
       order by l.ts desc, b.id
       limit ${WAITING_MAX}`);
     return withMessages(tx, ctx, mails);

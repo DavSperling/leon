@@ -614,26 +614,40 @@ describe('writeBrouillons : ses réponses aux questions de Leon, puis le brouill
     expect((await titlesOf(julie)).find(([title]) => title === '1')).toEqual(['1', null]);
   });
 
-  it('ses réponses viennent plus de sept jours après le mail : le brouillon s’écrit quand même', async () => {
-    // Un mail trop ancien pour un premier appel : seule la demande déjà posée, avec ses réponses, le fait écrire.
+  it('ses réponses viennent plus de sept jours après le mail : le brouillon s’écrit quand même ; passé trente jours, plus aucun appel', async () => {
+    // Deux mails trop anciens pour un premier appel : seule la demande déjà posée, avec ses réponses, fait écrire celui
+    // de neuf jours. Celui de trente et un jours n'est plus demandé au modèle : un second appel resté illisible ne se
+    // retente pas sans fin.
     const julie = await julieWaiting();
     vi.spyOn(console, 'info').mockImplementation(() => {});
-    const mail = received(ago(9 * DAY), 'Bonjour Julie, mardi vous convient-il ?');
-    const sourceId = await mailThread(julie, 'Ancien', [mail]);
+    const asked: Array<[string, string]> = [];
+    for (const [title, days] of [
+      ['Ancien', 9],
+      ['Trop ancien', 31],
+    ] as const) {
+      const mail = received(ago(days * DAY), 'Bonjour Julie, mardi vous convient-il ?');
+      asked.push([await mailThread(julie, title, [mail]), mail.externalId]);
+    }
     const { llm, calls } = answering(draft(COMPLET));
     expect(await writeBrouillons(julie, { llm })).toBe(0);
     expect(calls).toHaveLength(0);
-    await adminPool.query(
-      `insert into brouillons (tenant_id, user_id, source_id, message, questions, reponses, acl)
-       values ($1, $2, $3, $4, $5, $6, array[$2::uuid])`,
-      [julie.tenantId, julie.userId, sourceId, mail.externalId, QUESTIONS, REPONSES],
-    );
+    for (const [sourceId, message] of asked)
+      await adminPool.query(
+        `insert into brouillons (tenant_id, user_id, source_id, message, questions, reponses, acl)
+         values ($1, $2, $3, $4, $5, $6, array[$2::uuid])`,
+        [julie.tenantId, julie.userId, sourceId, message, QUESTIONS, REPONSES],
+      );
 
     expect(await writeBrouillons(julie, { llm })).toBe(1);
 
     expect(calls).toHaveLength(1);
     expect(calls[0]?.system).toContain(SUITE);
-    expect(await titlesOf(julie)).toEqual([['Ancien', COMPLET]]);
+    expect(await titlesOf(julie)).toEqual([
+      ['Ancien', COMPLET],
+      ['Trop ancien', null],
+    ]);
+    expect(await writeBrouillons(julie, { llm })).toBe(0);
+    expect(calls).toHaveLength(1);
   });
 
   it('le plafond du jour vaut aussi pour le second appel', async () => {

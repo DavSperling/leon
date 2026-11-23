@@ -380,16 +380,19 @@ describe('readHomeDemandes : les demandes de Leon pour l’accueil', () => {
     expect(await readHomeDemandes(julie)).toEqual([]);
   });
 
-  it('une demande dont le fil a bougé ou a disparu ne se montre plus', async () => {
+  it('une demande dont le fil a bougé ou a disparu ne se montre plus, ni celle d’un mail de plus de trente jours', async () => {
     const [julie] = await people();
     await answered(julie);
     const moved = await asked(julie, 'Elle a répondu', 3);
     const gone = await asked(julie, 'Fil supprimé', 2);
     await asked(julie, 'Intacte', 1);
+    // Trop ancien pour le second appel : ses réponses ne feraient plus rien écrire.
+    await asked(julie, 'Trop ancien', 31 * 24);
+    await asked(julie, 'Encore à temps', 29 * 24);
     await reply(moved.sourceId);
     await adminPool.query('delete from sources where id = $1', [gone.sourceId]);
 
-    expect(await titles(julie)).toEqual(['Intacte']);
+    expect(await titles(julie)).toEqual(['Intacte', 'Encore à temps']);
   });
 
   it('les demandes d’une personne ne partent pas vers l’accueil d’un collègue, de son manager avec la vue de l’équipe, ni d’une autre organisation', async () => {

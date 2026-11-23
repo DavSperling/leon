@@ -109,6 +109,7 @@ Les règles du brouillon :
 ${COMME_ELLE}
 - Écris le mail en entier, avec ce qu'elle a répondu : ses réponses décident de ce que dit le mail.
 - N'invente rien : ni fait, ni date, ni prix, ni engagement qu'elle n'a pas donné. Pour une question restée sans réponse, n'aborde pas ce point, ou reste général.
+- N'ajoute rien qu'elle n'a pas dit : ni promesse pour la suite (tenir au courant, revenir vers son correspondant), ni conclusion tirée à sa place. Chaque phrase du mail vient du fil ou de ses réponses, sauf les formules d'appel et de politesse.
 - Un brouillon est complet : aucun blanc, aucun crochet, rien à compléter, et aucune nouvelle question.
 ${FORME}
 

@@ -407,6 +407,7 @@ describe('buildBrouillonPrompt : le second appel, avec les questions de Leon et 
       "Écris le mail en entier, avec ce qu'elle a répondu : ses réponses décident de ce que dit le mail",
       "N'invente rien : ni fait, ni date, ni prix, ni engagement qu'elle n'a pas donné",
       "Pour une question restée sans réponse, n'aborde pas ce point, ou reste général",
+      "N'ajoute rien qu'elle n'a pas dit : ni promesse pour la suite",
       'aucun blanc, aucun crochet, rien à compléter, et aucune nouvelle question',
       'Ni objet ni signature',
       'En texte brut, sans Markdown',

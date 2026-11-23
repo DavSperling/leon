@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { matchesGlob } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import config from '../wxt.config';
@@ -16,6 +17,8 @@ describe('le zip des sources pour Mozilla', () => {
       'extension/tsconfig.json',
       'extension/wxt.config.ts',
       'extension/build-firefox.md',
+      'extension/public/icon/16.png',
+      'extension/public/_locales/en/messages.json',
       'src/capture/turn.ts',
       'package.json',
       'pnpm-lock.yaml',
@@ -23,6 +26,18 @@ describe('le zip des sources pour Mozilla', () => {
     ]) {
       expect(included(file), file).toBe(true);
     }
+  });
+
+  it('prend chaque fichier suivi par Git qui sert à la construction', () => {
+    const root = new URL('../..', import.meta.url);
+    const tracked = execFileSync('git', ['ls-files', 'extension', 'src/capture'], {
+      cwd: root,
+      encoding: 'utf8',
+    })
+      .split('\n')
+      .filter((file) => file && !file.endsWith('.test.ts') && !file.includes('/fixtures/'));
+    expect(tracked.length).toBeGreaterThan(0);
+    for (const file of tracked) expect(included(file), file).toBe(true);
   });
 
   it('laisse dehors un fichier oublié à côté du code (réponse enregistrée, note, clé, paquet)', () => {

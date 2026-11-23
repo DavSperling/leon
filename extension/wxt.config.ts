@@ -16,11 +16,15 @@ export default defineConfig({
     sourcesTemplate: 'leon-{{version}}-sources.zip',
     // Les sources pour Mozilla partent de la racine du dépôt, car l'extension importe ../src/capture.
     // Sans dotSources, aucun fichier caché (.env*, .git, .output, .wxt) n'y entre ; node_modules et les tests
-    // en sont exclus par WXT. La liste nomme des sortes de fichiers, pas des dossiers entiers : WXT ramasse
-    // ce qui est sur le disque, que Git le suive ou non (une réponse enregistrée, une note, une clé).
+    // en sont exclus par WXT. La liste nomme des sortes de fichiers, pas des dossiers entiers : une réponse
+    // enregistrée (.json, .sse), une note (.md) ou une clé (.pem) posée à côté reste dehors. public/ part en
+    // entier : WXT le copie tout dans le paquet (resolve-config.mjs:66), rien de neuf ne part chez Mozilla.
+    // shortcut: WXT ramasse ce qui est sur le disque, suivi par Git ou non, donc un .ts, .html ou .css non suivi
+    // part encore ; construire les zips envoyés à Mozilla depuis une copie propre (git archive).
     sourcesRoot: fileURLToPath(new URL('..', import.meta.url)),
     includeSources: [
       'extension/{assets,entrypoints,lib}/**/*.{ts,html,css}',
+      'extension/public/**',
       'extension/{tsconfig.json,wxt.config.ts,build-firefox.md}',
       'src/capture/*.ts',
       'package.json',

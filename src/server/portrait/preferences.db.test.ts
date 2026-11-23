@@ -164,12 +164,16 @@ describe('compareReplies : la réponse qu’elle a vraiment envoyée, à la fin 
     ).toEqual([JSON.stringify({ userId: julie.userId, brouillonId: row?.id, issue: 'tel-quel' })]);
   });
 
-  it('le premier de ses envois après le message reçu : pas un envoi d’avant, pas le mail d’un collègue, pas un autre fil ni une autre boîte', async () => {
+  it('le premier de ses envois à Léa après le message reçu : pas un envoi d’avant, pas un transfert à un collègue, pas le mail d’un collègue, pas un autre fil ni une autre boîte', async () => {
     const [julie, paul] = await team();
     // Le même texte : envoyé par elle dans le fil avant le message reçu ; puis par Paul, dans le fil de Julie (reçu chez
-    // elle) et depuis sa propre boîte, partagée à l'équipe ; puis par elle, dans un autre fil.
+    // elle) ; par elle à Paul seul, dans le même fil (un transfert) ; par Paul depuis sa propre boîte, partagée à
+    // l'équipe ; puis par elle, dans un autre fil.
     const thread = await drafted(julie, 'Devis 2027', [sent(ago(3 * HOUR), DRAFT)]);
-    await extendThread(julie, thread, [fromPaul(ago(90 * 60_000), DRAFT)]);
+    await extendThread(julie, thread, [
+      fromPaul(ago(90 * 60_000), DRAFT),
+      sent(ago(85 * 60_000), DRAFT, [PAUL]),
+    ]);
     await mailThread(
       paul,
       'Devis 2027',

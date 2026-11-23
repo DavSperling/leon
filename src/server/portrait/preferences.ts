@@ -25,9 +25,10 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export type Reply = { id: string; texte: string; envoye: string };
 
 // Ses brouillons écrits (un texte, pas écartés) sans issue encore, dont le mail reçu a moins de ANSWERED_DAYS jours,
-// avec sa réponse : le premier de ses mails envoyés dans le même fil, après le message auquel le brouillon répondait.
-// Ni un envoi d'avant, ni le mail d'un collègue (il n'est pas de son côté), ni un fil d'une autre boîte. Un brouillon
-// sans réponse d'elle n'est pas rendu. Un mail coupé en plusieurs tours se recolle dans l'ordre de ses morceaux.
+// avec sa réponse : le premier de ses mails envoyés dans le même fil, après le message auquel le brouillon répondait,
+// à son auteur (en « à » ou en copie). Ni un envoi d'avant, ni un transfert à un collègue, ni le mail d'un collègue
+// (il n'est pas de son côté), ni un fil d'une autre boîte. Un brouillon sans réponse d'elle n'est pas rendu. Un mail
+// coupé en plusieurs tours se recolle dans l'ordre de ses morceaux.
 async function readReplies(ctx: TenantContext, now: Date): Promise<Reply[]> {
   const since = new Date(now.getTime() - ANSWERED_DAYS * DAY_MS);
   const { rows } = await withTenant(ctx, (tx) =>
@@ -35,7 +36,7 @@ async function readReplies(ctx: TenantContext, now: Date): Promise<Reply[]> {
       select b.id, b.texte, r.text as envoye
       from brouillons b
       cross join lateral (
-        select min(t.ts) as ts from turns t
+        select min(t.ts) as ts, min(lower(t.author_email)) as author from turns t
         where t.tenant_id = b.tenant_id and t.source_id = b.source_id
           and substring(t.external_id from ${MESSAGE}) = b.message
       ) m
@@ -44,6 +45,7 @@ async function readReplies(ctx: TenantContext, now: Date): Promise<Reply[]> {
         from turns t
         join sources s on s.tenant_id = t.tenant_id and s.id = t.source_id
         where ${sentTurns(ctx, since)} and t.source_id = b.source_id and t.ts > m.ts
+          and m.author = any(t.recipients_to || t.recipients_cc)
         order by t.ts, substring(t.external_id from ${MESSAGE})
         limit 1
       ) f

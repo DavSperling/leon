@@ -22,7 +22,8 @@ const COMPLET = 'Bonjour Léa,\n\nVoici le devis, à jour 🎉.\n\nBien à vous'
 const A_TROU = 'Bonjour Léa,\n\nVoici le devis [à compléter : le montant].\n\nBien à vous';
 const CONNECT = 'https://api.pipedream.com/v1/connect/proj_essai';
 const GMAIL = 'https://gmail.googleapis.com/gmail/v1/users/me';
-const READ = `${GMAIL}/messages/m-devis?format=metadata&metadataHeaders=Message-ID&metadataHeaders=References&metadataHeaders=Subject`;
+const READ =
+  '?format=metadata&metadataHeaders=Message-ID&metadataHeaders=References&metadataHeaders=Subject';
 
 const tenantIds: string[] = [];
 afterAll(async () => {
@@ -108,9 +109,19 @@ const HEADERS = [
   { name: 'References', value: '<m-avant@acme.test>' },
   { name: 'Subject', value: 'Devis été 2027' },
 ];
+// Un message du fil tel que Gmail le rend avec format=metadata, `minutes` après le message reçu.
+const inThread = (id: string, minutes: number, labels: string[], headers = HEADERS) => ({
+  id,
+  threadId: 't',
+  labelIds: labels,
+  internalDate: String(Date.parse('2026-11-20T10:00:00Z') + minutes * 60_000),
+  payload: { headers },
+});
+const RECEIVED = inThread('m-devis', 0, ['INBOX']);
+// La lecture du fil : sans autre précision, le message reçu y est le dernier.
 const readRoute = (over: Partial<FakeRoute> = {}): FakeRoute => ({
-  url: proxied(`${GMAIL}/messages/m-devis`),
-  json: { id: 'm-devis', threadId: 't', payload: { headers: HEADERS } },
+  url: proxied(`${GMAIL}/threads/`),
+  json: { id: 't', messages: [RECEIVED] },
   ...over,
 });
 const createRoute = (over: Partial<FakeRoute> = {}): FakeRoute => ({
@@ -121,7 +132,7 @@ const createRoute = (over: Partial<FakeRoute> = {}): FakeRoute => ({
 });
 
 describe('depositBrouillon : un brouillon complet va dans ses brouillons Gmail', () => {
-  it('lit les en-têtes du message reçu, crée le brouillon dans le fil, et garde son identifiant', async () => {
+  it('lit le fil chez Gmail, y crée le brouillon en réponse au message reçu, et garde son identifiant', async () => {
     const [julie] = await team();
     const { id, thread } = await drafted(julie, COMPLET, { connectionId: await gmailOf(julie) });
     const fetchImpl = fakeFetch([TOKEN, readRoute(), createRoute()]);
@@ -133,7 +144,7 @@ describe('depositBrouillon : un brouillon complet va dans ses brouillons Gmail',
     const [, read, create] = fetchImpl.calls;
     expect(fetchImpl.calls).toHaveLength(3);
     expect(read?.method).toBe('GET');
-    expect(target(read)).toBe(READ);
+    expect(target(read)).toBe(`${GMAIL}/threads/${thread.slice('thread:'.length)}${READ}`);
     expect(create?.method).toBe('POST');
     expect(target(create)).toBe(`${GMAIL}/drafts`);
     for (const call of [read, create]) {
@@ -276,6 +287,27 @@ describe('depositBrouillon : ce qui reste dans Leon seulement, sans aucune requ�
   });
 });
 
+// Leon ne connaît sa boîte que telle qu'à la dernière relève : le fil se relit chez Gmail avant d'y écrire.
+describe('depositBrouillon : chez Gmail, le fil n’attend plus sa réponse', () => {
+  it.each([
+    ['elle a déjà répondu depuis Gmail', [RECEIVED, inThread('m-reponse', 30, ['SENT'])]],
+    ['on lui a récrit depuis', [RECEIVED, inThread('m-suite', 30, ['INBOX', 'UNREAD'])]],
+    ['elle a mis le mail à la corbeille', [inThread('m-devis', 0, ['TRASH'])]],
+    ['elle l’a classé en indésirable', [inThread('m-devis', 0, ['SPAM'])]],
+  ])('%s : une lecture, aucune création, aucune erreur', async (_, messages) => {
+    const [julie] = await team();
+    const { id } = await drafted(julie, COMPLET, { connectionId: await gmailOf(julie) });
+    const fetchImpl = fakeFetch([TOKEN, readRoute({ json: { id: 't', messages } })]);
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    expect(await depositBrouillon(julie, { id, to: LEA }, { fetchImpl })).toBe(false);
+
+    expect(fetchImpl.calls.slice(1).map((call) => call.method)).toEqual(['GET']);
+    expect(await stored(id)).toMatchObject({ brouillonGmail: null, ecarteLe: null });
+    expect(errors).not.toHaveBeenCalled();
+  });
+});
+
 describe('depositBrouillon : un dépôt qui échoue', () => {
   const connectionOf = async (id: string) =>
     (
@@ -286,12 +318,15 @@ describe('depositBrouillon : un dépôt qui échoue', () => {
     ).rows[0];
 
   it.each<[string, FakeRoute[], string[]]>([
-    ['le message reçu a été supprimé', [TOKEN, readRoute({ status: 404, json: {} })], ['GET']],
+    ['le fil a été supprimé', [TOKEN, readRoute({ status: 404, json: {} })], ['GET']],
     ['l’accès est refusé', [TOKEN, readRoute({ status: 403, json: {} })], ['GET']],
     ['Gmail est en panne à la lecture', [TOKEN, readRoute({ status: 503, json: {} })], ['GET']],
     [
       'le message reçu n’a pas d’identifiant',
-      [TOKEN, readRoute({ json: { payload: { headers: [HEADERS[2]] } } })],
+      [
+        TOKEN,
+        readRoute({ json: { messages: [inThread('m-devis', 0, ['INBOX'], HEADERS.slice(2))] } }),
+      ],
       ['GET'],
     ],
     [

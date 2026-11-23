@@ -474,25 +474,38 @@ describe('gmailConnector : relevé', () => {
 // Pipedream) et jamais rejouée.
 describe('gmailClient : un brouillon de réponse dans un fil', () => {
   const DRAFTS = `${GMAIL}/gmail/v1/users/me/drafts`;
+  const THREADS = `${GMAIL}/gmail/v1/users/me/threads`;
+  // Un message d'un fil lu avec format=metadata : ses libellés, sa date, ses en-têtes.
+  const inThread = (id: string, at: string, labels?: string[]) => ({
+    id,
+    threadId: 't/1',
+    labelIds: labels,
+    internalDate: String(Date.parse(`2026-11-20T${at}:00Z`)),
+    payload: {
+      headers: [
+        { name: 'Message-Id', value: `<${id}@mail.client.test>` },
+        { name: 'SUBJECT', value: 'Devis cuisine' },
+      ],
+    },
+  });
 
-  it('lit les trois en-têtes du message reçu, quelle que soit leur casse, sans son corps', async () => {
+  it('lit le fil sans les corps et rend les trois en-têtes du message reçu, quelle que soit leur casse', async () => {
     const { http, calls } = testHttp(gmailConnector, config, [
       {
-        url: `${LIST}/m%2F1`,
+        url: `${THREADS}/t%2F1`,
         json: {
-          id: 'm/1',
-          threadId: 't1',
-          payload: {
-            headers: [
-              { name: 'Message-Id', value: '<m1@mail.client.test>' },
-              { name: 'SUBJECT', value: 'Devis cuisine' },
-            ],
-          },
+          id: 't/1',
+          // Sa réponse d'avant, le message reçu (archivé : sans libellé), puis un brouillon : le fil attend toujours.
+          messages: [
+            inThread('m0', '09:00', ['SENT']),
+            inThread('m1', '10:00'),
+            inThread('m2', '11:00', ['DRAFT']),
+          ],
         },
       },
     ]);
 
-    expect(await gmailClient(http).replyHeaders('m/1')).toEqual({
+    expect(await gmailClient(http).replyHeaders('t/1', 'm1')).toEqual({
       messageId: '<m1@mail.client.test>',
       references: null,
       subject: 'Devis cuisine',
@@ -501,13 +514,31 @@ describe('gmailClient : un brouillon de réponse dans un fil', () => {
     expect(calls).toHaveLength(1);
     const url = new URL(calls[0]?.url ?? '');
     expect(calls[0]?.method).toBe('GET');
-    expect(url.pathname).toBe('/gmail/v1/users/me/messages/m%2F1');
+    expect(url.pathname).toBe('/gmail/v1/users/me/threads/t%2F1');
     expect([...url.searchParams]).toEqual([
       ['format', 'metadata'],
       ['metadataHeaders', 'Message-ID'],
       ['metadataHeaders', 'References'],
       ['metadataHeaders', 'Subject'],
     ]);
+  });
+
+  it.each([
+    [
+      'elle a déjà répondu depuis Gmail',
+      [inThread('m1', '10:00'), inThread('m2', '10:30', ['SENT'])],
+    ],
+    ['on lui a récrit depuis', [inThread('m1', '10:00'), inThread('m2', '10:30', ['INBOX'])]],
+    ['elle a mis le mail à la corbeille', [inThread('m1', '10:00', ['TRASH'])]],
+    ['elle l’a classé en indésirable', [inThread('m1', '10:00', ['SPAM'])]],
+    ['le message n’est plus dans le fil', [inThread('m0', '09:00', ['INBOX'])]],
+    ['le fil est vide', undefined],
+  ])('le fil n’attend plus sa réponse (%s) : rien à quoi répondre', async (_, messages) => {
+    const { http } = testHttp(gmailConnector, config, [
+      { url: `${THREADS}/t1`, json: { id: 't1', messages } },
+    ]);
+
+    expect(await gmailClient(http).replyHeaders('t1', 'm1')).toBeNull();
   });
 
   it('crée le brouillon dans le fil et rend son identifiant', async () => {
@@ -532,27 +563,27 @@ describe('gmailClient : un brouillon de réponse dans un fil', () => {
 
   it.each([429, 500, 503])('ne rejoue ni la lecture ni la création après un %s', async (status) => {
     const { http, calls } = testHttp(gmailConnector, config, [
-      { url: `${LIST}/m1`, status },
+      { url: `${THREADS}/t1`, status },
       { method: 'POST', url: DRAFTS, status },
     ]);
     const client = gmailClient(http);
 
-    await expect(client.replyHeaders('m1')).rejects.toBeInstanceOf(ConnectorHttpError);
+    await expect(client.replyHeaders('t1', 'm1')).rejects.toBeInstanceOf(ConnectorHttpError);
     await expect(client.createDraft('t1', 'VG86IGxlYQ')).rejects.toBeInstanceOf(ConnectorHttpError);
 
     expect(calls.map((call) => call.method)).toEqual(['GET', 'POST']);
   });
 
-  it('un message supprimé, un accès retiré ou une réponse sans identifiant de brouillon lèvent', async () => {
+  it('un fil supprimé, un accès retiré ou une réponse sans identifiant de brouillon lèvent', async () => {
     const { http } = testHttp(gmailConnector, config, [
-      { url: `${LIST}/m1`, status: 404 },
-      { url: `${LIST}/m1`, status: 403 },
+      { url: `${THREADS}/t1`, status: 404 },
+      { url: `${THREADS}/t1`, status: 403 },
       { method: 'POST', url: DRAFTS, json: { message: { id: 'm9' } } },
     ]);
     const client = gmailClient(http);
 
-    await expect(client.replyHeaders('m1')).rejects.toMatchObject({ status: 404 });
-    await expect(client.replyHeaders('m1')).rejects.toBeInstanceOf(ConnectorAuthError);
+    await expect(client.replyHeaders('t1', 'm1')).rejects.toMatchObject({ status: 404 });
+    await expect(client.replyHeaders('t1', 'm1')).rejects.toBeInstanceOf(ConnectorAuthError);
     await expect(client.createDraft('t1', 'VG86IGxlYQ')).rejects.toMatchObject({
       message: 'Unexpected response',
     });

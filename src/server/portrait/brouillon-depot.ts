@@ -24,17 +24,19 @@ import { hasBlank } from './brouillon-prompt';
 //   pas en pause (loadMyConnections) : ni le fil d'un collègue, ni une boîte branchée par un autre ;
 // - il n'est pas déjà déposé (0081) ;
 // - à l'instant du dépôt, elle dit toujours oui à l'agent et n'a pas écarté ce brouillon : c'est son oui qui autorise
-//   Leon à écrire dans sa boîte, et un passage dure plusieurs minutes après l'avoir lu (brouillons.ts).
+//   Leon à écrire dans sa boîte, et un passage dure plusieurs minutes après l'avoir lu (brouillons.ts) ;
+// - chez Gmail, au même instant, le fil attend toujours sa réponse (client.ts, replyHeaders) : Leon ne relève sa boîte
+//   que quelques fois par jour, et un brouillon déposé dans un fil auquel elle a déjà répondu y resterait.
 // shortcut: Gmail seulement, un brouillon sur un fil Outlook reste dans Leon ; à déposer par Microsoft Graph quand
 // l'agent doit servir les boîtes Outlook.
 //
-// Deux requêtes par le proxy de Pipedream, donc deux crédits par brouillon déposé : la lecture des en-têtes du message
-// reçu, puis la création du brouillon. Hors de toute transaction. Le destinataire est fixé ici, jamais par le modèle :
-// l'auteur du mail reçu, à qui elle a déjà écrit (waiting-mails.ts).
+// Deux requêtes par le proxy de Pipedream, donc deux crédits par brouillon déposé : la lecture du fil (s'il attend
+// toujours, et les en-têtes du message reçu), puis la création du brouillon. Hors de toute transaction. Le destinataire
+// est fixé ici, jamais par le modèle : l'auteur du mail reçu, à qui elle a déjà écrit (waiting-mails.ts).
 // shortcut: Reply-To est ignoré et personne n'est mis en copie ; à revoir si de vraies boîtes montrent des réponses
 // qui partent à la mauvaise adresse.
 //
-// Un dépôt qui échoue (Pipedream non configuré ou injoignable, accès refusé, message supprimé entre-temps, réponse
+// Un dépôt qui échoue (Pipedream non configuré ou injoignable, accès refusé, fil supprimé entre-temps, réponse
 // inattendue) ne lève pas : le brouillon reste dans Leon, non déposé, l'échec est journalisé sans rien de capté, et
 // l'état de la connexion n'est pas touché.
 // shortcut: une seule tentative, à l'écriture du brouillon, pour ne pas payer une requête à chaque passage ; un dépôt
@@ -92,11 +94,10 @@ export async function depositBrouillon(
     if (!config.success) return false;
 
     const client = gmailClient(connectorHttp('gmail', gmailConnector, config.data, deps));
-    const raw = replyRaw({
-      ...(await client.replyHeaders(messageId)),
-      to: draft.to,
-      text: row.texte,
-    });
+    const headers = await client.replyHeaders(threadId, messageId);
+    // Depuis la relève, elle a répondu ou supprimé le mail, ou on lui a récrit : rien à déposer, et ce n'est pas un échec.
+    if (!headers) return false;
+    const raw = replyRaw({ ...headers, to: draft.to, text: row.texte });
     // Un message reçu sans identifiant, ou une adresse qui n'en est pas une : pas de réponse dans le fil.
     if (raw === null) throw new ConnectorHttpError(null, 'Unexpected response');
     const brouillonGmail = await client.createDraft(threadId, raw);

@@ -532,17 +532,25 @@ describe('writeBrouillons : un brouillon complet va aussi dans ses brouillons Gm
         url: 'https://api.pipedream.com/v1/oauth/token',
         json: { access_token: 'pd' },
       },
-      // Le message du premier fil a été supprimé de sa boîte entre-temps.
-      { url: proxied(`${GMAIL}/messages/supprime`), status: 404 },
+      // Le premier fil a été supprimé de sa boîte entre-temps. Les fils se lisent dans l'ordre des mails qui attendent,
+      // et rien ne se lit pour le brouillon qui porte un blanc : la seconde lecture est celle du fil « devis ».
+      { url: proxied(`${GMAIL}/threads/`), status: 404 },
       {
-        url: proxied(`${GMAIL}/messages/devis`),
+        url: proxied(`${GMAIL}/threads/`),
         json: {
-          payload: {
-            headers: [
-              { name: 'Message-ID', value: '<devis@mail.client.test>' },
-              { name: 'Subject', value: 'devis' },
-            ],
-          },
+          messages: [
+            {
+              id: 'devis',
+              threadId: 't',
+              internalDate: '1795000000000',
+              payload: {
+                headers: [
+                  { name: 'Message-ID', value: '<devis@mail.client.test>' },
+                  { name: 'Subject', value: 'devis' },
+                ],
+              },
+            },
+          ],
         },
       },
       { method: 'POST', url: proxied(`${GMAIL}/drafts`), json: { id: 'r-devis' } },

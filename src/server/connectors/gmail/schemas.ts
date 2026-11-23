@@ -36,8 +36,8 @@ export const MessageSchema = z.object({
 });
 export type GmailMessage = z.infer<typeof MessageSchema>;
 
-// Un message lu avec format=metadata : ses en-têtes, sans son corps.
-export const MessageHeadersSchema = z.object({ payload: PartSchema.nullish() });
+// Un fil lu avec format=metadata : ses messages, avec leurs en-têtes et sans leur corps.
+export const ThreadSchema = z.object({ messages: z.array(MessageSchema).nullish() });
 
 // Le brouillon créé : seul son identifiant est gardé.
 export const DraftSchema = z.object({ id: z.string().min(1).max(200) });

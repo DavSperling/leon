@@ -12,9 +12,9 @@ import {
   DraftSchema,
   type GmailMessage,
   ListSchema,
-  MessageHeadersSchema,
   MessageSchema,
   ProfileSchema,
+  ThreadSchema,
 } from './schemas';
 
 // Les requêtes vers l'API Gmail. Les messages se lisent par lots (une requête, donc un crédit Pipedream,
@@ -24,8 +24,9 @@ import {
 // « Brouillons de réponse » (portrait/brouillon-depot.ts). Rien n'est envoyé, supprimé ni modifié.
 // Non vérifié : aucune des pages ci-dessous n'a pu être relue le 23/11/2026 (hôte fermé), et aucun brouillon réel n'a
 // été créé. La forme des deux requêtes est celle que ces pages décrivaient, de mémoire :
-//   https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/get (format=metadata,
-//     metadataHeaders répété ; à vérifier : la casse des noms d'en-tête demandés)
+//   https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.threads/get (format=metadata,
+//     metadataHeaders répété ; à vérifier : la casse des noms d'en-tête demandés, internalDate et labelIds rendus
+//     pour chaque message, un message à la corbeille rendu avec TRASH)
 //   https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.drafts/create (POST …/drafts, corps
 //     { message: { raw, threadId } } ; à vérifier : gmail.modify parmi les droits acceptés)
 //   https://developers.google.com/workspace/gmail/api/guides/threads (threadId, In-Reply-To et References, objet)
@@ -153,21 +154,32 @@ export function gmailClient(http: ConnectorHttp) {
       return read;
     },
 
-    // Ce qu'il faut d'un message pour lui répondre dans son fil (reply.ts) : trois en-têtes, sans son corps. Une
-    // seule requête, jamais rejouée : chacune coûte un crédit.
-    async replyHeaders(id: string) {
-      const { payload } = await http.json(
+    // Ce qu'il faut d'un message pour lui répondre dans son fil (reply.ts) : trois en-têtes. C'est le fil qui se lit,
+    // sans les corps, pour savoir d'abord s'il attend toujours : Leon ne connaît la boîte que telle qu'à la dernière
+    // relève. Rend null quand il n'y a plus à répondre : le message n'y est plus, elle l'a mis à la corbeille ou en
+    // indésirable, ou un message plus récent le suit (elle a répondu depuis Gmail, ou on lui a récrit ; un brouillon
+    // ne compte pas). Une seule requête, jamais rejouée : chacune coûte un crédit.
+    async replyHeaders(threadId: string, messageId: string) {
+      const { messages } = await http.json(
         {
-          url: `${GMAIL}/gmail/v1/users/me/messages/${encodeURIComponent(id)}`,
+          url: `${GMAIL}/gmail/v1/users/me/threads/${encodeURIComponent(threadId)}`,
           query: { format: 'metadata', metadataHeaders: ['Message-ID', 'References', 'Subject'] },
           once: true,
         },
-        MessageHeadersSchema,
+        ThreadSchema,
       );
+      const received = messages?.find((one) => one.id === messageId);
+      const binned = received?.labelIds?.some((label) => label === 'TRASH' || label === 'SPAM');
+      const followed = messages?.some(
+        (one) =>
+          !one.labelIds?.includes('DRAFT') &&
+          Number(one.internalDate) > Number(received?.internalDate),
+      );
+      if (!received || binned || followed) return null;
       return {
-        messageId: headerOf(payload, 'message-id'),
-        references: headerOf(payload, 'references'),
-        subject: headerOf(payload, 'subject'),
+        messageId: headerOf(received.payload, 'message-id'),
+        references: headerOf(received.payload, 'references'),
+        subject: headerOf(received.payload, 'subject'),
       };
     },
 

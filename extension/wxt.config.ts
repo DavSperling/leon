@@ -1,17 +1,32 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'wxt';
-import { hostPermissionsFor, serverUrlFromEnv } from './lib/permissions';
+import { manifestFor } from './lib/manifest';
+import { serverUrlFromEnv } from './lib/permissions';
 
 export default defineConfig({
+  // Firefox aussi en MV3 : WXT y vise MV2 par défaut.
+  manifestVersion: 3,
   // Manifeste en fonction : WXT ne le résout qu'après avoir chargé .env.local,
-  // si bien que host_permissions suit la même URL que SERVER_URL.
-  manifest: () => ({
-    name: 'Leon',
-    // En anglais, la langue de base : le manifeste n'a pas de traduction.
-    description: 'Captures your claude.ai and chatgpt.com conversations into your team’s memory.',
-    permissions: ['storage', 'alarms'],
-    host_permissions: hostPermissionsFor(serverUrlFromEnv(process.env.WXT_PUBLIC_LEON_URL)),
-    incognito: 'not_allowed',
-  }),
+  // si bien que host_permissions suit la même URL que SERVER_URL. La cible vient de WXT (-b).
+  manifest: ({ browser }) =>
+    manifestFor({ serverUrl: serverUrlFromEnv(process.env.WXT_PUBLIC_LEON_URL), browser }),
+  zip: {
+    // Noms fixes : extension/ n'a pas de package.json, WXT prendrait le nom du dossier courant.
+    artifactTemplate: 'leon-{{version}}-{{browser}}.zip',
+    sourcesTemplate: 'leon-{{version}}-sources.zip',
+    // Les sources pour Mozilla partent de la racine du dépôt, car l'extension importe ../src/capture.
+    // Sans dotSources, aucun fichier caché (.env*, .git, .output, .wxt) n'y entre ; node_modules et les tests
+    // en sont exclus par WXT.
+    sourcesRoot: fileURLToPath(new URL('..', import.meta.url)),
+    includeSources: [
+      'extension/**',
+      'src/capture/**',
+      'package.json',
+      'pnpm-lock.yaml',
+      'pnpm-workspace.yaml',
+    ],
+    excludeSources: ['**/fixtures/**'],
+  },
   // Le code partagé vit dans ../src/capture (décision D1).
   vite: () => ({ server: { fs: { allow: ['..'] } } }),
 });

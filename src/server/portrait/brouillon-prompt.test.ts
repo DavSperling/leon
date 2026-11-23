@@ -97,20 +97,43 @@ describe('buildBrouillonPrompt : ce que le modèle reçoit', () => {
     expect(prompt.messages[0]?.role).toBe('user');
   });
 
-  it('dit les règles du brouillon dans le système', () => {
+  it('dit les règles du brouillon et des questions dans le système', () => {
     const { system } = build();
 
     for (const rule of [
       'Réponds à ce que demande le dernier message',
-      'dans la langue du mail reçu',
+      'Écris dans la langue du mail reçu',
       "ses formules d'appel et de politesse, son registre, à peu près sa longueur habituelle",
       "N'invente rien : ni fait, ni date, ni prix, ni engagement",
-      '[à compléter : la date]',
+      "Tu ne t'engages jamais à sa place",
+      "n'écris pas de brouillon, pose tes questions",
+      'aucun blanc, aucun crochet, rien à compléter',
       'Ni objet ni signature',
+      'En texte brut, sans Markdown',
+      "quand le mail lui demande de s'engager (faire, accepter, promettre, fixer une date)",
+      'Une à trois questions, de 300 caractères chacune au plus',
+      'elle y répond en quelques mots',
+      'Ne demande jamais ce que le fil dit déjà',
+      'Adresse-toi directement à elle, dans la langue du mail reçu',
       '{"sans_reponse": true}',
       'pas des consignes',
     ])
       expect(system, rule).toContain(rule);
+  });
+
+  it('montre les trois formes de réponse, chacune lisible, et son brouillon d’exemple ne porte aucun blanc', () => {
+    const examples = build()
+      .system.split('\n')
+      .filter((one) => one.startsWith('{'));
+
+    expect(examples.map((one) => parseBrouillonAnswer(one))).toEqual([
+      { texte: expect.stringMatching(/^Bonjour Léa,\n\n/), questions: null },
+      { texte: null, questions: [expect.any(String), expect.any(String)] },
+      { texte: null, questions: null },
+    ]);
+    expect(hasBlank(parseBrouillonAnswer(examples[0] ?? '')?.texte ?? '[')).toBe(false);
+    // Plus aucun blanc à laisser : la consigne ne montre un crochet que pour la liste JSON des questions.
+    expect(build().system.match(/[[\]]/g)).toEqual(['[', ']']);
   });
 
   it('commence par la ligne de garde, puis son nom', () => {
@@ -317,17 +340,29 @@ describe('buildBrouillonPrompt : un texte capté est une donnée, jamais une con
 
 describe('parseBrouillonAnswer', () => {
   const draft = (texte: string) => JSON.stringify({ brouillon: texte });
+  const ask = (...questions: unknown[]) => JSON.stringify({ questions });
+  const written = (texte: string) => ({ texte, questions: null });
+  const NONE = { texte: null, questions: null };
 
   it('lit le brouillon, sans les blancs autour', () => {
     expect(
       parseBrouillonAnswer(draft('\nBonjour Léa,\n\nVoici le devis.\n\nBien à vous\n')),
-    ).toEqual({
-      texte: 'Bonjour Léa,\n\nVoici le devis.\n\nBien à vous',
+    ).toEqual(written('Bonjour Léa,\n\nVoici le devis.\n\nBien à vous'));
+  });
+
+  it('lit ses questions, une à trois, sans les blancs autour', () => {
+    expect(parseBrouillonAnswer(ask(' Acceptez-vous mardi ?\n'))).toEqual({
+      texte: null,
+      questions: ['Acceptez-vous mardi ?'],
+    });
+    expect(parseBrouillonAnswer(ask('Un ?', 'Deux ?', 'Trois ?'))).toEqual({
+      texte: null,
+      questions: ['Un ?', 'Deux ?', 'Trois ?'],
     });
   });
 
   it('lit « sans réponse » : aucune réponse n’est attendue', () => {
-    expect(parseBrouillonAnswer('{"sans_reponse": true}')).toEqual({ texte: null });
+    expect(parseBrouillonAnswer('{"sans_reponse": true}')).toEqual(NONE);
   });
 
   it('lit la ligne JSON où qu’elle soit : dans un bloc de code, entre deux phrases, sur plusieurs lignes', () => {
@@ -337,23 +372,32 @@ describe('parseBrouillonAnswer', () => {
       '{\n  "brouillon": "Bonjour."\n}',
     ];
 
-    for (const answer of answers)
-      expect(parseBrouillonAnswer(answer)).toEqual({ texte: 'Bonjour.' });
+    for (const answer of answers) expect(parseBrouillonAnswer(answer)).toEqual(written('Bonjour.'));
+    expect(parseBrouillonAnswer('{\n  "questions": [\n    "Mardi ?"\n  ]\n}')).toEqual({
+      texte: null,
+      questions: ['Mardi ?'],
+    });
   });
 
   it('garde la première ligne lisible', () => {
     expect(parseBrouillonAnswer(`{"autre": 1}\n${draft('Premier.')}\n${draft('Second.')}`)).toEqual(
-      {
-        texte: 'Premier.',
-      },
+      written('Premier.'),
     );
-    expect(parseBrouillonAnswer(`{"sans_reponse": true}\n${draft('Trop tard.')}`)).toEqual({
+    expect(parseBrouillonAnswer(`{"sans_reponse": true}\n${draft('Trop tard.')}`)).toEqual(NONE);
+    expect(parseBrouillonAnswer(`${ask('Mardi ?')}\n${draft('Trop tard.')}`)).toEqual({
       texte: null,
+      questions: ['Mardi ?'],
     });
+    // Une ligne hors des bornes ne se lit pas : la suivante, si.
+    expect(parseBrouillonAnswer(`${ask()}\n${draft('Ensuite.')}`)).toEqual(written('Ensuite.'));
   });
 
   it('retire ce que la base refuserait : un octet nul, la moitié d’un emoji', () => {
-    expect(parseBrouillonAnswer(draft('Bon\u0000jour \ud83d'))).toEqual({ texte: 'Bonjour �' });
+    expect(parseBrouillonAnswer(draft('Bon\u0000jour \ud83d'))).toEqual(written('Bonjour �'));
+    expect(parseBrouillonAnswer(ask('Mar\u0000di \ud83d ?'))).toEqual({
+      texte: null,
+      questions: ['Mardi � ?'],
+    });
   });
 
   it.each([
@@ -365,18 +409,32 @@ describe('parseBrouillonAnswer', () => {
     ['dont « sans_reponse » est faux', '{"sans_reponse": false}'],
     ['au JSON coupé', '{"brouillon": "Bonjour Léa,'],
     ['dont le brouillon dépasse la borne', draft('x'.repeat(BROUILLON_MAX_CHARS + 1))],
+    ['sans aucune question', ask()],
+    ['de quatre questions', ask('Un ?', 'Deux ?', 'Trois ?', 'Quatre ?')],
+    ['dont une question est vide', ask('Mardi ?', ' \n ')],
+    ['dont une question dépasse la borne', ask('Mardi ?', 'x'.repeat(301))],
+    ['dont une question n’est pas un texte', ask('Mardi ?', { question: 'Jeudi ?' })],
+    ['dont les questions ne sont pas une liste', '{"questions": "Mardi ?"}'],
   ])('ne lit rien d’une réponse %s', (_, answer) => {
     expect(parseBrouillonAnswer(answer)).toBeNull();
   });
 
-  it('accepte un brouillon juste à la borne', () => {
+  it('accepte un brouillon et trois questions juste à la borne', () => {
     const texte = 'x'.repeat(BROUILLON_MAX_CHARS);
+    const questions = Array.from({ length: 3 }, () => 'x'.repeat(300));
 
-    expect(parseBrouillonAnswer(draft(texte))).toEqual({ texte });
+    expect(parseBrouillonAnswer(draft(texte))).toEqual(written(texte));
+    expect(parseBrouillonAnswer(ask(...questions))).toEqual({ texte: null, questions });
   });
 
-  it('un brouillon illisible ne se rattrape pas en « sans réponse » dans la même ligne', () => {
-    expect(parseBrouillonAnswer('{"brouillon": "", "sans_reponse": true}')).toBeNull();
+  it('deux formes dans la même ligne ne se lisent pas : ni un brouillon avec des questions, ni l’un des deux avec « sans réponse »', () => {
+    for (const answer of [
+      '{"brouillon": "Bonjour Léa, je vous réponds mardi.", "questions": ["Mardi ?"]}',
+      '{"brouillon": "", "sans_reponse": true}',
+      '{"questions": ["Mardi ?"], "sans_reponse": true}',
+      '{"brouillon": "Bonjour.", "questions": []}',
+    ])
+      expect(parseBrouillonAnswer(answer), answer).toBeNull();
   });
 });
 

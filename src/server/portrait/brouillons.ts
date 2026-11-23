@@ -20,10 +20,12 @@ import { readWaitingMails } from './waiting-mails';
 
 // L'agent « Brouillons de réponse », le premier en service : pour chaque mail qui attend la réponse de la personne
 // (waiting-mails.ts), un modèle écrit un brouillon comme elle l'écrirait (brouillon-prompt.ts), gardé dans sa table
-// privée (0080) et montré dans Leon. Un brouillon complet est aussi déposé dans ses brouillons Gmail, en réponse dans
-// le fil (brouillon-depot.ts) : c'est tout ce que Leon écrit dans sa boîte. Rien n'est envoyé : l'agent prépare, elle
-// valide. Tout se lit et s'écrit sous withTenant de la personne ; l'appel au modèle et le dépôt se font hors de toute
-// transaction. Le worker de la file `brouillons-ecrire` lance un passage (brouillons-worker.ts).
+// privée (0080) et montré dans Leon. Quand une information ou une décision lui manque, ou que le mail lui demande de
+// s'engager, il rend à la place une à trois questions, gardées sur la même ligne sans texte (0082) : Leon l'attend.
+// Un brouillon complet est aussi déposé dans ses brouillons Gmail, en réponse dans le fil (brouillon-depot.ts) : c'est
+// tout ce que Leon écrit dans sa boîte. Rien n'est envoyé : l'agent prépare, elle valide. Tout se lit et s'écrit sous
+// withTenant de la personne ; l'appel au modèle et le dépôt se font hors de toute transaction. Le worker de la file
+// `brouillons-ecrire` lance un passage (brouillons-worker.ts).
 
 // Le plafond de dépense : au plus 20 appels au modèle par personne et par jour (UTC, reserver_brouillon, 0080), un par
 // mail. Un appel lit environ 4 000 jetons (la consigne, quatre messages et trois exemples coupés) et en écrit un
@@ -40,8 +42,8 @@ const BROUILLON_TIMEOUT_MS = 90_000;
 // par mail. Rend le nombre de brouillons écrits. Ne fait rien pour un compte supprimé, ni pour qui n'a pas répondu
 // « oui » à l'agent, ni quand il ne lui est plus proposé (sa boîte débranchée). Passé le plafond du jour, il s'arrête.
 // Un mail dont la réponse du modèle est illisible, refusée ou coupée n'écrit rien : il attend toujours, et le passage
-// suivant le retente, sous le même plafond. Un mail qui a son résultat (un brouillon, ou « sans réponse ») n'est jamais
-// redemandé au modèle, et son brouillon n'est déposé qu'ici, une fois, juste après son écriture.
+// suivant le retente, sous le même plafond. Un mail qui a son résultat (un brouillon, des questions, ou « sans
+// réponse ») n'est jamais redemandé au modèle, et son brouillon n'est déposé qu'ici, une fois, juste après son écriture.
 // Deux passages lancés au même instant appelleraient chacun le modèle pour le même mail, pour une seule ligne écrite :
 // la file n'en lance qu'un par personne à la fois (brouillons-queue.ts).
 export async function writeBrouillons(
@@ -89,8 +91,8 @@ export async function writeBrouillons(
       continue;
     }
     const result = parseBrouillonAnswer(answer);
-    // Des identifiants et des nombres seulement, jamais de texte. `brouillon` : écrit (true), sans réponse à donner
-    // (false), ou réponse illisible (null).
+    // Des identifiants et des nombres seulement, jamais de texte. `brouillon` : écrit (true), pas de brouillon (false :
+    // des questions à lui poser, ou aucune réponse à donner), ou réponse illisible (null). `questions` : leur nombre.
     console.info(
       '[leon]',
       'brouillons.answered',
@@ -98,6 +100,7 @@ export async function writeBrouillons(
         userId: ctx.userId,
         sourceId: mail.sourceId,
         brouillon: result && result.texte !== null,
+        questions: result?.questions?.length ?? 0,
         chars: answer.length,
       }),
     );
@@ -114,6 +117,7 @@ export async function writeBrouillons(
           sourceId: mail.sourceId,
           message: mail.message,
           texte: result.texte,
+          questions: result.questions,
           acl: [ctx.userId],
         })
         .onConflictDoNothing()

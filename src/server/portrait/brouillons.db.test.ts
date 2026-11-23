@@ -35,6 +35,8 @@ const ago = (ms: number) => new Date(Date.now() - ms);
 const DRAFT = 'Bonjour Léa,\n\nVoici le devis [à compléter : le montant].\n\nBien à vous';
 const draft = (texte = DRAFT) => JSON.stringify({ brouillon: texte });
 const NONE = '{"sans_reponse": true}';
+const QUESTIONS = ['Acceptez-vous le rendez-vous de mardi ?', 'Quel prix lui annoncer ?'];
+const ask = (questions = QUESTIONS) => JSON.stringify({ questions });
 
 const tenantIds: string[] = [];
 const userIds: string[] = [];
@@ -179,6 +181,7 @@ describe('writeBrouillons', () => {
         userId: julie.userId,
         sourceId: expect.any(String),
         brouillon: true,
+        questions: 0,
         chars: draft().length,
       });
     expect(new Set(logged.map((one) => one.sourceId))).toEqual(
@@ -200,6 +203,35 @@ describe('writeBrouillons', () => {
     expect(await writeBrouillons(julie, { llm: second.llm })).toBe(0);
     expect(second.calls).toHaveLength(0);
     expect(await titlesOf(julie)).toEqual([['Merci', null]]);
+  });
+
+  it('quand le modèle pose des questions, elles sont gardées sans texte, et le modèle n’est pas rappelé tant qu’elle n’a pas répondu', async () => {
+    const julie = await julieWaiting('Devis 2027');
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+    const first = answering(ask());
+
+    expect(await writeBrouillons(julie, { llm: first.llm })).toBe(0);
+
+    expect(first.calls).toHaveLength(1);
+    const rows = await stored(julie);
+    expect(rows).toMatchObject([
+      { texte: null, questions: QUESTIONS, reponses: null, ecarteLe: null, brouillonGmail: null },
+    ]);
+    // Le journal compte les questions, sans rien en dire.
+    expect(JSON.parse(String(info.mock.calls.at(-1)?.[2]))).toEqual({
+      userId: julie.userId,
+      sourceId: rows[0]?.sourceId,
+      brouillon: false,
+      questions: 2,
+      chars: ask().length,
+    });
+    expect(JSON.stringify(info.mock.calls)).not.toMatch(/mardi|prix/);
+    // Rien à montrer parmi ses brouillons prêts, et rien à redemander au modèle : Leon l'attend.
+    expect(await readBrouillons(julie)).toEqual([]);
+    const again = answering(draft());
+    expect(await writeBrouillons(julie, { llm: again.llm })).toBe(0);
+    expect(again.calls).toHaveLength(0);
+    expect(await counted(julie)).toBe(1);
   });
 
   it('n’appelle jamais deux fois le modèle pour le même mail : un second passage ne demande que le mail arrivé depuis', async () => {
@@ -847,7 +879,6 @@ describe('ses brouillons sont privés à la personne', () => {
   });
 
   // Une demande de Leon à Julie, posée en base sans passer par le modèle : deux questions, pas encore de réponse.
-  const QUESTIONS = ['Acceptez-vous le rendez-vous de mardi ?', 'Quel prix lui annoncer ?'];
   async function asked(ctx: TenantContext, title: string, questions: string[] | null = QUESTIONS) {
     const mail = received(ago(HOUR), 'Bonjour Julie, mardi vous convient-il, et à quel prix ?');
     const sourceId = await mailThread(ctx, title, [mail]);

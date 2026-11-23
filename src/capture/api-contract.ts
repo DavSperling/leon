@@ -113,8 +113,13 @@ export type SessionFacts = z.infer<typeof SessionFactsSchema>;
 // Les usages de l'accord (C7 révisé du plan de la mémoire à disposition) : chacun accepté à part, daté, par outil, sur
 // le poste (cli/consent.ts). Le serveur vérifie l'usage à chaque emploi ; un usage absent vaut refus. Tous ceux du plan
 // sont connus dès maintenant : une CLI qui en enverra un nouveau ne verra pas ses faits refusés par ce serveur.
-export const USAGES = ['lecture', 'rappel', 'resume', 'coulisses', 'noter'] as const;
+// `passage` (D40, T67) : la lecture obligée de Claude Code, que seul le crochet vérifie, sur le poste. Il entre ici dans
+// la même PR que la commande : un serveur qui ne le connaîtrait pas refuserait en 400 tout corps qui le porte.
+export const USAGES = ['lecture', 'rappel', 'resume', 'coulisses', 'noter', 'passage'] as const;
 export type Usage = (typeof USAGES)[number];
+// La première phrase, fixe, du message d'arrêt de `leon read-first` (D40, T67) : T58 la cherche n'importe où dans le
+// texte d'un résultat d'outil, pour ne pas compter l'arrêt comme un échec d'`Edit`.
+export const READ_FIRST_MARK = 'Leon : cette modification attend.';
 // Les usages cochés par défaut que la page « Autoriser » sait montrer en cases, à ce lot (T64, C16) : `lecture`, puis
 // `rappel` (T49, avec son crochet), puis `noter` (T57, sans crochet), dans l'ordre des questions du terminal. À part de
 // USAGES : la page ne montre, et `leon setup` ne demande, que ce qu'un installateur de ce lot sait écrire (les trois

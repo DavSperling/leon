@@ -14,10 +14,12 @@
 // 4. pour chaque outil proposé, montre son texte d'accord et pose ses crochets (`installHooks`, commandes K9) : ceux
 //    d'une installation d'avant (`pnpm … leon …`) sont remplacés sur place, l'accord déjà donné est gardé (S11) ;
 // 5. finit par une ligne par outil, le chemin du lanceur et, sous la forme installée, les mises à jour automatiques.
-// Dans un terminal, sans --yes, les usages (`lecture`, `rappel`, `noter`, `resume`) se demandent une fois pour tous les
-// outils du passage : au premier installateur auquel l'un manque sans refus ; la réponse passe aux suivants (UsageDecisions, T47), qui
-// l'écrivent chacun après son accord de base. Les cases tranchées sur la page passent par les mêmes décisions : elles ne
-// sont pas redemandées. --yes n'ajoute jamais un usage de lui-même : seules les cases de la page en donnent.
+// Dans un terminal, sans --yes, les usages (`lecture`, `rappel`, `noter`, `passage`, `resume`) se demandent une fois pour
+// tous les outils du passage : au premier installateur auquel l'un manque sans refus ; la réponse passe aux suivants
+// (UsageDecisions, T47), qui l'écrivent chacun après son accord de base. `coulisses` se demande outil par outil, et
+// `passage` (D40, T67) pour Claude Code seulement, suivi de l'exception du bac à sable quand celui-ci est actif. Les cases
+// tranchées sur la page passent par les mêmes décisions : elles ne sont pas redemandées. --yes n'ajoute jamais un usage
+// de lui-même : seules les cases de la page en donnent, et ni `passage` ni l'exception n'y sont.
 // `--yes` accepte tout, sauf le remplacement d'un lanceur qui n'est pas celui de la forme installée (un clone, ou un
 // fichier que Leon n'a pas écrit). Relancée, la commande n'écrit rien de ce qui est déjà en place.
 //
@@ -185,13 +187,17 @@ export async function ensureLauncher(
   }
 }
 
-// Les crochets de Claude Code sont-ils posés tels que `leon setup` les veut (commandes du lanceur, délais) avec
-// l'accord enregistré ? `installHooks` rend 0 aussi quand on lui a répondu « non » : la ligne finale doit le distinguer.
+// Les crochets de Claude Code sont-ils posés tels que `leon setup` les veut (commandes du lanceur, délais), ceux des
+// usages donnés compris (`rappel`, `passage`), avec l'accord enregistré ? `installHooks` rend 0 aussi quand on lui a
+// répondu « non » : la ligne finale doit le distinguer.
 async function claudeCodeHooksInPlace(configDir: string, home: string): Promise<boolean> {
   const settings = parseSettings(await load(join(configDir, SETTINGS_FILE)));
-  if (settings === null || (await factsConsent(home, 'claude_code')) === null) return false;
+  const consent = await factsConsent(home, 'claude_code');
+  if (settings === null || consent === null) return false;
   try {
-    return addLeonHooks(settings, home).changes.every((change) => change.action === 'inchange');
+    return addLeonHooks(settings, home, consent.usages).changes.every(
+      (change) => change.action === 'inchange',
+    );
   } catch {
     return false;
   }

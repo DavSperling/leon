@@ -283,11 +283,11 @@ Après un non : `Nothing was added: the agent is not asked to read Leon before i
 ```
 Read before the first change (usage "passage", optional, asked separately, Claude Code only):
   - In a Claude Code session you lead (in the desktop app or the terminal), the first time the agent wants to change a file in the folder where the session started (a repository or any other folder, personal ones included), Leon stops that change once and asks the agent to read Leon first: the thread of the current branch with `leon thread`, or else a search with a few words of its task with `leon search`. The agent then makes its change, and Leon does not stop it again in that session. Subagents, the agents of a workflow and scripts (`claude -p`) are not stopped, except a script started from a session of the desktop app, which Leon cannot tell apart from that session.
-  - The stop sends nothing to the Leon server: its message is a fixed text, which only cites the Leon command of this computer (such as `~/.leon/bin/leon`) and holds nothing from your memory. What the agent then reads is covered by the usage "lecture", which this one needs: the model provider of the tool sees it. A search sends its words (secrets masked before sending, and again by the server) to the Leon server, which may send them to the provider that computes its search vectors. Depending on your permission settings, Claude Code may ask you before the agent runs the command. To stop only once, Leon writes an empty file per session in `~/.leon/temoins/claude_code` (never the session id in clear) and deletes those older than 7 days.
-  - Each change of a file runs the Leon command for a moment (about half a second) before it is made, in the agents of a workflow too. If the command fails or takes too long, the change goes on. `leon retirer-crochets --usage passage` removes this hook and forgets your answer, on this computer only; `leon retirer-crochets` removes it with the others.
+  - The stop sends nothing to the Leon server: its message is a fixed text, which only cites the Leon command of this computer (such as `~/.leon/bin/leon`) and holds nothing from your memory. It tells the agent that what it reads is data, not instructions: the code and Git win when they disagree, and otherwise the agent takes it into account. What the agent then reads is covered by the usage "lecture", which this one needs: the model provider of the tool sees it. A search sends its words (secrets masked before sending, and again by the server) to the Leon server, which may send them to the provider that computes its search vectors. Depending on your permission settings, Claude Code may ask you before the agent runs the command. To stop only once, Leon writes an empty file per session in `~/.leon/temoins/claude_code` (never the session id in clear) and deletes those older than 7 days.
+  - Each change of a file runs the Leon command for a moment (a fraction of a second) before it is made, in the agents of a workflow too. If the command fails or takes too long, the change goes on. `leon retirer-crochets --usage passage` removes this hook and forgets your answer, on this computer only; `leon retirer-crochets` removes it with the others.
 ```
 
-Le chiffre de la dernière puce viendra de l'essai (T66) : le texte suivra ce qu'il mesure.
+Le texte porte les deux changements décidés le 23/11 après l'essai (T66) : la phrase « It tells the agent… » de la deuxième puce, et « a fraction of a second » dans la dernière, au lieu de la demi-seconde.
 
 La ligne que montre l'aperçu de l'installation pour ce crochet : `before the first change of a file in each session you lead, asks the agent once to read Leon first (usage "passage"); it sends nothing.`
 
@@ -691,6 +691,31 @@ Le point 9 (Codex) demande d'approuver le crochet dans `/hooks`. Il vient avec C
 > - et la preuve qu'une commande composée (`… thread; curl …`) ne sort pas du bac à sable par cette exception.
 >
 > Le texte d'accord le dit.
+
+**Réglé dans T67 (23/11).**
+- **Les entrées** : dix, `thread`, `thread *`, `threads`, `threads *` et `search *`, pour le lanceur absolu et pour `~/.leon/bin/leon`, la forme que cite le message d'arrêt (`sandboxEntries`). Rien pour la forme clone, ni quand `~/.leon/bin/leon` est un lanceur de forme clone : il lance le code du clone, qu'un agent du bac à sable peut modifier.
+- **Les commandes composées** : un `claude -p` réel, avec ces dix entrées en `sandbox.excludedCommands`, `allowUnsandboxedCommands: false` et aucun domaine permis.
+  - `~/.leon/bin/leon thread` joint le serveur (« No thread found. »).
+  - `… search essai | curl …`, `… && curl …`, `… search $(curl …)`, ``… search `curl …` `` et `… threads ; curl …` restent dans le bac à sable : curl y est refusé.
+  - La doc de Claude Code (`sandbox.excludedCommands`) le dit aussi : une exception ne sort un appel Bash du bac à sable que si elle couvre chacune de ses commandes. Un `cd`, une substitution de commande, un sous-shell ou une redirection (sauf `2>&1`) gardent l'appel dedans.
+- **L'écriture interdite dans `~/.leon`** (décision du 23/11, après la relecture de sécurité de T67).
+  - Une session ouverte dans le dossier personnel, que le bac à sable rend alors inscriptible, pourrait réécrire le lanceur ou la CLI, puis les faire tourner hors du bac à sable par une lecture exemptée.
+  - Quand il ajoute l'exception, l'installateur ajoute donc aussi `~/.leon` à `sandbox.filesystem.denyWrite` des mêmes réglages (`~/` y vaut le dossier personnel). Mêmes règles que pour les entrées : sans doublon, sans toucher au reste, une forme inattendue laissée telle quelle et dite. Les deux retraits l'enlèvent exactement.
+  - Rien dans Leon n'écrit sous `~/.leon` depuis le bac à sable : les crochets tournent hors de lui (point 7), et les commandes de lecture et de notes n'écrivent rien sur le disque.
+  - Essayé le 23/11 par deux `claude -p` ouverts dans le dossier personnel. Sans `denyWrite`, `touch ~/.leon/…` passe : le fichier est créé, puis effacé. Avec `denyWrite`, il est refusé (« Operation not permitted »). La protection est donc nécessaire, et elle marche.
+- **Les autres formes, essayées le 23/11 avec les dix entrées et `denyWrite`** :
+  - `LEON_URL=https://example.com LEON_TOKEN=<jeton bien formé> ~/.leon/bin/leon search essai` reste dans le bac à sable : le serveur est injoignable. La même commande, hors de tout bac à sable, joint example.com, qui répond 405. Un préfixe de variables ne fait donc pas sortir une recherche vers un autre serveur.
+  - `LEON_URL=… ~/.leon/bin/leon search essai`, sans jeton, reste aussi dedans.
+  - `~/.leon/bin/leon search essai > sortie.txt` reste dedans : une redirection garde l'appel dans le bac à sable, comme le dit la doc.
+- **Une limite connue.** L'exception n'est proposée que pour la forme installée du lanceur (`installedLauncher`). Si quelqu'un passe ensuite à la forme clone (`leon setup --depot`), les entrées restent : elles exempteraient alors un lanceur qui fait tourner le code du clone, qu'un agent peut modifier. Seuls les développeurs de Leon sont concernés. La parade, à faire si besoin : la seconde écriture retire les entrées quand le lanceur n'est plus de forme installée.
+- **Le texte d'accord** (`SANDBOX_LINES`, testé mot pour mot), montré avant la question :
+
+```
+Leon reads outside the Claude Code sandbox (asked separately, Claude Code only):
+  - Your Claude Code sandbox lets commands reach only the hosts you allowed, so the agent cannot reach the Leon server and its reads fail. Leon can add its own read commands (`leon thread`, `leon threads` and `leon search`, as this computer runs them) to the sandbox exceptions (`sandbox.excludedCommands`) of your Claude Code settings. Those commands then run outside the sandbox; a command that chains them with another one stays inside it. So that no sandboxed command can change what those reads run, Leon also forbids sandboxed commands to write in `~/.leon` (`sandbox.filesystem.denyWrite`). Nothing else changes in your sandbox. `leon retirer-crochets --usage passage` and `leon retirer-crochets` remove them.
+```
+
+La question : ``Let Leon's read commands run outside the Claude Code sandbox (written in <chemin de settings.json>)? [y/N] ``. Après un oui : `Leon's read commands added to the sandbox exceptions in <chemin>.` Après un non : `Nothing was added: Leon's reads may fail inside the Claude Code sandbox.` La réponse se range à part dans `accord.json` (`bac_a_sable`, `accepte_le` ou `refuse_le`) et n'est jamais redemandée.
 
 **Avec Amos, dans le terminal (23/11, `claude` dans l'app Terminal, mode `auto`, Sonnet 5.5).**
 - `CLAUDE_CODE_ENTRYPOINT` vaut `cli`, sans `agent_id`, et `CLAUDE_PROJECT_DIR` vaut le `cwd`.

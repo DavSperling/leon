@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { API_PATHS } from '../capture/api-contract';
+import { SECRET_MASK } from '../capture/mask-secrets';
 import { addUsage, writeConsent } from './consent';
 import type { GitRunner } from './project-key';
 import {
@@ -105,6 +106,16 @@ describe('runReadCommand', () => {
       path: API_PATHS.chercher,
       body: { requete: 'route des faits', projet: 'github.com/acme/leon', usages: [] },
     });
+  });
+
+  it('leon search : un secret de la requête part masqué, jamais en clair (D40)', async () => {
+    const secret = `sk-ant-${'a1B2c3D4'.repeat(4)}`;
+    const { deps, sent } = setup();
+
+    await runReadCommand('search', ['migration', secret], deps);
+
+    expect(sent().body.requete).toBe(`migration ${SECRET_MASK}`);
+    expect(JSON.stringify(sent().body)).not.toContain(secret);
   });
 
   it('leon versions : la liste, ou une version avec --read', async () => {

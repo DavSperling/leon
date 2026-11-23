@@ -1,5 +1,6 @@
 import { createHmac, hkdfSync } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
+import { USAGES } from '@/capture/api-contract';
 import { env } from '@/server/env';
 import { signComputerCode, signPayload, verifyComputerCode, verifyPayload } from './computer-code';
 
@@ -167,7 +168,10 @@ describe('code signé de l’ordinateur : les cases de la page', () => {
     ['une valeur inconnue dans g', { ...GOOD, m: ['lecture'], g: ['admin'] }],
     ['m qui n’est pas un tableau', { ...GOOD, m: 'lecture', g: [] }],
     ['g qui n’est pas un tableau', { ...GOOD, m: ['lecture'], g: true }],
-    ['plus de valeurs que d’usages connus', { ...GOOD, m: Array(6).fill('lecture'), g: [] }],
+    [
+      'plus de valeurs que d’usages connus',
+      { ...GOOD, m: Array(USAGES.length + 1).fill('lecture'), g: [] },
+    ],
   ])('refuse, même bien signée : %s', (_, payload) => {
     expect(verifyComputerCode(signed(payload), OPTS)).toBeNull();
   });

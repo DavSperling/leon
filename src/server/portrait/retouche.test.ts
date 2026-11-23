@@ -77,7 +77,30 @@ describe('issueOf : retouché, elle a gardé la moitié des mots du brouillon au
   });
 });
 
-describe('issueOf : réécrit, moins de la moitié des mots du brouillon reste', () => {
+describe('issueOf : retouché aussi, elle a coupé le brouillon : trois mots sur quatre de son texte en viennent, dix au moins', () => {
+  it('coupé de plus de la moitié, sans un mot à elle (11 sur 23) : le brouillon se reconnaît, en plus court', () => {
+    expect(issueOf(DRAFT, 'Bonjour Léa,\n\nJe vous envoie le devis vendredi.\n\nBien à vous')).toBe(
+      'retouche',
+    );
+  });
+
+  it('les bornes : dix mots du brouillon au moins, plus que ses formules ; trois mots sur quatre de son texte', () => {
+    // 10 mots, tous du brouillon : une coupe. 9, ses seules formules prises au brouillon : rien du fond ne reste.
+    expect(issueOf(DRAFT, 'Bonjour Léa,\n\nJe vous envoie le devis.\n\nBien à vous')).toBe(
+      'retouche',
+    );
+    expect(issueOf(DRAFT, 'Bonjour Léa,\n\nMerci pour votre message.\n\nBien à vous')).toBe(
+      'reecrit',
+    );
+    // Ses formules à elle sur une coupe : 11 de ses 14 mots viennent du brouillon. Un mot de plus à elle, 11 sur 15.
+    const cut =
+      'Hello Léa,\n\nMerci, je vous envoie le devis vendredi avec les options.\n\nBelle journée';
+    expect(issueOf(DRAFT, cut)).toBe('retouche');
+    expect(issueOf(DRAFT, cut.replace('Belle', 'Très belle'))).toBe('reecrit');
+  });
+});
+
+describe('issueOf : réécrit, moins de la moitié des mots du brouillon reste, et ce n’est pas une coupe', () => {
   it('un autre mail sous les mêmes formules : deux mails sans rapport partagent toujours quelques mots (8 sur 23)', () => {
     const sent =
       'Bonjour Léa,\n\nJe ne pourrai pas vous répondre avant mon retour de congés, le 4 décembre. Paul suit le dossier en attendant.\n\nBien à vous';
@@ -85,14 +108,9 @@ describe('issueOf : réécrit, moins de la moitié des mots du brouillon reste',
     expect(issueOf(DRAFT, sent)).toBe('reecrit');
   });
 
-  it('une réponse d’une ligne, même avec ses formules (5 sur 23)', () => {
+  it('une réponse d’une ligne, même avec ses formules (5 sur 23), même toutes prises au brouillon (4 sur 23)', () => {
     expect(issueOf(DRAFT, 'Bonjour Léa, c’est noté. Bien à vous')).toBe('reecrit');
-  });
-
-  it('coupé de plus de la moitié, même sans un mot à elle (11 sur 23) : le brouillon n’est plus le sien', () => {
-    expect(issueOf(DRAFT, 'Bonjour Léa,\n\nJe vous envoie le devis vendredi.\n\nBien à vous')).toBe(
-      'reecrit',
-    );
+    expect(issueOf(DRAFT, 'Merci ! Bien à vous')).toBe('reecrit');
   });
 
   it('rien d’elle : un transfert sans un mot, ou la seule citation du mail reçu', () => {

@@ -5,20 +5,25 @@ import { ownText } from './own-text';
 // modèle. Module pur.
 //
 // La mesure : les mots du brouillon qu'on retrouve dans sa réponse, dans le même ordre (la plus longue sous-suite
-// commune), rapportés au nombre de mots du brouillon. Un mot est une suite de lettres ou de chiffres, en minuscules :
+// commune), rapportés au nombre de mots du brouillon, et à celui de son texte. Un mot est une suite de lettres ou de
+// chiffres, en minuscules :
 // les espaces, la ponctuation et la casse ne comptent pas. De sa réponse, seul compte ce qu'elle a écrit
 // (own-text.ts) : ni la citation du mail reçu, ni sa signature.
 // - tel quel : les mêmes mots, dans le même ordre, ni plus ni moins ;
 // - retouché : elle a gardé, dans l'ordre, la moitié des mots du brouillon au moins, et changé le reste (un mot, une
-//   formule d'appel ou de politesse, une phrase en plus ou en moins, la longueur) ;
-// - réécrit : moins de la moitié. Deux mails sans rapport partagent toujours quelques mots (« bonjour », « de »,
-//   « vous », « cordialement ») : la moitié laisse cette marge.
+//   formule d'appel ou de politesse, une phrase en plus ou en moins, la longueur) ; ou elle l'a coupé : trois mots
+//   sur quatre de son texte viennent du brouillon, et elle en a gardé dix au moins, plus que ses seules formules ;
+// - réécrit : le reste. Deux mails sans rapport partagent toujours quelques mots (« bonjour », « de », « vous »,
+//   « cordialement ») : la moitié laisse cette marge ; et une ligne faite de ces formules (« Merci ! Bien à vous ») ne
+//   garde presque rien du brouillon.
 // shortcut: une signature sans la ligne « -- » (celle qu'Outlook ajoute) reste dans son texte et fait d'un envoi tel
 // quel une retouche ; à retirer d'après la ligne « signature » de sa fiche si de vraies boîtes le montrent.
 
 export type Issue = NonNullable<(typeof brouillons.$inferSelect)['issue']>;
 
 const KEPT_MIN = 0.5;
+const CUT_FROM_DRAFT = 0.75;
+const CUT_WORDS = 10;
 
 const wordsOf = (text: string) => text.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
 
@@ -42,5 +47,6 @@ export function issueOf(brouillon: string, envoye: string): Issue {
   const sent = wordsOf(ownText(envoye).text);
   const kept = common(draft, sent);
   if (kept === draft.length && kept === sent.length) return 'tel-quel';
-  return draft.length > 0 && kept >= KEPT_MIN * draft.length ? 'retouche' : 'reecrit';
+  const cut = kept >= CUT_WORDS && kept >= CUT_FROM_DRAFT * sent.length;
+  return (draft.length > 0 && kept >= KEPT_MIN * draft.length) || cut ? 'retouche' : 'reecrit';
 }

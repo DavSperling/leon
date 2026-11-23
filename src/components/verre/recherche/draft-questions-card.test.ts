@@ -182,8 +182,9 @@ describe('DraftQuestionsCard : ses réponses envoyées, Leon écrit', () => {
     const html = render([REPONDUE]);
     const words = text(html);
 
-    expect(words).toContain('Leon écrit votre réponse à Léa Roy. Le brouillon arrivera ici.');
-    expect(words).not.toContain('J’ai besoin de vous');
+    expect(words).toContain('Leon écrit votre réponse à Léa Roy.');
+    // Aucune promesse sur l'endroit : au-delà de trois brouillons prêts, celui-ci ne se montrerait pas ici.
+    expect(words).not.toMatch(/J’ai besoin de vous|arrivera/);
     expect(words).toContain('Reçu le 10 nov. 2026');
     expect(html).toContain('href="https://mail.google.test/2"');
     // Toujours parmi les demandes de Leon, à la place de la sienne.
@@ -217,9 +218,8 @@ describe('DraftQuestionsCard : ses réponses envoyées, Leon écrit', () => {
   it('en anglais, et sans nom de correspondant, les mêmes mots', () => {
     const html = render([{ ...CONTRAT, repondue: true }], 'en');
 
-    expect(text(html)).toContain(
-      'Leon is writing your reply to your correspondent. The draft will show up here.',
-    );
+    expect(text(html)).toContain('Leon is writing your reply to your correspondent.');
+    expect(text(html)).not.toContain('show up');
     expect(buttons(html)).toEqual(['Refresh', 'Dismiss']);
   });
 });

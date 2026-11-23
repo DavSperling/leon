@@ -364,7 +364,7 @@
     "noAnswer": "Sans réponse",
     "change": "Modifier",
     "send": "Envoyer mes réponses",
-    "writing": "Leon écrit votre réponse à {name}. Le brouillon arrivera ici.",
+    "writing": "Leon écrit votre réponse à {name}.",
     "discard": "Écarter",
     "gone": "Cette demande n’est plus ouverte.",
     "received": "Reçu le {date}",

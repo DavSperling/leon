@@ -228,7 +228,8 @@ export function Questions({
 // part d'ici : ses réponses servent à écrire le brouillon, qu'elle relira.
 // Ses réponses envoyées, la demande ne disparaît pas : à sa place, la ligne dit que Leon écrit sa réponse, tant que le
 // brouillon n'est pas là (portrait/brouillons.ts), avec « Actualiser » pour le voir arriver et « Écarter » pour la
-// fermer tout de suite, y compris quand le brouillon ne vient pas.
+// fermer tout de suite, y compris quand le brouillon ne vient pas. Elle ne promet pas qu'il arrivera ici : avec déjà
+// trois brouillons prêts sur des mails plus récents, il ne s'y montre pas.
 function Demande({
   demande,
   max,

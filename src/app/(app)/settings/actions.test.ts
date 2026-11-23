@@ -1339,7 +1339,8 @@ describe('les actions de l’onglet « Ma fiche »', () => {
 
     expect(vi.mocked(answerUnknownMail).mock.calls).toEqual([[ctx, MAIL, 'Dites-lui oui, mardi.']]);
     expect(vi.mocked(requestBrouillons).mock.calls).toEqual([[ctx]]);
-    expect(revalidatePath).toHaveBeenCalledWith('/');
+    // L'accueil n'est pas relu : la carte garde sa ligne, qui dit que Leon écrit.
+    expect(revalidatePath).not.toHaveBeenCalled();
   });
 
   it('« Oui » sans indication garde un oui vide ; « Non » ne garde pas d’indications et ne demande aucun passage', async () => {

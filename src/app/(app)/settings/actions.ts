@@ -867,6 +867,7 @@ export async function answerUnknownAction(input: {
   }
   if (!id) return { error: 'introuvable' };
   if (oui) await requestBrouillons(ctx);
-  revalidatePath('/');
+  // Pas de revalidatePath : la carte tient la ligne (« Leon écrit », avec `id`), qu'un accueil relu remplacerait par une
+  // autre, sous une autre clé, emportant le focus.
   return { ok: true, id };
 }

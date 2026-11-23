@@ -615,8 +615,9 @@ function Pret({ draft, onGone }: { draft: HomeBrouillon; onGone: () => void }) {
  * d'un inconnu y est une demande aussi : veut-elle une réponse ? Puis les brouillons prêts. Trois au plus de chaque sorte, les plus récents d'abord. Écartée, une ligne s'en va sans attendre
  * que l'Accueil soit relu, et le focus va au titre de l'Accueil plutôt que sur <body>. `max` vient du serveur
  * (brouillon-prompt.ts).
- * shortcut: après « Actualiser », la ligne d'une demande dont le brouillon est arrivé s'en va avec le bouton qui avait
- * le focus, comme l'état « Leon construit votre fiche » des réglages ; à reprendre si l'essai au clavier le demande.
+ * shortcut: après « Actualiser », la ligne d'une demande dont le brouillon est arrivé, ou celle de son oui à un inconnu
+ * (relue comme une demande), s'en va avec le bouton qui avait le focus, comme l'état « Leon construit votre fiche » des
+ * réglages ; à reprendre si l'essai au clavier le demande.
  */
 export function DraftQuestionsCard({
   demandes,

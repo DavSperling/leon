@@ -541,6 +541,27 @@ describe('gmailClient : un brouillon de réponse dans un fil', () => {
     expect(await gmailClient(http).replyHeaders('t1', 'm1')).toBeNull();
   });
 
+  it('ne lit pas la date des messages : leur ordre dans le fil suffit', async () => {
+    // Ce que la documentation promet avec format=metadata : identifiants, libellés, en-têtes.
+    const bare = (id: string, labels?: string[]) => ({
+      id,
+      threadId: 't1',
+      labelIds: labels,
+      payload: { headers: [{ name: 'Message-ID', value: `<${id}@mail.client.test>` }] },
+    });
+    const waiting = testHttp(gmailConnector, config, [
+      { url: `${THREADS}/t1`, json: { id: 't1', messages: [bare('m0', ['SENT']), bare('m1')] } },
+    ]);
+    const answered = testHttp(gmailConnector, config, [
+      { url: `${THREADS}/t1`, json: { id: 't1', messages: [bare('m1'), bare('m2', ['SENT'])] } },
+    ]);
+
+    expect(await gmailClient(waiting.http).replyHeaders('t1', 'm1')).toMatchObject({
+      messageId: '<m1@mail.client.test>',
+    });
+    expect(await gmailClient(answered.http).replyHeaders('t1', 'm1')).toBeNull();
+  });
+
   it('crée le brouillon dans le fil et rend son identifiant', async () => {
     const { http, calls } = testHttp(gmailConnector, config, [
       {

@@ -22,14 +22,17 @@ import {
 //
 // La seule écriture : un brouillon de réponse créé dans un fil (replyHeaders, puis createDraft), pour l'agent
 // « Brouillons de réponse » (portrait/brouillon-depot.ts). Rien n'est envoyé, supprimé ni modifié.
-// Non vérifié : aucune des pages ci-dessous n'a pu être relue le 23/11/2026 (hôte fermé), et aucun brouillon réel n'a
-// été créé. La forme des deux requêtes est celle que ces pages décrivaient, de mémoire :
+// Doc relue le 23/11/2026 :
 //   https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.threads/get (format=metadata,
-//     metadataHeaders répété ; à vérifier : la casse des noms d'en-tête demandés, internalDate et labelIds rendus
-//     pour chaque message, un message à la corbeille rendu avec TRASH)
+//     metadataHeaders répété, gmail.modify accepté ; ce format ne rend que « IDs, labels, and email headers »)
 //   https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.drafts/create (POST …/drafts, corps
-//     { message: { raw, threadId } } ; à vérifier : gmail.modify parmi les droits acceptés)
-//   https://developers.google.com/workspace/gmail/api/guides/threads (threadId, In-Reply-To et References, objet)
+//     { message: { raw, threadId } }, gmail.modify accepté)
+//   https://developers.google.com/workspace/gmail/api/guides/drafts (raw : un message RFC 2822 en base64url)
+//   https://developers.google.com/workspace/gmail/api/guides/threads (les messages d'un fil sont rendus dans l'ordre ;
+//     pour rester dans le fil : threadId, In-Reply-To et References, et un objet qui correspond)
+//   https://pipedream.com/docs/connect/api-proxy (un POST avec un corps JSON passe ; 30 s au plus)
+// Non vérifié : aucun brouillon réel n'a été créé. La documentation ne dit pas si un nom d'en-tête demandé dans une
+// autre casse est rendu (« Message-Id »), ni si un message à la corbeille reste dans la lecture du fil.
 
 const GMAIL = 'https://gmail.googleapis.com';
 export const LIST_SIZE = 100;
@@ -169,13 +172,12 @@ export function gmailClient(http: ConnectorHttp) {
         },
         ThreadSchema,
       );
-      const received = messages?.find((one) => one.id === messageId);
+      const index = messages?.findIndex((one) => one.id === messageId) ?? -1;
+      const received = messages?.[index];
       const binned = received?.labelIds?.some((label) => label === 'TRASH' || label === 'SPAM');
-      const followed = messages?.some(
-        (one) =>
-          !one.labelIds?.includes('DRAFT') &&
-          Number(one.internalDate) > Number(received?.internalDate),
-      );
+      // Gmail rend les messages d'un fil dans l'ordre (guides/threads) : ce qui suit le message reçu est plus récent.
+      // La date des messages n'est pas lue : la documentation ne la promet pas avec format=metadata.
+      const followed = messages?.slice(index + 1).some((one) => !one.labelIds?.includes('DRAFT'));
       if (!received || binned || followed) return null;
       return {
         messageId: headerOf(received.payload, 'message-id'),

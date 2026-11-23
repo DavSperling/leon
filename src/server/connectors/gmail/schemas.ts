@@ -36,8 +36,11 @@ export const MessageSchema = z.object({
 });
 export type GmailMessage = z.infer<typeof MessageSchema>;
 
-// Un fil lu avec format=metadata : ses messages, avec leurs en-têtes et sans leur corps.
-export const ThreadSchema = z.object({ messages: z.array(MessageSchema).nullish() });
+// Un fil lu avec format=metadata : ses messages dans l'ordre, avec leurs libellés et leurs en-têtes, sans leur corps.
+// Leur date n'est pas exigée : la documentation ne promet pour ce format que « IDs, labels, and email headers ».
+export const ThreadSchema = z.object({
+  messages: z.array(MessageSchema.omit({ internalDate: true })).nullish(),
+});
 
 // Le brouillon créé : seul son identifiant est gardé.
 export const DraftSchema = z.object({ id: z.string().min(1).max(200) });

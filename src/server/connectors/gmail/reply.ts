@@ -2,8 +2,8 @@
 // createDraft) : le champ `raw`, en base64url. Module pur, sans dépendance. Le destinataire, l'objet et les identifiants
 // de message sont des valeurs captées dans une boîte : aucune ne peut ajouter un en-tête, un destinataire, ni couper
 // le message. Ni De, ni date, ni identifiant : Gmail les pose. Ni citation du message d'origine, ni signature.
-// Non vérifié (la documentation de Google n'a pas pu être relue ici) : que Gmail pose De sur un brouillon créé sans
-// lui, et qu'il n'ajoute pas la signature de la personne.
+// Non vérifié (la documentation de Google, relue le 23/11/2026, ne le dit pas, et ses exemples posent De) : que Gmail
+// pose De sur un brouillon créé sans lui, et qu'il n'ajoute pas la signature de la personne.
 
 export type Reply = {
   // L'adresse du destinataire, seule.

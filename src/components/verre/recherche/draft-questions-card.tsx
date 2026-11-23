@@ -59,7 +59,7 @@ function Demande({
     <li className="px-3 py-3.5">
       {failed && (
         <Notice tone="error" live="alert" className="mb-3">
-          {nb(t('failed'))}
+          {nb(f('errorFailed'))}
         </Notice>
       )}
       <div id={words} className="grid gap-1 text-body [overflow-wrap:anywhere] text-fg">

@@ -61,13 +61,17 @@ export type WaitingMail = {
   messages: ThreadMessage[];
 };
 
-// Un mail pour lequel Leon a posé ses questions à la personne, qui y a répondu : son brouillon reste à écrire.
+// Un mail pour lequel elle a répondu à Leon, et dont le brouillon reste à écrire : à ses questions (le second appel),
+// ou « Oui » au mail d'un inconnu (le premier appel).
 export type AnsweredMail = WaitingMail & {
-  // La ligne du brouillon (0082).
+  // La ligne du brouillon (0082, 0084).
   id: string;
-  questions: string[];
-  // Une par question, dans le même ordre ; une réponse peut être vide.
-  reponses: string[];
+  // Ses questions et ses réponses, une par question, dans le même ordre ; une réponse peut être vide. Nulles pour son
+  // oui à un inconnu, tant que le premier appel n'a pas posé de questions.
+  questions: string[] | null;
+  reponses: string[] | null;
+  // Ses indications au mail d'un inconnu, vides quand elle n'en a pas donné (0084). Nulles pour un autre mail.
+  indications: string | null;
 };
 
 type MessageRow = {
@@ -220,16 +224,17 @@ export async function readUnknownMails(
   return rows.map(({ at, ...mail }) => ({ ...mail, receivedAt: epochToDate(at) }));
 }
 
-// Les brouillons qu'elle attend : Leon lui avait posé ses questions, elle y a répondu, et le texte reste à écrire
-// (brouillons.ts, le second appel). Ceux qu'elle n'a pas écartés, et dont le fil n'a pas bougé depuis : le mail est
+// Les brouillons qu'elle attend, et dont le texte reste à écrire (brouillons.ts) : Leon lui avait posé ses questions,
+// et elle y a répondu (le second appel) ; ou elle a dit « Oui » au mail d'un inconnu (0084), et le modèle ne l'a pas
+// encore lu (le premier appel). Ceux qu'elle n'a pas écartés, et dont le fil n'a pas bougé depuis : le mail est
 // toujours son dernier message. Les règles d'un mail qui attend ne se rejouent pas : il les passait quand Leon a posé
-// ses questions, et sa réponse peut venir plus de WAITING_DAYS jours après. Mais pas plus de ANSWERED_DAYS jours après
-// le mail : un second appel resté illisible se retente à chaque passage, et c'est ce qui l'arrête.
+// ses questions, ou quand elle a dit oui, et un passage peut venir plus de WAITING_DAYS jours après. Mais pas plus de
+// ANSWERED_DAYS jours après le mail : un appel resté illisible se retente à chaque passage, et c'est ce qui l'arrête.
 export async function readAnsweredMails(ctx: TenantContext): Promise<AnsweredMail[]> {
   return withTenant(ctx, async (tx) => {
     const { rows: mails } = await tx.execute<Omit<AnsweredMail, 'messages'>>(sql`
       select b.id, b.source_id as "sourceId", b.message, l.address as "from", s.title as subject,
-             b.questions, b.reponses
+             b.questions, b.reponses, b.indications
       from brouillons b
       join sources s on s.tenant_id = b.tenant_id and s.id = b.source_id
       cross join lateral (
@@ -240,7 +245,8 @@ export async function readAnsweredMails(ctx: TenantContext): Promise<AnsweredMai
         limit 1
       ) l
       where b.tenant_id = ${ctx.tenantId} and b.user_id = ${ctx.userId}
-        and b.texte is null and b.reponses is not null and b.ecarte_le is null
+        and b.texte is null and b.ecarte_le is null
+        and (b.reponses is not null or (b.indications is not null and b.questions is null))
         and l.message = b.message and l.ts >= now() - make_interval(days => ${ANSWERED_DAYS})
       order by l.ts desc, b.id
       limit ${WAITING_MAX}`);

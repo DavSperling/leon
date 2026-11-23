@@ -33,7 +33,8 @@ import { hasBlank } from './brouillon-prompt';
 //
 // Deux requêtes par le proxy de Pipedream, donc deux crédits par brouillon déposé : la lecture du fil (s'il attend
 // toujours, et les en-têtes du message reçu), puis la création du brouillon. Hors de toute transaction. Le destinataire
-// est fixé ici, jamais par le modèle : l'auteur du mail reçu, à qui elle a déjà écrit (waiting-mails.ts).
+// est fixé ici, jamais par le modèle : l'auteur du mail reçu, à qui elle a déjà écrit, ou l'inconnu dont elle a
+// voulu une réponse (waiting-mails.ts).
 // shortcut: Reply-To est ignoré et personne n'est mis en copie ; à revoir si de vraies boîtes montrent des réponses
 // qui partent à la mauvaise adresse.
 //

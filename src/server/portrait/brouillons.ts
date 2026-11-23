@@ -8,7 +8,7 @@ import { brouillons } from '@/server/db/schema/portrait';
 import { withTenant } from '@/server/db/with-tenant';
 import { type Llm, LlmError } from '@/server/llm/llm';
 import { logError } from '@/server/log';
-import { epochToDate } from '@/server/search/filters-sql';
+import { epochToDate, textArray } from '@/server/search/filters-sql';
 import { EN_SERVICE } from './agents';
 import { depositBrouillon } from './brouillon-depot';
 import { buildBrouillonPrompt, parseBrouillonAnswer } from './brouillon-prompt';
@@ -32,6 +32,9 @@ import {
 // s'engager, il rend à la place une à trois questions, chacune avec ses choix de réponse, gardées sur la même ligne
 // sans texte (0082, 0083) : Leon l'attend. Ses réponses reçues (answerQuestions), un second appel écrit le brouillon en
 // entier, sur cette ligne.
+// Le mail d'un inconnu ne part pas au modèle avant qu'elle l'ait demandé : l'accueil lui demande si elle veut une
+// réponse (answerUnknownMail), et son « oui », avec ses indications, fait faire le premier appel au passage suivant,
+// sur la ligne de son oui (0084). La suite est celle de tous les brouillons.
 // Un brouillon complet est aussi déposé dans ses brouillons Gmail, en réponse dans le fil (brouillon-depot.ts) : c'est
 // tout ce que Leon écrit dans sa boîte. Rien n'est envoyé : l'agent prépare, elle valide. Tout se lit et s'écrit sous
 // withTenant de la personne ; l'appel au modèle et le dépôt se font hors de toute transaction. Le worker de la file
@@ -49,8 +52,9 @@ export const BROUILLONS_DAILY_CAP = 20;
 const BROUILLON_MAX_TOKENS = 8000;
 const BROUILLON_TIMEOUT_MS = 90_000;
 
-// Un passage : d'abord les brouillons qu'elle attend (elle a répondu aux questions de Leon, le second appel), puis ses
-// mails qui attendent (le premier appel), cinq appels au modèle au plus en tout (WAITING_MAX), un par mail. Rend le
+// Un passage : d'abord les brouillons qu'elle attend (elle a répondu aux questions de Leon, le second appel ; ou dit
+// « Oui » au mail d'un inconnu, son premier appel, avec ses indications), puis ses mails qui attendent (le premier
+// appel), cinq appels au modèle au plus en tout (WAITING_MAX), un par mail. Rend le
 // nombre de brouillons écrits. Ne fait rien pour un compte supprimé, ni pour qui n'a pas répondu « oui » à l'agent, ni
 // quand il ne lui est plus proposé (sa boîte débranchée). Passé le plafond du jour, il s'arrête.
 // Un mail dont la réponse du modèle est illisible, refusée ou coupée n'écrit rien : il attend toujours, et le passage
@@ -58,7 +62,7 @@ const BROUILLON_TIMEOUT_MS = 90_000;
 // réponse ») n'est jamais redemandé au modèle, sauf une fois pour écrire le brouillon quand elle a répondu aux
 // questions ; et son brouillon n'est déposé qu'ici, une fois, juste après son écriture. Aucun appel pour une demande
 // qu'elle a écartée, ni pour un fil qui a bougé depuis, ni pour un mail de plus de ANSWERED_DAYS jours
-// (readAnsweredMails).
+// (readAnsweredMails). Aucun pour le mail d'un inconnu avant son oui : il n'est jamais parmi ses mails qui attendent.
 // Deux passages lancés au même instant appelleraient chacun le modèle pour le même mail, pour une seule ligne écrite :
 // la file n'en lance qu'un par personne à la fois (brouillons-queue.ts).
 export async function writeBrouillons(
@@ -83,8 +87,13 @@ export async function writeBrouillons(
   const sent = handWritten((await readSentMails(ctx, SENT_MAIL_DAYS, now)).mails);
   let written = 0;
   for (const mail of mails) {
-    // Ses réponses aux questions de Leon : le second appel pour ce mail.
-    const asked = 'questions' in mail ? mail : undefined;
+    // Ce qu'elle attend : ses réponses aux questions de Leon, le second appel pour ce mail ; ou son oui au mail d'un
+    // inconnu, avec ses indications, le premier.
+    const owed = 'id' in mail ? mail : undefined;
+    const asked =
+      owed?.questions && owed.reponses
+        ? { questions: owed.questions, reponses: owed.reponses }
+        : undefined;
     const { rows } = await db.execute<{ ok: boolean }>(
       sql`select reserver_brouillon(${ctx.userId}, ${BROUILLONS_DAILY_CAP}) as ok`,
     );
@@ -98,6 +107,7 @@ export async function writeBrouillons(
       lines,
       sent,
       asked,
+      indications: owed?.indications ?? undefined,
     });
     let answer = '';
     try {
@@ -135,12 +145,17 @@ export async function writeBrouillons(
     // résultat déjà écrit pour ce message n'est pas écrasé.
     const kept = await withTenant(ctx, async (tx) => {
       if (!(await lockAccount(tx, ctx))) return undefined;
-      if (asked) {
-        // Le texte ne se pose que par ecrire_brouillon (0082) : une fois, et pas sur une demande écartée entre-temps.
+      if (owed) {
+        // Sur sa ligne, le résultat ne se pose que par ecrire_brouillon (0082) ou ecrire_inconnu (0084) : une fois, et
+        // pas sur une demande écartée entre-temps.
         const posed = await tx.execute<{ ok: boolean }>(
-          sql`select ecrire_brouillon(${asked.id}, ${result.texte}) as ok`,
+          asked
+            ? sql`select ecrire_brouillon(${owed.id}, ${result.texte}) as ok`
+            : sql`select ecrire_inconnu(${owed.id}, ${result.texte},
+                    ${result.questions ? textArray(result.questions) : sql`null`}::text[],
+                    ${result.choix && JSON.stringify(result.choix)}::jsonb) as ok`,
         );
-        return posed.rows[0]?.ok ? asked.id : undefined;
+        return posed.rows[0]?.ok ? owed.id : undefined;
       }
       const [row] = await tx
         .insert(brouillons)

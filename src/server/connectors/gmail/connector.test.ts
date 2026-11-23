@@ -582,6 +582,37 @@ describe('gmailClient : un brouillon de réponse dans un fil', () => {
     expect(calls[0]?.headers['content-type']).toBe('application/json');
   });
 
+  it('supprime le brouillon déposé, une fois ; un brouillon qui n’y est plus ne lève pas', async () => {
+    const { http, calls } = testHttp(gmailConnector, config, [
+      { method: 'DELETE', url: `${DRAFTS}/r%2F1`, json: {} },
+      { method: 'DELETE', url: `${DRAFTS}/r-parti`, status: 404 },
+    ]);
+    const client = gmailClient(http);
+
+    await expect(client.deleteDraft('r/1')).resolves.toBeUndefined();
+    await expect(client.deleteDraft('r-parti')).resolves.toBeUndefined();
+
+    expect(calls.map((call) => [call.method, call.url])).toEqual([
+      ['DELETE', `${DRAFTS}/r%2F1`],
+      ['DELETE', `${DRAFTS}/r-parti`],
+    ]);
+    expect(calls[0]?.body).toBeUndefined();
+  });
+
+  it.each([403, 429, 500])(
+    'une suppression refusée (%s) lève, sans être rejouée',
+    async (status) => {
+      const { http, calls } = testHttp(gmailConnector, config, [
+        { method: 'DELETE', url: `${DRAFTS}/r-1`, status },
+      ]);
+
+      // Un accès retiré (403) lève une erreur d'accès, les autres une erreur HTTP.
+      await expect(gmailClient(http).deleteDraft('r-1')).rejects.toBeInstanceOf(Error);
+
+      expect(calls).toHaveLength(1);
+    },
+  );
+
   it.each([429, 500, 503])('ne rejoue ni la lecture ni la création après un %s', async (status) => {
     const { http, calls } = testHttp(gmailConnector, config, [
       { url: `${THREADS}/t1`, status },

@@ -20,8 +20,9 @@ import {
 // Les requêtes vers l'API Gmail. Les messages se lisent par lots (une requête, donc un crédit Pipedream,
 // pour BATCH_SIZE messages) : https://developers.google.com/workspace/gmail/api/guides/batch
 //
-// La seule écriture : un brouillon de réponse créé dans un fil (replyHeaders, puis createDraft), pour l'agent
-// « Brouillons de réponse » (portrait/brouillon-depot.ts). Rien n'est envoyé, supprimé ni modifié.
+// Les seules écritures : un brouillon de réponse créé dans un fil (replyHeaders, puis createDraft), pour l'agent
+// « Brouillons de réponse » (portrait/brouillon-depot.ts), et ce même brouillon supprimé quand elle l'écarte dans Leon
+// (deleteDraft). Rien n'est envoyé, et rien d'autre n'est supprimé ni modifié.
 // Doc relue le 23/11/2026 :
 //   https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.threads/get (format=metadata,
 //     metadataHeaders répété, gmail.modify accepté ; ce format ne rend que « IDs, labels, and email headers »)
@@ -30,6 +31,8 @@ import {
 //   https://developers.google.com/workspace/gmail/api/guides/drafts (raw : un message RFC 2822 en base64url)
 //   https://developers.google.com/workspace/gmail/api/guides/threads (les messages d'un fil sont rendus dans l'ordre ;
 //     pour rester dans le fil : threadId, In-Reply-To et References, et un objet qui correspond)
+//   https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.drafts/delete (DELETE …/drafts/<id>,
+//     suppression immédiate et définitive, gmail.modify accepté)
 //   https://pipedream.com/docs/connect/api-proxy (un POST avec un corps JSON passe ; 30 s au plus)
 // Non vérifié : aucun brouillon réel n'a été créé. La documentation ne dit pas si un nom d'en-tête demandé dans une
 // autre casse est rendu (« Message-Id »), ni si un message à la corbeille reste dans la lecture du fil.
@@ -200,6 +203,22 @@ export function gmailClient(http: ConnectorHttp) {
         DraftSchema,
       );
       return draft.id;
+    },
+
+    // Supprime un brouillon que Leon a déposé (createDraft), quand elle l'écarte dans Leon : la seule suppression de
+    // Leon dans une boîte, et jamais d'un autre message. Définitive, sans passer par la corbeille. Un brouillon qui
+    // n'y est plus (elle l'a envoyé ou supprimé) rend 404 : il n'y a plus rien à retirer. Jamais rejouée, sauf un 401
+    // par le proxy de Pipedream.
+    async deleteDraft(draftId: string): Promise<void> {
+      try {
+        await http.text({
+          url: `${GMAIL}/gmail/v1/users/me/drafts/${encodeURIComponent(draftId)}`,
+          method: 'DELETE',
+          once: true,
+        });
+      } catch (error) {
+        if (!(error instanceof ConnectorHttpError && error.status === 404)) throw error;
+      }
     },
   };
 }

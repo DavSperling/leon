@@ -48,7 +48,6 @@ vi.mock('@/server/portrait/screen', () => ({
     lines: [],
     sources: {},
     agents: [],
-    brouillons: [],
   })),
 }));
 vi.mock('@/server/log', () => ({ logError: vi.fn() }));
@@ -308,7 +307,6 @@ describe('page de Réglages : l’onglet « Ma fiche »', () => {
       lines: [],
       sources: {},
       agents: [],
-      brouillons: [],
     };
     vi.mocked(readFicheScreen).mockResolvedValueOnce(screen);
 

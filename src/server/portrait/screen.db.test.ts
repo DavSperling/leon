@@ -13,7 +13,8 @@ import { getFicheBoss } from './queue';
 import { readFicheScreen, readHomeBrouillons } from './screen';
 
 // La fiche telle que l'écran « Ma fiche » la reçoit, sous les droits de la personne : son rôle et ses tâches, où en est
-// sa construction, et les sources de ses tâches qu'elle voit encore. Aucune construction n'est demandée ici : la file est lue, vide (l'état
+// sa construction, et les sources de ses tâches qu'elle voit encore. Et ce que l'accueil reçoit de l'agent « Brouillons
+// de réponse ». Aucune construction n'est demandée ici : la file est lue, vide (l'état
 // « en cours » se teste avec elle, queue.db.test.ts). Données inventées : Julie et Paul dans une organisation, Zoé dans
 // une autre.
 
@@ -74,7 +75,6 @@ describe('readFicheScreen : où en est la fiche', () => {
       lines: [],
       sources: {},
       agents: [],
-      brouillons: [],
     });
 
     await seedConnection(paul, { provider: 'gmail' });
@@ -102,7 +102,6 @@ describe('readFicheScreen : où en est la fiche', () => {
       lines: [],
       sources: {},
       agents: [],
-      brouillons: [],
     });
   });
 
@@ -138,7 +137,6 @@ describe('readFicheScreen : où en est la fiche', () => {
       lines: [],
       sources: {},
       agents: [],
-      brouillons: [],
     });
   });
 });
@@ -226,81 +224,22 @@ const reply = (sourceId: string) =>
     [sourceId],
   );
 
-describe('readFicheScreen : les brouillons prêts', () => {
-  it('l’écran reçoit, pour chacun, le correspondant, le fil lié à son outil, la date du mail reçu, le texte, et s’il est déposé dans Gmail : rien d’autre', async () => {
-    const [julie, paul] = await people();
-    await answered(julie);
-    await answered(paul);
-    const older = await seedBrouillon(julie, 'Contrat', 5, { depot: 'r-contrat-1789' });
-    const recent = await seedBrouillon(julie, 'Devis 2027', 2);
-    await seedBrouillon(julie, 'Écarté', 1, { ecarte: true });
-    await seedBrouillon(julie, 'Sans réponse', 1, { texte: null });
-    await seedBrouillon(paul, 'Fil de Paul', 1);
-
-    const screen = await readFicheScreen(julie);
-
-    // Le mail le plus récent d'abord. Ni l'identifiant du fil, ni celui du message, ni une adresse ; un oui ou un non
-    // pour le dépôt, jamais l'identifiant du brouillon Gmail.
-    expect(screen.brouillons).toEqual([
-      {
-        id: expect.any(String),
-        from: 'Léa Roy',
-        receivedAt: recent.receivedAt,
-        texte: 'Brouillon pour Devis 2027.',
-        depose: false,
-        source: { title: 'Devis 2027', url: 'https://mail.google.test/2', kind: 'gmail' },
-      },
-      {
-        id: expect.any(String),
-        from: 'Léa Roy',
-        receivedAt: older.receivedAt,
-        texte: 'Brouillon pour Contrat.',
-        depose: true,
-        source: { title: 'Contrat', url: 'https://mail.google.test/5', kind: 'gmail' },
-      },
-    ]);
-    expect(JSON.stringify(screen.brouillons)).not.toMatch(
-      /message:|lea@client\.test|r-contrat-1789/,
-    );
-    expect(JSON.stringify(screen.brouillons)).not.toContain(recent.sourceId);
-    // Les fils des brouillons ne se mêlent pas aux sources des tâches.
-    expect(screen.sources).toEqual({});
-    expect((await readFicheScreen(paul)).brouillons.map((one) => one.texte)).toEqual([
-      'Brouillon pour Fil de Paul.',
-    ]);
-  });
-
-  it('un brouillon dont le fil a bougé ou a disparu ne part pas vers l’écran', async () => {
+describe('readFicheScreen : « Ma fiche » ne lit plus ses brouillons de réponse', () => {
+  it('un brouillon prêt, une demande de Leon : rien n’en part vers l’écran des réglages, tout part vers l’accueil', async () => {
     const [julie] = await people();
     await answered(julie);
-    const moved = await seedBrouillon(julie, 'Elle a répondu', 3);
-    const gone = await seedBrouillon(julie, 'Fil supprimé', 2);
-    await seedBrouillon(julie, 'Intact', 1);
-    await reply(moved.sourceId);
-    await adminPool.query('delete from sources where id = $1', [gone.sourceId]);
+    await seedBrouillon(julie, 'Brouillon prêt', 1);
+    await seedBrouillon(julie, 'Demande', 2, { texte: null, questions: ['Mardi ?'] });
 
     const screen = await readFicheScreen(julie);
 
-    expect(screen.brouillons.map((one) => one.source.title)).toEqual(['Intact']);
-  });
-
-  it('sans son oui à l’agent, ses brouillons ne partent pas vers l’écran ; un nouveau oui les remontre', async () => {
-    const [julie, paul] = await people();
-    await answered(julie, false);
-    await seedBrouillon(julie, 'Devis', 1);
-    // Paul n'a jamais répondu à l'agent, qui ne lui est pas proposé.
-    await seedBrouillon(paul, 'Jamais répondu', 1);
-
-    expect((await readFicheScreen(julie)).brouillons).toEqual([]);
-    expect((await readFicheScreen(paul)).brouillons).toEqual([]);
-
-    await adminPool.query('update reponses_agent set oui = true where user_id = $1', [
-      julie.userId,
-    ]);
-
-    expect((await readFicheScreen(julie)).brouillons.map((one) => one.texte)).toEqual([
-      'Brouillon pour Devis.',
-    ]);
+    expect(Object.keys(screen).sort()).toEqual(['agents', 'etat', 'lines', 'sources']);
+    // Ni le texte d'un brouillon, ni une question, ni leur fil parmi les sources des tâches.
+    expect(JSON.stringify(screen)).not.toMatch(/Brouillon pour|Mardi|mail\.google\.test/);
+    expect(screen.sources).toEqual({});
+    const home = await readHomeBrouillons(julie);
+    expect(home.prets.map((one) => one.source.title)).toEqual(['Brouillon prêt']);
+    expect(home.demandes.map((one) => one.source.title)).toEqual(['Demande']);
   });
 });
 

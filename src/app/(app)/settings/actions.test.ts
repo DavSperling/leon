@@ -1190,7 +1190,8 @@ describe('les actions de l’onglet « Ma fiche »', () => {
       ok: true,
       resteDansGmail: false,
     });
-    expect(revalidatePath).toHaveBeenCalledTimes(1);
+    // L'accueil est relu : c'est lui qui montre les brouillons, plus les réglages.
+    expect(vi.mocked(revalidatePath).mock.calls).toEqual([['/']]);
     await expect(discardBrouillonAction(LIGNE)).resolves.toEqual({ error: 'introuvable' });
 
     expect(vi.mocked(discardBrouillon).mock.calls).toEqual([

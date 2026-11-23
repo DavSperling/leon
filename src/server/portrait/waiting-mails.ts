@@ -127,7 +127,7 @@ export async function readWaitingMails(
   return withTenant(ctx, async (tx) => {
     // `l` : le dernier tour du fil. Un mail coupé en plusieurs tours les date tous pareil : n'importe lequel donne son
     // message, son auteur et ses destinataires. Deux messages à la même date : le plus grand identifiant, ici, dans
-    // la lecture du fil plus bas et à l'écran (readBrouillons).
+    // la lecture du fil plus bas et à l'écran (readShown, brouillons.ts).
     const { rows: mails } = await tx.execute<Omit<WaitingMail, 'messages'>>(sql`
       with sent as (
         select lower(t.author_email) as address, t.recipients_to || t.recipients_cc as recipients

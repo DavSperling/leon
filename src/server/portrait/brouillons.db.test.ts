@@ -19,7 +19,7 @@ import {
   answerQuestions,
   BROUILLONS_DAILY_CAP,
   discardBrouillon,
-  readBrouillons,
+  readShown,
   writeBrouillons,
 } from './brouillons';
 import { buildFiche } from './fiche';
@@ -125,6 +125,8 @@ function answering(...answers: string[]) {
   return { llm, calls: fake.calls };
 }
 
+// Ses brouillons prêts, tels que l'accueil les lit.
+const readBrouillons = async (ctx: TenantContext) => (await readShown(ctx)).prets;
 const stored = (ctx: TenantContext) =>
   adminDb.select().from(brouillons).where(eq(brouillons.userId, ctx.userId));
 const titlesOf = async (ctx: TenantContext) => {
@@ -245,8 +247,12 @@ describe('writeBrouillons', () => {
       chars: ask().length,
     });
     expect(JSON.stringify(info.mock.calls)).not.toMatch(/mardi|prix|jeudi|tarif|1 200/);
-    // Rien à montrer parmi ses brouillons prêts, et rien à redemander au modèle : Leon l'attend.
-    expect(await readBrouillons(julie)).toEqual([]);
+    // Rien à montrer parmi ses brouillons prêts, mais une demande, avec ses questions et leurs choix ; et rien à
+    // redemander au modèle : Leon l'attend.
+    expect(await readShown(julie)).toMatchObject({
+      demandes: [{ id: rows[0]?.id, questions: QUESTIONS, choix: CHOIX, repondue: false }],
+      prets: [],
+    });
     const again = answering(draft());
     expect(await writeBrouillons(julie, { llm: again.llm })).toBe(0);
     expect(again.calls).toHaveLength(0);
@@ -535,6 +541,8 @@ describe('writeBrouillons : ses réponses aux questions de Leon, puis le brouill
     const id = await demandOf(julie, 'Devis 2027');
 
     expect(await answerQuestions(julie, id, REPONSES)).toBe(true);
+    // Entre ses réponses et le brouillon, la demande reste lue pour l'accueil : Leon écrit.
+    expect(await readShown(julie)).toMatchObject({ demandes: [{ id, repondue: true }], prets: [] });
     const { llm, calls } = answering(draft(COMPLET));
     expect(await writeBrouillons(julie, { llm })).toBe(1);
 
@@ -565,8 +573,8 @@ describe('writeBrouillons : ses réponses aux questions de Leon, puis le brouill
     expect(await stored(julie)).toMatchObject([
       { id, texte: COMPLET, questions: QUESTIONS, reponses: REPONSES, ecarteLe: null },
     ]);
-    // Il suit le chemin de tous les brouillons : montré parmi ses brouillons prêts.
-    expect((await readBrouillons(julie)).map((one) => one.texte)).toEqual([COMPLET]);
+    // Il suit le chemin de tous les brouillons : montré parmi ses brouillons prêts, et plus parmi les demandes.
+    expect(await readShown(julie)).toMatchObject({ demandes: [], prets: [{ id, texte: COMPLET }] });
     // Le premier et le second appel comptent sous le même plafond ; et plus aucun appel pour ce mail.
     expect(await counted(julie)).toBe(2);
     const again = answering(draft('Refait.'));
@@ -1014,7 +1022,7 @@ describe('writeBrouillons : un brouillon complet va aussi dans ses brouillons Gm
   });
 });
 
-describe('readBrouillons : ses brouillons prêts', () => {
+describe('readShown : ses brouillons prêts', () => {
   // Le fil nommé, parmi ses sources.
   const threadOf = async (ctx: TenantContext, title: string) => {
     const { rows } = await adminPool.query<{ id: string }>(
@@ -1110,9 +1118,9 @@ describe('readBrouillons : ses brouillons prêts', () => {
     expect(await shown(julie)).toEqual([DRAFT]);
   });
 
-  it('ne montre que les vingt plus récents', async () => {
+  it('ne montre que les trois plus récents', async () => {
     const [julie] = await team();
-    for (let hours = 1; hours <= 21; hours++) {
+    for (let hours = 1; hours <= 4; hours++) {
       const mail = received(ago(hours * HOUR), 'Une question.');
       const sourceId = await mailThread(julie, `Fil ${hours}`, [mail]);
       await adminPool.query(
@@ -1122,9 +1130,7 @@ describe('readBrouillons : ses brouillons prêts', () => {
       );
     }
 
-    expect(await shown(julie)).toEqual(
-      Array.from({ length: 20 }, (_, index) => `Brouillon ${index + 1}`),
-    );
+    expect(await shown(julie)).toEqual(['Brouillon 1', 'Brouillon 2', 'Brouillon 3']);
   });
 });
 

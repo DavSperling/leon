@@ -9,13 +9,11 @@ import {
   answerAgentAction,
   buildFicheAction,
   correctFicheLineAction,
-  discardBrouillonAction,
   retireFicheLineAction,
 } from '@/app/(app)/settings/actions';
 import {
   AlertDialog,
   Button,
-  CopyButton,
   EmptyState,
   Field,
   GlassCard,
@@ -32,15 +30,15 @@ import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
 import type { FicheLine } from '@/server/portrait/fiche';
 import type { Proposal } from '@/server/portrait/propositions';
-import type { FicheBrouillon, FicheEtat, FicheScreen, FicheSource } from '@/server/portrait/screen';
+import type { FicheEtat, FicheScreen, FicheSource } from '@/server/portrait/screen';
 import { SourceThing } from './source-thing';
 
 // L'onglet « Ma fiche » des réglages : ce que Leon a compris du travail de la personne (portrait/), en mots : son rôle
 // et les tâches qu'elle refait. Chaque ligne dit d'où elle vient, se corrige et se retire. Les mesures calculées sur
 // ses mails (interlocuteurs, façon d'écrire, rythme, signature) restent enregistrées, sans s'afficher. Les gestes sont
 // ceux des leçons de l'onglet Mémoire (memoire.tsx), sans la connexion récente : la fiche n'est lue que par elle.
-// Sous ses tâches, les agents de départ que Leon lui propose : un oui ou un non par agent, rien d'autre. En tête, quand
-// il y en a, les brouillons de réponse que l'agent « Brouillons de réponse » lui a préparés : à copier ou à écarter.
+// Sous ses tâches, les agents de départ que Leon lui propose : un oui ou un non par agent, rien d'autre. Ce que l'agent
+// « Brouillons de réponse » lui prépare ne se montre pas ici, mais sur l'Accueil (recherche/draft-questions-card.tsx).
 
 type Result = { ok: true } | { error: string };
 type ErrorKey = 'errorNotFound' | 'errorInvalid' | 'errorFailed';
@@ -293,71 +291,6 @@ function Sources({ id, sources }: { id: string; sources: Array<FicheSource & { i
   );
 }
 
-// Un brouillon de réponse prêt : le correspondant, la date du mail reçu, le fil lié à son outil, le texte du brouillon
-// tel quel, « Copier » et « Écarter ». Rien ne part d'ici, et rien ne s'y modifie : elle colle le texte dans sa réponse,
-// ou le retrouve dans ses brouillons Gmail quand il y est déposé. « Écarter » le retire aussi de Gmail.
-function Brouillon({ draft, onGone }: { draft: FicheBrouillon; onGone: () => void }) {
-  const t = useTranslations('fiche');
-  const locale = useLocale();
-  const router = useRouter();
-  const [failed, setFailed] = useState(false);
-  const [discarding, startDiscarding] = useTransition();
-  const words = `brouillon-${draft.id}`;
-  const discard = () =>
-    startDiscarding(async () => {
-      const result = await attempt(() => discardBrouillonAction(draft.id));
-      // Un brouillon déjà écarté ailleurs disparaît quand la page relit la fiche.
-      const gone = 'error' in result && result.error === 'introuvable';
-      setFailed('error' in result && !gone);
-      if ('ok' in result) {
-        // Écarté dans Leon, mais resté dans sa boîte : elle doit le savoir, il peut encore en partir.
-        if (result.resteDansGmail) toast.error(t('discardedKeptInGmail'));
-        else toast.success(t('discarded'));
-        onGone();
-      }
-      if (gone) {
-        toast.error(t('draftGone'));
-        router.refresh();
-      }
-    });
-  return (
-    <li className="px-3 py-3.5">
-      {failed && (
-        <Notice tone="error" live="alert" className="mb-3">
-          {nb(t('errorFailed'))}
-        </Notice>
-      )}
-      <div id={words} className="grid gap-1 text-body [overflow-wrap:anywhere] text-fg">
-        <p className="font-medium">{draft.from}</p>
-        <p className="text-label text-muted">
-          <time dateTime={draft.receivedAt.toISOString()}>
-            {t('draftReceived', { date: formatDate(draft.receivedAt, locale) })}
-          </time>
-        </p>
-        {draft.depose && <p className="text-label text-muted">{t('draftDeposited')}</p>}
-      </div>
-      <div className="mt-2">
-        <SourceThing source={draft.source} />
-      </div>
-      <p className="mt-3 whitespace-pre-wrap text-body [overflow-wrap:anywhere] text-fg">
-        {draft.texte}
-      </p>
-      <div className="mt-2 flex flex-wrap gap-2">
-        <CopyButton value={draft.texte} variant="quiet" aria-describedby={words} />
-        <Button
-          size="sm"
-          variant="quiet"
-          loading={discarding}
-          aria-describedby={words}
-          onClick={discard}
-        >
-          {t('discard')}
-        </Button>
-      </div>
-    </li>
-  );
-}
-
 // Un agent de départ proposé : son nom, sa phrase, s'il est en service, « Oui » et « Non ». Le bouton enfoncé est la
 // réponse que Leon garde (aucun tant qu'elle n'a pas répondu) ; l'autre la change. Ni raison ni mesure : l'écran ne
 // reçoit que l'agent, son état et sa réponse.
@@ -482,7 +415,7 @@ export function FicheSection({ data }: { data: FicheScreen | null }) {
     );
   }
   const { lines } = data;
-  // La ligne retirée, ou le brouillon écarté, emporte le bouton qui avait le focus : il passe au haut de la fiche.
+  // La ligne retirée emporte le bouton qui avait le focus : il passe au haut de la fiche.
   const onGone = () => requestAnimationFrame(() => top.current?.focus({ preventScroll: true }));
   const tasks = linesOf(lines, 'tache').sort((x, y) => Number(x.cle) - Number(y.cle));
 
@@ -491,12 +424,6 @@ export function FicheSection({ data }: { data: FicheScreen | null }) {
       <Section title={t('title')} description={t('description')} className="mt-0">
         <Build etat={data.etat} />
       </Section>
-
-      <Part title={t('draftsTitle')} description={t('draftsHint')}>
-        {data.brouillons.map((draft) => (
-          <Brouillon key={draft.id} draft={draft} onGone={onGone} />
-        ))}
-      </Part>
 
       <Part title={t('roleTitle')}>
         {linesOf(lines, 'role').map((line) => (

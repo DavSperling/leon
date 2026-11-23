@@ -3,11 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DraftQuestionsCard } from '@/components/verre/recherche/draft-questions-card';
 import { Greeting, HomeAsk } from '@/components/verre/recherche/home';
 import { logError } from '@/server/log';
-import {
-  type FicheBrouillon,
-  type HomeDemande,
-  readHomeBrouillons,
-} from '@/server/portrait/screen';
+import { type HomeBrouillon, type HomeDemande, readHomeBrouillons } from '@/server/portrait/screen';
 import HomePage from './page';
 
 // L'Accueil lit beaucoup de choses ; seule la carte de l'agent « Brouillons de réponse » se teste ici (les demandes de
@@ -50,7 +46,7 @@ const DEMANDE: HomeDemande = {
   repondue: false,
   source: { title: 'Devis 2027', url: null, kind: 'gmail' },
 };
-const PRET: FicheBrouillon = {
+const PRET: HomeBrouillon = {
   id: '00000002-1111-4111-8111-111111111111',
   from: 'Léa Roy',
   receivedAt: new Date('2026-11-09T09:00:00Z'),

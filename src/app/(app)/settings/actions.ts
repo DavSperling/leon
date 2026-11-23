@@ -725,9 +725,9 @@ export async function readMemoryVersionAction(input: {
   return version ? { ok: true, version } : { error: 'introuvable' };
 }
 
-// L'onglet « Ma fiche » (portrait/) : la personne connectée construit sa fiche, en corrige et en retire les lignes,
-// répond aux agents qui lui sont proposés et écarte un brouillon de réponse, sous la session du navigateur. Et, depuis
-// l'accueil, elle répond aux questions de Leon ou écarte sa demande. Les siennes seulement : chaque fonction
+// L'onglet « Ma fiche » (portrait/) : la personne connectée construit sa fiche, en corrige et en retire les lignes, et
+// répond aux agents qui lui sont proposés, sous la session du navigateur. Et, depuis l'accueil, elle répond aux
+// questions de Leon, écarte sa demande ou écarte un brouillon de réponse. Les siens seulement : chaque fonction
 // appelée filtre sur elle, sous ses droits, et la ligne d'un autre est « introuvable ». Aucune erreur ne recopie une
 // valeur reçue.
 type FicheError = 'introuvable' | 'invalide';
@@ -795,9 +795,10 @@ export async function answerAgentAction(input: {
   return { ok: true };
 }
 
-// « Écarter » un brouillon de réponse prêt : il ne se montre plus, et celui que Leon avait déposé dans ses brouillons
-// Gmail en est retiré (portrait/brouillon-depot.ts). Celui d'un autre, ou déjà écarté, est « introuvable ». Rien n'est
-// envoyé. `resteDansGmail` : Leon n'a pas pu le retirer de sa boîte, et l'écran le lui dit.
+// « Écarter », depuis la carte de l'accueil, un brouillon de réponse prêt ou une demande de Leon : la ligne ne se montre
+// plus, et le brouillon que Leon avait déposé dans ses brouillons Gmail en est retiré (portrait/brouillon-depot.ts).
+// Celle d'un autre, ou déjà écartée, est « introuvable ». Rien n'est envoyé. `resteDansGmail` : Leon n'a pas pu le
+// retirer de sa boîte, et l'écran le lui dit.
 export async function discardBrouillonAction(
   id: string,
 ): Promise<{ ok: true; resteDansGmail: boolean } | { error: FicheError }> {
@@ -806,7 +807,7 @@ export async function discardBrouillonAction(
   if (!parsed.success) return { error: 'invalide' };
   if (!(await discardBrouillon(ctx, parsed.data))) return { error: 'introuvable' };
   const withdrawn = await withdrawBrouillon(ctx, parsed.data);
-  revalidatePath('/settings');
+  revalidatePath('/');
   return { ok: true, resteDansGmail: !withdrawn };
 }
 

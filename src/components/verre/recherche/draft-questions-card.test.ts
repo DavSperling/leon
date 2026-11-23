@@ -3,7 +3,7 @@ import { createElement, type ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { type Flow, OTHER, startFlow } from '@/lib/draft-questions';
-import type { FicheBrouillon, HomeDemande } from '@/server/portrait/screen';
+import type { HomeBrouillon, HomeDemande } from '@/server/portrait/screen';
 import en from '../../../../messages/en.json';
 import fr from '../../../../messages/fr.json';
 import { DraftQuestionsCard, Questions } from './draft-questions-card';
@@ -49,11 +49,8 @@ const within = (children: ReactNode, locale: 'en' | 'fr') =>
       children,
     }),
   );
-const render = (
-  demandes: HomeDemande[],
-  locale: 'en' | 'fr' = 'fr',
-  prets: FicheBrouillon[] = [],
-) => within(createElement(DraftQuestionsCard, { demandes, prets, max: 1000 }), locale);
+const render = (demandes: HomeDemande[], locale: 'en' | 'fr' = 'fr', prets: HomeBrouillon[] = []) =>
+  within(createElement(DraftQuestionsCard, { demandes, prets, max: 1000 }), locale);
 // Les questions d'une demande, dans l'état `flow`.
 const PANEL = 'panneau';
 const questions = (flow: Flow, demande = DEVIS, locale: 'en' | 'fr' = 'fr') =>
@@ -325,7 +322,7 @@ describe('Questions : une question à la fois, puis le récapitulatif', () => {
 });
 
 describe('DraftQuestionsCard : les brouillons prêts sur l’Accueil', () => {
-  const PRET: FicheBrouillon = {
+  const PRET: HomeBrouillon = {
     id: id(701),
     from: 'Léa Roy',
     receivedAt: new Date('2026-11-20T08:30:00Z'),
@@ -334,7 +331,7 @@ describe('DraftQuestionsCard : les brouillons prêts sur l’Accueil', () => {
     source: { title: 'Devis 2027', url: 'https://mail.google.test/fil/1', kind: 'gmail' },
   };
   // Un fil sans objet ni lien, d'un correspondant sans nom ni adresse.
-  const SANS_LIEN: FicheBrouillon = {
+  const SANS_LIEN: HomeBrouillon = {
     id: id(702),
     from: null,
     receivedAt: new Date('2026-11-19T08:30:00Z'),
@@ -343,7 +340,7 @@ describe('DraftQuestionsCard : les brouillons prêts sur l’Accueil', () => {
     source: { title: null, url: null, kind: 'outlook' },
   };
   // Complet : déposé aussi dans ses brouillons Gmail.
-  const DEPOSE: FicheBrouillon = {
+  const DEPOSE: HomeBrouillon = {
     id: id(703),
     from: 'marc@client.test',
     receivedAt: new Date('2026-11-18T08:30:00Z'),
@@ -352,7 +349,7 @@ describe('DraftQuestionsCard : les brouillons prêts sur l’Accueil', () => {
     source: { title: 'Contrat', url: 'https://mail.google.test/fil/3', kind: 'gmail' },
   };
   const ALL = [PRET, SANS_LIEN, DEPOSE];
-  const row = (html: string, one: FicheBrouillon) =>
+  const row = (html: string, one: HomeBrouillon) =>
     html
       .split('<li class="px-3')
       .find((part) => part.includes(`id="brouillon-${one.id}"`))

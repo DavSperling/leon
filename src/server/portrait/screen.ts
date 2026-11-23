@@ -6,7 +6,7 @@ import { lignesFiche } from '@/server/db/schema/portrait';
 import { withTenant } from '@/server/db/with-tenant';
 import { briefingSources } from '@/server/discussion/citation-sources';
 import { EN_SERVICE } from './agents';
-import { type Demande, type ReadyBrouillon, readBrouillons, readShown } from './brouillons';
+import { type Demande, type ReadyBrouillon, readShown } from './brouillons';
 import { type FicheLine, readFiche } from './fiche';
 import { type Proposal, readProposals } from './propositions';
 import { enqueueFicheBuild, ficheBuildCompleted, ficheBuildPending } from './queue';
@@ -14,9 +14,9 @@ import { MAIL_KINDS } from './sent-mails';
 import { synthesisDone } from './synthese';
 
 // La fiche pour l'écran « Ma fiche » des réglages : son rôle et ses tâches, où en est sa construction, les sources de
-// ses tâches, les agents de départ qui lui sont proposés, et les brouillons de réponse prêts. Et, pour l'accueil, ce
-// que l'agent « Brouillons de réponse » a pour elle (readHomeBrouillons). Tout se lit sous les droits de la personne,
-// et rien d'autre ne lit sa fiche.
+// ses tâches, et les agents de départ qui lui sont proposés. Et, pour l'accueil seulement, ce que l'agent « Brouillons
+// de réponse » a pour elle (readHomeBrouillons). Tout se lit sous les droits de la personne, et rien d'autre ne lit sa
+// fiche.
 
 // Où en est la construction, dans l'ordre où l'écran le décide :
 // - en-cours : une construction demandée ou en cours, ce que la file sait seule (queue.ts) ;
@@ -34,9 +34,6 @@ export type FicheEtat =
   | 'sans-mail'
   | 'a-construire';
 export type FicheSource = { title: string | null; url: string | null; kind: string };
-// Un brouillon prêt, tel que l'écran le montre : le correspondant, le fil (son objet, lié à son outil), la date du mail
-// reçu, le texte du brouillon, et s'il est déposé dans ses brouillons Gmail. `id` sert au geste « Écarter ».
-export type FicheBrouillon = Omit<ReadyBrouillon, 'sourceId'> & { source: FicheSource };
 export type FicheScreen = {
   etat: FicheEtat;
   // Son rôle et ses tâches seulement.
@@ -45,8 +42,6 @@ export type FicheScreen = {
   sources: Record<string, FicheSource>;
   // Les agents de départ proposés d'après ses outils et sa fiche entière, avec sa réponse à chacun (propositions.ts).
   agents: Proposal[];
-  // Les brouillons de réponse prêts, le mail le plus récent d'abord (brouillons.ts).
-  brouillons: FicheBrouillon[];
 };
 
 async function etatOf(ctx: TenantContext, hasLines: boolean): Promise<FicheEtat> {
@@ -71,17 +66,16 @@ async function etatOf(ctx: TenantContext, hasLines: boolean): Promise<FicheEtat>
 }
 
 // Les sources d'une tâche se relisent à chaque affichage, sous ses droits : une source supprimée, ou qu'elle ne voit
-// plus, n'est pas rendue, et l'écran ne la compte ni ne la montre. Le fil d'un brouillon se relit avec elles. 20
-// brouillons, puis 8 tâches de 20 sources au plus : sous la borne de briefingSources (200).
+// plus, n'est pas rendue, et l'écran ne la compte ni ne la montre. 8 tâches de 20 sources au plus : sous la borne de
+// briefingSources (200). Ses brouillons de réponse ne se lisent pas ici : ils ne se montrent que sur l'accueil.
 export async function readFicheScreen(ctx: TenantContext): Promise<FicheScreen> {
   const all = await readFiche(ctx);
   // L'écran ne montre que son rôle et ses tâches : les mesures calculées sur ses mails restent en base.
   const lines = all.filter((line) => line.genre === 'role' || line.genre === 'tache');
-  const ready = await readBrouillons(ctx);
-  const taskIds = linesOf(lines, 'tache').flatMap((line) => line.valeur.sources);
+  const taskIds = [...new Set(linesOf(lines, 'tache').flatMap((line) => line.valeur.sources))];
   const [etat, seen, agents] = await Promise.all([
     etatOf(ctx, all.length > 0),
-    briefingSources(ctx, [...new Set([...ready.map((one) => one.sourceId), ...taskIds])]),
+    briefingSources(ctx, taskIds),
     // Les mesures servent à proposer, sans partir vers l'écran : il ne reçoit que l'agent et sa réponse.
     readProposals(ctx, all),
   ]);
@@ -89,31 +83,28 @@ export async function readFicheScreen(ctx: TenantContext): Promise<FicheScreen> 
     seen.map(({ sourceId, title, url, kind }) => [sourceId, { title, url, kind }]),
   );
   const sources = Object.fromEntries(
-    [...new Set(taskIds)].flatMap((id) => {
+    taskIds.flatMap((id) => {
       const source = found.get(id);
       return source ? [[id, source]] : [];
     }),
   );
-  // Ses brouillons ne se montrent que tant qu'elle dit oui à l'agent et qu'il lui est proposé. Après un « non », ils
-  // restent en base : un nouveau « oui » les remontre sans rappeler le modèle.
-  const wanted = agents.some((one) => one.agent === EN_SERVICE && one.oui);
-  const brouillons = ready.flatMap(({ sourceId, ...one }) => {
-    const source = found.get(sourceId);
-    return wanted && source ? [{ ...one, source }] : [];
-  });
-  return { etat, lines, sources, agents, brouillons };
+  return { etat, lines, sources, agents };
 }
 
 // Une demande de Leon, telle que l'accueil la montre : le correspondant, le fil (son objet, lié à son outil), la date du
 // mail reçu, les questions et leurs choix, et si elle y a répondu. `id` sert à lui répondre ou à l'écarter. Ni ses
 // réponses, ni rien d'autre, ne part vers l'accueil.
 export type HomeDemande = Omit<Demande, 'sourceId'> & { source: FicheSource };
-export type HomeBrouillons = { demandes: HomeDemande[]; prets: FicheBrouillon[] };
+// Un brouillon prêt, tel que l'accueil le montre : le correspondant, le fil (son objet, lié à son outil), la date du
+// mail reçu, le texte du brouillon, et s'il est déposé dans ses brouillons Gmail. `id` sert au geste « Écarter ».
+export type HomeBrouillon = Omit<ReadyBrouillon, 'sourceId'> & { source: FicheSource };
+export type HomeBrouillons = { demandes: HomeDemande[]; prets: HomeBrouillon[] };
 
 // Ce que l'agent « Brouillons de réponse » a pour elle, pour l'accueil : les demandes de Leon puis les brouillons
 // prêts, les plus récents d'abord, trois au plus de chaque sorte (brouillons.ts). Seulement tant qu'elle dit oui à
-// l'agent et qu'il lui est proposé. Lu à chaque chargement de l'accueil : ses lignes d'abord, sa fiche et ses outils
-// seulement s'il y en a une.
+// l'agent et qu'il lui est proposé : après un « non », ses lignes restent en base, et un nouveau « oui » les remontre
+// sans rappeler le modèle. Lu à chaque chargement de l'accueil : ses lignes d'abord, sa fiche et ses outils seulement
+// s'il y en a une.
 export async function readHomeBrouillons(ctx: TenantContext): Promise<HomeBrouillons> {
   const shown = await readShown(ctx);
   const sourceIds = [...shown.demandes, ...shown.prets].map((one) => one.sourceId);

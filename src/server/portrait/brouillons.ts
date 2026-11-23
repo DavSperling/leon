@@ -1,4 +1,4 @@
-import { and, eq, isNull, type SQL, sql } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { accountIsGone } from '@/server/briefing/briefings';
@@ -27,7 +27,7 @@ import {
 
 // L'agent « Brouillons de réponse », le premier en service : pour chaque mail qui attend la réponse de la personne
 // (waiting-mails.ts), un modèle écrit un brouillon comme elle l'écrirait (brouillon-prompt.ts), gardé dans sa table
-// privée (0080) et montré dans Leon. Quand une information ou une décision lui manque, ou que le mail lui demande de
+// privée (0080) et montré sur l'accueil de Leon (readShown). Quand une information ou une décision lui manque, ou que le mail lui demande de
 // s'engager, il rend à la place une à trois questions, chacune avec ses choix de réponse, gardées sur la même ligne
 // sans texte (0082, 0083) : Leon l'attend. Ses réponses reçues (answerQuestions), un second appel écrit le brouillon en
 // entier, sur cette ligne.
@@ -166,9 +166,6 @@ export async function writeBrouillons(
   return written;
 }
 
-// Ce que l'écran montre au plus : les brouillons des mails les plus récents.
-// shortcut: au-delà, les plus anciens ne se montrent pas ; à paginer si une personne en garde autant sans les écarter.
-const SHOWN_MAX = 20;
 // Ce que l'accueil montre au plus, de chaque sorte (les demandes de Leon, les brouillons prêts) : les mails les plus
 // récents.
 const HOME_MAX = 3;
@@ -192,51 +189,15 @@ export type Demande = Pick<ReadyBrouillon, 'id' | 'sourceId' | 'from' | 'receive
   repondue: boolean;
 };
 
-// Ses lignes dans l'état `state`, le mail le plus récent d'abord : celles qu'elle n'a pas écartées, et dont le fil n'a
-// pas bougé depuis. Le dernier message du fil se relit à chaque affichage : dès qu'elle a répondu, ou qu'un nouveau
-// message est arrivé, la ligne ne se montre plus. À date égale, le même départage que readWaitingMails.
-async function shownRows(ctx: TenantContext, state: SQL, limit: number) {
-  const { rows } = await withTenant(ctx, (tx) =>
-    tx.execute<{
-      id: string;
-      sourceId: string;
-      from: string | null;
-      at: string;
-      texte: string | null;
-      depose: boolean;
-      questions: string[] | null;
-    }>(sql`
-      select b.id, b.source_id as "sourceId", coalesce(l.author_name, l.author_email) as "from",
-             extract(epoch from l.ts) as at, b.texte, b.brouillon_gmail is not null as depose, b.questions
-      from brouillons b
-      cross join lateral (
-        select t.external_id, t.author_name, t.author_email, t.ts
-        from turns t
-        where t.tenant_id = b.tenant_id and t.source_id = b.source_id
-        order by t.ts desc, substring(t.external_id from ${MESSAGE}) desc
-        limit 1
-      ) l
-      where b.tenant_id = ${ctx.tenantId} and b.user_id = ${ctx.userId}
-        and b.ecarte_le is null and ${state}
-        and substring(l.external_id from ${MESSAGE}) = b.message
-      order by l.ts desc, b.id
-      limit ${limit}`),
-  );
-  return rows.map(({ at, ...row }) => ({ ...row, receivedAt: epochToDate(at) }));
-}
-
-// Ses brouillons prêts, pour « Ma fiche » : ceux qui ont leur texte, écrit au premier appel ou avec ses réponses.
-export async function readBrouillons(ctx: TenantContext): Promise<ReadyBrouillon[]> {
-  const rows = await shownRows(ctx, sql`b.texte is not null`, SHOWN_MAX);
-  return rows.flatMap(({ questions: _, texte, ...row }) =>
-    texte === null ? [] : [{ ...row, texte }],
-  );
-}
-
 // Ce que l'accueil montre de l'agent, d'une seule lecture : les demandes de Leon (ses questions, qu'elle y ait répondu
-// ou non, tant que le brouillon n'est pas écrit) et les brouillons prêts, HOME_MAX de chaque sorte, le mail le plus
-// récent d'abord. Les mêmes règles que shownRows : ni ligne écartée, ni fil qui a bougé. Et pas la demande d'un mail
-// trop ancien pour le second appel (readAnsweredMails) : ses réponses ne feraient plus rien écrire.
+// ou non, tant que le brouillon n'est pas écrit) et les brouillons prêts (ceux qui ont leur texte, écrit au premier
+// appel ou avec ses réponses), HOME_MAX de chaque sorte, le mail le plus récent d'abord. Seulement les lignes qu'elle
+// n'a pas écartées, et dont le fil n'a pas bougé depuis : le dernier message du fil se relit à chaque affichage, et dès
+// qu'elle a répondu, ou qu'un nouveau message est arrivé, la ligne ne se montre plus. À date égale, le même départage
+// que readWaitingMails. Et pas la demande d'un mail trop ancien pour le second appel (readAnsweredMails) : ses réponses
+// ne feraient plus rien écrire.
+// shortcut: au-delà de HOME_MAX, les plus anciens ne se montrent pas ; à paginer si une personne en garde autant sans
+// les écarter.
 export async function readShown(
   ctx: TenantContext,
 ): Promise<{ demandes: Demande[]; prets: ReadyBrouillon[] }> {

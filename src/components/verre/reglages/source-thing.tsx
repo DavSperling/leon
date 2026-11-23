@@ -7,7 +7,8 @@ import { SOURCE_KIND_LABELS } from '@/lib/labels';
 import type { FicheSource } from '@/server/portrait/screen';
 
 // Une source : son outil et son titre. Avec son lien, elle mène à son outil, comme l'activité d'une personne dans
-// l'écran Équipe ; sans lien, elle se montre sans s'ouvrir. Sert à « Ma fiche » et à la demande de Leon sur l'Accueil.
+// l'écran Équipe ; sans lien, elle se montre sans s'ouvrir. Sert à « Ma fiche » et, sur l'Accueil, aux demandes de Leon
+// et aux brouillons prêts.
 export function SourceThing({ source }: { source: FicheSource }) {
   const t = useTranslations('fiche');
   const props = {

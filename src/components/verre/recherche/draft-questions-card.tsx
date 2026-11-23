@@ -24,7 +24,7 @@ import {
 } from '@/lib/draft-questions';
 import { formatDate } from '@/lib/verre';
 import { nb } from '@/lib/verre/nb';
-import type { FicheBrouillon, HomeDemande } from '@/server/portrait/screen';
+import type { HomeBrouillon, HomeDemande } from '@/server/portrait/screen';
 
 type Done = { ok: true; resteDansGmail?: boolean };
 type Result = Done | { error: string };
@@ -374,7 +374,7 @@ function Demande({
 // fil lié à son outil, puis le texte du brouillon, replié derrière « Voir le brouillon » pour que l'Accueil reste léger,
 // « Copier » et « Écarter ». Rien ne part d'ici, et rien ne s'y modifie : elle colle le texte dans sa réponse, ou le
 // retrouve dans ses brouillons Gmail quand il y est déposé. « Écarter » le retire aussi de Gmail.
-function Pret({ draft, onGone }: { draft: FicheBrouillon; onGone: () => void }) {
+function Pret({ draft, onGone }: { draft: HomeBrouillon; onGone: () => void }) {
   const t = useTranslations('draftQuestions');
   const f = useTranslations('fiche');
   const locale = useLocale();
@@ -462,7 +462,7 @@ export function DraftQuestionsCard({
   max,
 }: {
   demandes: HomeDemande[];
-  prets: FicheBrouillon[];
+  prets: HomeBrouillon[];
   max: number;
 }) {
   const t = useTranslations('draftQuestions');

@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import type { FicheLine } from '@/server/portrait/fiche';
 import type { Proposal } from '@/server/portrait/propositions';
-import type { FicheBrouillon, FicheScreen } from '@/server/portrait/screen';
+import type { FicheScreen } from '@/server/portrait/screen';
 import en from '../../../../messages/en.json';
 import fr from '../../../../messages/fr.json';
 import { errorOf, FicheSection } from './fiche';
@@ -15,7 +15,6 @@ vi.mock('@/app/(app)/settings/actions', () => ({
   answerAgentAction: vi.fn(),
   buildFicheAction: vi.fn(),
   correctFicheLineAction: vi.fn(),
-  discardBrouillonAction: vi.fn(),
   retireFicheLineAction: vi.fn(),
 }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
@@ -65,7 +64,6 @@ const DATA: FicheScreen = {
     [UNLINKED]: { title: null, url: null, kind: 'gmail' },
   },
   agents: [],
-  brouillons: [],
 };
 
 const render = (data: FicheScreen | null = DATA, locale: 'en' | 'fr' = 'fr') =>
@@ -290,14 +288,18 @@ describe('FicheSection : les agents proposés', () => {
 
     expect(states('fr', 'En service', 'Pas encore en service')).toEqual(expected);
     expect(states('en', 'Running', 'Not running yet')).toEqual(expected);
-    // Sa phrase dit ce que son « oui » autorise : un brouillon déposé dans sa boîte Gmail, jamais envoyé.
+    // Sa phrase dit ce que son « oui » autorise, et où trouver le brouillon : sur l'accueil, plus « sur cette page » ;
+    // déposé aussi dans sa boîte Gmail, jamais envoyé.
     const html = render({ ...DATA, agents: all });
     expect(text(html)).toContain(
-      'un brouillon écrit comme vous, sur cette page. Avec Gmail, un brouillon complet est aussi déposé dans vos brouillons. Jamais envoyé.',
+      'un brouillon écrit comme vous, sur l’accueil. Avec Gmail, un brouillon complet est aussi déposé dans vos brouillons. Jamais envoyé.',
     );
-    expect(text(render({ ...DATA, agents: all }, 'en'))).toContain(
-      'a draft written the way you write, on this page. With Gmail, a complete draft is also saved to your drafts. Never sent.',
+    expect(text(html)).not.toContain('sur cette page');
+    const english = text(render({ ...DATA, agents: all }, 'en'));
+    expect(english).toContain(
+      'a draft written the way you write, on the home page. With Gmail, a complete draft is also saved to your drafts. Never sent.',
     );
+    expect(english).not.toContain('on this page');
   });
 
   it('une fiche sans rôle ni tâche montre quand même ses propositions', () => {
@@ -306,7 +308,6 @@ describe('FicheSection : les agents proposés', () => {
       lines: [],
       sources: {},
       agents: AGENTS,
-      brouillons: [],
     });
 
     expect(html).toContain('>Agents proposés</h2>');
@@ -323,7 +324,7 @@ describe('FicheSection : les agents proposés', () => {
 
     // Ni raison ni mesure : le nom, la phrase, l'état, les deux boutons.
     expect(words('brouillon-reponse')).toBe(
-      'Brouillons de réponse Quand un mail attend une réponse, un brouillon écrit comme vous, sur cette page. Avec Gmail, un brouillon complet est aussi déposé dans vos brouillons. Jamais envoyé. En service Oui Non',
+      'Brouillons de réponse Quand un mail attend une réponse, un brouillon écrit comme vous, sur l’accueil. Avec Gmail, un brouillon complet est aussi déposé dans vos brouillons. Jamais envoyé. En service Oui Non',
     );
     expect(words('relance')).toBe(
       'Relances Quand un mail envoyé reste sans réponse, le fil remonte avec un brouillon de relance. Pas encore en service Oui Non',
@@ -396,155 +397,26 @@ describe('FicheSection : les agents proposés', () => {
   });
 });
 
-describe('FicheSection : les brouillons prêts', () => {
-  const DEVIS: FicheBrouillon = {
-    id: id(701),
-    from: 'Léa Roy',
-    receivedAt: new Date('2026-11-20T08:30:00Z'),
-    texte: 'Bonjour Léa,\n\nVoici le devis [à compléter : le montant] <b>.\n\nBien à vous',
-    depose: false,
-    source: { title: 'Devis 2027', url: 'https://mail.google.test/fil/1', kind: 'gmail' },
-  };
-  // Un fil sans objet ni lien, d'un correspondant sans nom.
-  const SANS_LIEN: FicheBrouillon = {
-    id: id(702),
-    from: 'marc@client.test',
-    receivedAt: new Date('2026-11-19T08:30:00Z'),
-    texte: 'Bonjour,\n\nBien reçu.',
-    depose: false,
-    source: { title: null, url: null, kind: 'outlook' },
-  };
-  // Complet : déposé aussi dans ses brouillons Gmail.
-  const DEPOSE: FicheBrouillon = {
-    id: id(703),
-    from: 'Léa Roy',
-    receivedAt: new Date('2026-11-18T08:30:00Z'),
-    texte: 'Bonjour Léa,\n\nC’est entendu.',
-    depose: true,
-    source: { title: 'Contrat', url: 'https://mail.google.test/fil/3', kind: 'gmail' },
-  };
-  const WITH_DRAFTS = { ...DATA, brouillons: [DEVIS, SANS_LIEN] };
-  const draft = (html: string, one: FicheBrouillon) =>
-    html
-      .split('<li class="px-3')
-      .find((part) => part.includes(`id="brouillon-${one.id}"`))
-      ?.split('</section>')[0] ?? '';
+describe('FicheSection : les brouillons de réponse ne se montrent plus ici', () => {
+  it('ni partie « Brouillons prêts », ni brouillon, ni « Copier » ni « Écarter » : ils sont sur l’Accueil', () => {
+    const agents: Proposal[] = [{ agent: 'brouillon-reponse', oui: true, enService: true }];
+    // Même si l'écran recevait encore des brouillons, l'onglet n'a plus rien pour les dessiner.
+    const data = { ...DATA, agents, brouillons: [{ id: id(701), texte: 'Bonjour Léa.' }] };
+    for (const locale of ['fr', 'en'] as const) {
+      const html = render(data, locale);
 
-  it('sans brouillon, la partie ne se montre pas', () => {
-    const html = render();
-
-    expect(text(html)).not.toMatch(/Brouillons prêts|Rien n’est envoyé|Écarter/);
-    expect(html).not.toContain('>Copier<');
-  });
-
-  it('avec des brouillons, la partie vient en tête, avant le rôle, et sa phrase dit ce qui va dans sa boîte, dans les deux langues', () => {
-    const html = render(WITH_DRAFTS);
-    const titles = [...html.matchAll(/<h2[^>]*>([^<]+)<\/h2>/g)].map((match) => match[1]);
-
-    expect(titles).toEqual(['Ma fiche', 'Brouillons prêts', 'Rôle', 'Tâches répétées']);
-    // Rien n'est envoyé ; un brouillon complet est aussi dans ses brouillons Gmail, d'où « Écarter » le retire aussi.
-    expect(text(html)).toContain(
-      'Rien n’est envoyé. Avec Gmail, un brouillon complet est aussi déposé dans vos brouillons ; les autres se copient d’ici. Écarter un brouillon le retire aussi de Gmail.',
-    );
-    expect(text(html)).not.toContain('ni écrit dans votre boîte');
-    const english = text(render(WITH_DRAFTS, 'en'));
-    expect(english).toContain('Drafts ready');
-    expect(english).toContain(
-      'Nothing is sent. With Gmail, a complete draft is also saved to your drafts; copy the others from here. Dismissing a draft also removes it from Gmail.',
-    );
-  });
-
-  it('une fiche sans rôle ni tâche montre quand même ses brouillons', () => {
-    const html = render({
-      etat: 'a-completer',
-      lines: [],
-      sources: {},
-      agents: [],
-      brouillons: [DEVIS],
-    });
-
-    expect(html).toContain('>Brouillons prêts</h2>');
-    expect(html).not.toContain('>Rôle</h2>');
-  });
-
-  it('chaque brouillon : le correspondant, la date du mail reçu, le fil lié à son outil, le texte tel quel, « Copier » et « Écarter »', () => {
-    const html = render(WITH_DRAFTS);
-    const devis = draft(html, DEVIS);
-
-    expect(text(devis)).toContain('Léa Roy');
-    expect(text(devis)).toContain('Reçu le 20 nov. 2026');
-    expect(devis).toContain('dateTime="2026-11-20T08:30:00.000Z"');
-    // Le fil, comme les sources d'une tâche : son objet, son outil, et son lien vers l'outil.
-    expect(devis).toContain('href="https://mail.google.test/fil/1"');
-    expect(devis).toContain('target="_blank" rel="noopener noreferrer"');
-    expect(text(devis)).toContain('Devis 2027');
-    expect(text(devis)).toContain('Gmail');
-    // Le texte tel quel : ses lignes, ses crochets, et rien qui s'interprète.
-    expect(devis).toContain(
-      'Bonjour Léa,\n\nVoici le devis [à compléter : le montant] &lt;b&gt;.\n\nBien à vous',
-    );
-    expect(devis).toMatch(/<p class="[^"]*whitespace-pre-wrap[^"]*">Bonjour Léa,/);
-    // Deux gestes, pas un de plus : ni corriger, ni refaire, ni envoyer.
-    expect(
-      [...devis.matchAll(/<button [^>]*>(?:<span[^>]*><\/span>)?([^<]+)</g)].map((m) => m[1]),
-    ).toEqual(['Copier', 'Écarter']);
-    expect(html.indexOf(`brouillon-${DEVIS.id}`)).toBeLessThan(
-      html.indexOf(`brouillon-${SANS_LIEN.id}`),
-    );
-  });
-
-  it('un brouillon déposé le dit, lui seul, dans les deux langues, sans geste de plus', () => {
-    const data = { ...DATA, brouillons: [DEVIS, DEPOSE, SANS_LIEN] };
-    const html = render(data);
-    const english = render(data, 'en');
-
-    expect(text(draft(html, DEPOSE))).toContain('Déposé dans vos brouillons Gmail');
-    expect(text(draft(english, DEPOSE))).toContain('Saved to your Gmail drafts');
-    for (const one of [DEVIS, SANS_LIEN]) {
-      expect(text(draft(html, one)), one.id).not.toContain('Déposé');
-      expect(text(draft(english, one)), one.id).not.toContain('Saved to');
+      expect(text(html)).not.toMatch(
+        /Brouillons prêts|Drafts ready|Bonjour Léa|Écarter|Dismiss|Déposé dans|Saved to your/,
+      );
+      expect(html).not.toMatch(/>Copier<|>Copy<|id="brouillon-/);
     }
-    // La mention fait partie des mots du brouillon, que « Copier » et « Écarter » rappellent.
-    expect(draft(html, DEPOSE)).toMatch(
-      new RegExp(`id="brouillon-${DEPOSE.id}"[^]*Déposé dans vos brouillons Gmail</p></div>`),
-    );
-    expect(
-      [...draft(html, DEPOSE).matchAll(/<button [^>]*>(?:<span[^>]*><\/span>)?([^<]+)</g)].map(
-        (m) => m[1],
-      ),
-    ).toEqual(['Copier', 'Écarter']);
-  });
-
-  it('un fil sans objet ni lien se montre sans s’ouvrir, et un correspondant sans nom par son adresse', () => {
-    const sansLien = draft(render(WITH_DRAFTS), SANS_LIEN);
-
-    expect(text(sansLien)).toContain('marc@client.test');
-    expect(text(sansLien)).toContain('Sans titre');
-    expect(text(sansLien)).toContain('Outlook');
-    expect(sansLien).not.toContain('href=');
-    expect(sansLien).toMatch(/<button [^>]*disabled=""/);
-  });
-
-  it('relie « Copier » et « Écarter » aux mots de leur brouillon', () => {
-    const html = render(WITH_DRAFTS);
-
-    for (const one of [DEVIS, SANS_LIEN])
-      expect(count(html, `aria-describedby="brouillon-${one.id}"`), one.id).toBe(2);
-  });
-
-  it('se dessine en anglais avec les mêmes clés', () => {
-    const html = render(WITH_DRAFTS, 'en');
-    const shown = text(html);
-
-    for (const words of ['Drafts ready', 'Received on Nov 20, 2026', 'Untitled', 'Dismiss'])
-      expect(shown).toContain(words);
-    expect(html).toContain('>Copy<');
-    expect(shown).not.toMatch(/fiche\.|common\./);
+    const titles = [...render(data).matchAll(/<h2[^>]*>([^<]+)<\/h2>/g)].map((match) => match[1]);
+    expect(titles).toEqual(['Ma fiche', 'Rôle', 'Tâches répétées', 'Agents proposés']);
   });
 });
 
 describe('FicheSection : où en est la construction', () => {
-  const EMPTY = { lines: [], sources: {}, agents: [], brouillons: [] };
+  const EMPTY = { lines: [], sources: {}, agents: [] };
 
   it('sans fiche ni boîte : il en faut une, avec le lien vers les connexions, et pas de bouton', () => {
     const html = render({ etat: 'sans-boite', ...EMPTY });

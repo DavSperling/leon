@@ -28,7 +28,6 @@ import {
   Thing,
   toast,
 } from '@/components/verre';
-import { HOME_TITLE_ID } from '@/components/verre/discussions/about-suggestion-card';
 import { SourceThing } from '@/components/verre/reglages/source-thing';
 import {
   answersOf,
@@ -500,7 +499,8 @@ type Result = Done | { error: string };
  * « Mail précédent » et « Mail suivant ». Un geste qui clôt un mail (ses réponses envoyées, son oui avec ses
  * indications, son non, « Écarter ») passe au suivant sans attendre que l'Accueil soit relu, et la ligne se met à jour ;
  * plus rien, le panneau le dit. Le focus va à l'en-tête du mail montré ; le panneau fermé, il revient à la ligne, ou au
- * titre de l'Accueil quand elle est partie. Rien ne part d'ici. `max` vient du serveur (brouillon-prompt.ts).
+ * contenu de la page quand elle est partie (le repli du kit). Rien ne part d'ici. `max` vient du serveur
+ * (brouillon-prompt.ts).
  */
 export function ReplyDrafts({
   name,
@@ -641,8 +641,6 @@ export function ReplyDrafts({
         open={open}
         onOpenChange={(next) => {
           if (working) return;
-          // la ligne est partie avec le dernier mail : le focus va au titre de l'Accueil, jamais sur <body>
-          if (!next && mails.length === 0) document.getElementById(HOME_TITLE_ID)?.focus();
           setAsking(false);
           setOpen(next);
         }}

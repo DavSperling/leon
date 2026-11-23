@@ -37,7 +37,18 @@ const DRAFT = 'Bonjour Léa,\n\nVoici le devis [à compléter : le montant].\n\n
 const draft = (texte = DRAFT) => JSON.stringify({ brouillon: texte });
 const NONE = '{"sans_reponse": true}';
 const QUESTIONS = ['Acceptez-vous le rendez-vous de mardi ?', 'Quel prix lui annoncer ?'];
-const ask = (questions = QUESTIONS) => JSON.stringify({ questions });
+const CHOIX = [
+  ['Oui', 'Non, proposer jeudi'],
+  ['1 200 €', '1 500 €', 'Le tarif habituel'],
+];
+// Les questions du modèle, chacune avec ses choix de réponse.
+const ask = (questions = QUESTIONS) =>
+  JSON.stringify({
+    questions: questions.map((question, index) => ({
+      question,
+      choix: CHOIX[index] ?? ['Oui', 'Non'],
+    })),
+  });
 
 const tenantIds: string[] = [];
 const userIds: string[] = [];

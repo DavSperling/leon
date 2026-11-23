@@ -161,15 +161,17 @@ function waiting(ctx: TenantContext, now: Date, columns: SQL): SQL {
       and a.last_ts >= ${since}::timestamptz and l.ts >= ${since}::timestamptz
       and l.message is not null and l.address is not null
       and l.author_side is distinct from ${TEAM}
-      and not exists (select 1 from sent where sent.address = l.address)
+      and l.address not in (select address from sent where address is not null)
       and l.recipients_to && array(select address from sent where address is not null)
       and not exists (
         select 1 from brouillons b
         where b.tenant_id = s.tenant_id and b.source_id = s.id
           and b.user_id = ${ctx.userId} and b.message = l.message)`;
 }
-// Elle a écrit à l'auteur du mail, en « à » ou en copie, dans ses mails envoyés : un correspondant.
-const CORRESPONDENT = sql`exists (select 1 from sent where l.address = any(sent.recipients))`;
+// Elle a écrit à l'auteur du mail, en « à » ou en copie, dans ses mails envoyés : un correspondant. Ses destinataires
+// se lisent une fois par requête, pas une fois par fil (l'accueil lit les inconnus à chaque chargement) ; sans nul,
+// pour une adresse jamais nulle, la condition est vraie ou fausse, jamais nulle.
+const CORRESPONDENT = sql`(l.address = any(array(select r from sent, unnest(sent.recipients) r where r is not null)))`;
 
 export async function readWaitingMails(
   ctx: TenantContext,

@@ -449,6 +449,20 @@ describe('readUnknownMails : le complément exact des mails qui attendent', () =
       [5, INES.email],
     ] as const)
       await mailThread(julie, email, [received(ago(hours * HOUR), 'Un point ?', from(email))]);
+    // Un mail envoyé sans adresse d'auteur, ou un destinataire nul (aucune relève n'en écrit), ne change rien au
+    // partage.
+    await mailThread(julie, 'Sans adresse', [
+      received(ago(DAY), 'Bonjour Yves.', {
+        author: { name: 'Julie Martin', email: null },
+        side: 'team',
+        recipients: { to: ['yves@client.test'], cc: [] },
+      }),
+    ]);
+    await adminPool.query(
+      `update turns set recipients_cc = array_append(recipients_cc, null)
+        where tenant_id = $1 and author_side = 'team'`,
+      [julie.tenantId],
+    );
 
     const known = await subjects(julie);
     const unknown = await unknownSubjects(julie);

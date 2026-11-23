@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { deleteAccount } from '@/server/auth/delete-account';
 import { setManager } from '@/server/auth/organisation';
@@ -757,15 +757,13 @@ describe('discardBrouillon : « Écarter »', () => {
 });
 
 describe('ses brouillons sont privés à la personne', () => {
-  it('ni un collègue, ni son manager avec la vue de l’équipe, ni une autre organisation ne les lisent ni ne les écrivent', async () => {
+  // Julie, et ceux qui ne lisent rien d'elle : Paul, un collègue ; Marc, propriétaire de l'organisation et son manager,
+  // sans puis avec la vue de l'équipe ; Zoé, d'une autre organisation.
+  async function julieAndOthers(): Promise<[TenantContext, TenantContext[]]> {
     const [julie, paul, marc] = await team();
     const other = await createTestTenant(['Zoé Bernard']);
     const [zoe] = other.members as [TenantContext];
     tenantIds.push(other.tenantId);
-    await ready(julie, 'Devis 2027');
-    vi.spyOn(console, 'info').mockImplementation(() => {});
-    await writeBrouillons(julie, { llm: answering(draft()).llm });
-    // Marc, propriétaire de l'organisation, est le manager de Julie.
     const memberOf = async (ctx: TenantContext) =>
       (
         await adminDb
@@ -775,7 +773,15 @@ describe('ses brouillons sont privés à la personne', () => {
       )[0]?.id ?? '';
     await adminDb.update(members).set({ role: 'owner' }).where(eq(members.userId, marc.userId));
     expect(await setManager(marc, await memberOf(julie), await memberOf(marc))).toBe('ok');
-    const others = [paul, marc, { ...marc, equipe: true }, zoe];
+    return [julie, [paul, marc, { ...marc, equipe: true }, zoe]];
+  }
+
+  it('ni un collègue, ni son manager avec la vue de l’équipe, ni une autre organisation ne les lisent ni ne les écrivent', async () => {
+    const [julie, others] = await julieAndOthers();
+    const [paul] = others as [TenantContext];
+    await ready(julie, 'Devis 2027');
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    await writeBrouillons(julie, { llm: answering(draft()).llm });
 
     const visible = (ctx: TenantContext) =>
       withTenant(ctx, (tx) => tx.select({ texte: brouillons.texte }).from(brouillons));
@@ -838,6 +844,144 @@ describe('ses brouillons sont privés à la personne', () => {
       ),
     ).rejects.toMatchObject({ code: '23505' });
     expect(await stored(julie)).toHaveLength(1);
+  });
+
+  // Une demande de Leon à Julie, posée en base sans passer par le modèle : deux questions, pas encore de réponse.
+  const QUESTIONS = ['Acceptez-vous le rendez-vous de mardi ?', 'Quel prix lui annoncer ?'];
+  async function asked(ctx: TenantContext, title: string, questions: string[] | null = QUESTIONS) {
+    const mail = received(ago(HOUR), 'Bonjour Julie, mardi vous convient-il, et à quel prix ?');
+    const sourceId = await mailThread(ctx, title, [mail]);
+    const { rows } = await adminPool.query<{ id: string }>(
+      `insert into brouillons (tenant_id, user_id, source_id, message, questions, acl)
+       values ($1, $2, $3, $4, $5, array[$2::uuid]) returning id`,
+      [ctx.tenantId, ctx.userId, sourceId, mail.externalId, questions],
+    );
+    return rows[0]?.id ?? '';
+  }
+  const TEXTE = 'Bonjour Léa,\n\nMardi me convient.\n\nBien à vous';
+  // Par le rôle de l'app, sous les droits de `ctx`.
+  const writeTexte = (ctx: TenantContext, id: string, texte = TEXTE) =>
+    withTenant(ctx, async (tx) => {
+      const { rows } = await tx.execute<{ ok: boolean }>(
+        sql`select ecrire_brouillon(${id}, ${texte}) as ok`,
+      );
+      return rows[0]?.ok;
+    });
+  const reply = (ctx: TenantContext, id: string, reponses: string[]) =>
+    withTenant(ctx, (tx) =>
+      tx
+        .update(brouillons)
+        .set({ reponses })
+        .where(eq(brouillons.id, id))
+        .returning({ id: brouillons.id }),
+    );
+
+  it('le texte ne se pose qu’une fois, et seulement sur une ligne à elle qui a ses questions et ses réponses', async () => {
+    const [julie, others] = await julieAndOthers();
+    const id = await asked(julie, 'Devis 2027');
+
+    // Tant qu'elle n'a pas répondu, aucun texte ; et personne ne répond à sa place.
+    expect(await writeTexte(julie, id)).toBe(false);
+    for (const ctx of others) expect(await reply(ctx, id, ['Oui.', '1 200 €'])).toEqual([]);
+    expect(await reply(julie, id, ['Oui.', ''])).toHaveLength(1);
+    // Ses réponses là, personne d'autre n'écrit son brouillon.
+    for (const ctx of others) expect(await writeTexte(ctx, id)).toBe(false);
+    expect(await stored(julie)).toMatchObject([{ texte: null }]);
+
+    expect(await writeTexte(julie, id)).toBe(true);
+
+    // Posé, il ne change plus : ni par la fonction, ni par une mise à jour, que l'app n'a toujours pas le droit de faire.
+    expect(await writeTexte(julie, id, 'Un autre texte.')).toBe(false);
+    await expect(
+      withTenant(julie, (tx) =>
+        tx.update(brouillons).set({ texte: 'Un autre texte.' }).where(eq(brouillons.id, id)),
+      ),
+    ).rejects.toMatchObject({ cause: { code: '42501' } });
+    expect(await stored(julie)).toMatchObject([
+      { texte: TEXTE, questions: QUESTIONS, reponses: ['Oui.', ''], ecarteLe: null },
+    ]);
+  });
+
+  it('aucun texte ne se pose sur un mail jugé sans réponse à donner, sur un brouillon déjà écrit, ni sur une demande écartée ; et la borne du texte tient', async () => {
+    const [julie] = await team();
+    const none = await asked(julie, 'Merci', null);
+    const discarded = await asked(julie, 'Contrat');
+    const open = await asked(julie, 'Devis 2027');
+    await adminPool.query(
+      `update brouillons set reponses = '{Oui.,Non.}', ecarte_le = case when id = $1 then now() end
+       where id = any($2)`,
+      [discarded, [discarded, open]],
+    );
+    const direct = await asked(julie, 'Facture', null);
+    await adminPool.query("update brouillons set texte = 'Écrit au premier appel.' where id = $1", [
+      direct,
+    ]);
+
+    for (const id of [none, discarded, direct]) expect(await writeTexte(julie, id)).toBe(false);
+    for (const texte of ['', 'x'.repeat(6001)])
+      await expect(writeTexte(julie, open, texte)).rejects.toMatchObject({
+        cause: { code: '23514' },
+      });
+
+    expect(await titlesOf(julie)).toEqual([
+      ['Contrat', null],
+      ['Devis 2027', null],
+      ['Facture', 'Écrit au premier appel.'],
+      ['Merci', null],
+    ]);
+    expect(await writeTexte(julie, open)).toBe(true);
+  });
+
+  it('ni un collègue, ni son manager avec la vue de l’équipe, ni une autre organisation ne lisent ses questions ni ses réponses', async () => {
+    const [julie, others] = await julieAndOthers();
+    const id = await asked(julie, 'Devis 2027');
+    await reply(julie, id, ['Oui.', '1 200 €']);
+
+    const visible = (ctx: TenantContext) =>
+      withTenant(ctx, (tx) =>
+        tx
+          .select({ questions: brouillons.questions, reponses: brouillons.reponses })
+          .from(brouillons),
+      );
+    expect(await visible(julie)).toEqual([{ questions: QUESTIONS, reponses: ['Oui.', '1 200 €'] }]);
+    for (const ctx of others) expect(await visible(ctx)).toEqual([]);
+    // L'app ne refait pas les questions de Leon.
+    await expect(
+      withTenant(julie, (tx) => tx.update(brouillons).set({ questions: ['Une autre ?'] })),
+    ).rejects.toMatchObject({ cause: { code: '42501' } });
+  });
+
+  it('la base borne les questions et les réponses, et refuse un état qui n’existe pas', async () => {
+    const [julie] = await team();
+    const id = await asked(julie, 'Devis 2027');
+    const none = await asked(julie, 'Merci', null);
+    const set = (target: string, column: string, value: string[] | string) =>
+      adminPool.query(`update brouillons set ${column} = $2 where id = $1`, [target, value]);
+    const long = (chars: number) => 'x'.repeat(chars);
+
+    for (const [target, column, value] of [
+      // Une à trois questions, 900 caractères en tout.
+      [id, 'questions', []],
+      [id, 'questions', ['Un ?', 'Deux ?', 'Trois ?', 'Quatre ?']],
+      [id, 'questions', [long(450), long(451)]],
+      // Une réponse par question, 3 000 caractères en tout ; jamais de réponse sans question.
+      [id, 'reponses', ['Oui.']],
+      [id, 'reponses', ['Oui.', 'Non.', 'Peut-être.']],
+      [id, 'reponses', [long(1500), long(1501)]],
+      [none, 'reponses', []],
+      [none, 'reponses', ['Oui.']],
+      // Pas de texte sur une ligne qui a ses questions sans ses réponses.
+      [id, 'texte', 'Bonjour.'],
+    ] as const)
+      await expect(
+        set(target, column, value as string[] | string),
+        `${column} = ${JSON.stringify(value).slice(0, 40)}`,
+      ).rejects.toMatchObject({ code: '23514' });
+
+    // À la borne, tout passe ; une réponse peut être vide.
+    await set(id, 'questions', [long(450), long(450)]);
+    await set(id, 'reponses', ['', long(3000)]);
+    await set(id, 'texte', 'Bonjour.');
   });
 });
 

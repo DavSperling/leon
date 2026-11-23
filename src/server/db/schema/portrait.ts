@@ -74,8 +74,9 @@ export const reponsesAgent = pgTable(
 
 // Les brouillons de réponse que l'agent « Brouillons de réponse » prépare pour elle (0080-brouillons.sql) : une ligne
 // par mail auquel répondre, privée à la personne comme sa fiche (acl = [user_id], contrôlé par la base), et qui ne
-// survit pas à son fil. Seul deleteAccount supprime des lignes ; l'app ne met à jour que la date où elle l'écarte, et
-// l'identifiant du brouillon déposé dans sa boîte Gmail (0081).
+// survit pas à son fil. Seul deleteAccount supprime des lignes ; l'app ne met à jour que la date où elle l'écarte,
+// l'identifiant du brouillon déposé dans sa boîte Gmail (0081) et ses réponses aux questions de Leon (0082). Le texte
+// d'une ligne qui a ses questions et ses réponses ne se pose que par ecrire_brouillon, une fois.
 export const brouillons = pgTable('brouillons', {
   id: uuid('id').primaryKey().defaultRandom(),
   tenantId: uuid('tenant_id')
@@ -88,8 +89,12 @@ export const brouillons = pgTable('brouillons', {
   sourceId: uuid('source_id').notNull(),
   // Le message auquel répondre : l'identifiant de ses tours, « message:<id> ». Un seul résultat par message.
   message: text('message').notNull(),
-  // Nul : le modèle a jugé qu'aucune réponse n'était attendue.
+  // Nul : le modèle a jugé qu'aucune réponse n'était attendue, ou Leon attend ses réponses pour l'écrire.
   texte: text('texte'),
+  // Les questions de Leon à la personne (0082), une à trois. Nul : il n'en a pas posé.
+  questions: text('questions').array(),
+  // Ses réponses, une par question, dans le même ordre ; une réponse peut être vide. Nul : elle n'a pas répondu.
+  reponses: text('reponses').array(),
   ecarteLe: timestamp('ecarte_le', { withTimezone: true }),
   // Le brouillon Gmail créé pour lui (portrait/brouillon-depot.ts). Nul : rien n'est déposé dans sa boîte.
   brouillonGmail: text('brouillon_gmail'),

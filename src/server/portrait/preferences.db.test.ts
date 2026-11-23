@@ -189,8 +189,8 @@ describe('compareReplies : la réponse qu’elle a vraiment envoyée, à la fin 
     await pass(julie);
     expect(await issues(julie)).toEqual([null]);
 
-    // Puis sa réponse : réécrite. Le premier envoi compte, et l'issue ne change plus.
-    await extendThread(julie, thread, [sent(ago(HOUR), REWRITTEN)]);
+    // Puis sa réponse, réécrite, et un second envoi, relevés ensemble : le premier compte, et l'issue ne change plus.
+    await extendThread(julie, thread, [sent(ago(HOUR), REWRITTEN), sent(ago(45 * 60_000), DRAFT)]);
     await pass(julie);
     expect(await issues(julie)).toEqual(['reecrit']);
     await extendThread(julie, thread, [sent(ago(30 * 60_000), DRAFT)]);
@@ -221,12 +221,12 @@ describe('compareReplies : la réponse qu’elle a vraiment envoyée, à la fin 
     await line('Demande', ago(2 * DAY), null);
     await line('Vingt-neuf jours', ago(29 * DAY), DRAFT);
     await line('Trente et un jours', ago(31 * DAY), DRAFT);
-    // Elle écarte le brouillon de Devis 2027, puis répond quand même.
+    // Elle écarte le brouillon de Devis 2027, puis répond quand même, en le retouchant : aucun appel (pass).
     await adminDb
       .update(brouillons)
       .set({ ecarteLe: new Date() })
       .where(and(eq(brouillons.userId, julie.userId), eq(brouillons.sourceId, thread)));
-    await extendThread(julie, thread, [sent(ago(HOUR), DRAFT)]);
+    await extendThread(julie, thread, [sent(ago(HOUR), RETOUCHED)]);
 
     await pass(julie);
 

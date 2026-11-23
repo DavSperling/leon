@@ -76,8 +76,9 @@ export const reponsesAgent = pgTable(
 // par mail auquel répondre, privée à la personne comme sa fiche (acl = [user_id], contrôlé par la base), et qui ne
 // survit pas à son fil. Seul deleteAccount supprime des lignes ; l'app ne met à jour que la date où elle l'écarte,
 // l'identifiant du brouillon déposé dans sa boîte Gmail (0081) et ses réponses aux questions de Leon (0082). Le texte
-// d'une ligne qui a ses questions et ses réponses ne se pose que par ecrire_brouillon, une fois. Les questions et
-// leurs choix (0083) s'écrivent avec la ligne et ne changent plus.
+// d'une ligne qui a ses questions et ses réponses ne se pose que par ecrire_brouillon, une fois ; celui de son oui au
+// mail d'un inconnu, par ecrire_inconnu (0084), une fois. Les questions et leurs choix (0083), son oui et ses
+// indications (0084) s'écrivent avec la ligne et ne changent plus.
 export const brouillons = pgTable('brouillons', {
   id: uuid('id').primaryKey().defaultRandom(),
   tenantId: uuid('tenant_id')
@@ -99,6 +100,9 @@ export const brouillons = pgTable('brouillons', {
   choix: jsonb('choix').$type<string[][]>(),
   // Ses réponses, une par question, dans le même ordre ; une réponse peut être vide. Nul : elle n'a pas répondu.
   reponses: text('reponses').array(),
+  // Son « oui » au mail d'un inconnu (0084), avec ses indications : ce qu'elle veut répondre, vide quand elle n'en donne
+  // pas. Nul : pas de « oui » à un inconnu.
+  indications: text('indications'),
   ecarteLe: timestamp('ecarte_le', { withTimezone: true }),
   // Le brouillon Gmail créé pour lui (portrait/brouillon-depot.ts). Nul : rien n'est déposé dans sa boîte.
   brouillonGmail: text('brouillon_gmail'),

@@ -11,6 +11,7 @@ import { withTenant } from '@/server/db/with-tenant';
 import { createFakeLlm } from '@/server/llm/fake-llm';
 import { type Llm, LlmError } from '@/server/llm/llm';
 import { DATA_GUARD_LINE } from '@/server/llm/prompt-guard';
+import { textArray } from '@/server/search/filters-sql';
 import { adminDb, adminPool } from '@/test/db';
 import { type FakeRoute, fakeFetch } from '@/test/fake-fetch';
 import { createTestTenant } from '@/test/fixtures';
@@ -1468,6 +1469,154 @@ describe('ses brouillons sont privés à la personne', () => {
       [id, JSON.stringify([full, full, full])],
     );
     await adminPool.query('update brouillons set choix = null where id = $1', [id]);
+  });
+
+  // Sa réponse au mail d'un inconnu (0084), écrite par le rôle de l'app sous ses droits : « Oui » avec ses indications
+  // (une chaîne, vide quand elle n'en donne pas), ou « Non » (null). `ecarte` : écartée depuis.
+  async function stranger(
+    ctx: TenantContext,
+    title: string,
+    indications: string | null,
+    ecarte = false,
+  ): Promise<string> {
+    const mail = received(ago(HOUR), 'Bonjour, je me permets de vous écrire.', {
+      author: { name: 'Inès Garnier', email: 'ines@inconnue.test' },
+    });
+    const sourceId = await mailThread(ctx, title, [mail]);
+    const [row] = await withTenant(ctx, (tx) =>
+      tx
+        .insert(brouillons)
+        .values({
+          tenantId: ctx.tenantId,
+          userId: ctx.userId,
+          sourceId,
+          message: mail.externalId,
+          indications,
+          ecarteLe: ecarte ? new Date() : null,
+          acl: [ctx.userId],
+        })
+        .returning({ id: brouillons.id }),
+    );
+    return row?.id ?? '';
+  }
+  // Le résultat du premier appel pour un inconnu, posé par le rôle de l'app sous les droits de `ctx`.
+  const writeFirst = (
+    ctx: TenantContext,
+    id: string,
+    result: { texte?: string; questions?: string[]; choix?: string[][] },
+  ) =>
+    withTenant(ctx, async (tx) => {
+      const { rows } = await tx.execute<{ ok: boolean }>(
+        sql`select ecrire_inconnu(${id}, ${result.texte ?? null},
+                                  ${result.questions ? textArray(result.questions) : sql`null`}::text[],
+                                  ${result.choix ? JSON.stringify(result.choix) : null}::jsonb) as ok`,
+      );
+      return rows[0]?.ok;
+    });
+
+  it('son oui au mail d’un inconnu et ses indications s’écrivent avec la ligne, privés, bornés, et l’app ne les refait pas', async () => {
+    const [julie, others] = await julieAndOthers();
+    const oui = await stranger(julie, 'Partenariat', 'Dites-lui que je suis intéressée.');
+    await stranger(julie, 'Sans indication', '');
+    await stranger(julie, 'Prospection', null);
+
+    const visible = (ctx: TenantContext) =>
+      withTenant(ctx, (tx) =>
+        tx
+          .select({ indications: brouillons.indications })
+          .from(brouillons)
+          .orderBy(brouillons.indications),
+      );
+    expect(await visible(julie)).toEqual([
+      { indications: '' },
+      { indications: 'Dites-lui que je suis intéressée.' },
+      { indications: null },
+    ]);
+    for (const ctx of others) expect(await visible(ctx)).toEqual([]);
+
+    // Ses indications ne changent plus : aucun droit de mise à jour, l'insertion seule.
+    await expect(
+      withTenant(julie, (tx) =>
+        tx.update(brouillons).set({ indications: 'Autre chose.' }).where(eq(brouillons.id, oui)),
+      ),
+    ).rejects.toMatchObject({ cause: { code: '42501' } });
+    const { rows } = await adminPool.query<{ droits: string }>(
+      `select string_agg(privilege_type, ',' order by privilege_type) as droits
+       from information_schema.column_privileges
+       where table_name = 'brouillons' and column_name = 'indications' and grantee = 'leon_app'`,
+    );
+    expect(rows[0]?.droits).toBe('INSERT,SELECT');
+
+    // 1 000 caractères au plus, comme une réponse.
+    const set = (indications: string) =>
+      adminPool.query('update brouillons set indications = $2 where id = $1', [oui, indications]);
+    await expect(set('x'.repeat(1001))).rejects.toMatchObject({ code: '23514' });
+    await set('x'.repeat(1000));
+  });
+
+  it('le premier appel pour un inconnu ne pose son résultat qu’une fois, et seulement sur une ligne à elle qui a son oui', async () => {
+    const [julie, others] = await julieAndOthers();
+    const QUESTION = { questions: ['Quel tarif lui annoncer ?'], choix: [['1 200 €', '1 500 €']] };
+    const withQuestions = await stranger(julie, 'Questions', 'Je veux bien le rencontrer.');
+    const withDraft = await stranger(julie, 'Brouillon', '');
+    const nothing = await stranger(julie, 'Sans réponse', 'Remerciez-le.');
+    const non = await stranger(julie, 'Non', null);
+    const discarded = await stranger(julie, 'Mise à l’écart', 'Oui.', true);
+    const known = await asked(julie, 'Demande d’un correspondant');
+
+    // Personne d'autre ne pose rien sur sa ligne ; ni « Non », ni une ligne écartée, ni une demande qui n'est pas un oui
+    // à un inconnu ne reçoivent de résultat.
+    for (const ctx of others)
+      expect(await writeFirst(ctx, withDraft, { texte: TEXTE })).toBe(false);
+    for (const id of [non, discarded, known])
+      expect(await writeFirst(julie, id, { texte: TEXTE })).toBe(false);
+
+    expect(await writeFirst(julie, withQuestions, QUESTION)).toBe(true);
+    expect(await writeFirst(julie, withDraft, { texte: TEXTE })).toBe(true);
+    // « Sans réponse » : la ligne prend l'état d'un mail sans réponse à donner, sans ses indications.
+    expect(await writeFirst(julie, nothing, {})).toBe(true);
+
+    // Posé, le résultat ne change plus, ni par cette fonction, ni par ecrire_brouillon sans ses réponses.
+    for (const id of [withQuestions, withDraft, nothing]) {
+      expect(await writeFirst(julie, id, { texte: 'Un autre texte.' })).toBe(false);
+      expect(await writeTexte(julie, id, 'Un autre texte.')).toBe(false);
+    }
+    const lines = await adminPool.query(
+      `select s.title, b.texte, b.questions, b.choix, b.indications from brouillons b
+       join sources s on s.id = b.source_id where b.user_id = $1 order by s.title`,
+      [julie.userId],
+    );
+    expect(lines.rows).toEqual([
+      { title: 'Brouillon', texte: TEXTE, questions: null, choix: null, indications: '' },
+      {
+        title: 'Demande d’un correspondant',
+        texte: null,
+        questions: QUESTIONS,
+        choix: CHOIX,
+        indications: null,
+      },
+      { title: 'Mise à l’écart', texte: null, questions: null, choix: null, indications: 'Oui.' },
+      { title: 'Non', texte: null, questions: null, choix: null, indications: null },
+      {
+        title: 'Questions',
+        texte: null,
+        questions: QUESTION.questions,
+        choix: QUESTION.choix,
+        indications: 'Je veux bien le rencontrer.',
+      },
+      { title: 'Sans réponse', texte: null, questions: null, choix: null, indications: null },
+    ]);
+    // Ses questions suivent le chemin de toutes les demandes : ses réponses, puis le texte, une fois.
+    expect(await reply(julie, withQuestions, ['1 200 €'])).toHaveLength(1);
+    expect(await writeTexte(julie, withQuestions)).toBe(true);
+    expect(await writeTexte(julie, withQuestions, 'Un autre texte.')).toBe(false);
+
+    // Les bornes de la table tiennent aussi ici.
+    const open = await stranger(julie, 'Bornes', '');
+    for (const result of [{ texte: '' }, { texte: 'x'.repeat(6001) }, { questions: [] }])
+      await expect(writeFirst(julie, open, result)).rejects.toMatchObject({
+        cause: { code: '23514' },
+      });
   });
 });
 

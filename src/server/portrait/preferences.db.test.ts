@@ -681,8 +681,8 @@ describe('readHomeBrouillons : une préférence proposée est une demande de plu
         source: { title: 'Devis 2027', url: null, kind: 'gmail' },
       },
     ]);
-    const [one] = home.demandes as [{ id: string }];
-    expect(await answerPreference(julie, one.id, false)).toBe(true);
+    const [one] = home.demandes;
+    expect(one && 'preference' in one && (await answerPreference(julie, one.id, false))).toBe(true);
     expect((await readHomeBrouillons(julie)).demandes).toEqual([]);
   });
 

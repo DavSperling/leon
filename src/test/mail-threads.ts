@@ -43,11 +43,17 @@ export const sent = (
   });
 
 // Un fil relevé par la boîte de `owner`, privée sauf `shared` (une boîte partagée à l'équipe). Rend sa source.
+// `connectionId` : une connexion déjà créée par `owner` pour cet outil, au lieu d'une connexion de test neuve.
 export async function mailThread(
   owner: TenantContext,
   title: string,
   messages: ConnectorTurn[],
-  options: { provider?: 'gmail' | 'outlook' | 'crisp'; shared?: boolean; url?: string } = {},
+  options: {
+    provider?: 'gmail' | 'outlook' | 'crisp';
+    shared?: boolean;
+    url?: string;
+    connectionId?: string;
+  } = {},
 ): Promise<string> {
   const provider = options.provider ?? 'gmail';
   const externalId = `thread:${randomUUID()}`;
@@ -65,7 +71,7 @@ export async function mailThread(
   );
   if (!item) throw new Error('fil de test refusé par la normalisation');
   const connection = {
-    id: await seedConnection(owner, { provider }),
+    id: options.connectionId ?? (await seedConnection(owner, { provider })),
     provider,
     createdBy: owner.userId,
     privateRaw: !options.shared,

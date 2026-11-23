@@ -3,6 +3,7 @@ import { DATA_GUARD_LINE } from '@/server/llm/prompt-guard';
 import {
   BROUILLON_MAX_CHARS,
   buildBrouillonPrompt,
+  hasBlank,
   parseBrouillonAnswer,
 } from './brouillon-prompt';
 import type { SentMail } from './facts';
@@ -376,5 +377,28 @@ describe('parseBrouillonAnswer', () => {
 
   it('un brouillon illisible ne se rattrape pas en « sans réponse » dans la même ligne', () => {
     expect(parseBrouillonAnswer('{"brouillon": "", "sans_reponse": true}')).toBeNull();
+  });
+});
+
+describe('hasBlank : un brouillon incomplet', () => {
+  it.each([
+    'Bonjour Léa,\n\nJe vous envoie le devis [à compléter : la date].\n\nCordialement',
+    'Hello Lea,\n\nThe price is [to be completed: the amount].',
+    'Hallo Lea,\n\nder Termin ist am [bitte ergänzen].',
+    'Le montant : []',
+    'Voir [1] et [2].',
+  ])('une paire de crochets sur une même ligne est un blanc : %j', (texte) => {
+    expect(hasBlank(texte)).toBe(true);
+  });
+
+  it.each([
+    'Bonjour Léa,\n\nVoici le devis.\n\nCordialement',
+    'Un crochet ouvert [ sans fin.',
+    'Un crochet fermé ] sans début.',
+    'Fermé ] avant d’être ouvert [.',
+    'Ouvert [ sur une ligne,\nfermé ] sur la suivante.',
+    'Des parenthèses (à voir) et des accolades {date}.',
+  ])('sans paire de crochets sur une même ligne, le brouillon est complet : %j', (texte) => {
+    expect(hasBlank(texte)).toBe(false);
   });
 });

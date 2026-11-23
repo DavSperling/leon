@@ -463,6 +463,26 @@ describe('parseClaudeCodeSession', () => {
     expect(parseClaudeCodeSession('{"type":"mode"}\nn’importe quoi\n')).toBeNull();
   });
 
+  // Les agents de workflow d'avant le 07/11 (relevé du 23/11, sur les formes) : décision d'Amos, ils sont écartés.
+  it('écarte une session lancée par un script (sdk-py) où la personne n’a tapé aucun tour', () => {
+    const agent = { entrypoint: 'sdk-py' };
+    const consigne = line('user', 1, 'Relis le lot.', { ...agent, turnOrigin: 'sdk' });
+    const reponse = line('assistant', 2, 'Relu.', agent);
+    const tape = line('user', 3, 'Et la suite ?', { ...agent, turnOrigin: 'human' });
+
+    expect(parseClaudeCodeSession([consigne, reponse].join('\n'))).toBeNull();
+    expect(parseClaudeCodeSession([consigne, reponse, tape].join('\n'))?.turns).toHaveLength(3);
+  });
+
+  it('garde une session lancée par une autre session (claude-desktop), même sans tour tapé', () => {
+    const consigne = line('user', 1, 'Fais la tâche.', {
+      entrypoint: 'claude-desktop',
+      turnOrigin: 'sdk',
+    });
+
+    expect(parseClaudeCodeSession(consigne)?.turns).toHaveLength(1);
+  });
+
   it('ignore une ligne sans identifiant ou sans date valide', () => {
     const content = [
       line('user', 1, 'Sans date', { timestamp: 'hier' }),

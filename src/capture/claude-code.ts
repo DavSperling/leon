@@ -22,6 +22,8 @@ const LineSchema = z.object({
   sessionId: z.string().min(1).max(200).optional(),
   timestamp: z.iso.datetime({ offset: true }).optional(),
   cwd: z.string().optional(),
+  // Ce qui a lancé Claude Code (`cli`, `claude-desktop`, `sdk-py`…) : lu pour écarter les agents d'un script.
+  entrypoint: z.string().optional(),
   isSidechain: z.boolean().optional(),
   isMeta: z.boolean().optional(),
   isCompactSummary: z.boolean().optional(),
@@ -244,10 +246,19 @@ function sessionTitle(
   return firstUserText ? firstUserText.slice(0, TITLE_FROM_TEXT_MAX) : null;
 }
 
+// Le point d'entrée des agents qu'un script lançait comme des sessions à part (le relevé du 23/11, sur les formes) : du
+// 27/10 au 06/11, les agents de workflow, en lecture seule avec StructuredOutput, dont aucun tour n'est de la personne.
+// Depuis le 07/11, ce sont des sous-agents de la session de l'humain (subagents/workflows/, loadWorkflowRuns).
+const SCRIPT_ENTRYPOINT = 'sdk-py';
+
+// null quand il n'y a rien à envoyer : pas de sessionId, ou une session lancée par un script où la personne n'a tapé
+// aucun tour (décision d'Amos du 23/11 : elle est écartée, pas rattachée). Une session lancée par une autre session
+// (`claude-desktop`) reste, même sans tour tapé.
 export function parseClaudeCodeSession(content: string): ClaudeCodeSession | null {
   const turns: Turn[] = [];
   let sessionId: string | null = null;
   let cwd: string | null = null;
+  let entrypoint: string | undefined;
   let aiTitle: string | undefined;
   let customTitle: string | undefined;
   const subagentCalls = new Set<string>();
@@ -255,6 +266,7 @@ export function parseClaudeCodeSession(content: string): ClaudeCodeSession | nul
   for (const raw of content.split('\n')) {
     const line = parseLine(raw);
     if (!line) continue;
+    entrypoint ??= line.entrypoint;
     if (line.type === 'ai-title') aiTitle = line.aiTitle ?? aiTitle;
     if (line.type === 'custom-title') customTitle = line.customTitle ?? customTitle;
     let turn: Turn | null;
@@ -269,5 +281,6 @@ export function parseClaudeCodeSession(content: string): ClaudeCodeSession | nul
   }
 
   if (sessionId === null) return null;
+  if (entrypoint === SCRIPT_ENTRYPOINT && !turns.some(isTypedTurn)) return null;
   return { sessionId, cwd, title: sessionTitle(customTitle, aiTitle, turns), turns };
 }

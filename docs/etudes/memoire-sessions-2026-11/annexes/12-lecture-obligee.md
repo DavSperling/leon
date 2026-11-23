@@ -578,6 +578,7 @@ Total du lot : environ 4 j.
     - Jusqu'au 06/11, chaque agent de workflow était une session `sdk-py` à part : 322 des 394 sessions de tête. L'import du 19/11 les a rangées comme des sessions menées, souvent externes (`StructuredOutput` n'est pas un outil local).
     - Depuis le 07/11, ce sont des sous-agents, sous `subagents/workflows/`, et l'outil `Workflow` rend la session de l'humain externe.
     - Proposition : écarter ou rattacher les anciennes sessions, et juger `Workflow` par les échanges de ses agents, comme T63 juge `Agent` et `Task`. Il reste à vérifier que ces échanges se lisent bien sous ce dossier.
+    - Tranché le 23/11 par Amos, après un relevé sur les formes (314 des 388 sessions, ce jour-là) : les sessions `sdk-py` sans tour de la personne sont écartées, celles déjà sur le serveur y restent, et `Workflow` se juge par les agents de son run. Les échanges se lisent bien sous ce dossier. Le détail est dans le plan (« Décisions d'Amos du 23/11 pour les agents de workflow », T63 amendé le 23/11).
 - **Des lectures de la CLI qui envoient leur session** (`--session`, `--tool`, comme `leon note`).
   - Aujourd'hui, elles n'en envoient pas (`read-commands.ts:13-15`) : `read_log` ne relie pas une lecture de la CLI à sa session.
   - Avec elles, et `passage` dans `metadata.usages`, on pourrait compter les lectures des vraies sessions d'Amos, avec et sans l'arrêt.

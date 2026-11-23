@@ -13,7 +13,12 @@ import {
 } from '../capture/api-contract';
 import { type ClaudeCodeSession, parseClaudeCodeSession } from '../capture/claude-code';
 import { extractBackstage } from '../capture/session-backstage';
-import { extractClaudeCodeFacts, type Subagents } from '../capture/session-facts';
+import {
+  extractClaudeCodeFacts,
+  isExternalWorkflowAgent,
+  type Subagents,
+  type Workflows,
+} from '../capture/session-facts';
 import {
   BACKSTAGE_ROLES,
   type CodeSessionKind,
@@ -28,7 +33,7 @@ import { CONSENT_WITHDRAWN_MESSAGE } from './consent';
 import type { ServerEnv } from './env';
 import { findSessionFiles } from './find-sessions';
 import { type GitRunner, projectKeyFor, repoRootOrCloneFor } from './project-key';
-import { loadSubagents } from './subagents';
+import { loadSubagents, loadWorkflowRuns } from './subagents';
 
 // `--since AAAA-MM-JJ` : minuit à l'heure locale de qui lance l'import, pas minuit UTC.
 export function parseSince(value: string | undefined): Date | undefined {
@@ -262,6 +267,7 @@ export async function sendSessionFacts(
     fin: boolean;
     faits?: SessionFacts;
     subagents?: Subagents;
+    workflows?: Workflows;
   },
   options: Pick<ImportOptions, 'dryRun' | 'projectKey'> & { kind?: CodeSessionKind },
   deps: ImportDeps,
@@ -277,7 +283,14 @@ export async function sendSessionFacts(
       ? { usages: deps.facts.usages, accord_le: deps.facts.accordLe.toISOString() }
       : {}),
     faits:
-      source.faits ?? extractClaudeCodeFacts(source.content, source.root, false, source.subagents),
+      source.faits ??
+      extractClaudeCodeFacts(
+        source.content,
+        source.root,
+        false,
+        source.subagents,
+        source.workflows,
+      ),
     fin: source.fin,
   };
   if (options.dryRun) {
@@ -396,11 +409,13 @@ export async function importClaudeCode(
       const fin = Date.now() - mtimeMs >= IDLE_MS;
       // Sans git (essais), la racine reste le dossier de départ.
       const root = deps.git ? await repoRootOrCloneFor(start, deps.git) : start;
-      const subagents = await loadSubagents(file, {
-        readFile: (path) => readFile(path, 'utf8'),
-        readdir: deps.readdir,
-      });
-      const source = { content, root, fin, subagents };
+      const lecture = { readFile: (path: string) => readFile(path, 'utf8'), readdir: deps.readdir };
+      const subagents = await loadSubagents(file, lecture);
+      // `false` : l'import ne lit pas la configuration MCP (sendSessionFacts).
+      const workflows = await loadWorkflowRuns(file, content, lecture, (agent) =>
+        isExternalWorkflowAgent(agent, false, subagents),
+      );
+      const source = { content, root, fin, subagents, workflows };
       const factsDeps = { ...deps, facts: { ...deps.facts, usages } };
       factsRefused = !(await sendSessionFacts(
         session,

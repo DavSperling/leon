@@ -37,7 +37,7 @@ import { dirname, isAbsolute, join, resolve, sep } from 'node:path';
 import { z } from 'zod';
 import { parseClaudeCodeSession } from '../capture/claude-code';
 import { extractBackstage } from '../capture/session-backstage';
-import { extractClaudeCodeFacts } from '../capture/session-facts';
+import { extractClaudeCodeFacts, isExternalWorkflowAgent } from '../capture/session-facts';
 import type { Turn } from '../capture/turn';
 import type { Outil } from './hook-commands';
 import {
@@ -55,7 +55,7 @@ import {
 import { leonMcpRecognized } from './leon-mcp';
 import { ADAPTATEURS, sessionFileFrom } from './outils';
 import { type GitRunner, projectKeyFor, repoRootOrCloneFor } from './project-key';
-import { loadSubagents } from './subagents';
+import { loadSubagents, loadWorkflowRuns } from './subagents';
 
 // Le crochet dure 30 s au plus (T14), démarrage de la commande compris : le réseau a bien moins que cela,
 // et une fois ce délai écoulé la requête est interrompue, pour que la commande se termine. Il court une seule
@@ -220,7 +220,11 @@ async function capture(stdin: string, deps: CaptureDeps): Promise<void> {
       dirs: root === null ? [start] : [start, root],
       url: deps.mcpUrl,
     });
-    const faits = extractClaudeCodeFacts(content, root, leonMcp, subagents);
+    // Après leonMcp : les agents d'un run se jugent à la lecture, par la règle de la session.
+    const workflows = await loadWorkflowRuns(input.transcript_path, content, deps, (agent) =>
+      isExternalWorkflowAgent(agent, leonMcp, subagents),
+    );
+    const faits = extractClaudeCodeFacts(content, root, leonMcp, subagents, workflows);
     const source = { content, root, fin: true, faits };
     if (!(await sendSessionFacts(session, source, { dryRun: false, projectKey }, deps))) {
       warn(FACTS_REFUSED_MESSAGE);

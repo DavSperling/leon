@@ -26,6 +26,9 @@ const EXAMPLE_CHARS = 1200;
 // Le corps d'un brouillon, au plus : le contrôle de la table (0080) a la même borne.
 export const BROUILLON_MAX_CHARS = 6000;
 
+// « Sa boîte ajoute la signature », dit la consigne : c'est vrai du brouillon qu'elle colle dans sa réponse. Pour un
+// brouillon déposé dans ses brouillons Gmail (brouillon-depot.ts), ce n'est pas vérifié : si Gmail n'ajoute pas la
+// signature à un brouillon créé par l'API, il part sans elle, Leon n'en ajoutant aucune.
 const SYSTEM = `Tu es Leon, la mémoire de l'entreprise. Une personne a reçu un mail qui attend sa réponse. Tu écris le brouillon de cette réponse, comme elle l'écrirait. Elle le relira, le corrigera et l'enverra elle-même : rien ne part sans elle.
 
 Le message contient, derrière une ligne de garde :

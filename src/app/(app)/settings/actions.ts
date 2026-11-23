@@ -783,7 +783,8 @@ export async function answerAgentAction(input: {
 }
 
 // « Écarter » un brouillon de réponse prêt : il ne se montre plus. Celui d'un autre, ou déjà écarté, est
-// « introuvable ». Rien n'est envoyé ni écrit dans sa boîte, ici comme ailleurs.
+// « introuvable ». Rien n'est envoyé, et rien ne change dans sa boîte : un brouillon déposé dans ses brouillons Gmail
+// y reste, elle le supprime elle-même (portrait/brouillon-depot.ts).
 export async function discardBrouillonAction(
   id: string,
 ): Promise<{ ok: true } | { error: FicheError }> {

@@ -120,6 +120,7 @@ export async function ingestConnectorItems(
         internalNote: turn.internalNote,
         recipientsTo: turn.recipientsTo,
         recipientsCc: turn.recipientsCc,
+        automated: turn.automated,
         acl: sourceAcl,
       }));
       const { ids, lastTs } = await insertNewTurns(tx, rows);

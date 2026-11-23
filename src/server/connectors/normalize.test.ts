@@ -386,6 +386,18 @@ describe('normalizeItem', () => {
     expect(result?.turns[0]).toMatchObject({ recipientsTo: [], recipientsCc: [] });
   });
 
+  it('garde le fait « envoi automatique » d’un courrier, nul quand l’outil ne le dit pas', () => {
+    const result = normalize(
+      item([
+        { ...body('Nos nouveautés.'), automated: true },
+        { ...body('Un point ?'), automated: false },
+        body('Texte'),
+      ]),
+    );
+
+    expect(result?.turns.map((turn) => turn.automated)).toEqual([true, false, null]);
+  });
+
   it('laisse de côté ce qui n’est pas une adresse, et une adresse de plus de 320 caractères', () => {
     const tooLong = `${'a'.repeat(320)}@acme.test`;
     const to = [

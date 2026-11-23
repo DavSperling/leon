@@ -25,6 +25,9 @@ export type ConnectorTurn = {
   // Les destinataires d'un courrier, « à » et « copie » : des adresses seules, sans les noms (le minimum sur
   // des tiers), jamais la copie cachée. Absent pour tout ce qui n'est pas un courrier.
   recipients?: { to: string[]; cc: string[] };
+  // Un courrier reçu envoyé par une machine ou en nombre (lettre d'information, notification), lu dans ce que l'outil
+  // rend déjà (Gmail : gmail/map.ts). Absent quand l'outil ne le dit pas, et pour un mail envoyé.
+  automated?: boolean;
   text: string; // texte brut (HTML déjà passé par htmlToText)
   // ISO 8601. Tour document : updatedAt de l'élément (l'état décrit vaut à cette date ; un corps
   // modifié donne un tour daté de la modification). Commentaire ou prise de parole : sa propre date.

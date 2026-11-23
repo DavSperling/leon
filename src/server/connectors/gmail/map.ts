@@ -5,7 +5,8 @@ import type { GmailMessage, GmailPart } from './schemas';
 // Des messages de Gmail aux éléments du socle, comme Outlook : un fil regroupe les messages d'une même
 // conversation lus ensemble, chacun est un tour `participant` daté de sa réception. Le côté vient du
 // libellé SENT (envoyé depuis la boîte) ; rien n'est déduit pour les autres. Les destinataires viennent
-// des en-têtes To et Cc, jamais de Bcc.
+// des en-têtes To et Cc, jamais de Bcc. Un message reçu dit seulement s'il est envoyé par une machine ou en
+// nombre (automated).
 
 export const headerOf = (part: GmailPart | null | undefined, name: string): string | null =>
   part?.headers?.find((header) => header.name.toLowerCase() === name)?.value ?? null;
@@ -83,14 +84,41 @@ const titleOf = (subject: string | null): string =>
 
 const iso = (internalDate: string) => new Date(Number(internalDate)).toISOString();
 
+// Un message reçu envoyé par une machine ou en nombre, lu dans ce que Gmail rend déjà (format=full), sans modèle ni
+// requête de plus : un en-tête de liste ou d'envoi automatique (List-Unsubscribe, List-Id, Auto-Submitted autre que
+// « no », Precedence bulk, list ou junk), un onglet autre que Principale, ou une adresse d'expéditeur de machine. Les
+// onglets, d'après leurs libellés (doc lue le 23/11/2026 :
+// https://developers.google.com/workspace/gmail/api/guides/labels) : Notifications (CATEGORY_UPDATES) et Forums
+// (CATEGORY_FORUMS) ; Promotions et Réseaux sociaux ne sont pas relevés (connector.ts). Rien n'en est gardé que ce fait.
+const MACHINE_SENDER =
+  /^(?:no-reply|noreply|do-not-reply|donotreply|mailer-daemon|postmaster|notifications)/i;
+const BULK_TABS = ['CATEGORY_UPDATES', 'CATEGORY_FORUMS'];
+
+function automated(message: GmailMessage, from: string | null): boolean {
+  const header = (name: string) => headerOf(message.payload, name)?.trim().toLowerCase() ?? null;
+  const submitted = header('auto-submitted');
+  return (
+    header('list-unsubscribe') !== null ||
+    header('list-id') !== null ||
+    (submitted !== null && !/^no\b/.test(submitted)) ||
+    ['bulk', 'list', 'junk'].includes(header('precedence') ?? '') ||
+    (message.labelIds ?? []).some((label) => BULK_TABS.includes(label)) ||
+    MACHINE_SENDER.test(from ?? '')
+  );
+}
+
 function messageTurn(message: GmailMessage): ConnectorTurn | null {
   const text = textOf(message.payload);
   if (text === '') return null;
+  const author = parseAddress(headerOf(message.payload, 'from'));
   return {
     externalId: `message:${message.id}`,
     role: 'participant',
-    author: parseAddress(headerOf(message.payload, 'from')),
-    ...(message.labelIds?.includes('SENT') ? { side: 'team' as const } : {}),
+    author,
+    // Envoyé depuis sa boîte : du côté de l'équipe. Reçu : envoyé par une machine ou en nombre, ou non.
+    ...(message.labelIds?.includes('SENT')
+      ? { side: 'team' as const }
+      : { automated: automated(message, author.email) }),
     recipients: {
       to: parseAddressList(headerOf(message.payload, 'to')),
       cc: parseAddressList(headerOf(message.payload, 'cc')),

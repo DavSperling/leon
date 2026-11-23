@@ -38,6 +38,7 @@ export type NormalizedTurn = {
   internalNote: boolean;
   recipientsTo: string[];
   recipientsCc: string[];
+  automated: boolean | null;
   text: string;
   ts: Date;
 };
@@ -370,6 +371,7 @@ function normalizeTurn(turn: ConnectorTurn, ts: Date): NormalizedTurn[] {
         internalNote: turn.internalNote === true,
         recipientsTo,
         recipientsCc,
+        automated: turn.automated ?? null,
         text,
         ts,
       },

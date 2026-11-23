@@ -35,6 +35,8 @@ function message(
     text?: string;
     html?: string;
     labels?: string[];
+    // D'autres en-têtes, tels quels.
+    headers?: Array<{ name: string; value: string }>;
   },
 ): GmailMessage {
   const parts = [
@@ -58,6 +60,7 @@ function message(
         ...(input.cc === undefined ? [] : [{ name: 'Cc', value: input.cc }]),
         ...(input.bcc === undefined ? [] : [{ name: 'Bcc', value: input.bcc }]),
         { name: 'Subject', value: input.subject ?? 'Devis cuisine' },
+        ...(input.headers ?? []),
       ],
       parts,
     },
@@ -318,6 +321,80 @@ describe('gmail : lecture des messages', () => {
       { index: 1, status: 429, body: '{"error":{}}' },
     ]);
     expect(() => parseBatch('', 'application/json')).toThrow('Unexpected response');
+  });
+});
+
+describe('gmail : un message reçu envoyé par une machine ou en nombre', () => {
+  // Un message reçu, relu comme la relève le lit : le fait gardé sur son tour, une fois normalisé.
+  const automated = (input: Partial<Parameters<typeof message>[2]>) => {
+    const [item] = threadsOf([
+      message('m1', 't1', { at: '2026-10-23T09:00:00Z', text: 'Bonjour Julie.', ...input }),
+    ]);
+    return item && normalizeItem(item, 'gmail')?.turns[0]?.automated;
+  };
+  const header = (name: string, value: string) => ({ headers: [{ name, value }] });
+
+  it('le mail d’une personne : pas automatique', () => {
+    expect(automated({ from: 'Inès Garnier <ines@inconnue.test>' })).toBe(false);
+    // Une adresse qui ne fait que contenir un mot de machine, une réponse automatique dite « no », un envoi d'une
+    // autre priorité, l'onglet Principale.
+    expect(automated({ from: 'julie.notifications@acme.test' })).toBe(false);
+    expect(automated(header('Auto-Submitted', 'no'))).toBe(false);
+    expect(automated(header('Precedence', 'first-class'))).toBe(false);
+    expect(automated({ labels: ['INBOX', 'CATEGORY_PERSONAL'] })).toBe(false);
+  });
+
+  it.each([
+    ['une désinscription', header('List-Unsubscribe', '<mailto:desinscription@lettre.test>')],
+    ['une liste de diffusion', header('List-Id', 'Nouvelles <nouvelles.lettre.test>')],
+    ['une réponse automatique', header('Auto-Submitted', 'auto-replied')],
+    ['un envoi généré', header('Auto-Submitted', 'auto-generated')],
+    ['un envoi en nombre', header('Precedence', 'bulk')],
+    ['un envoi à une liste', header('Precedence', 'list')],
+    ['un envoi indésirable', header('Precedence', 'junk')],
+    ['l’onglet Notifications', { labels: ['INBOX', 'CATEGORY_UPDATES'] }],
+    ['l’onglet Forums', { labels: ['INBOX', 'CATEGORY_FORUMS'] }],
+    ['une adresse « no-reply »', { from: 'Banque <no-reply@banque.test>' }],
+    ['une adresse « noreply »', { from: 'noreply@service.test' }],
+    ['une adresse « do-not-reply »', { from: 'do-not-reply@service.test' }],
+    ['une adresse « donotreply »', { from: 'Service <donotreply@service.test>' }],
+    ['une adresse « mailer-daemon »', { from: 'Mail Delivery <mailer-daemon@service.test>' }],
+    ['une adresse « postmaster »', { from: 'postmaster@service.test' }],
+    ['une adresse « notifications »', { from: 'GitHub <notifications@github.test>' }],
+  ])('%s : automatique', (_, input) => {
+    expect(automated(input)).toBe(true);
+  });
+
+  it('lit les en-têtes et leurs valeurs quelle que soit leur casse, et l’adresse de même', () => {
+    expect(automated(header('LIST-UNSUBSCRIBE', '<https://lettre.test/stop>'))).toBe(true);
+    expect(automated(header('list-id', 'nouvelles.lettre.test'))).toBe(true);
+    expect(automated(header('auto-submitted', ' Auto-Notified '))).toBe(true);
+    expect(automated(header('AUTO-SUBMITTED', 'No'))).toBe(false);
+    expect(automated(header('precedence', 'BULK'))).toBe(true);
+    expect(automated({ from: 'NoReply@Service.test' })).toBe(true);
+  });
+
+  it('un mail qu’elle a envoyé : on ne sait pas, même avec un signal de machine', () => {
+    for (const input of [
+      { labels: ['SENT'] },
+      { labels: ['SENT'], ...header('List-Unsubscribe', '<mailto:stop@lettre.test>') },
+      { labels: ['SENT', 'CATEGORY_UPDATES'], from: 'noreply@acme.test' },
+    ])
+      expect(automated(input)).toBeNull();
+  });
+
+  it('aucun en-tête n’est gardé : le tour ne porte que ce fait', () => {
+    const [item] = threadsOf([
+      message('m1', 't1', {
+        at: '2026-10-23T09:00:00Z',
+        text: 'Nos nouveautés.',
+        ...header('List-Unsubscribe', '<https://lettre.test/stop?id=julie>'),
+      }),
+    ]);
+    const turn = item?.turns[0];
+
+    expect(turn?.automated).toBe(true);
+    expect(JSON.stringify(item)).not.toContain('lettre.test');
   });
 });
 

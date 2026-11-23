@@ -191,6 +191,35 @@ describe('ingestConnectorItems', () => {
     ]);
   });
 
+  // Le fait « envoyé par une machine ou en nombre » d'un courrier reçu suit le tour jusqu'à la base, où l'agent
+  // « Brouillons de réponse » le relira ; un tour dont l'outil ne dit rien reste nul. Un tour relevé avant (sans le
+  // fait) le garde nul quand la relève suivante le relit : l'ingestion ne réécrit pas un tour déjà là.
+  it('enregistre si un courrier reçu est un envoi automatique, nul quand l’outil ne le dit pas, même relu ensuite', async () => {
+    const connection = await connectionOf(paul);
+    const externalId = `thread:${randomUUID()}`;
+    const before = comment(3, 'Relevé avant.');
+    await ingestConnectorItems(paul, connection, [normalized(connectorItem(externalId, [before]))]);
+
+    await ingestConnectorItems(paul, connection, [
+      normalized(
+        connectorItem(externalId, [
+          { ...comment(1, 'Nos nouveautés.'), automated: true },
+          { ...comment(2, 'Un point ?'), automated: false },
+          { ...before, automated: true },
+          comment(4, 'Sans le fait.'),
+        ]),
+      ),
+    ]);
+
+    const stored = await readTurns(paul, await sourceIdOf(paul, externalId));
+    expect(stored.map((t) => [t.text, t.automated]).sort()).toEqual([
+      ['Nos nouveautés.', true],
+      ['Relevé avant.', null],
+      ['Sans le fait.', null],
+      ['Un point ?', false],
+    ]);
+  });
+
   it("montre la source, ses tours et son run à toute l'équipe, à personne d'autre", async () => {
     const connection = await connectionOf(paul);
     const externalId = `issue:${randomUUID()}`;

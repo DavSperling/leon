@@ -58,6 +58,8 @@ export const turns = pgTable('turns', {
   // Les destinataires d'un courrier, « à » et « copie » (0075) : des adresses seules, en minuscules. Vides pour le reste.
   recipientsTo: text('recipients_to').array().notNull().default(sql`'{}'::text[]`),
   recipientsCc: text('recipients_cc').array().notNull().default(sql`'{}'::text[]`),
+  // Un courrier reçu envoyé par une machine ou en nombre (0085), lu à la relève Gmail. Nul : on ne sait pas.
+  automated: boolean('automated'),
   // Tour `user` injecté (true), tapé par la personne (false), ou inconnu (null : capté avant la marque, T43).
   injecte: boolean('injecte'),
   acl: acl(),

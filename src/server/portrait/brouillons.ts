@@ -195,7 +195,8 @@ export type Demande = Pick<ReadyBrouillon, 'id' | 'sourceId' | 'from' | 'receive
 // n'a pas écartées, et dont le fil n'a pas bougé depuis : le dernier message du fil se relit à chaque affichage, et dès
 // qu'elle a répondu, ou qu'un nouveau message est arrivé, la ligne ne se montre plus. À date égale, le même départage
 // que readWaitingMails. Et pas la demande d'un mail trop ancien pour le second appel (readAnsweredMails) : ses réponses
-// ne feraient plus rien écrire.
+// ne feraient plus rien écrire. Parmi les demandes, celles qui attendent sa réponse passent avant celles où Leon
+// écrit : elles seules attendent un geste d'elle, et trois lignes « Leon écrit » ne doivent pas les cacher.
 // shortcut: au-delà de HOME_MAX, les plus anciens ne se montrent pas ; à paginer si une personne en garde autant sans
 // les écarter.
 export async function readShown(
@@ -217,7 +218,10 @@ export async function readShown(
         select b.id, b.source_id as "sourceId", coalesce(l.author_name, l.author_email) as "from",
                extract(epoch from l.ts) as at, b.texte, b.brouillon_gmail is not null as depose,
                b.questions, b.choix, b.reponses is not null as repondue,
-               row_number() over (partition by b.texte is null order by l.ts desc, b.id) as n
+               row_number() over (
+                 partition by b.texte is null
+                 order by (b.texte is null and b.reponses is not null), l.ts desc, b.id
+               ) as n
         from brouillons b
         cross join lateral (
           select t.external_id, t.author_name, t.author_email, t.ts

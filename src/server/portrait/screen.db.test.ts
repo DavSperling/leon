@@ -403,6 +403,17 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
     expect(await readHomeBrouillons(paul)).toEqual(NOTHING);
   });
 
+  it('parmi les trois demandes, celles qui attendent sa réponse passent avant celles où Leon écrit, même sur des mails plus récents', async () => {
+    const [julie] = await people();
+    await answered(julie);
+    for (const hours of [1, 2, 3])
+      await asked(julie, `Répondue ${hours}`, hours, { reponses: ['Oui.', ''] });
+    for (const hours of [5, 4]) await asked(julie, `Demande ${hours}`, hours);
+
+    // Les deux qui attendent un geste d'elle, puis la plus récente de celles où Leon écrit ; montrées par date du mail.
+    expect((await titles(julie)).demandes).toEqual(['Répondue 1', 'Demande 4', 'Demande 5']);
+  });
+
   it('sans son oui à l’agent, ou quand il ne lui est plus proposé, rien ne part vers l’accueil ; un nouveau oui remontre tout', async () => {
     const [julie, paul] = await people();
     await answered(julie, false);

@@ -112,9 +112,9 @@ export function Questions({
                   {answers[index] || <span className="text-muted">{t('noAnswer')}</span>}
                 </p>
                 <Button
-                  size="xs"
+                  size="sm"
                   variant="quiet"
-                  className="-ml-3"
+                  className="-ml-3.5"
                   aria-describedby={`${id}-question-${index}`}
                   disabled={sending || discarding}
                   onClick={() => dispatch({ type: 'goto', step: index })}

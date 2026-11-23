@@ -692,6 +692,23 @@ Le point 9 (Codex) demande d'approuver le crochet dans `/hooks`. Il vient avec C
 >
 > Le texte d'accord le dit.
 
+**Avec Amos, dans le terminal (23/11, `claude` dans l'app Terminal, mode `auto`, Sonnet 5.5).**
+- `CLAUDE_CODE_ENTRYPOINT` vaut `cli`, sans `agent_id`, et `CLAUDE_PROJECT_DIR` vaut le `cwd`.
+- L'agent est arrêté une fois. La lecture échoue pour la même raison que dans l'app, le bac à sable réseau, et l'agent refait sa modification. Aucune permission n'est demandée.
+- Le point 2 est donc réglé : `claude-desktop` pour l'app, `cli` pour le terminal, `sdk-cli` pour un `claude -p` d'un environnement propre.
+
+**Avec Amos, dans Cursor (23/11, l'appli d'agents de Cursor, Grok 4.7).**
+- Cursor lit les crochets de `.claude/settings.json` du dossier. Il les lance en `preToolUse`, sur `Write`, `Read`, `Grep` et `Shell`.
+- Son entrée porte `conversation_id`, `cursor_version`, `generation_id`, `model`, `session_id`, `tool_input`, `tool_name`, `tool_use_id`, `transcript_path`, `user_email` et `workspace_roots`, plus `cwd` pour `Shell`. `isOtherToolHook` le reconnaît par `cursor_version`.
+- **Point 8.** Le premier `Write` a reçu le code 1 sans sortie, comme d'une CLI qui ne connaît pas `read-first`. Cursor a laissé passer l'écriture, et `produit.js` est créé. Les appels suivants, avec le code 0 sans sortie, passent aussi. Une CLI ancienne ne bloque donc pas Cursor.
+
+**T66 est fait** (23/11). Les points 1 à 8 et 10 ont leur réponse. Le point 9 (Codex) vient avec Codex, après une approbation dans `/hooks`. Trois choses changent pour T67 :
+- le texte d'arrêt V2 ;
+- la règle du code 0 et du projet (`CLAUDE_PROJECT_DIR` ou `cwd`) ;
+- l'exception du bac à sable proposée par l'installateur.
+
+Le dépôt `~/leon-essai-t66` reste jusqu'à la fin de T67, pour un dernier essai du vrai crochet avec Amos.
+
 ## Ce qui demande la présence d'Amos
 
 - **L'essai (T66)** : une session dans l'app de bureau, avec le bac à sable de Bash, une dans le terminal, et un essai dans Cursor, devant l'appli. C'est Cursor qui risque le plus : il reprend par défaut les crochets de Claude Code, et sa doc dit qu'un JSON invalide y bloque l'action.

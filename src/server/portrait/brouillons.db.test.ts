@@ -217,7 +217,7 @@ describe('writeBrouillons', () => {
     expect(await titlesOf(julie)).toEqual([['Merci', null]]);
   });
 
-  it('quand le modèle pose des questions, elles sont gardées sans texte, et le modèle n’est pas rappelé tant qu’elle n’a pas répondu', async () => {
+  it('quand le modèle pose des questions, elles sont gardées avec leurs choix, sans texte, et le modèle n’est pas rappelé tant qu’elle n’a pas répondu', async () => {
     const julie = await julieWaiting('Devis 2027');
     const info = vi.spyOn(console, 'info').mockImplementation(() => {});
     const first = answering(ask());
@@ -227,9 +227,16 @@ describe('writeBrouillons', () => {
     expect(first.calls).toHaveLength(1);
     const rows = await stored(julie);
     expect(rows).toMatchObject([
-      { texte: null, questions: QUESTIONS, reponses: null, ecarteLe: null, brouillonGmail: null },
+      {
+        texte: null,
+        questions: QUESTIONS,
+        choix: CHOIX,
+        reponses: null,
+        ecarteLe: null,
+        brouillonGmail: null,
+      },
     ]);
-    // Le journal compte les questions, sans rien en dire.
+    // Le journal compte les questions, sans rien en dire, ni de leurs choix.
     expect(JSON.parse(String(info.mock.calls.at(-1)?.[2]))).toEqual({
       userId: julie.userId,
       sourceId: rows[0]?.sourceId,
@@ -237,7 +244,7 @@ describe('writeBrouillons', () => {
       questions: 2,
       chars: ask().length,
     });
-    expect(JSON.stringify(info.mock.calls)).not.toMatch(/mardi|prix/);
+    expect(JSON.stringify(info.mock.calls)).not.toMatch(/mardi|prix|jeudi|tarif|1 200/);
     // Rien à montrer parmi ses brouillons prêts, et rien à redemander au modèle : Leon l'attend.
     expect(await readBrouillons(julie)).toEqual([]);
     const again = answering(draft());
@@ -1249,14 +1256,22 @@ describe('ses brouillons sont privés à la personne', () => {
     expect(await stored(julie)).toHaveLength(1);
   });
 
-  // Une demande de Leon à Julie, posée en base sans passer par le modèle : deux questions, pas encore de réponse.
+  // Une demande de Leon à Julie, posée en base sans passer par le modèle : deux questions et leurs choix, pas encore
+  // de réponse.
   async function asked(ctx: TenantContext, title: string, questions: string[] | null = QUESTIONS) {
     const mail = received(ago(HOUR), 'Bonjour Julie, mardi vous convient-il, et à quel prix ?');
     const sourceId = await mailThread(ctx, title, [mail]);
     const { rows } = await adminPool.query<{ id: string }>(
-      `insert into brouillons (tenant_id, user_id, source_id, message, questions, acl)
-       values ($1, $2, $3, $4, $5, array[$2::uuid]) returning id`,
-      [ctx.tenantId, ctx.userId, sourceId, mail.externalId, questions],
+      `insert into brouillons (tenant_id, user_id, source_id, message, questions, choix, acl)
+       values ($1, $2, $3, $4, $5, $6, array[$2::uuid]) returning id`,
+      [
+        ctx.tenantId,
+        ctx.userId,
+        sourceId,
+        mail.externalId,
+        questions,
+        questions && JSON.stringify(CHOIX),
+      ],
     );
     return rows[0]?.id ?? '';
   }
@@ -1334,7 +1349,7 @@ describe('ses brouillons sont privés à la personne', () => {
     expect(await writeTexte(julie, open)).toBe(true);
   });
 
-  it('ni un collègue, ni son manager avec la vue de l’équipe, ni une autre organisation ne lisent ses questions ni ses réponses', async () => {
+  it('ni un collègue, ni son manager avec la vue de l’équipe, ni une autre organisation ne lisent ses questions, leurs choix ni ses réponses', async () => {
     const [julie, others] = await julieAndOthers();
     const id = await asked(julie, 'Devis 2027');
     await reply(julie, id, ['Oui.', '1 200 €']);
@@ -1342,15 +1357,32 @@ describe('ses brouillons sont privés à la personne', () => {
     const visible = (ctx: TenantContext) =>
       withTenant(ctx, (tx) =>
         tx
-          .select({ questions: brouillons.questions, reponses: brouillons.reponses })
+          .select({
+            questions: brouillons.questions,
+            choix: brouillons.choix,
+            reponses: brouillons.reponses,
+          })
           .from(brouillons),
       );
-    expect(await visible(julie)).toEqual([{ questions: QUESTIONS, reponses: ['Oui.', '1 200 €'] }]);
+    expect(await visible(julie)).toEqual([
+      { questions: QUESTIONS, choix: CHOIX, reponses: ['Oui.', '1 200 €'] },
+    ]);
     for (const ctx of others) expect(await visible(ctx)).toEqual([]);
-    // L'app ne refait pas les questions de Leon.
-    await expect(
-      withTenant(julie, (tx) => tx.update(brouillons).set({ questions: ['Une autre ?'] })),
-    ).rejects.toMatchObject({ cause: { code: '42501' } });
+    // L'app ne refait ni les questions de Leon, ni leurs choix : aucun droit de plus avec 0083.
+    for (const set of [
+      { questions: ['Une autre ?'] },
+      { choix: [['Oui', 'Non']] },
+      { choix: null },
+    ])
+      await expect(withTenant(julie, (tx) => tx.update(brouillons).set(set))).rejects.toMatchObject(
+        { cause: { code: '42501' } },
+      );
+    const { rows } = await adminPool.query<{ droits: string }>(
+      `select string_agg(privilege_type, ',' order by privilege_type) as droits
+       from information_schema.column_privileges
+       where table_name = 'brouillons' and column_name = 'choix' and grantee = 'leon_app'`,
+    );
+    expect(rows[0]?.droits).toBe('INSERT,SELECT');
   });
 
   it('la base borne les questions et les réponses, et refuse un état qui n’existe pas', async () => {
@@ -1384,6 +1416,52 @@ describe('ses brouillons sont privés à la personne', () => {
     await set(id, 'questions', [long(450), long(450)]);
     await set(id, 'reponses', ['', long(3000)]);
     await set(id, 'texte', 'Bonjour.');
+  });
+
+  it('la base borne les choix : une liste par question, jamais sans question, et une taille bornée', async () => {
+    const [julie] = await team();
+    const id = await asked(julie, 'Devis 2027');
+    const none = await asked(julie, 'Merci', null);
+    const set = (target: string, choix: unknown) =>
+      adminPool.query('update brouillons set choix = $2::jsonb where id = $1', [
+        target,
+        JSON.stringify(choix),
+      ]);
+    const OUI_NON = ['Oui', 'Non'];
+
+    for (const [target, choix] of [
+      // Une liste par question : la demande en a deux.
+      [id, []],
+      [id, [OUI_NON]],
+      [id, [OUI_NON, OUI_NON, OUI_NON]],
+      // Une liste, rien d'autre.
+      [id, { 0: OUI_NON, 1: OUI_NON }],
+      [id, 'Oui'],
+      // Le texte JSON des choix, 6 000 caractères au plus.
+      [id, [OUI_NON, ['x'.repeat(3000), 'y'.repeat(3000)]]],
+      // Jamais de choix sans question.
+      [none, []],
+      [none, [OUI_NON]],
+    ] as const)
+      await expect(set(target, choix), JSON.stringify(choix).slice(0, 40)).rejects.toMatchObject({
+        code: '23514',
+      });
+    // Des questions retirées ou d'un autre nombre ne laissent pas leurs choix derrière elles.
+    await expect(
+      adminPool.query('update brouillons set questions = null where id = $1', [id]),
+    ).rejects.toMatchObject({ code: '23514' });
+    await expect(
+      adminPool.query("update brouillons set questions = '{Une seule ?}' where id = $1", [id]),
+    ).rejects.toMatchObject({ code: '23514' });
+
+    // Ce que la lecture accepte passe toujours : trois questions, quatre choix de 80 caractères, même des caractères
+    // que le JSON écrit sur six. Et une demande sans choix, posée avant eux, reste valable.
+    const full = Array.from({ length: 4 }, (_, index) => `${index}`.padEnd(80, '\u0001'));
+    await adminPool.query(
+      "update brouillons set questions = '{Un ?,Deux ?,Trois ?}', choix = $2::jsonb where id = $1",
+      [id, JSON.stringify([full, full, full])],
+    );
+    await adminPool.query('update brouillons set choix = null where id = $1', [id]);
   });
 });
 

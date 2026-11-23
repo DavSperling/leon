@@ -76,7 +76,8 @@ export const reponsesAgent = pgTable(
 // par mail auquel répondre, privée à la personne comme sa fiche (acl = [user_id], contrôlé par la base), et qui ne
 // survit pas à son fil. Seul deleteAccount supprime des lignes ; l'app ne met à jour que la date où elle l'écarte,
 // l'identifiant du brouillon déposé dans sa boîte Gmail (0081) et ses réponses aux questions de Leon (0082). Le texte
-// d'une ligne qui a ses questions et ses réponses ne se pose que par ecrire_brouillon, une fois.
+// d'une ligne qui a ses questions et ses réponses ne se pose que par ecrire_brouillon, une fois. Les questions et
+// leurs choix (0083) s'écrivent avec la ligne et ne changent plus.
 export const brouillons = pgTable('brouillons', {
   id: uuid('id').primaryKey().defaultRandom(),
   tenantId: uuid('tenant_id')
@@ -93,6 +94,9 @@ export const brouillons = pgTable('brouillons', {
   texte: text('texte'),
   // Les questions de Leon à la personne (0082), une à trois. Nul : il n'en a pas posé.
   questions: text('questions').array(),
+  // Les choix de réponse de chaque question (0083), dans le même ordre. Nul : pas de question, ou une demande posée
+  // avant les choix.
+  choix: jsonb('choix').$type<string[][]>(),
   // Ses réponses, une par question, dans le même ordre ; une réponse peut être vide. Nul : elle n'a pas répondu.
   reponses: text('reponses').array(),
   ecarteLe: timestamp('ecarte_le', { withTimezone: true }),

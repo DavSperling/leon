@@ -28,8 +28,9 @@ import {
 // L'agent « Brouillons de réponse », le premier en service : pour chaque mail qui attend la réponse de la personne
 // (waiting-mails.ts), un modèle écrit un brouillon comme elle l'écrirait (brouillon-prompt.ts), gardé dans sa table
 // privée (0080) et montré dans Leon. Quand une information ou une décision lui manque, ou que le mail lui demande de
-// s'engager, il rend à la place une à trois questions, gardées sur la même ligne sans texte (0082) : Leon l'attend.
-// Ses réponses reçues (answerQuestions), un second appel écrit le brouillon en entier, sur cette ligne.
+// s'engager, il rend à la place une à trois questions, chacune avec ses choix de réponse, gardées sur la même ligne
+// sans texte (0082, 0083) : Leon l'attend. Ses réponses reçues (answerQuestions), un second appel écrit le brouillon en
+// entier, sur cette ligne.
 // Un brouillon complet est aussi déposé dans ses brouillons Gmail, en réponse dans le fil (brouillon-depot.ts) : c'est
 // tout ce que Leon écrit dans sa boîte. Rien n'est envoyé : l'agent prépare, elle valide. Tout se lit et s'écrit sous
 // withTenant de la personne ; l'appel au modèle et le dépôt se font hors de toute transaction. Le worker de la file
@@ -149,6 +150,7 @@ export async function writeBrouillons(
           message: mail.message,
           texte: result.texte,
           questions: result.questions,
+          choix: result.choix,
           acl: [ctx.userId],
         })
         .onConflictDoNothing()

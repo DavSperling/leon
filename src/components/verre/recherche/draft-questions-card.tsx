@@ -1,20 +1,208 @@
 'use client';
 
 import { useLocale, useTranslations } from 'next-intl';
-import { type TransitionStartFunction, useState, useTransition } from 'react';
+import {
+  type Dispatch,
+  type TransitionStartFunction,
+  useEffect,
+  useReducer,
+  useState,
+  useTransition,
+} from 'react';
 import { answerQuestionsAction, discardBrouillonAction } from '@/app/(app)/settings/actions';
-import { Button, Field, GlassCard, Notice, Textarea, toast } from '@/components/verre';
+import { Button, GlassCard, Notice, Textarea, toast } from '@/components/verre';
 import { HOME_TITLE_ID } from '@/components/verre/discussions/about-suggestion-card';
 import { SourceThing } from '@/components/verre/reglages/source-thing';
+import {
+  answersOf,
+  type Flow,
+  type FlowAction,
+  flowReducer,
+  OTHER,
+  startFlow,
+} from '@/lib/draft-questions';
 import { formatDate } from '@/lib/verre';
 import { nb } from '@/lib/verre/nb';
 import type { HomeDemande } from '@/server/portrait/screen';
 
 type Result = { ok: true } | { error: string };
 
+const RADIO = 'mt-0.5 size-[18px] shrink-0 cursor-pointer accent-[var(--ink)]';
+const CHOICE = 'flex cursor-pointer items-start gap-2.5 text-body [overflow-wrap:anywhere] text-fg';
+
+/**
+ * Les questions d'une demande, une par une, comme Claude pose les siennes : la question et sa place, ses choix en
+ * boutons radio (un seul se retient), et « Autre », qui ouvre un texte libre. « Suivant » passe à la suivante, même
+ * sans réponse ; après la dernière, le récapitulatif de ses réponses, chacune à modifier en revenant à sa question, puis
+ * « Envoyer mes réponses ». « Écarter » ferme la demande pour de bon, à tout moment. L'état est celui de
+ * lib/draft-questions.ts : ici, rien que son dessin. Pas de formulaire : « Entrée » sur un choix n'envoie rien.
+ */
+export function Questions({
+  id,
+  words,
+  demande,
+  flow,
+  dispatch,
+  max,
+  hidden,
+  sending,
+  discarding,
+  onSend,
+  onDiscard,
+}: {
+  // L'identifiant du panneau, et celui des mots de la demande, que ses boutons rappellent.
+  id: string;
+  words: string;
+  demande: Pick<HomeDemande, 'questions' | 'choix'>;
+  flow: Flow;
+  dispatch: Dispatch<FlowAction>;
+  max: number;
+  hidden?: boolean;
+  sending?: boolean;
+  discarding?: boolean;
+  onSend: () => void;
+  onDiscard: () => void;
+}) {
+  const t = useTranslations('draftQuestions');
+  const c = useTranslations('common');
+  const { questions, choix } = demande;
+  // Ce qui prend le focus quand l'étape change : la question montrée, ou le titre du récapitulatif.
+  const shown = `${id}-etape`;
+  const recap = flow.step >= questions.length;
+  const pick = flow.picks[flow.step];
+  const choices = choix[flow.step] ?? [];
+  const answers = answersOf(choix, flow.picks);
+
+  return (
+    <div id={id} hidden={hidden} className="mt-3 grid gap-3">
+      {recap || !pick ? (
+        <div className="grid gap-3">
+          <p id={shown} tabIndex={-1} className="text-body font-medium text-fg outline-none">
+            {t('recap')}
+          </p>
+          <ol className="grid gap-3">
+            {questions.map((question, index) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: les questions d'une demande ne changent pas, dans l'ordre
+              <li key={index} className="grid justify-items-start gap-1 [overflow-wrap:anywhere]">
+                <p id={`${id}-question-${index}`} className="text-label text-muted">
+                  {question}
+                </p>
+                <p className="whitespace-pre-wrap text-body text-fg">
+                  {answers[index] || <span className="text-muted">{t('noAnswer')}</span>}
+                </p>
+                <Button
+                  size="xs"
+                  variant="quiet"
+                  className="-ml-3"
+                  aria-describedby={`${id}-question-${index}`}
+                  disabled={sending || discarding}
+                  onClick={() => dispatch({ type: 'goto', step: index })}
+                >
+                  {t('change')}
+                </Button>
+              </li>
+            ))}
+          </ol>
+        </div>
+      ) : (
+        <fieldset
+          // Une autre question : un autre groupe, qui prend le focus.
+          key={flow.step}
+          id={shown}
+          tabIndex={-1}
+          className="m-0 grid min-w-0 gap-2.5 border-0 p-0 outline-none"
+        >
+          <legend className="mb-2.5 grid gap-1 p-0">
+            <span className="text-label text-muted">
+              {t('position', { n: flow.step + 1, total: questions.length })}
+            </span>
+            <span className="text-body font-medium [overflow-wrap:anywhere] text-fg">
+              {questions[flow.step]}
+            </span>
+          </legend>
+          {choices.map((choice, index) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: les choix d'une question ne changent pas, dans l'ordre
+            <label key={index} className={CHOICE}>
+              <input
+                type="radio"
+                name={shown}
+                className={RADIO}
+                checked={pick.choice === index}
+                onChange={() => dispatch({ type: 'pick', choice: index })}
+              />
+              {choice}
+            </label>
+          ))}
+          {/* Sans choix (une demande posée avant eux), le texte libre seul. */}
+          {choices.length > 0 && (
+            <label className={CHOICE}>
+              <input
+                type="radio"
+                name={shown}
+                className={RADIO}
+                checked={pick.choice === OTHER}
+                onChange={() => dispatch({ type: 'pick', choice: OTHER })}
+              />
+              {t('other')}
+            </label>
+          )}
+          {pick.choice === OTHER && (
+            <Textarea
+              aria-label={t('otherAnswer')}
+              value={pick.text}
+              onChange={(event) => dispatch({ type: 'write', text: event.target.value })}
+              maxLength={max}
+              rows={2}
+              autoGrow
+            />
+          )}
+        </fieldset>
+      )}
+      <div className="flex flex-wrap items-center gap-2">
+        {flow.step > 0 && (
+          <Button
+            size="sm"
+            variant="quiet"
+            disabled={sending || discarding}
+            onClick={() => dispatch({ type: 'previous' })}
+          >
+            {c('previous')}
+          </Button>
+        )}
+        {recap ? (
+          <Button
+            size="sm"
+            variant="primary"
+            disabled={discarding}
+            loading={sending}
+            onClick={onSend}
+          >
+            {t('send')}
+          </Button>
+        ) : (
+          <Button size="sm" disabled={discarding} onClick={() => dispatch({ type: 'next' })}>
+            {c('next')}
+          </Button>
+        )}
+        <Button
+          size="sm"
+          variant="quiet"
+          className="ml-auto"
+          aria-describedby={words}
+          disabled={sending}
+          loading={discarding}
+          onClick={onDiscard}
+        >
+          {t('discard')}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 // Une demande de Leon : le correspondant, la date du mail reçu, le fil lié à son outil, puis « Voulez-vous voir mes
-// questions ? ». « Oui » les ouvre, un champ par question, qu'elle peut laisser vide ; « Non » écarte la demande, comme
-// « Écarter » un brouillon. Rien ne part d'ici : ses réponses servent à écrire le brouillon, qu'elle relira.
+// questions ? ». « Oui » les ouvre, une par une ; « Non » écarte la demande, comme « Écarter » un brouillon. Rien ne
+// part d'ici : ses réponses servent à écrire le brouillon, qu'elle relira.
 function Demande({
   demande,
   max,
@@ -28,13 +216,19 @@ function Demande({
   const f = useTranslations('fiche');
   const locale = useLocale();
   const [open, setOpen] = useState(false);
-  const [answers, setAnswers] = useState(() => demande.questions.map(() => ''));
+  const [flow, dispatch] = useReducer(flowReducer, demande.choix, startFlow);
   const [failed, setFailed] = useState(false);
   const [sending, startSending] = useTransition();
   const [discarding, startDiscarding] = useTransition();
   const words = `demande-${demande.id}`;
   const ask = `demande-${demande.id}-voir`;
   const panel = `demande-${demande.id}-questions`;
+
+  // Le focus suit ce qui se montre : la première question après « Oui », puis chaque étape.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: l'étape change ce que porte l'identifiant
+  useEffect(() => {
+    if (open) document.getElementById(`${panel}-etape`)?.focus();
+  }, [open, flow.step, panel]);
 
   // `done` : le mot d'après, quand il y en a un. Une demande qui n'est plus ouverte (répondue ou écartée ailleurs) s'en
   // va aussi ; un appel qui échoue (réseau) est une erreur comme une autre, et la demande reste.
@@ -50,7 +244,8 @@ function Demande({
   const send = () =>
     run(
       startSending,
-      () => answerQuestionsAction({ id: demande.id, reponses: answers }),
+      () =>
+        answerQuestionsAction({ id: demande.id, reponses: answersOf(demande.choix, flow.picks) }),
       t('sent'),
     );
   const discard = () => run(startDiscarding, () => discardBrouillonAction(demande.id));
@@ -73,18 +268,17 @@ function Demande({
       <div className="mt-2">
         <SourceThing source={demande.source} />
       </div>
-      <div className="mt-3 flex flex-wrap items-center gap-2">
+      {/* « Oui » : la question posée laisse la place aux siennes. */}
+      <div hidden={open} className="mt-3 flex flex-wrap items-center gap-2">
         <p id={ask} className="mr-1 text-body text-fg">
           {t('ask')}
         </p>
         <Button
           size="sm"
           variant="quiet"
-          aria-expanded={open}
-          aria-controls={panel}
           aria-describedby={`${ask} ${words}`}
-          disabled={sending || discarding}
-          onClick={() => setOpen(!open)}
+          disabled={discarding}
+          onClick={() => setOpen(true)}
         >
           {t('yes')}
         </Button>
@@ -92,43 +286,25 @@ function Demande({
           size="sm"
           variant="quiet"
           aria-describedby={`${ask} ${words}`}
-          disabled={sending}
           loading={discarding}
           onClick={discard}
         >
           {t('no')}
         </Button>
       </div>
-      <form
+      <Questions
         id={panel}
+        words={words}
+        demande={demande}
+        flow={flow}
+        dispatch={dispatch}
+        max={max}
         hidden={!open}
-        aria-labelledby={words}
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (!sending && !discarding) send();
-        }}
-        className="mt-3 grid gap-4"
-      >
-        {demande.questions.map((question, index) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: les questions d'une demande ne changent pas, dans l'ordre
-          <Field key={index} label={question}>
-            <Textarea
-              value={answers[index]}
-              onChange={(event) =>
-                setAnswers((all) => all.map((one, i) => (i === index ? event.target.value : one)))
-              }
-              maxLength={max}
-              rows={2}
-              autoGrow
-            />
-          </Field>
-        ))}
-        <div>
-          <Button type="submit" variant="primary" disabled={discarding} loading={sending}>
-            {t('send')}
-          </Button>
-        </div>
-      </form>
+        sending={sending}
+        discarding={discarding}
+        onSend={send}
+        onDiscard={discard}
+      />
     </li>
   );
 }

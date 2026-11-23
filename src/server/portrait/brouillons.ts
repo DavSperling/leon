@@ -182,9 +182,9 @@ export async function writeBrouillons(
   return written;
 }
 
-// Ce que l'accueil montre au plus, de chaque sorte (les demandes de Leon, les brouillons prêts) : les mails les plus
-// récents.
-const HOME_MAX = 3;
+// Ce que l'accueil montre au plus, de chaque sorte (les demandes de Leon, avec les mails d'inconnus, et les brouillons
+// prêts) : les mails les plus récents.
+export const HOME_MAX = 3;
 
 export type ReadyBrouillon = {
   id: string;

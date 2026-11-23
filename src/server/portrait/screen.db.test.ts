@@ -1,16 +1,24 @@
 import { eq } from 'drizzle-orm';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
 import { linesOf } from '@/lib/fiche-view';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { sources } from '@/server/db/schema/memory';
 import { lignesFiche } from '@/server/db/schema/portrait';
 import { adminDb, adminPool } from '@/test/db';
 import { createTestTenant, seedConnection } from '@/test/fixtures';
+import { mailThread, received, sent } from '@/test/mail-threads';
 import { seedRun } from '@/test/seed-search';
 import { type FicheLine, readFiche, retireLine } from './fiche';
 import { answerProposal } from './propositions';
 import { getFicheBoss } from './queue';
 import { readFicheScreen, readHomeBrouillons } from './screen';
+
+// Les fils de courrier des mails d'inconnus passent par l'ingestion, qui met leur indexation en file : seule cette mise
+// en file est simulée, la file de la fiche restant la vraie.
+vi.mock('@/server/pipeline/queue', async (original) => ({
+  ...(await original<typeof import('@/server/pipeline/queue')>()),
+  enqueuePipelineStep: vi.fn(),
+}));
 
 // La fiche telle que l'écran « Ma fiche » la reçoit, sous les droits de la personne : son rôle et ses tâches, où en est
 // sa construction, et les sources de ses tâches qu'elle voit encore. Et ce que l'accueil reçoit de l'agent « Brouillons
@@ -461,6 +469,94 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
     for (const hours of [5, 4]) await asked(julie, `Demande ${hours}`, hours);
 
     expect((await titles(julie)).demandes).toEqual(['Oui 1', 'Demande 4', 'Demande 5']);
+  });
+
+  // Un mail d'une inconnue dans un fil de la personne, marqué « pas automatique » à la relève, et son adresse à elle,
+  // d'où part un mail envoyé à Léa il y a dix jours.
+  const stranger = async (ctx: TenantContext, title: string, hoursAgo: number) => {
+    const at = new Date(Date.now() - hoursAgo * 3_600_000);
+    const mail = received(at, 'Bonjour, pourrions-nous travailler ensemble ?', {
+      author: { name: 'Inès Garnier', email: 'ines@inconnue.test' },
+      automated: false,
+    });
+    const url = `https://mail.google.test/inconnu-${hoursAgo}`;
+    return {
+      sourceId: await mailThread(ctx, title, [mail], { url }),
+      message: mail.externalId,
+      at,
+    };
+  };
+  const wroteToLea = (ctx: TenantContext) =>
+    mailThread(ctx, 'Premier contact', [
+      sent(new Date(Date.now() - 240 * 3_600_000), 'Bonjour Léa.'),
+    ]);
+
+  it('l’accueil reçoit, pour chaque mail d’une inconnue, son auteur, le fil lié à son outil, la date du mail, et de quoi lui répondre : rien de son texte ni de son adresse', async () => {
+    const [julie] = await people();
+    await answered(julie);
+    await wroteToLea(julie);
+    const ines = await stranger(julie, 'Partenariat', 2);
+
+    const home = await readHomeBrouillons(julie);
+
+    expect(home).toEqual({
+      demandes: [
+        {
+          from: 'Inès Garnier',
+          receivedAt: ines.at,
+          mail: { sourceId: ines.sourceId, message: ines.message },
+          source: {
+            title: 'Partenariat',
+            url: 'https://mail.google.test/inconnu-2',
+            kind: 'gmail',
+          },
+        },
+      ],
+      prets: [],
+    });
+    expect(JSON.stringify(home)).not.toMatch(/travailler|ines@inconnue\.test/);
+  });
+
+  it('les mails d’inconnues partagent les trois places des demandes : celles qui attendent un geste d’elle d’abord, les plus récentes d’abord, montrées par date', async () => {
+    const [julie] = await people();
+    await answered(julie);
+    await wroteToLea(julie);
+    await asked(julie, 'Répondue 1', 1, { reponses: ['Oui.', ''] });
+    await stranger(julie, 'Inconnue 3', 3);
+    await asked(julie, 'Demande 4', 4);
+    await stranger(julie, 'Inconnue 5', 5);
+    await seedBrouillon(julie, 'Prêt', 6);
+
+    // Trois places : les trois qui attendent un geste d'elle, même sur des mails plus anciens que celle où Leon écrit.
+    expect(await titles(julie)).toEqual({
+      demandes: ['Inconnue 3', 'Demande 4', 'Inconnue 5'],
+      prets: ['Prêt'],
+    });
+
+    // Une place libérée (elle a écarté sa demande) revient à la plus récente de celles où Leon écrit.
+    await adminPool.query(
+      `update brouillons set ecarte_le = now() where user_id = $1 and questions is not null and reponses is null`,
+      [julie.userId],
+    );
+    expect((await titles(julie)).demandes).toEqual(['Répondue 1', 'Inconnue 3', 'Inconnue 5']);
+  });
+
+  it('sans son oui à l’agent, aucun mail d’inconnue ne part vers l’accueil ; ni vers celui d’un collègue ou d’une autre organisation', async () => {
+    const [julie, paul, zoe] = await people();
+    await answered(julie, false);
+    await answered(paul);
+    await answered(zoe);
+    await wroteToLea(julie);
+    await stranger(julie, 'Partenariat', 2);
+
+    expect(await readHomeBrouillons(julie)).toEqual(NOTHING);
+    for (const ctx of [paul, { ...paul, equipe: true }, zoe])
+      expect(await readHomeBrouillons(ctx)).toEqual(NOTHING);
+
+    await adminPool.query('update reponses_agent set oui = true where user_id = $1', [
+      julie.userId,
+    ]);
+    expect((await titles(julie)).demandes).toEqual(['Partenariat']);
   });
 
   it('sans son oui à l’agent, ou quand il ne lui est plus proposé, rien ne part vers l’accueil ; un nouveau oui remontre tout', async () => {

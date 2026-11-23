@@ -3,7 +3,7 @@ import { createElement, type ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { type Flow, OTHER, startFlow } from '@/lib/draft-questions';
-import type { HomeBrouillon, HomeDemande } from '@/server/portrait/screen';
+import type { HomeBrouillon, HomeDemande, HomeInconnu } from '@/server/portrait/screen';
 import en from '../../../../messages/en.json';
 import fr from '../../../../messages/fr.json';
 import { DraftQuestionsCard, Questions } from './draft-questions-card';
@@ -14,6 +14,7 @@ import { DraftQuestionsCard, Questions } from './draft-questions-card';
 // rendu. Données inventées.
 vi.mock('@/app/(app)/settings/actions', () => ({
   answerQuestionsAction: vi.fn(),
+  answerUnknownAction: vi.fn(),
   discardBrouillonAction: vi.fn(),
 }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
@@ -49,8 +50,11 @@ const within = (children: ReactNode, locale: 'en' | 'fr') =>
       children,
     }),
   );
-const render = (demandes: HomeDemande[], locale: 'en' | 'fr' = 'fr', prets: HomeBrouillon[] = []) =>
-  within(createElement(DraftQuestionsCard, { demandes, prets, max: 1000 }), locale);
+const render = (
+  demandes: Array<HomeDemande | HomeInconnu>,
+  locale: 'en' | 'fr' = 'fr',
+  prets: HomeBrouillon[] = [],
+) => within(createElement(DraftQuestionsCard, { demandes, prets, max: 1000 }), locale);
 // Les questions d'une demande, dans l'état `flow`.
 const PANEL = 'panneau';
 const questions = (flow: Flow, demande = DEVIS, locale: 'en' | 'fr' = 'fr') =>
@@ -221,6 +225,84 @@ describe('DraftQuestionsCard : ses réponses envoyées, Leon écrit', () => {
     expect(text(html)).toContain('Leon is writing your reply to your correspondent.');
     expect(text(html)).not.toContain('show up');
     expect(buttons(html)).toEqual(['Refresh', 'Dismiss']);
+  });
+});
+
+describe('DraftQuestionsCard : le mail d’un inconnu', () => {
+  const INES: HomeInconnu = {
+    from: 'Inès Garnier',
+    receivedAt: new Date('2026-11-12T09:00:00Z'),
+    mail: { sourceId: id(7), message: 'message:18c2f0a' },
+    source: { title: 'Partenariat', url: 'https://mail.google.test/7', kind: 'gmail' },
+  };
+  const words = `inconnu-${INES.mail.sourceId}`;
+  const panel = `${words}-indications`;
+  const row = (html: string) =>
+    html
+      .split('<li class="px-3')
+      .find((part) => part.includes(`id="${words}"`))
+      ?.split('</li>')[0] ?? '';
+
+  it('dit qui lui a écrit et demande si elle veut une réponse, avec la date du mail et le fil lié à son outil, puis « Oui » et « Non »', () => {
+    const html = render([INES]);
+    const said = text(html);
+
+    expect(said).toContain('Inès Garnier vous a écrit. Voulez-vous une réponse ?');
+    // Leon ne sait pas que c'est la première fois : il sait seulement qu'elle ne lui a pas écrit depuis 90 jours.
+    expect(said).not.toMatch(/première fois|jamais/);
+    expect(said).toContain('Reçu le 12 nov. 2026');
+    expect(html).toContain('href="https://mail.google.test/7"');
+    expect(said).toContain('Partenariat');
+    // Parmi les demandes de Leon, une ligne comme les autres.
+    expect(html).toContain('<ul aria-label="Leon a besoin de vous"');
+    expect(count(html, '<li class="px-3')).toBe(1);
+    // « Oui » et « Non » se lisent avec la ligne ; rien du mail ni de son adresse ne s'y montre.
+    expect(buttons(row(html)).slice(0, 2)).toEqual(['Oui', 'Non']);
+    expect(count(html, `aria-describedby="${words}"`)).toBe(3);
+    expect(html).not.toMatch(/message:|inconnue\.test/);
+  });
+
+  it('« Oui » ouvre ses indications, fermées d’abord : un champ facultatif, nommé, aidé et borné, puis « Préparer la réponse » et « Écarter »', () => {
+    const html = render([INES]);
+
+    expect(html).toContain(`<div id="${panel}" hidden=""`);
+    const shown = html.slice(html.indexOf(`<div id="${panel}"`));
+    expect(shown).toMatch(new RegExp(`<label for="${panel}-champ"[^>]*>Vos indications</label>`));
+    expect(shown).toMatch(
+      new RegExp(
+        `<textarea rows="2"[^>]*id="${panel}-champ"[^>]*aria-describedby="${panel}-champ-note"[^>]*maxLength="1000"`,
+      ),
+    );
+    expect(shown).not.toContain('required');
+    expect(text(shown)).toContain(
+      'Ce que vous voulez répondre, en quelques mots. Vous pouvez laisser vide.',
+    );
+    expect(buttons(shown)).toEqual(['Préparer la réponse', 'Écarter']);
+    // Pas de formulaire : « Entrée » dans le champ n'envoie rien.
+    expect(html).not.toContain('<form');
+  });
+
+  it('partage les places des demandes, dans l’ordre reçu, chacune avec ses gestes', () => {
+    const html = render([DEVIS, INES, CONTRAT]);
+
+    expect(count(html, '<li class="px-3')).toBe(3);
+    expect(html.indexOf(`id="demande-${DEVIS.id}"`)).toBeLessThan(html.indexOf(`id="${words}"`));
+    expect(html.indexOf(`id="${words}"`)).toBeLessThan(html.indexOf(`id="demande-${CONTRAT.id}"`));
+    expect(buttons(row(html))).toEqual(['Oui', 'Non', 'Préparer la réponse', 'Écarter']);
+  });
+
+  it('en anglais, les mêmes mots', () => {
+    const html = render([INES], 'en');
+    const said = text(html);
+
+    for (const one of [
+      'Inès Garnier wrote to you. Do you want a reply?',
+      'Received on Nov 12, 2026',
+      'Your instructions',
+      'What you want to reply, in a few words. You can leave it empty.',
+    ])
+      expect(said, one).toContain(one);
+    expect(buttons(row(html))).toEqual(['Yes', 'No', 'Prepare the reply', 'Dismiss']);
   });
 });
 

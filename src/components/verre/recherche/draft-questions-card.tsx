@@ -10,8 +10,12 @@ import {
   useState,
   useTransition,
 } from 'react';
-import { answerQuestionsAction, discardBrouillonAction } from '@/app/(app)/settings/actions';
-import { Button, CopyButton, GlassCard, Notice, Textarea, toast } from '@/components/verre';
+import {
+  answerQuestionsAction,
+  answerUnknownAction,
+  discardBrouillonAction,
+} from '@/app/(app)/settings/actions';
+import { Button, CopyButton, Field, GlassCard, Notice, Textarea, toast } from '@/components/verre';
 import { HOME_TITLE_ID } from '@/components/verre/discussions/about-suggestion-card';
 import { SourceThing } from '@/components/verre/reglages/source-thing';
 import {
@@ -24,9 +28,10 @@ import {
 } from '@/lib/draft-questions';
 import { formatDate } from '@/lib/verre';
 import { nb } from '@/lib/verre/nb';
-import type { HomeBrouillon, HomeDemande } from '@/server/portrait/screen';
+import type { HomeBrouillon, HomeDemande, HomeInconnu } from '@/server/portrait/screen';
 
-type Done = { ok: true; resteDansGmail?: boolean };
+// `id` : la ligne écrite par son oui au mail d'un inconnu.
+type Done = { ok: true; resteDansGmail?: boolean; id?: string };
 type Result = Done | { error: string };
 
 // Un geste sur une ligne de la carte. `done` : ce qui suit un appel réussi. Une ligne qui n'existe plus (répondue ou
@@ -371,6 +376,162 @@ function Demande({
   );
 }
 
+// Le mail d'un inconnu (quelqu'un à qui elle n'a pas écrit depuis 90 jours), que Leon n'a pas lu : « {name} vous a
+// écrit. Voulez-vous une réponse ? », la date du mail reçu, le fil lié à son outil, « Oui » et « Non ». « Non » le
+// ferme pour de bon. « Oui » ouvre ses indications, facultatives, puis « Préparer la réponse » : Leon ne lit le mail
+// qu'alors, au passage suivant, et la ligne dit qu'il écrit, comme pour des réponses envoyées. « Écarter » est là à
+// chaque étape : avant l'envoi, il vaut « Non » ; après, il écarte la ligne de son oui. Rien du mail ne se montre ici.
+function Inconnu({
+  inconnu,
+  max,
+  onGone,
+}: {
+  inconnu: HomeInconnu;
+  max: number;
+  onGone: () => void;
+}) {
+  const t = useTranslations('draftQuestions');
+  const f = useTranslations('fiche');
+  const locale = useLocale();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [indications, setIndications] = useState('');
+  // La ligne de son oui, une fois envoyé : Leon écrit.
+  const [id, setId] = useState<string | null>(null);
+  const [sending, startSending] = useTransition();
+  const [discarding, startDiscarding] = useTransition();
+  const { failed, run } = useGesture(onGone, t('gone'));
+  const words = `inconnu-${inconnu.mail.sourceId}`;
+  const panel = `${words}-indications`;
+  const field = `${panel}-champ`;
+
+  // Le focus suit ce qui se montre : ses indications après « Oui », puis les mots de la ligne quand son oui est parti.
+  useEffect(() => {
+    if (id) document.getElementById(words)?.focus();
+    else if (open) document.getElementById(field)?.focus();
+  }, [open, id, field, words]);
+
+  const answer = (oui: boolean) =>
+    run(
+      oui ? startSending : startDiscarding,
+      () => answerUnknownAction({ ...inconnu.mail, oui, indications: oui ? indications : '' }),
+      (result) => (oui ? setId(result.id ?? null) : onGone()),
+    );
+  const discard = () =>
+    run(
+      startDiscarding,
+      () => discardBrouillonAction(id ?? ''),
+      (result) => {
+        if (result.resteDansGmail) toast.error(t('discardedKeptInGmail'));
+        onGone();
+      },
+    );
+
+  return (
+    <li className="px-3 py-3.5">
+      {failed && (
+        <Notice tone="error" live="alert" className="mb-3">
+          {nb(f('errorFailed'))}
+        </Notice>
+      )}
+      <div
+        id={words}
+        tabIndex={-1}
+        className="grid gap-1 text-body [overflow-wrap:anywhere] text-fg outline-none"
+      >
+        <p className="font-medium">{t(id ? 'writing' : 'strangerAsk', { name: inconnu.from })}</p>
+        <p className="text-label text-muted">
+          <time dateTime={inconnu.receivedAt.toISOString()}>
+            {t('received', { date: formatDate(inconnu.receivedAt, locale) })}
+          </time>
+        </p>
+      </div>
+      <div className="mt-2">
+        <SourceThing source={inconnu.source} />
+      </div>
+      {id ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            variant="quiet"
+            aria-describedby={words}
+            disabled={discarding}
+            onClick={() => router.refresh()}
+          >
+            {f('refresh')}
+          </Button>
+          <Button
+            size="sm"
+            variant="quiet"
+            aria-describedby={words}
+            loading={discarding}
+            onClick={discard}
+          >
+            {t('discard')}
+          </Button>
+        </div>
+      ) : (
+        <>
+          {/* « Oui » : la question laisse la place à ses indications. */}
+          <div hidden={open} className="mt-3 flex flex-wrap items-center gap-2">
+            <Button
+              size="sm"
+              variant="quiet"
+              aria-describedby={words}
+              disabled={discarding}
+              onClick={() => setOpen(true)}
+            >
+              {t('yes')}
+            </Button>
+            <Button
+              size="sm"
+              variant="quiet"
+              aria-describedby={words}
+              loading={discarding}
+              onClick={() => answer(false)}
+            >
+              {t('no')}
+            </Button>
+          </div>
+          <div id={panel} hidden={!open} className="mt-3 grid gap-3">
+            <Field id={field} label={t('instructions')} help={t('instructionsHelp')}>
+              <Textarea
+                value={indications}
+                onChange={(event) => setIndications(event.target.value)}
+                maxLength={max}
+                rows={2}
+                autoGrow
+              />
+            </Field>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                size="sm"
+                variant="primary"
+                disabled={discarding}
+                loading={sending}
+                onClick={() => answer(true)}
+              >
+                {t('prepare')}
+              </Button>
+              <Button
+                size="sm"
+                variant="quiet"
+                className="ml-auto"
+                aria-describedby={words}
+                disabled={sending}
+                loading={discarding}
+                onClick={() => answer(false)}
+              >
+                {t('discard')}
+              </Button>
+            </div>
+          </div>
+        </>
+      )}
+    </li>
+  );
+}
+
 // Un brouillon de réponse prêt : le correspondant, la date du mail reçu, s'il est déposé dans ses brouillons Gmail, le
 // fil lié à son outil, puis le texte du brouillon, replié derrière « Voir le brouillon » pour que l'Accueil reste léger,
 // « Copier » et « Écarter ». Rien ne part d'ici, et rien ne s'y modifie : elle colle le texte dans sa réponse, ou le
@@ -450,8 +611,8 @@ function Pret({ draft, onGone }: { draft: HomeBrouillon; onGone: () => void }) {
 /**
  * Ce que l'agent « Brouillons de réponse » a pour elle, sur l'Accueil (portrait/brouillons.ts). D'abord les demandes de
  * Leon : quand une information ou une décision lui manque pour répondre à un mail, il pose ses questions ici, tout de
- * suite, au lieu de laisser un blanc dans le brouillon ; ses réponses envoyées, la même ligne dit qu'il écrit. Puis les
- * brouillons prêts. Trois au plus de chaque sorte, les plus récents d'abord. Écartée, une ligne s'en va sans attendre
+ * suite, au lieu de laisser un blanc dans le brouillon ; ses réponses envoyées, la même ligne dit qu'il écrit. Le mail
+ * d'un inconnu y est une demande aussi : veut-elle une réponse ? Puis les brouillons prêts. Trois au plus de chaque sorte, les plus récents d'abord. Écartée, une ligne s'en va sans attendre
  * que l'Accueil soit relu, et le focus va au titre de l'Accueil plutôt que sur <body>. `max` vient du serveur
  * (brouillon-prompt.ts).
  * shortcut: après « Actualiser », la ligne d'une demande dont le brouillon est arrivé s'en va avec le bouton qui avait
@@ -462,32 +623,34 @@ export function DraftQuestionsCard({
   prets,
   max,
 }: {
-  demandes: HomeDemande[];
+  demandes: Array<HomeDemande | HomeInconnu>;
   prets: HomeBrouillon[];
   max: number;
 }) {
   const t = useTranslations('draftQuestions');
-  // Les lignes parties d'ici, par sorte : une demande et le brouillon qui la suit portent le même identifiant.
+  // Les lignes parties d'ici, par sorte : une demande et le brouillon qui la suit portent le même identifiant ; le mail
+  // d'un inconnu, celui de son fil.
   const [gone, setGone] = useState<string[]>([]);
   const leave = (key: string) => () => {
     document.getElementById(HOME_TITLE_ID)?.focus();
     setGone((keys) => [...keys, key]);
   };
-  const open = demandes.filter((one) => !gone.includes(`demande-${one.id}`));
+  const keyOf = (one: HomeDemande | HomeInconnu) =>
+    'mail' in one ? `inconnu-${one.mail.sourceId}` : `demande-${one.id}`;
+  const open = demandes.filter((one) => !gone.includes(keyOf(one)));
   const ready = prets.filter((one) => !gone.includes(`brouillon-${one.id}`));
   if (open.length + ready.length === 0) return null;
   return (
     <GlassCard className="mt-6 max-w-[772px] divide-y divide-line p-1.5">
       {open.length > 0 && (
         <ul aria-label={t('title')} className="divide-y divide-line">
-          {open.map((demande) => (
-            <Demande
-              key={demande.id}
-              demande={demande}
-              max={max}
-              onGone={leave(`demande-${demande.id}`)}
-            />
-          ))}
+          {open.map((one) =>
+            'mail' in one ? (
+              <Inconnu key={keyOf(one)} inconnu={one} max={max} onGone={leave(keyOf(one))} />
+            ) : (
+              <Demande key={keyOf(one)} demande={one} max={max} onGone={leave(keyOf(one))} />
+            ),
+          )}
         </ul>
       )}
       {ready.length > 0 && (

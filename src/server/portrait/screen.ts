@@ -6,12 +6,13 @@ import { lignesFiche } from '@/server/db/schema/portrait';
 import { withTenant } from '@/server/db/with-tenant';
 import { briefingSources } from '@/server/discussion/citation-sources';
 import { EN_SERVICE } from './agents';
-import { type Demande, type ReadyBrouillon, readShown } from './brouillons';
+import { type Demande, HOME_MAX, type ReadyBrouillon, readShown } from './brouillons';
 import { type FicheLine, readFiche } from './fiche';
 import { type Proposal, readProposals } from './propositions';
 import { enqueueFicheBuild, ficheBuildCompleted, ficheBuildPending } from './queue';
 import { MAIL_KINDS } from './sent-mails';
 import { synthesisDone } from './synthese';
+import { readUnknownMails, type UnknownMail } from './waiting-mails';
 
 // La fiche pour l'écran « Ma fiche » des réglages : son rôle et ses tâches, où en est sa construction, les sources de
 // ses tâches, et les agents de départ qui lui sont proposés. Et, pour l'accueil seulement, ce que l'agent « Brouillons
@@ -98,16 +99,29 @@ export type HomeDemande = Omit<Demande, 'sourceId'> & { source: FicheSource };
 // Un brouillon prêt, tel que l'accueil le montre : le correspondant, le fil (son objet, lié à son outil), la date du
 // mail reçu, le texte du brouillon, et s'il est déposé dans ses brouillons Gmail. `id` sert au geste « Écarter ».
 export type HomeBrouillon = Omit<ReadyBrouillon, 'sourceId'> & { source: FicheSource };
-export type HomeBrouillons = { demandes: HomeDemande[]; prets: HomeBrouillon[] };
+// Le mail d'un inconnu qui l'attend, tel que l'accueil le montre : son auteur, le fil (son objet, lié à son outil), la
+// date du mail. `mail` sert à lui répondre « Oui » ou « Non ». Rien de son texte.
+export type HomeInconnu = Pick<UnknownMail, 'from' | 'receivedAt'> & {
+  mail: Pick<UnknownMail, 'sourceId' | 'message'>;
+  source: FicheSource;
+};
+export type HomeBrouillons = {
+  demandes: Array<HomeDemande | HomeInconnu>;
+  prets: HomeBrouillon[];
+};
 
-// Ce que l'agent « Brouillons de réponse » a pour elle, pour l'accueil : les demandes de Leon puis les brouillons
-// prêts, les plus récents d'abord, trois au plus de chaque sorte (brouillons.ts). Seulement tant qu'elle dit oui à
-// l'agent et qu'il lui est proposé : après un « non », ses lignes restent en base, et un nouveau « oui » les remontre
-// sans rappeler le modèle. Lu à chaque chargement de l'accueil : ses lignes d'abord, sa fiche et ses outils seulement
-// s'il y en a une.
+// Ce que l'agent « Brouillons de réponse » a pour elle, pour l'accueil : les demandes de Leon et les mails d'inconnus
+// qui l'attendent (waiting-mails.ts), puis les brouillons prêts, les plus récents d'abord, trois au plus de chaque sorte
+// (brouillons.ts). Seulement tant qu'elle dit oui à l'agent et qu'il lui est proposé : après un « non », ses lignes
+// restent en base, et un nouveau « oui » les remontre sans rappeler le modèle. Lu à chaque chargement de l'accueil : ses
+// lignes et les mails d'inconnus d'abord, sa fiche et ses outils seulement s'il y a de quoi montrer.
 export async function readHomeBrouillons(ctx: TenantContext): Promise<HomeBrouillons> {
-  const shown = await readShown(ctx);
-  const sourceIds = [...shown.demandes, ...shown.prets].map((one) => one.sourceId);
+  const [shown, unknown] = await Promise.all([readShown(ctx), readUnknownMails(ctx, HOME_MAX)]);
+  const inconnus = unknown.map(({ message, ...one }) => ({
+    ...one,
+    mail: { sourceId: one.sourceId, message },
+  }));
+  const sourceIds = [...shown.demandes, ...inconnus, ...shown.prets].map((one) => one.sourceId);
   if (sourceIds.length === 0) return { demandes: [], prets: [] };
   const [agents, seen] = await Promise.all([
     readProposals(ctx, await readFiche(ctx)),
@@ -123,7 +137,16 @@ export async function readHomeBrouillons(ctx: TenantContext): Promise<HomeBrouil
         ? [{ ...one, source: { title: source.title, url: source.url, kind: source.kind } }]
         : [];
     });
-  return { demandes: withSource(shown.demandes), prets: withSource(shown.prets) };
+  // Les mails d'inconnus partagent les trois places des demandes : celles qui attendent un geste d'elle se comptent
+  // d'abord, les plus récentes d'abord, et l'ordre montré reste celui de la date du mail.
+  const recent = (a: { receivedAt: Date }, b: { receivedAt: Date }) =>
+    b.receivedAt.getTime() - a.receivedAt.getTime();
+  const writing = (one: HomeDemande | HomeInconnu) => 'repondue' in one && one.repondue;
+  const demandes = [...withSource(shown.demandes), ...withSource(inconnus)]
+    .sort((a, b) => Number(writing(a)) - Number(writing(b)) || recent(a, b))
+    .slice(0, HOME_MAX)
+    .sort(recent);
+  return { demandes, prets: withSource(shown.prets) };
 }
 
 // La demande du bouton « Construire ma fiche » : la construction part en file si l'écran la propose à la personne.

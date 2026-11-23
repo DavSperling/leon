@@ -3,7 +3,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DraftQuestionsCard } from '@/components/verre/recherche/draft-questions-card';
 import { Greeting, HomeAsk } from '@/components/verre/recherche/home';
 import { logError } from '@/server/log';
-import { type HomeBrouillon, type HomeDemande, readHomeBrouillons } from '@/server/portrait/screen';
+import {
+  type HomeBrouillon,
+  type HomeDemande,
+  type HomeInconnu,
+  readHomeBrouillons,
+} from '@/server/portrait/screen';
 import HomePage from './page';
 
 // L'Accueil lit beaucoup de choses ; seule la carte de l'agent « Brouillons de réponse » se teste ici (les demandes de
@@ -45,6 +50,12 @@ const DEMANDE: HomeDemande = {
   choix: [['Oui', 'Non, proposer jeudi']],
   repondue: false,
   source: { title: 'Devis 2027', url: null, kind: 'gmail' },
+};
+const INCONNU: HomeInconnu = {
+  from: 'Inès Garnier',
+  receivedAt: new Date('2026-11-11T09:00:00Z'),
+  mail: { sourceId: '00000003-1111-4111-8111-111111111111', message: 'message:18c2f0a' },
+  source: { title: 'Partenariat', url: null, kind: 'gmail' },
 };
 const PRET: HomeBrouillon = {
   id: '00000002-1111-4111-8111-111111111111',
@@ -100,6 +111,20 @@ describe('l’Accueil : les demandes de Leon et les brouillons prêts', () => {
 
     expect(elements.find((element) => element.type === DraftQuestionsCard)?.props).toEqual({
       demandes: [repondue],
+      prets: [],
+      max: 1000,
+    });
+  });
+
+  it('le mail d’un inconnu est une demande comme une autre : la carte se montre à la même place, avec lui', async () => {
+    vi.mocked(readHomeBrouillons).mockResolvedValue({ demandes: [INCONNU, DEMANDE], prets: [] });
+
+    const { elements, types } = await home();
+
+    expect(types.indexOf(DraftQuestionsCard)).toBeGreaterThan(types.indexOf(Greeting));
+    expect(types.indexOf(HomeAsk)).toBeGreaterThan(types.indexOf(DraftQuestionsCard));
+    expect(elements.find((element) => element.type === DraftQuestionsCard)?.props).toEqual({
+      demandes: [INCONNU, DEMANDE],
       prets: [],
       max: 1000,
     });

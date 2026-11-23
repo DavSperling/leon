@@ -41,6 +41,10 @@ export const REPONSE_MAX_CHARS = 1000;
 const CHOIX_MIN = 2;
 const CHOIX_MAX = 4;
 const CHOIX_MAX_CHARS = 80;
+// Ce que la consigne interdit comme choix. « Autre » (« Other » en anglais) est celui de l'écran : il s'y montrerait
+// deux fois.
+// shortcut: ces mots exacts seulement ; à élargir si l'essai réel montre d'autres formes.
+const CHOIX_INTERDITS = ['autre', 'other', 'je ne sais pas'];
 
 // Ce que les deux consignes ont en commun : ce que le message contient, l'exemple d'un brouillon, écrire comme elle,
 // et la forme du texte.
@@ -203,14 +207,15 @@ export const hasBlank = (texte: string) => /[[\]]/.test(texte);
 // Un texte de la réponse, nettoyé de ce que la base refuserait, de 1 à `max` caractères.
 const text = (max: number) => z.string().transform(clean).pipe(z.string().min(1).max(max));
 const FORMS = ['brouillon', 'questions', 'sans_reponse'];
-// Une question et ses choix, tous différents (sans tenir compte de la casse).
+// Une question et ses choix, tous différents, et aucun interdit (sans tenir compte de la casse).
 const Question = z.object({
   question: text(QUESTION_MAX_CHARS),
   choix: z
     .array(text(CHOIX_MAX_CHARS))
     .min(CHOIX_MIN)
     .max(CHOIX_MAX)
-    .refine((all) => new Set(all.map((one) => one.toLowerCase())).size === all.length),
+    .refine((all) => new Set(all.map((one) => one.toLowerCase())).size === all.length)
+    .refine((all) => !all.some((one) => CHOIX_INTERDITS.includes(one.toLowerCase()))),
 });
 const Line = z.union([
   z.object({ brouillon: text(BROUILLON_MAX_CHARS) }),
@@ -230,9 +235,9 @@ export type BrouillonAnswer = {
 // forme, deux formes dans la même ligne (un brouillon et des questions), un brouillon vide ou de plus de
 // BROUILLON_MAX_CHARS caractères, aucune question ou plus de QUESTIONS_MAX, une question vide ou de plus de
 // QUESTION_MAX_CHARS caractères, une question sans ses choix (l'ancienne forme, une liste de textes), moins de
-// CHOIX_MIN choix ou plus de CHOIX_MAX, un choix vide, de plus de CHOIX_MAX_CHARS caractères, ou donné deux fois. Rien
-// ne s'écrira alors, et ce mail pourra être retenté. `asked` : le second appel, qui ne rend qu'un brouillon ; de
-// nouvelles questions ou « sans réponse » ne se lisent pas.
+// CHOIX_MIN choix ou plus de CHOIX_MAX, un choix vide, de plus de CHOIX_MAX_CHARS caractères, donné deux fois, ou
+// interdit (CHOIX_INTERDITS). Rien ne s'écrira alors, et ce mail pourra être retenté. `asked` : le second appel, qui
+// ne rend qu'un brouillon ; de nouvelles questions ou « sans réponse » ne se lisent pas.
 export function parseBrouillonAnswer(answer: string, asked = false): BrouillonAnswer | null {
   for (const json of jsonObjects(answer)) {
     if (FORMS.filter((form) => form in (json as object)).length !== 1) continue;

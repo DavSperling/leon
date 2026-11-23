@@ -583,6 +583,10 @@ describe('parseBrouillonAnswer', () => {
     ['dont un choix dépasse la borne', choices('Oui', 'x'.repeat(81))],
     ['dont un choix n’est pas un texte', choices('Oui', 2)],
     ['dont un choix est donné deux fois', choices('Oui', 'Non', 'oui ')],
+    // « Autre » est le choix de l'écran : rendu par le modèle, il s'y montrerait deux fois.
+    ['dont un choix est « Autre »', choices('Oui', 'Non', 'Autre')],
+    ['dont un choix est « Other »', choices('Yes', 'No', ' other\n')],
+    ['dont un choix est « Je ne sais pas »', choices('Oui', 'Non', 'Je ne sais pas')],
     // Une seule question hors bornes rend toute la réponse illisible.
     [
       'dont une seule question a trop peu de choix',
@@ -605,6 +609,10 @@ describe('parseBrouillonAnswer', () => {
     expect(parseBrouillonAnswer(draft(texte))).toEqual(written(texte));
     expect(parseBrouillonAnswer(ask(...questions))).toEqual(asked(...questions));
     expect(parseBrouillonAnswer(choices(...choix))?.choix).toEqual([choix]);
+    // Seul le mot « Autre » à lui seul est refusé, pas un choix qui le contient.
+    expect(parseBrouillonAnswer(choices('Mardi', 'Un autre jour'))?.choix).toEqual([
+      ['Mardi', 'Un autre jour'],
+    ]);
   });
 
   it('au second appel, seul un brouillon se lit : de nouvelles questions ou « sans réponse » sont illisibles', () => {

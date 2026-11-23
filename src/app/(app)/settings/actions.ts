@@ -58,7 +58,7 @@ import {
 import { AGENTS, type AgentId } from '@/server/portrait/agents';
 import { withdrawBrouillon } from '@/server/portrait/brouillon-depot';
 import { QUESTIONS_MAX, REPONSE_MAX_CHARS } from '@/server/portrait/brouillon-prompt';
-import { answerQuestions, discardBrouillon } from '@/server/portrait/brouillons';
+import { answerQuestions, answerUnknownMail, discardBrouillon } from '@/server/portrait/brouillons';
 import { requestBrouillons } from '@/server/portrait/brouillons-queue';
 import { correctFields, retireLine } from '@/server/portrait/fiche';
 import { answerProposal } from '@/server/portrait/propositions';
@@ -742,6 +742,12 @@ const QuestionAnswersSchema = z.object({
     .min(1)
     .max(QUESTIONS_MAX),
 });
+const UnknownAnswerSchema = z.object({
+  sourceId: z.uuid(),
+  message: z.string().min(1).max(200),
+  oui: z.boolean(),
+  indications: z.string().transform(clean).pipe(z.string().max(REPONSE_MAX_CHARS)),
+});
 
 // « Construire ma fiche » : la construction part en file si l'écran la propose à la personne (screen.ts), et rien
 // d'autre ne la lance. `ok` faux : rien à construire, ou sa fiche est déjà faite.
@@ -834,4 +840,33 @@ export async function answerQuestionsAction(input: {
   await requestBrouillons(ctx);
   revalidatePath('/');
   return { ok: true };
+}
+
+// Sa réponse au mail d'un inconnu, depuis la carte de l'accueil : « Oui », avec ses indications (REPONSE_MAX_CHARS
+// caractères au plus, vides quand elle n'en donne pas), ou « Non », qui ne garde pas d'indications. Hors de ces bornes :
+// « invalide ». Un mail qui ne l'attend plus (à une autre, d'un correspondant, automatique, déjà traité, d'un fil qui a
+// bougé, trop ancien) : « introuvable » (portrait/brouillons.ts, answerUnknownMail). Rien n'est écrit dans les deux cas.
+// Son oui gardé, un passage est demandé à la file : il fera le premier appel ; `id`, sa ligne, sert à l'écarter ensuite.
+// Son non ne demande rien. Rien n'est envoyé. Une panne de la base est « echec » : son erreur citerait ses indications.
+export async function answerUnknownAction(input: {
+  sourceId: string;
+  message: string;
+  oui: boolean;
+  indications: string;
+}): Promise<{ ok: true; id: string } | { error: FicheError | 'echec' }> {
+  const ctx = await requireUserContext();
+  const parsed = UnknownAnswerSchema.safeParse(input);
+  if (!parsed.success) return { error: 'invalide' };
+  const { sourceId, message, oui, indications } = parsed.data;
+  let id: string | null;
+  try {
+    id = await answerUnknownMail(ctx, { sourceId, message }, oui ? indications : null);
+  } catch (error) {
+    logError('brouillons.inconnu', error, { userId: ctx.userId });
+    return { error: 'echec' };
+  }
+  if (!id) return { error: 'introuvable' };
+  if (oui) await requestBrouillons(ctx);
+  revalidatePath('/');
+  return { ok: true, id };
 }

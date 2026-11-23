@@ -20,7 +20,7 @@ import { logError } from '@/server/log';
 import { correctLesson, retireLesson, writeLesson } from '@/server/memory/lessons';
 import { readMemoryVersion, restoreMemoryVersion } from '@/server/memory/memory-section';
 import { withdrawBrouillon } from '@/server/portrait/brouillon-depot';
-import { answerQuestions, discardBrouillon } from '@/server/portrait/brouillons';
+import { answerQuestions, answerUnknownMail, discardBrouillon } from '@/server/portrait/brouillons';
 import { requestBrouillons } from '@/server/portrait/brouillons-queue';
 import { correctFields, retireLine } from '@/server/portrait/fiche';
 import { answerProposal } from '@/server/portrait/propositions';
@@ -29,6 +29,7 @@ import fr from '../../../../messages/fr.json';
 import {
   answerAgentAction,
   answerQuestionsAction,
+  answerUnknownAction,
   buildFicheAction,
   changePasswordAction,
   correctFicheLineAction,
@@ -109,6 +110,7 @@ vi.mock('@/server/memory/memory-section', () => ({
 vi.mock('@/server/portrait/brouillon-depot', () => ({ withdrawBrouillon: vi.fn() }));
 vi.mock('@/server/portrait/brouillons', () => ({
   answerQuestions: vi.fn(),
+  answerUnknownMail: vi.fn(),
   discardBrouillon: vi.fn(),
 }));
 vi.mock('@/server/portrait/brouillons-queue', () => ({ requestBrouillons: vi.fn() }));
@@ -1312,6 +1314,9 @@ describe('les actions de l’onglet « Ma fiche »', () => {
     await expect(answerQuestionsAction({ id: LIGNE, reponses: ['Oui.'] })).rejects.toThrow(
       'NEXT_REDIRECT /sign-in',
     );
+    await expect(
+      answerUnknownAction({ sourceId: LIGNE, message: 'message:1', oui: true, indications: '' }),
+    ).rejects.toThrow('NEXT_REDIRECT /sign-in');
 
     expect(requestFicheBuild).not.toHaveBeenCalled();
     expect(correctFields).not.toHaveBeenCalled();
@@ -1319,6 +1324,95 @@ describe('les actions de l’onglet « Ma fiche »', () => {
     expect(answerProposal).not.toHaveBeenCalled();
     expect(discardBrouillon).not.toHaveBeenCalled();
     expect(answerQuestions).not.toHaveBeenCalled();
+    expect(answerUnknownMail).not.toHaveBeenCalled();
+    expect(requestBrouillons).not.toHaveBeenCalled();
+  });
+
+  const MAIL = { sourceId: '0b9f2c7e-2d4c-4f6a-9a51-6a1e2f3b4c61', message: 'message:18c2f0a' };
+
+  it('« Oui » au mail d’un inconnu : gardé pour la personne connectée, avec ses indications nettoyées, puis un passage est demandé', async () => {
+    vi.mocked(answerUnknownMail).mockResolvedValue(LIGNE);
+
+    await expect(
+      answerUnknownAction({ ...MAIL, oui: true, indications: '  Dites-lui oui,\u0000 mardi.\n' }),
+    ).resolves.toEqual({ ok: true, id: LIGNE });
+
+    expect(vi.mocked(answerUnknownMail).mock.calls).toEqual([[ctx, MAIL, 'Dites-lui oui, mardi.']]);
+    expect(vi.mocked(requestBrouillons).mock.calls).toEqual([[ctx]]);
+    expect(revalidatePath).toHaveBeenCalledWith('/');
+  });
+
+  it('« Oui » sans indication garde un oui vide ; « Non » ne garde pas d’indications et ne demande aucun passage', async () => {
+    vi.mocked(answerUnknownMail).mockResolvedValue(LIGNE);
+
+    await answerUnknownAction({ ...MAIL, oui: true, indications: '   ' });
+    expect(requestBrouillons).toHaveBeenCalledTimes(1);
+    await expect(
+      answerUnknownAction({ ...MAIL, oui: false, indications: 'Oubliée.' }),
+    ).resolves.toEqual({ ok: true, id: LIGNE });
+
+    expect(vi.mocked(answerUnknownMail).mock.calls).toEqual([
+      [ctx, MAIL, ''],
+      [ctx, MAIL, null],
+    ]);
+    expect(requestBrouillons).toHaveBeenCalledTimes(1);
+  });
+
+  it('un mail qui ne l’attend plus est introuvable : rien n’est écrit, aucun passage n’est demandé', async () => {
+    // Chacune de ces gardes est tenue par answerUnknownMail, sous ses droits (brouillons.db.test.ts) : elle rend null.
+    vi.mocked(answerUnknownMail).mockResolvedValue(null);
+
+    for (const oui of [true, false])
+      await expect(answerUnknownAction({ ...MAIL, oui, indications: '' })).resolves.toEqual({
+        error: 'introuvable',
+      });
+
+    expect(requestBrouillons).not.toHaveBeenCalled();
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it('une panne de la base est un échec, journalisé sans ses indications, et aucun passage n’est demandé', async () => {
+    const failure = new Error('Failed query: insert into "brouillons" … params: Dites-lui oui.');
+    vi.mocked(answerUnknownMail).mockRejectedValue(failure);
+
+    await expect(
+      answerUnknownAction({ ...MAIL, oui: true, indications: 'Dites-lui oui.' }),
+    ).resolves.toEqual({ error: 'echec' });
+
+    expect(logError).toHaveBeenCalledExactlyOnceWith('brouillons.inconnu', failure, {
+      userId: ctx.userId,
+    });
+    expect(requestBrouillons).not.toHaveBeenCalled();
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it('ses indications : mille caractères passent, pas plus', async () => {
+    vi.mocked(answerUnknownMail).mockResolvedValue(LIGNE);
+
+    await expect(
+      answerUnknownAction({ ...MAIL, oui: true, indications: 'x'.repeat(1000) }),
+    ).resolves.toEqual({ ok: true, id: LIGNE });
+    await expect(
+      answerUnknownAction({ ...MAIL, oui: true, indications: 'x'.repeat(1001) }),
+    ).resolves.toEqual({ error: 'invalide' });
+
+    expect(answerUnknownMail).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    [{ ...MAIL, sourceId: 'pas-un-id', oui: true, indications: '' }],
+    [{ ...MAIL, message: '', oui: true, indications: '' }],
+    [{ ...MAIL, message: 'x'.repeat(201), oui: true, indications: '' }],
+    [{ ...MAIL, oui: 'oui', indications: '' }],
+    [{ ...MAIL, indications: '' }],
+    [{ ...MAIL, oui: true }],
+    [{ ...MAIL, oui: true, indications: null }],
+    [{ sourceId: MAIL.sourceId, oui: true, indications: '' }],
+    [MAIL.sourceId],
+    [null],
+  ])('sa réponse %j : invalide, sans rien lire ni écrire', async (input) => {
+    await expect(answerUnknownAction(input as never)).resolves.toEqual({ error: 'invalide' });
+    expect(answerUnknownMail).not.toHaveBeenCalled();
     expect(requestBrouillons).not.toHaveBeenCalled();
   });
 });

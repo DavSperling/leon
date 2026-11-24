@@ -51,6 +51,16 @@ export type SidePanelProps = {
   locked?: boolean;
   /** Le panneau travaille : le surligneur court le long du pied, le corps se fige (inert), aria-busy. */
   busy?: boolean;
+  /**
+   * La grande fenêtre : centrée sur l'écran, 1120 px au plus, quand il y a plusieurs choses à traiter l'une après
+   * l'autre. Même tête, même pied, mêmes gestes ; seule la place change.
+   */
+  wide?: boolean;
+  /**
+   * Avec `wide` : la colonne de gauche (300 px), qui défile seule. Une liste où l'on choisit ce que montre le corps.
+   * Cachée sous 768 px : le pied doit alors offrir de quoi passer d'une chose à l'autre.
+   */
+  aside?: ReactNode;
   className?: string;
 };
 
@@ -59,6 +69,7 @@ const FIRST_FIELD =
 
 /**
  * Le panneau latéral : tout ce qui concerne UNE chose, à un clic de son rectangle. 520 px, la hauteur de la fenêtre.
+ * Avec `wide`, la grande fenêtre centrée (et `aside`, sa colonne de gauche) : plusieurs choses à traiter à la suite.
  * Une feuille modale : un clic dehors la ferme et ne fait rien d'autre (il n'ouvre pas ce qu'il y a dessous), Échap la
  * ferme, le focus revient à ce qui l'a ouverte. À l'ouverture, le focus va au premier champ (ou à `data-autofocus`).
  */
@@ -74,6 +85,8 @@ export function SidePanel({
   confirm,
   locked,
   busy,
+  wide,
+  aside,
   className,
 }: SidePanelProps) {
   const t = useTranslations('common');
@@ -114,7 +127,10 @@ export function SidePanel({
           ref={contentRef}
           aria-busy={busy || undefined}
           className={cn(
-            'layer-side fixed top-[var(--inset)] right-[var(--inset)] bottom-[var(--inset)] z-50 flex w-[min(520px,calc(100vw-2*var(--inset)))] flex-col overflow-hidden rounded-card border border-float-line bg-menu text-lead text-fg shadow-float outline-none',
+            'fixed z-50 flex flex-col overflow-hidden rounded-card border border-float-line bg-menu text-lead text-fg shadow-float outline-none',
+            wide
+              ? 'layer-dialog top-1/2 left-1/2 h-[min(720px,calc(100dvh-2*var(--inset)))] w-[min(1120px,calc(100vw-2*var(--inset)))] -translate-x-1/2 -translate-y-1/2'
+              : 'layer-side top-[var(--inset)] right-[var(--inset)] bottom-[var(--inset)] w-[min(520px,calc(100vw-2*var(--inset)))]',
             className,
           )}
           onEscapeKeyDown={(e) => {
@@ -161,67 +177,83 @@ export function SidePanel({
               </RDialog.Close>
             )}
           </header>
-          <div
-            data-panel-body=""
-            inert={busy || undefined}
-            className="min-h-0 flex-1 overflow-y-auto px-6 pt-5 pb-6"
-          >
-            {children}
-          </div>
-          <footer
-            className={cn(
-              'panel-foot relative flex shrink-0 flex-wrap items-center gap-2 border-t border-line px-6 pt-4 pb-5',
-              (busy || confirm?.busy) && 'is-working',
-            )}
-          >
-            <span aria-hidden="true" className="work" />
-            {confirm ? (
-              // biome-ignore lint/a11y/useSemanticElements: un groupe nommé par sa question, pas un formulaire
-              <div role="group" aria-labelledby={confirmId} className="basis-full">
-                <b id={confirmId} className="block text-lead font-semibold">
-                  {typeof confirm.title === 'string' ? nb(confirm.title) : confirm.title}
-                </b>
-                {confirm.text && (
-                  <p className="mt-0.5 text-ui leading-[1.5] text-muted">
-                    {typeof confirm.text === 'string' ? nb(confirm.text) : confirm.text}
-                  </p>
-                )}
-                <div className="mt-3 flex flex-wrap items-center gap-2">
-                  <Button
-                    variant="destructive"
-                    loading={confirm.busy}
-                    loadingLabel={confirm.busyLabel}
-                    onClick={confirm.onYes}
-                  >
-                    {confirm.yes}
-                  </Button>
-                  <Button
-                    ref={noRef}
-                    variant="secondary"
-                    disabled={confirm.busy}
-                    onClick={confirm.onNo}
-                  >
-                    {confirm.no}
-                  </Button>
-                </div>
+          <div className="flex min-h-0 flex-1">
+            {wide && aside && (
+              <div
+                inert={busy || undefined}
+                className="w-[300px] shrink-0 overflow-y-auto border-r border-line bg-desk p-2 max-md:hidden"
+              >
+                {aside}
               </div>
-            ) : (
-              <>
-                {foot ?? (
-                  <RDialog.Close asChild>
-                    <Button variant="secondary" className="ml-auto">
-                      {t('done')}
-                    </Button>
-                  </RDialog.Close>
-                )}
-                {note && (
-                  <p className="basis-full text-label leading-[1.5] text-muted">
-                    {typeof note === 'string' ? nb(note) : note}
-                  </p>
-                )}
-              </>
             )}
-          </footer>
+            <div className="flex min-w-0 flex-1 flex-col">
+              <div
+                data-panel-body=""
+                inert={busy || undefined}
+                className={cn(
+                  'min-h-0 flex-1 overflow-y-auto',
+                  wide ? 'px-10 pt-8 pb-8 max-sm:px-6 max-sm:pt-5' : 'px-6 pt-5 pb-6',
+                )}
+              >
+                {children}
+              </div>
+              <footer
+                className={cn(
+                  'panel-foot relative flex shrink-0 flex-wrap items-center gap-2 border-t border-line pt-4 pb-5',
+                  wide ? 'px-10 max-sm:px-6' : 'px-6',
+                  (busy || confirm?.busy) && 'is-working',
+                )}
+              >
+                <span aria-hidden="true" className="work" />
+                {confirm ? (
+                  // biome-ignore lint/a11y/useSemanticElements: un groupe nommé par sa question, pas un formulaire
+                  <div role="group" aria-labelledby={confirmId} className="basis-full">
+                    <b id={confirmId} className="block text-lead font-semibold">
+                      {typeof confirm.title === 'string' ? nb(confirm.title) : confirm.title}
+                    </b>
+                    {confirm.text && (
+                      <p className="mt-0.5 text-ui leading-[1.5] text-muted">
+                        {typeof confirm.text === 'string' ? nb(confirm.text) : confirm.text}
+                      </p>
+                    )}
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <Button
+                        variant="destructive"
+                        loading={confirm.busy}
+                        loadingLabel={confirm.busyLabel}
+                        onClick={confirm.onYes}
+                      >
+                        {confirm.yes}
+                      </Button>
+                      <Button
+                        ref={noRef}
+                        variant="secondary"
+                        disabled={confirm.busy}
+                        onClick={confirm.onNo}
+                      >
+                        {confirm.no}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {foot ?? (
+                      <RDialog.Close asChild>
+                        <Button variant="secondary" className="ml-auto">
+                          {t('done')}
+                        </Button>
+                      </RDialog.Close>
+                    )}
+                    {note && (
+                      <p className="basis-full text-label leading-[1.5] text-muted">
+                        {typeof note === 'string' ? nb(note) : note}
+                      </p>
+                    )}
+                  </>
+                )}
+              </footer>
+            </div>
+          </div>
         </RDialog.Content>
       </RDialog.Portal>
     </RDialog.Root>

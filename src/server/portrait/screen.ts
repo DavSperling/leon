@@ -2,7 +2,7 @@ import { and, eq } from 'drizzle-orm';
 import { linesOf } from '@/lib/fiche-view';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { listConnections } from '@/server/connectors/connections';
-import { lignesFiche } from '@/server/db/schema/portrait';
+import { lignesFiche, reponsesAgent } from '@/server/db/schema/portrait';
 import { withTenant } from '@/server/db/with-tenant';
 import { briefingSources } from '@/server/discussion/citation-sources';
 import { logError } from '@/server/log';
@@ -134,14 +134,33 @@ export type HomeBrouillons = {
   prets: HomeBrouillon[];
 };
 
+// Elle a dit oui à « Relances » : sa réponse enregistrée, une ligne. Sans ce oui, ses mails sans réponse ne se lisent
+// pas (une lecture du coût de celle des mails d'inconnus, pour rien) ; avec lui, readProposals redit ensuite que
+// l'agent lui est toujours proposé.
+async function saidYesToRelances(ctx: TenantContext): Promise<boolean> {
+  const [answer] = await withTenant(ctx, (tx) =>
+    tx
+      .select({ oui: reponsesAgent.oui })
+      .from(reponsesAgent)
+      .where(
+        and(
+          eq(reponsesAgent.tenantId, ctx.tenantId),
+          eq(reponsesAgent.userId, ctx.userId),
+          eq(reponsesAgent.agent, 'relance'),
+        ),
+      ),
+  );
+  return answer?.oui === true;
+}
+
 // Ce que les agents « Brouillons de réponse » et « Relances » ont pour elle, pour l'accueil : les demandes de Leon, les
 // mails d'inconnus qui l'attendent (waiting-mails.ts), les préférences d'écriture qu'il lui propose (preferences.ts) et
 // ses mails restés sans réponse, à relancer ou non (unanswered-mails.ts), puis les brouillons prêts, relances comprises,
 // les plus récents d'abord, HOME_MAX (vingt) au plus de chaque sorte (brouillons.ts). L'accueil n'en montre qu'une
 // ligne ; son panneau les range (lib/reply-drafts.ts). Ce qui vient d'un agent ne se montre que tant qu'elle lui dit oui,
 // à lui, et qu'il lui est proposé : après un « non », ses lignes restent en base, et un nouveau « oui » les remontre
-// sans rappeler le modèle. Lu à chaque chargement de l'accueil : ses lignes, les mails d'inconnus et ses mails sans
-// réponse d'abord, sa fiche et ses outils seulement s'il y a de quoi montrer.
+// sans rappeler le modèle. Lu à chaque chargement de l'accueil : ses lignes, les mails d'inconnus et, après son oui à
+// « Relances », ses mails sans réponse d'abord, sa fiche et ses outils seulement s'il y a de quoi montrer.
 export async function readHomeBrouillons(ctx: TenantContext): Promise<HomeBrouillons> {
   const [shown, unknown, preferences, unanswered] = await Promise.all([
     readShown(ctx),
@@ -151,11 +170,13 @@ export async function readHomeBrouillons(ctx: TenantContext): Promise<HomeBrouil
       return [];
     }),
     readProposedPreferences(ctx, HOME_MAX),
-    // De même ses mails sans réponse.
-    readUnansweredMails(ctx, HOME_MAX).catch((error) => {
-      logError('accueil.relances', error, { userId: ctx.userId });
-      return [];
-    }),
+    // De même ses mails sans réponse, lus seulement après son oui à « Relances ».
+    saidYesToRelances(ctx)
+      .then((oui) => (oui ? readUnansweredMails(ctx, HOME_MAX) : []))
+      .catch((error) => {
+        logError('accueil.relances', error, { userId: ctx.userId });
+        return [];
+      }),
   ]);
   const inconnus = unknown.map(({ message, ...one }) => ({
     ...one,

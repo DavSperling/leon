@@ -847,8 +847,11 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
        values ($1, $2, $3, $4, 'Bonjour Léa,', '', 'relance', array[$2::uuid])`,
         [julie.tenantId, julie.userId, ready.sourceId, ready.message],
       );
+      vi.mocked(readUnansweredMails).mockClear();
 
       expect(await readHomeBrouillons(julie)).toEqual(NOTHING);
+      // Sans son oui, ses mails sans réponse ne sont même pas lus.
+      expect(readUnansweredMails).not.toHaveBeenCalled();
 
       await adminPool.query(
         `update reponses_agent set oui = true where user_id = $1 and agent = 'relance'`,

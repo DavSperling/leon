@@ -2,7 +2,16 @@ import { type SQL, sql } from 'drizzle-orm';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
 import { epochToDate, LAST_TS_SQL, textArray } from '@/server/search/filters-sql';
-import { MAIL_KINDS, MESSAGE, PART, SENT_MAIL_DAYS, sentTurns, TEAM } from './sent-mails';
+import {
+  MAIL_KINDS,
+  MESSAGE,
+  notOwn,
+  ownAddresses,
+  PART,
+  SENT_MAIL_DAYS,
+  sentTurns,
+  TEAM,
+} from './sent-mails';
 
 // Les mails qui attendent la réponse d'une personne, trouvés sans modèle : ce que l'agent « Brouillons de réponse »
 // (brouillons.ts) donne ensuite au modèle, un mail par appel. Lus sous withTenant de la personne, et seulement dans
@@ -62,7 +71,8 @@ export type WaitingMail = {
 };
 
 // Un mail pour lequel elle a répondu à Leon, et dont le brouillon reste à écrire : à ses questions (le second appel),
-// ou « Oui » au mail d'un inconnu (le premier appel).
+// ou « Oui » au mail d'un inconnu ou à une relance (le premier appel). Pour une relance, `from` est le premier
+// destinataire en « à » de son mail qui n'est pas elle : celui à qui elle écrit.
 export type AnsweredMail = WaitingMail & {
   // La ligne du brouillon (0082, 0084), et sa sorte (0088).
   id: string;
@@ -238,14 +248,18 @@ export async function readAnsweredMails(
   ctx: TenantContext,
   sortes: Array<AnsweredMail['sorte']>,
 ): Promise<AnsweredMail[]> {
+  const own = ownAddresses(ctx, new Date(Date.now() - SENT_MAIL_DAYS * DAY_MS));
   return withTenant(ctx, async (tx) => {
     const { rows: mails } = await tx.execute<Omit<AnsweredMail, 'messages'>>(sql`
-      select b.id, b.sorte, b.source_id as "sourceId", b.message, l.address as "from", s.title as subject,
+      select b.id, b.sorte, b.source_id as "sourceId", b.message, s.title as subject,
+             case when b.sorte = 'relance' then (${notOwn(sql`l.recipients_to`, own)})[1]
+                  else l.address end as "from",
              b.questions, b.reponses, b.indications
       from brouillons b
       join sources s on s.tenant_id = b.tenant_id and s.id = b.source_id
       cross join lateral (
-        select substring(t.external_id from ${MESSAGE}) as message, lower(t.author_email) as address, t.ts
+        select substring(t.external_id from ${MESSAGE}) as message, lower(t.author_email) as address,
+               t.recipients_to, t.ts
         from turns t
         where t.tenant_id = b.tenant_id and t.source_id = b.source_id
         order by t.ts desc, substring(t.external_id from ${MESSAGE}) desc

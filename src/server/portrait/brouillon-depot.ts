@@ -18,6 +18,8 @@ import { hasBlank } from './brouillon-prompt';
 // quand elle clique « Envoyer » et le confirme (sendBrouillon). Rien d'autre n'y est envoyé, supprimé ni modifié.
 //
 // Un brouillon est déposé si, et seulement si :
+// - c'est une réponse : une relance (0088) reste dans Leon, son destinataire n'étant pas l'auteur du dernier message
+//   (qui est elle) ;
 // - il est complet : son texte ne porte aucun blanc entre crochets (hasBlank). Un brouillon incomplet reste dans Leon
 //   seulement, d'où il ne peut pas partir par erreur ;
 // - son fil est un fil Gmail relevé par une connexion Gmail qu'elle a branchée elle-même, par Pipedream, et qui n'est
@@ -90,6 +92,7 @@ export async function depositBrouillon(
             eq(brouillons.tenantId, ctx.tenantId),
             eq(brouillons.userId, ctx.userId),
             eq(brouillons.id, draft.id),
+            eq(brouillons.sorte, 'reponse'),
             isNotNull(brouillons.texte),
             isNull(brouillons.brouillonGmail),
             isNull(brouillons.ecarteLe),

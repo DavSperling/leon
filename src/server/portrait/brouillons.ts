@@ -29,6 +29,7 @@ import {
 } from './preferences';
 import { readProposals } from './propositions';
 import { MESSAGE, readSentMails, SENT_MAIL_DAYS } from './sent-mails';
+import { unansweredMails } from './unanswered-mails';
 import {
   ANSWERED_DAYS,
   type AnsweredMail,
@@ -48,6 +49,11 @@ import {
 // Le mail d'un inconnu ne part pas au modèle avant qu'elle l'ait demandé : l'accueil lui demande si elle veut une
 // réponse (answerUnknownMail), et son « oui », avec ses indications, fait faire le premier appel au passage suivant,
 // sur la ligne de son oui (0084). La suite est celle de tous les brouillons.
+// L'agent « Relances » suit le même chemin, dans le même passage : l'accueil lui demande, pour chacun de ses mails
+// restés sans réponse (unanswered-mails.ts), si elle veut une relance (answerRelance) ; son « oui » fait faire le
+// premier appel au passage suivant, avec la consigne d'une relance (brouillon-prompt.ts), sur une ligne de sorte
+// « relance » (0088). Aucun modèle ne lit ce mail avant son oui. Une relance reste dans Leon : elle n'est jamais
+// déposée dans Gmail (brouillon-depot.ts).
 // Un brouillon complet est aussi déposé dans ses brouillons Gmail, en réponse dans le fil (brouillon-depot.ts) : c'est
 // tout ce que Leon écrit dans sa boîte. Rien n'est envoyé : l'agent prépare, elle valide. Tout se lit et s'écrit sous
 // withTenant de la personne ; l'appel au modèle et le dépôt se font hors de toute transaction. Le worker de la file
@@ -61,6 +67,7 @@ import {
 // mesuré). Le dépôt dans Gmail suit le même plafond : un brouillon écrit, un dépôt au plus, de deux requêtes, donc
 // 40 crédits Pipedream par personne et par jour au plus.
 export const BROUILLONS_DAILY_CAP = 20;
+const DAY_MS = 24 * 60 * 60 * 1000;
 // Borne le texte ET la réflexion du modèle (llm.ts) : un brouillon de 6 000 caractères en prend environ 2 000, le reste
 // est la marge de la réflexion à l'effort « medium ».
 const BROUILLON_MAX_TOKENS = 8000;
@@ -81,7 +88,9 @@ const PREFERENCE_MAX_TOKENS = 4000;
 // réponse ») n'est jamais redemandé au modèle, sauf une fois pour écrire le brouillon quand elle a répondu aux
 // questions ; et son brouillon n'est déposé qu'ici, une fois, juste après son écriture. Aucun appel pour une demande
 // qu'elle a écartée, ni pour un fil qui a bougé depuis, ni pour un mail de plus de ANSWERED_DAYS jours
-// (readAnsweredMails). Aucun pour le mail d'un inconnu avant son oui : il n'est jamais parmi ses mails qui attendent.
+// (readAnsweredMails). Aucun pour le mail d'un inconnu avant son oui : il n'est jamais parmi ses mails qui attendent ;
+// ni pour son mail resté sans réponse avant son oui à une relance : seule sa ligne le fait lire. Une relance a sa
+// consigne, et « sans réponse » y est illisible : elle l'a demandée.
 // Deux passages lancés au même instant appelleraient chacun le modèle pour le même mail, pour une seule ligne écrite :
 // la file n'en lance qu'un par personne à la fois (brouillons-queue.ts).
 export async function writeBrouillons(
@@ -118,6 +127,12 @@ export async function writeBrouillons(
     // Ce qu'elle attend : ses réponses aux questions de Leon, le second appel pour ce mail ; ou son oui au mail d'un
     // inconnu, avec ses indications, le premier.
     const owed = 'id' in mail ? mail : undefined;
+    // Une relance : depuis combien de jours son mail, le dernier du fil, attend une réponse.
+    const last = mail.messages.at(-1)?.at ?? now;
+    const relance =
+      owed?.sorte === 'relance'
+        ? { jours: Math.floor((now.getTime() - last.getTime()) / DAY_MS) }
+        : undefined;
     const asked =
       owed?.questions && owed.reponses
         ? { questions: owed.questions, reponses: owed.reponses }
@@ -127,9 +142,11 @@ export async function writeBrouillons(
       personName: person?.name ?? '',
       mail,
       lines,
-      sent,
+      // Une relance ne prend pas ses exemples dans son fil : son mail y est déjà, à relancer, pas à imiter.
+      sent: relance ? sent.filter((one) => one.sourceId !== mail.sourceId) : sent,
       asked,
       indications: owed?.indications ?? undefined,
+      relance,
     });
     let answer = '';
     try {
@@ -148,7 +165,7 @@ export async function writeBrouillons(
       logError('brouillons.call_failed', error, { userId: ctx.userId, sourceId: mail.sourceId });
       continue;
     }
-    const result = parseBrouillonAnswer(answer, asked !== undefined);
+    const result = parseBrouillonAnswer(answer, asked !== undefined, relance !== undefined);
     // Des identifiants et des nombres seulement, jamais de texte. `brouillon` : écrit (true), pas de brouillon (false :
     // des questions à lui poser, ou aucune réponse à donner), ou réponse illisible (null). `questions` : leur nombre.
     console.info(
@@ -198,7 +215,7 @@ export async function writeBrouillons(
     if (!kept || result.texte === null) continue;
     written += 1;
     // Le destinataire est l'auteur du mail reçu, jamais ce qu'écrit le modèle ni ce qu'elle a répondu. Un dépôt qui
-    // échoue n'arrête rien.
+    // échoue n'arrête rien. Une relance n'est pas déposée : depositBrouillon la refuse.
     await depositBrouillon(ctx, { id: kept, to: mail.from }, deps);
   }
   await learnFrom(ctx, retouches, WAITING_MAX - mails.length, deps.llm);
@@ -422,6 +439,32 @@ export async function answerUnknownMail(
     const { rows } = await tx.execute<{ id: string }>(sql`
       insert into brouillons (tenant_id, user_id, source_id, message, indications, acl)
       ${unknownMails(ctx, new Date(), line, mail)}
+      on conflict do nothing
+      returning id`);
+    return rows[0]?.id ?? null;
+  });
+}
+
+// Sa réponse à son mail resté sans réponse (unanswered-mails.ts), depuis l'accueil, comme au mail d'un inconnu : « Oui »,
+// avec ses indications (vides quand elle n'en donne pas), ou « Non » (null). Une ligne de relance s'écrit pour ce mail
+// (0088) : son oui attend le passage suivant, qui fera le premier appel ; son non le ferme pour de bon, sans appel. Rend
+// l'identifiant de la ligne, ou null sans rien écrire si ce n'est plus un mail sans réponse : à elle, toujours le
+// dernier de son fil, dans la fenêtre, pas encore traité (unansweredMails, la même requête que l'accueil, sans le filtre
+// du texte) ; ou si son compte est supprimé. Deux envois simultanés n'en gardent qu'un : une seule ligne par message
+// (0080). L'appelant a borné les indications (settings/actions.ts) ; la table aussi.
+export async function answerRelance(
+  ctx: TenantContext,
+  mail: { sourceId: string; message: string },
+  indications: string | null,
+): Promise<string | null> {
+  if (!z.uuid().safeParse(mail.sourceId).success) return null;
+  const line = sql`s.tenant_id, ${ctx.userId}::uuid, s.id, l.message, ${indications}::text, 'relance',
+                   array[${ctx.userId}::uuid]`;
+  return withTenant(ctx, async (tx) => {
+    if (!(await lockAccount(tx, ctx))) return null;
+    const { rows } = await tx.execute<{ id: string }>(sql`
+      insert into brouillons (tenant_id, user_id, source_id, message, indications, sorte, acl)
+      ${unansweredMails(ctx, new Date(), line, mail)}
       on conflict do nothing
       returning id`);
     return rows[0]?.id ?? null;

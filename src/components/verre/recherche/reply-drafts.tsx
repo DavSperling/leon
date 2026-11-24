@@ -16,6 +16,7 @@ import {
   answerQuestionsAction,
   answerUnknownAction,
   discardBrouillonAction,
+  sendBrouillonAction,
 } from '@/app/(app)/settings/actions';
 import {
   Badge,
@@ -402,8 +403,11 @@ export function MailView({
   onPreference,
   onDiscard,
   onRefresh,
+  onSendDraft,
 }: {
   mail: PanelMail;
+  // « Envoyer » un brouillon déposé : le panneau demande d'abord.
+  onSendDraft?: () => void;
   kept?: Flow;
   onKeep?: Dispatch<FlowAction>;
   // L'identifiant de sa place (« Mail 2 sur 4 », sous le titre du panneau), que l'en-tête rappelle.
@@ -508,6 +512,19 @@ export function MailView({
             </p>
             {mail.mail.depose && <p className="text-label text-muted">{nb(t('deposited'))}</p>}
             <div className="flex flex-wrap items-center gap-2">
+              {mail.mail.depose && onSendDraft && (
+                <Button
+                  id={`${words}-envoyer`}
+                  size="sm"
+                  variant="primary"
+                  aria-describedby={words}
+                  disabled={discarding}
+                  loading={sending}
+                  onClick={onSendDraft}
+                >
+                  {t('sendDraft.button')}
+                </Button>
+              )}
               <CopyButton value={mail.mail.texte} aria-describedby={words} />
               <Button
                 id={`${words}-ecarter`}
@@ -588,7 +605,8 @@ export function ReplyDrafts({
   const place = useId();
   const doneId = useId();
   const [open, setOpen] = useState(false);
-  const [asking, setAsking] = useState(false);
+  // La confirmation sur place : écarter un brouillon déposé, ou l'envoyer.
+  const [asking, setAsking] = useState<false | 'discard' | 'send'>(false);
   const [failed, setFailed] = useState(false);
   const [panel, dispatch] = useReducer(panelReducer, CLOSED);
   // Ses réponses en cours, mail par mail : fermer le panneau (un clic à côté) ne les perd pas.
@@ -650,6 +668,19 @@ export function ReplyDrafts({
     if (mails[index + 1]) toast.success(t('writing'));
     return id;
   };
+  // « Envoyer », confirmé : le mail part de sa boîte, le panneau passe au suivant. Gmail qui refuse : le mail reste,
+  // et le panneau le dit ; plus rien à envoyer d'ici (déjà envoyé, écarté ailleurs) : il s'en va.
+  const send = (mail: PanelMail) =>
+    close(
+      mail,
+      startSending,
+      () => sendBrouillonAction(mail.id),
+      () => {
+        toast.success(t('sendDraft.done'));
+        return null;
+      },
+      t('draftGone'),
+    );
   const discard = (mail: PanelMail) =>
     close(
       mail,
@@ -700,7 +731,8 @@ export function ReplyDrafts({
     // shortcut: un mail où Leon écrit est celui de l'Accueil chargé ; si son brouillon a été déposé depuis,
     // « Écarter » le retire de Gmail sans demander (son geste vise cette réponse). Une garde dans
     // discardBrouillonAction le jour où ça se voit.
-    onDiscard: () => (confirmsDiscard(mail) ? setAsking(true) : discard(mail)),
+    onDiscard: () => (confirmsDiscard(mail) ? setAsking('discard') : discard(mail)),
+    onSendDraft: () => setAsking('send'),
     onRefresh: () => router.refresh(),
   });
 
@@ -797,7 +829,7 @@ export function ReplyDrafts({
         }
         busy={working}
         confirm={
-          asking && shown
+          asking === 'discard' && shown
             ? {
                 title: t('confirmDiscard'),
                 text: t('confirmDiscardText'),
@@ -811,7 +843,23 @@ export function ReplyDrafts({
                   document.getElementById(`${shown.key}-ecarter`)?.focus();
                 },
               }
-            : null
+            : asking === 'send' && shown
+              ? {
+                  title: shown.mail.from
+                    ? t('sendDraft.confirm', { name: shown.mail.from })
+                    : t('sendDraft.confirmAnon'),
+                  text: t('sendDraft.confirmText'),
+                  yes: t('sendDraft.button'),
+                  yesVariant: 'primary',
+                  no: t('sendDraft.notYet'),
+                  busy: sending,
+                  onYes: () => send(shown),
+                  onNo: () => {
+                    setAsking(false);
+                    document.getElementById(`${shown.key}-envoyer`)?.focus();
+                  },
+                }
+              : null
         }
         foot={
           hasPrevious || hasNext ? (

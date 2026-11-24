@@ -18,6 +18,8 @@ export type SidePanelConfirm = {
   text?: ReactNode;
   /** Le bouton qui le fait (contour rouge) : « Supprimer la connexion ». */
   yes: string;
+  /** `primary` : un geste qui ne détruit rien mais ne se rattrape pas (« Envoyer »), le bouton plein d'encre. */
+  yesVariant?: 'destructive' | 'primary';
   /** Le retour, qui prend le focus : « Garder ». Échap répond « non » aussi, sans fermer le panneau. */
   no: string;
   onYes: () => void;
@@ -218,7 +220,7 @@ export function SidePanel({
                     )}
                     <div className="mt-3 flex flex-wrap items-center gap-2">
                       <Button
-                        variant="destructive"
+                        variant={confirm.yesVariant ?? 'destructive'}
                         loading={confirm.busy}
                         loadingLabel={confirm.busyLabel}
                         onClick={confirm.onYes}

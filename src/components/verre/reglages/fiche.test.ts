@@ -292,12 +292,12 @@ describe('FicheSection : les agents proposés', () => {
     // déposé aussi dans sa boîte Gmail, jamais envoyé.
     const html = render({ ...DATA, agents: all });
     expect(text(html)).toContain(
-      'un brouillon écrit comme vous, sur l’accueil. Avec Gmail, un brouillon complet est aussi déposé dans vos brouillons. Jamais envoyé.',
+      'un brouillon écrit comme vous, sur l’accueil. Avec Gmail, un brouillon complet est aussi déposé dans vos brouillons. Rien ne part sans votre clic sur « Envoyer ».',
     );
     expect(text(html)).not.toContain('sur cette page');
     const english = text(render({ ...DATA, agents: all }, 'en'));
     expect(english).toContain(
-      'a draft written the way you write, on the home page. With Gmail, a complete draft is also saved to your drafts. Never sent.',
+      'a draft written the way you write, on the home page. With Gmail, a complete draft is also saved to your drafts. Nothing is sent until you click Send.',
     );
     expect(english).not.toContain('on this page');
   });
@@ -324,7 +324,7 @@ describe('FicheSection : les agents proposés', () => {
 
     // Ni raison ni mesure : le nom, la phrase, l'état, les deux boutons.
     expect(words('brouillon-reponse')).toBe(
-      'Brouillons de réponse Quand un mail attend une réponse, un brouillon écrit comme vous, sur l’accueil. Avec Gmail, un brouillon complet est aussi déposé dans vos brouillons. Jamais envoyé. En service Oui Non',
+      'Brouillons de réponse Quand un mail attend une réponse, un brouillon écrit comme vous, sur l’accueil. Avec Gmail, un brouillon complet est aussi déposé dans vos brouillons. Rien ne part sans votre clic sur « Envoyer ». En service Oui Non',
     );
     expect(words('relance')).toBe(
       'Relances Quand un mail envoyé reste sans réponse, le fil remonte avec un brouillon de relance. Pas encore en service Oui Non',

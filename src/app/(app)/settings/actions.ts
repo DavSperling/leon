@@ -56,7 +56,7 @@ import {
   restoreMemoryVersion,
 } from '@/server/memory/memory-section';
 import { AGENTS, type AgentId } from '@/server/portrait/agents';
-import { withdrawBrouillon } from '@/server/portrait/brouillon-depot';
+import { sendBrouillon, withdrawBrouillon } from '@/server/portrait/brouillon-depot';
 import { QUESTIONS_MAX, REPONSE_MAX_CHARS } from '@/server/portrait/brouillon-prompt';
 import { answerQuestions, answerUnknownMail, discardBrouillon } from '@/server/portrait/brouillons';
 import { requestBrouillons } from '@/server/portrait/brouillons-queue';
@@ -818,6 +818,21 @@ export async function discardBrouillonAction(
   const withdrawn = await withdrawBrouillon(ctx, parsed.data);
   revalidatePath('/');
   return { ok: true, resteDansGmail: !withdrawn };
+}
+
+// « Envoyer » un brouillon prêt et déposé dans Gmail, depuis le panneau de l'accueil, après sa confirmation : il part
+// de sa boîte (portrait/brouillon-depot.ts, sendBrouillon). « introuvable » : rien à envoyer d'ici (écarté, jamais
+// déposé, déjà envoyé) ; « echec » : Gmail n'a rien envoyé, le brouillon reste dans ses brouillons Gmail.
+export async function sendBrouillonAction(
+  id: string,
+): Promise<{ ok: true } | { error: FicheError | 'echec' }> {
+  const ctx = await requireUserContext();
+  const parsed = z.uuid().safeParse(id);
+  if (!parsed.success) return { error: 'invalide' };
+  const sent = await sendBrouillon(ctx, parsed.data);
+  if (sent !== 'envoye') return { error: sent };
+  revalidatePath('/');
+  return { ok: true };
 }
 
 // Ses réponses aux questions de Leon, depuis le panneau de l'accueil : une par question, dans le même ordre, de

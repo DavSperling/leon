@@ -205,6 +205,21 @@ export function gmailClient(http: ConnectorHttp) {
       return draft.id;
     },
 
+    // Envoie un brouillon que Leon a déposé (createDraft), tel qu'il est dans Gmail, quand elle clique « Envoyer » dans
+    // Leon et le confirme : le seul envoi de Leon depuis une boîte, et jamais d'un autre brouillon. Jamais rejouée : une
+    // réponse perdue a pu envoyer le mail. Seul un 401 l'est, une fois, par le proxy de Pipedream. Un brouillon qui n'y
+    // est plus (elle l'a envoyé ou supprimé dans Gmail) rend 404 : lève, rien n'est parti.
+    // https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.drafts/send (POST …/drafts/send,
+    // corps { id }, gmail.modify accepté ; rend le message envoyé)
+    async sendDraft(draftId: string): Promise<void> {
+      await http.text({
+        url: `${GMAIL}/gmail/v1/users/me/drafts/send`,
+        method: 'POST',
+        body: { id: draftId },
+        once: true,
+      });
+    },
+
     // Supprime un brouillon que Leon a déposé (createDraft), quand elle l'écarte dans Leon : la seule suppression de
     // Leon dans une boîte, et jamais d'un autre message. Définitive, sans passer par la corbeille. Un brouillon qui
     // n'y est plus (elle l'a envoyé ou supprimé) rend 404 : il n'y a plus rien à retirer. Jamais rejouée, sauf un 401

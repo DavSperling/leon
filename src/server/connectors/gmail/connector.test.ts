@@ -663,6 +663,20 @@ describe('gmailClient : un brouillon de réponse dans un fil', () => {
     expect(calls[0]?.headers['content-type']).toBe('application/json');
   });
 
+  it('envoie le brouillon déposé par son identifiant, une fois ; un refus lève sans être rejoué', async () => {
+    const { http, calls } = testHttp(gmailConnector, config, [
+      { method: 'POST', url: `${DRAFTS}/send`, json: { id: 'm10', threadId: 't1' } },
+      { method: 'POST', url: `${DRAFTS}/send`, status: 404 },
+    ]);
+    const client = gmailClient(http);
+
+    await expect(client.sendDraft('r-1')).resolves.toBeUndefined();
+    await expect(client.sendDraft('r-parti')).rejects.toBeInstanceOf(Error);
+
+    expect(calls).toHaveLength(2);
+    expect(calls[0]).toMatchObject({ method: 'POST', url: `${DRAFTS}/send`, body: { id: 'r-1' } });
+  });
+
   it('supprime le brouillon déposé, une fois ; un brouillon qui n’y est plus ne lève pas', async () => {
     const { http, calls } = testHttp(gmailConnector, config, [
       { method: 'DELETE', url: `${DRAFTS}/r%2F1`, json: {} },

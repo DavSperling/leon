@@ -407,6 +407,14 @@
       "preference": "Préférence à valider",
       "pret": "Brouillon prêt",
       "ecrit": "En cours d’écriture"
+    },
+    "sendDraft": {
+      "button": "Envoyer",
+      "confirm": "Envoyer cette réponse à {name} ?",
+      "confirmAnon": "Envoyer cette réponse ?",
+      "confirmText": "Elle part de votre boîte Gmail, telle qu’elle est dans vos brouillons. Un mail envoyé ne se rattrape pas.",
+      "notYet": "Pas encore",
+      "done": "Réponse envoyée."
     }
   },
   "search": {
@@ -1172,7 +1180,7 @@
       },
       "brouillon-reponse": {
         "name": "Brouillons de réponse",
-        "text": "Quand un mail attend une réponse, un brouillon écrit comme vous, sur l’accueil. Avec Gmail, un brouillon complet est aussi déposé dans vos brouillons. Jamais envoyé."
+        "text": "Quand un mail attend une réponse, un brouillon écrit comme vous, sur l’accueil. Avec Gmail, un brouillon complet est aussi déposé dans vos brouillons. Rien ne part sans votre clic sur « Envoyer »."
       },
       "brief-rendez-vous": {
         "name": "Brief avant rendez-vous",

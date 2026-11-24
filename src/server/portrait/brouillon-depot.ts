@@ -15,8 +15,8 @@ import { hasBlank } from './brouillon-prompt';
 
 // Le dépôt d'un brouillon dans les brouillons Gmail de la personne, en réponse dans le fil, juste après qu'un passage
 // l'a écrit (brouillons.ts), et son retrait quand elle l'écarte dans Leon (withdrawBrouillon). Ce sont les seules
-// écritures de Leon dans une boîte : un brouillon de plus, puis ce même brouillon de moins. Rien n'est envoyé, et rien
-// d'autre n'y est supprimé ni modifié.
+// écritures de Leon dans une boîte : un brouillon de plus, puis ce même brouillon de moins, ou ce brouillon envoyé
+// quand elle clique « Envoyer » et le confirme (sendBrouillon). Rien d'autre n'y est envoyé, supprimé ni modifié.
 //
 // Un brouillon est déposé si, et seulement si :
 // - il est complet : son texte ne porte aucun blanc entre crochets (hasBlank). Un brouillon incomplet reste dans Leon
@@ -135,6 +135,51 @@ export async function depositBrouillon(
 // Retire de Gmail le brouillon que Leon y a déposé, une fois qu'elle l'a écarté dans Leon (discardBrouillon) : un
 // brouillon écarté ne doit plus pouvoir partir de sa boîte. La suppression est définitive, même si elle l'a retouché
 // dans Gmail entre-temps. Seul un brouillon écarté, à elle, et déposé par Leon est supprimé : jamais un autre message.
+// « Envoyer », depuis l'accueil, après sa confirmation : le brouillon déposé part de sa boîte Gmail, tel qu'il y est
+// (elle a pu le retoucher dans Gmail). Seulement le sien, non écarté, déposé, et par la boîte qui l'a déposé
+// (gmailOf). Le seul envoi de Leon : rien ne part sans ce geste. Envoyé, Leon oublie l'identifiant du brouillon Gmail :
+// un second clic ne trouve plus rien à envoyer. Rend 'envoye', 'introuvable' (rien à envoyer d'ici : pas à elle,
+// écarté, jamais déposé, déjà envoyé) ou 'echec' (sa boîte débranchée ou en pause, Gmail qui refuse, ou le brouillon
+// qui n'y est plus), journalisé sans rien de capté.
+// shortcut: la ligne reste « prête » sur l'accueil jusqu'à la prochaine relève de sa boîte (son envoi arrive alors dans
+// le fil, qui n'attend plus), sans « Envoyer » ; une colonne « envoyé le » si cela se voit.
+export async function sendBrouillon(
+  ctx: TenantContext,
+  id: string,
+  deps: Deps = {},
+): Promise<'envoye' | 'introuvable' | 'echec'> {
+  const mine = and(
+    eq(brouillons.tenantId, ctx.tenantId),
+    eq(brouillons.userId, ctx.userId),
+    eq(brouillons.id, id),
+  );
+  try {
+    const [row] = await withTenant(ctx, (tx) =>
+      tx
+        .select({
+          brouillonGmail: brouillons.brouillonGmail,
+          ecarteLe: brouillons.ecarteLe,
+          connectionId: sources.connectionId,
+        })
+        .from(brouillons)
+        .innerJoin(
+          sources,
+          and(eq(sources.tenantId, brouillons.tenantId), eq(sources.id, brouillons.sourceId)),
+        )
+        .where(mine),
+    );
+    if (!row || row.ecarteLe || row.brouillonGmail === null) return 'introuvable';
+    const client = await gmailOf(ctx, row.connectionId, deps);
+    if (!client) return 'echec';
+    await client.sendDraft(row.brouillonGmail);
+    await withTenant(ctx, (tx) => tx.update(brouillons).set({ brouillonGmail: null }).where(mine));
+    return 'envoye';
+  } catch (error) {
+    logError('brouillons.send_failed', error, { userId: ctx.userId, brouillonId: id });
+    return 'echec';
+  }
+}
+
 // Rend true quand il ne reste rien de Leon dans sa boîte pour ce brouillon (rien n'y était déposé, il vient d'être
 // supprimé, ou il n'y était déjà plus). Rend false quand il y reste : sa boîte débranchée ou en pause, ou une
 // suppression qui échoue, journalisée sans rien de capté. L'écran le lui dit alors.

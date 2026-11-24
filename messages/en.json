@@ -407,6 +407,14 @@
       "preference": "Preference to confirm",
       "pret": "Draft ready",
       "ecrit": "Being written"
+    },
+    "sendDraft": {
+      "button": "Send",
+      "confirm": "Send this reply to {name}?",
+      "confirmAnon": "Send this reply?",
+      "confirmText": "It is sent from your Gmail account, as it is in your drafts. A sent email cannot be taken back.",
+      "notYet": "Not yet",
+      "done": "Reply sent."
     }
   },
   "search": {
@@ -1172,7 +1180,7 @@
       },
       "brouillon-reponse": {
         "name": "Reply drafts",
-        "text": "When an email is waiting for a reply, a draft written the way you write, on the home page. With Gmail, a complete draft is also saved to your drafts. Never sent."
+        "text": "When an email is waiting for a reply, a draft written the way you write, on the home page. With Gmail, a complete draft is also saved to your drafts. Nothing is sent until you click Send."
       },
       "brief-rendez-vous": {
         "name": "Pre-meeting brief",

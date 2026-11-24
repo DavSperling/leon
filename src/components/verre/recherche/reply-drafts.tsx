@@ -18,6 +18,7 @@ import {
   discardBrouillonAction,
 } from '@/app/(app)/settings/actions';
 import {
+  Badge,
   Button,
   CopyButton,
   Field,
@@ -57,7 +58,9 @@ import type {
 } from '@/server/portrait/screen';
 
 const RADIO = 'mt-0.5 size-[18px] shrink-0 cursor-pointer accent-[var(--ink)]';
-const CHOICE = 'flex cursor-pointer items-start gap-2.5 text-body [overflow-wrap:anywhere] text-fg';
+// Un choix : une tuile qu'on clique en entier ; la choisie prend le trait d'encre.
+const CHOICE =
+  'flex min-h-12 cursor-pointer items-start gap-3 rounded-item border border-line bg-sheet px-4 py-3 text-body [overflow-wrap:anywhere] text-fg transition-colors duration-150 hover:border-line-strong hover:bg-hover has-[:checked]:border-ink has-[:checked]:bg-selected';
 
 /**
  * Les questions d'une demande, une par une, comme Claude pose les siennes : la question et sa place, ses choix en
@@ -139,11 +142,11 @@ export function Questions({
           tabIndex={-1}
           className="m-0 grid min-w-0 gap-2.5 border-0 p-0 outline-none"
         >
-          <legend className="mb-2.5 grid gap-1 p-0">
+          <legend className="mb-3 grid gap-1.5 p-0">
             <span className="text-label text-muted">
               {t('position', { n: flow.step + 1, total: questions.length })}
             </span>
-            <span className="text-body font-medium [overflow-wrap:anywhere] text-fg">
+            <span className="text-head font-semibold tracking-[-0.015em] text-balance [overflow-wrap:anywhere] text-fg">
               {questions[flow.step]}
             </span>
           </legend>
@@ -185,7 +188,7 @@ export function Questions({
           )}
         </fieldset>
       )}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="mt-2 flex flex-wrap items-center gap-2">
         {flow.step > 0 && (
           <Button
             size="sm"
@@ -207,7 +210,12 @@ export function Questions({
             {t('send')}
           </Button>
         ) : (
-          <Button size="sm" disabled={discarding} onClick={() => dispatch({ type: 'next' })}>
+          <Button
+            size="sm"
+            variant="primary"
+            disabled={discarding}
+            onClick={() => dispatch({ type: 'next' })}
+          >
             {c('next')}
           </Button>
         )}
@@ -235,6 +243,8 @@ function Asked({
   max,
   sending,
   discarding,
+  kept,
+  onKeep,
   onAnswers,
   onDiscard,
 }: {
@@ -243,10 +253,16 @@ function Asked({
   max: number;
   sending?: boolean;
   discarding?: boolean;
+  // Ses réponses gardées par le panneau : elles survivent à sa fermeture (un clic à côté ne les perd pas). Sans
+  // elles, le mail garde les siennes tant qu'il est monté.
+  kept?: Flow;
+  onKeep?: Dispatch<FlowAction>;
   onAnswers: (reponses: string[]) => void;
   onDiscard: () => void;
 }) {
-  const [flow, dispatch] = useReducer(flowReducer, demande.choix, startFlow);
+  const [own, ownDispatch] = useReducer(flowReducer, demande.choix, startFlow);
+  const flow = kept ?? own;
+  const dispatch = onKeep ?? ownDispatch;
   const [moved, setMoved] = useState(false);
   const panel = `${words}-questions`;
   // biome-ignore lint/correctness/useExhaustiveDependencies: l'étape change ce que porte l'identifiant
@@ -302,12 +318,13 @@ function Unknown({
   }, [open, field]);
   return (
     <>
+      <p id={ask} hidden={open} className="mb-3 text-lead font-medium text-fg">
+        {nb(t('strangerAsk'))}
+      </p>
       <div hidden={open} className="flex flex-wrap items-center gap-2">
-        <p id={ask} className="mr-1 text-body text-fg">
-          {nb(t('strangerAsk'))}
-        </p>
         <Button
           size="sm"
+          variant="primary"
           aria-describedby={`${ask} ${words}`}
           disabled={discarding}
           onClick={() => setOpen(true)}
@@ -378,6 +395,8 @@ export function MailView({
   failed,
   sending,
   discarding,
+  kept,
+  onKeep,
   onAnswers,
   onUnknown,
   onPreference,
@@ -385,6 +404,8 @@ export function MailView({
   onRefresh,
 }: {
   mail: PanelMail;
+  kept?: Flow;
+  onKeep?: Dispatch<FlowAction>;
   // L'identifiant de sa place (« Mail 2 sur 4 », sous le titre du panneau), que l'en-tête rappelle.
   place?: string;
   hidden?: boolean;
@@ -428,10 +449,10 @@ export function MailView({
           </time>
         </p>
       </div>
-      <div className="mt-3">
+      <div className="mt-3 max-w-[680px]">
         <SourceThing source={source} />
       </div>
-      <div className="mt-6">
+      <div className="mt-6 max-w-[680px]">
         {mail.sorte === 'questions' ? (
           <Asked
             demande={mail.mail}
@@ -439,6 +460,8 @@ export function MailView({
             max={max}
             sending={sending}
             discarding={discarding}
+            kept={kept}
+            onKeep={onKeep}
             onAnswers={onAnswers}
             onDiscard={onDiscard}
           />
@@ -458,14 +481,15 @@ export function MailView({
             >
               {mail.mail.preference}
             </p>
+            <p id={`${words}-tenir`} className="mt-2 text-lead font-medium text-fg">
+              {nb(t('keepInMind'))}
+            </p>
             <div className="flex flex-wrap items-center gap-2">
-              <p id={`${words}-tenir`} className="mr-1 text-body text-fg">
-                {nb(t('keepInMind'))}
-              </p>
               {[true, false].map((oui) => (
                 <Button
                   key={String(oui)}
                   size="sm"
+                  variant={oui ? 'primary' : 'secondary'}
                   aria-describedby={`${words}-tenir ${words}-preference`}
                   disabled={oui ? discarding : sending}
                   loading={oui ? sending : discarding}
@@ -563,6 +587,9 @@ export function ReplyDrafts({
   const [asking, setAsking] = useState(false);
   const [failed, setFailed] = useState(false);
   const [panel, dispatch] = useReducer(panelReducer, CLOSED);
+  // Ses réponses en cours, mail par mail : fermer le panneau (un clic à côté) ne les perd pas.
+  const [kept, setKept] = useState<Record<string, Flow>>({});
+  const locale = useLocale();
   const [sending, startSending] = useTransition();
   const [discarding, startDiscarding] = useTransition();
   const working = sending || discarding;
@@ -619,6 +646,14 @@ export function ReplyDrafts({
       mail.sorte === 'pret' ? t('draftGone') : t('gone'),
     );
   const gestures = (mail: PanelMail) => ({
+    ...(mail.sorte === 'questions' && {
+      kept: kept[mail.key],
+      onKeep: (action: FlowAction) =>
+        setKept((all) => ({
+          ...all,
+          [mail.key]: flowReducer(all[mail.key] ?? startFlow(mail.mail.choix), action),
+        })),
+    }),
     onAnswers: (reponses: string[]) =>
       close(
         mail,
@@ -664,6 +699,42 @@ export function ReplyDrafts({
   ]
     .filter(Boolean)
     .join(' · ');
+  // La colonne de gauche : tout ce qui attend, dans l'ordre du panneau ; un clic montre ce mail.
+  const list = shown && (
+    <ol aria-label={t('list')} className="grid gap-1">
+      {mails.map((mail, at) => (
+        <li key={mail.key}>
+          <button
+            type="button"
+            aria-current={at === index || undefined}
+            disabled={working}
+            onClick={() => show(at)}
+            className="grid w-full gap-1 rounded-item px-3 py-2.5 text-left transition-colors duration-150 hover:bg-hover disabled:cursor-default aria-[current]:bg-sheet aria-[current]:shadow-sheet"
+          >
+            <span className="flex items-baseline justify-between gap-2">
+              <span className="truncate text-body font-medium text-fg">
+                {mail.mail.from ?? t('someone')}
+              </span>
+              <time
+                dateTime={mail.mail.receivedAt.toISOString()}
+                className="shrink-0 text-label text-muted"
+              >
+                {formatDate(mail.mail.receivedAt, locale)}
+              </time>
+            </span>
+            <span className="truncate text-label text-fg-2">
+              {mail.mail.source.title ?? f('untitled')}
+            </span>
+            <span>
+              <Badge tone={mail.sorte === 'pret' ? 'success' : 'neutral'}>
+                {t(`kind.${mail.sorte}`)}
+              </Badge>
+            </span>
+          </button>
+        </li>
+      ))}
+    </ol>
+  );
   const hasPrevious = shown && index > 0;
   const hasNext = shown && index < mails.length - 1;
 
@@ -696,6 +767,8 @@ export function ReplyDrafts({
           setAsking(false);
           setOpen(next);
         }}
+        wide
+        aside={list}
         title={f('agents.brouillon-reponse.name')}
         sub={
           shown && (

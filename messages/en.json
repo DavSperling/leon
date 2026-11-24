@@ -399,7 +399,15 @@
     "keep": "Keep",
     "discarded": "Draft dismissed.",
     "discardedKeptInGmail": "Draft dismissed. Leon couldn’t remove it from Gmail: delete it from your Gmail drafts.",
-    "draftGone": "This draft no longer exists."
+    "draftGone": "This draft no longer exists.",
+    "list": "What is waiting for you",
+    "kind": {
+      "questions": "To complete",
+      "inconnu": "To decide",
+      "preference": "Preference to confirm",
+      "pret": "Draft ready",
+      "ecrit": "Being written"
+    }
   },
   "search": {
     "memoryLabel": "Search the team’s memory",

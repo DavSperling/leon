@@ -399,7 +399,15 @@
     "keep": "Garder",
     "discarded": "Brouillon écarté.",
     "discardedKeptInGmail": "Brouillon écarté. Leon n’a pas pu le retirer de Gmail : supprimez-le dans vos brouillons Gmail.",
-    "draftGone": "Ce brouillon n’existe plus."
+    "draftGone": "Ce brouillon n’existe plus.",
+    "list": "Ce qui vous attend",
+    "kind": {
+      "questions": "À compléter",
+      "inconnu": "À décider",
+      "preference": "Préférence à valider",
+      "pret": "Brouillon prêt",
+      "ecrit": "En cours d’écriture"
+    }
   },
   "search": {
     "memoryLabel": "Recherche dans la mémoire de l’équipe",

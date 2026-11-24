@@ -10,6 +10,7 @@ import type {
   HomeDemande,
   HomeInconnu,
   HomePreference,
+  HomeRelance,
 } from '@/server/portrait/screen';
 import en from '../../../../messages/en.json';
 import fr from '../../../../messages/fr.json';
@@ -22,6 +23,7 @@ import { MailView, Questions, ReplyDrafts } from './reply-drafts';
 vi.mock('@/app/(app)/settings/actions', () => ({
   answerPreferenceAction: vi.fn(),
   answerQuestionsAction: vi.fn(),
+  answerRelanceAction: vi.fn(),
   answerUnknownAction: vi.fn(),
   discardBrouillonAction: vi.fn(),
 }));
@@ -59,6 +61,7 @@ const DEVIS: HomeDemande = {
     ['1 200 €', '1 500 €', 'Le tarif habituel'],
   ],
   repondue: false,
+  relance: false,
   source: { title: 'Devis 2027', url: 'https://mail.google.test/2', kind: 'gmail' },
 };
 const CONTRAT: HomeDemande = {
@@ -68,6 +71,7 @@ const CONTRAT: HomeDemande = {
   questions: ['Can you sign before Friday?'],
   choix: [['Yes', 'No']],
   repondue: false,
+  relance: false,
   source: { title: null, url: null, kind: 'outlook' },
 };
 const INES: HomeInconnu = {
@@ -97,6 +101,7 @@ const PRET: HomeBrouillon = {
   receivedAt: new Date('2026-11-20T08:30:00Z'),
   texte: 'Bonjour Léa,\n\nVoici le devis [à compléter : le montant] <b>.\n\nBien à vous',
   depose: false,
+  relance: false,
   source: { title: 'Devis 2027', url: 'https://mail.google.test/fil/1', kind: 'gmail' },
 };
 // Complet : déposé aussi dans ses brouillons Gmail.
@@ -106,7 +111,30 @@ const DEPOSE: HomeBrouillon = {
   receivedAt: new Date('2026-11-18T08:30:00Z'),
   texte: 'Bonjour Marc,\n\nC’est entendu.',
   depose: true,
+  relance: false,
   source: { title: 'Contrat', url: 'https://mail.google.test/fil/3', kind: 'gmail' },
+};
+// Son mail à Léa resté sans réponse, envoyé le 14 : la question de relance. À plusieurs, avec deux autres.
+const SANS_REPONSE: HomeRelance = {
+  relance: true,
+  from: 'Léa Roy',
+  others: 0,
+  receivedAt: new Date('2026-11-14T09:00:00Z'),
+  mail: { sourceId: id(9), message: 'message:5d1e' },
+  source: { title: 'Devis 2027', url: 'https://mail.google.test/9', kind: 'gmail' },
+};
+const A_PLUSIEURS: HomeRelance = {
+  ...SANS_REPONSE,
+  others: 2,
+  mail: { ...SANS_REPONSE.mail, sourceId: id(10) },
+};
+// La relance prête, écrite après son oui.
+const RELANCE_PRETE: HomeBrouillon = {
+  ...PRET,
+  id: id(704),
+  receivedAt: SANS_REPONSE.receivedAt,
+  texte: 'Bonjour Léa,\n\nAvez-vous pu regarder le devis ?\n\nBien à vous',
+  relance: true,
 };
 
 const within = (children: ReactNode, locale: 'en' | 'fr') =>
@@ -118,14 +146,14 @@ const within = (children: ReactNode, locale: 'en' | 'fr') =>
     }),
   );
 const render = (
-  demandes: Array<HomeDemande | HomeInconnu | HomePreference>,
+  demandes: Array<HomeDemande | HomeInconnu | HomePreference | HomeRelance>,
   prets: HomeBrouillon[] = [],
   locale: 'en' | 'fr' = 'fr',
   name: string | null = 'Julie',
 ) => within(createElement(ReplyDrafts, { name, demandes, prets, max: 1000 }), locale);
 // Un mail du panneau, tel qu'il s'y montre (sans le préchargement du logo de son outil, que React pose devant).
 const mailView = (
-  one: HomeDemande | HomeInconnu | HomePreference | HomeBrouillon,
+  one: HomeDemande | HomeInconnu | HomePreference | HomeRelance | HomeBrouillon,
   locale: 'en' | 'fr' = 'fr',
   over: { done?: Done; hidden?: boolean; failed?: boolean } = {},
 ) => {
@@ -144,6 +172,7 @@ const mailView = (
       max: 1000,
       onAnswers: () => {},
       onUnknown: () => {},
+      onRelance: () => {},
       onPreference: () => {},
       onDiscard: () => {},
       onRefresh: () => {},
@@ -242,6 +271,21 @@ describe('ReplyDrafts : la ligne de l’Accueil', () => {
     );
     expect(text(render([RETOUCHE, autre], [PRET], 'en', null))).toBe(
       'I have a few questions for you. 2 preferences to confirm · 1 draft ready',
+    );
+  });
+
+  it('une relance à décider attend son geste aussi : « j’ai quelques questions », et son compte à part, au singulier, au pluriel', () => {
+    expect(text(render([SANS_REPONSE]))).toBe(
+      'Julie, j’ai quelques questions à vous poser. 1 relance à décider',
+    );
+    expect(text(render([DEVIS, SANS_REPONSE, A_PLUSIEURS], [RELANCE_PRETE]))).toBe(
+      'Julie, j’ai quelques questions à vous poser. 1 mail à compléter · 2 relances à décider · 1 brouillon prêt',
+    );
+    expect(text(render([SANS_REPONSE], [], 'en'))).toBe(
+      'Julie, I have a few questions for you. 1 follow-up to decide',
+    );
+    expect(text(render([SANS_REPONSE, A_PLUSIEURS], [], 'en', null))).toBe(
+      'I have a few questions for you. 2 follow-ups to decide',
     );
   });
 
@@ -561,6 +605,81 @@ describe('MailView : un mail du panneau', () => {
     ])
       expect(said, one).toContain(one);
     expect(said).not.toMatch(/draftQuestions\.|fiche\./);
+  });
+});
+
+describe('MailView : son mail resté sans réponse, et la relance', () => {
+  it('la question : son mail à son destinataire, resté sans réponse, la date de son envoi, le fil, puis « Voulez-vous une relance ? », « Oui » et « Non »', () => {
+    const html = mailView(SANS_REPONSE);
+    const words = `relance-${SANS_REPONSE.mail.sourceId}`;
+    const panel = `${words}-indications`;
+
+    expect(html).toMatch(
+      new RegExp(
+        `^<div><div id="${words}" tabindex="-1" data-autofocus="" aria-describedby="place"[^>]*><h3[^>]*>Votre mail à Léa Roy est resté sans réponse\\.</h3>`,
+      ),
+    );
+    expect(text(html)).toContain('Envoyé le 14 nov. 2026');
+    expect(html).toContain('dateTime="2026-11-14T09:00:00.000Z"');
+    expect(html).toContain('href="https://mail.google.test/9"');
+    expect(text(html)).toContain('Voulez-vous une relance ? Oui Non');
+    expect(count(html, `aria-describedby="${words}-voir ${words}"`)).toBe(2);
+    // « Oui » ouvre ses indications, fermées d'abord, puis « Préparer la relance » ; « Écarter » y vaut « Non ».
+    expect(html).toContain(`<div id="${panel}" hidden=""`);
+    expect(html).toMatch(new RegExp(`<label for="${panel}-champ"[^>]*>Vos indications</label>`));
+    expect(html).toMatch(new RegExp(`<textarea [^>]*id="${panel}-champ"[^>]*maxLength="1000"`));
+    expect(text(html)).toContain(
+      'Ce que vous voulez ajouter, en quelques mots. Vous pouvez laisser vide.',
+    );
+    expect(buttons(html)).toEqual(['Oui', 'Non', 'Préparer la relance', 'Écarter']);
+    expect(html).not.toMatch(/message:|Reçu le|Voulez-vous une réponse|<form/);
+  });
+
+  it('avec plusieurs destinataires, le premier et le nombre des autres ; en anglais, les mêmes mots', () => {
+    expect(text(mailView(A_PLUSIEURS))).toContain(
+      'Votre mail à Léa Roy et 2 autres personnes est resté sans réponse. Envoyé le 14 nov. 2026',
+    );
+    expect(text(mailView({ ...A_PLUSIEURS, others: 1 }))).toContain(
+      'Votre mail à Léa Roy et 1 autre personne est resté sans réponse.',
+    );
+    const english = text(mailView(SANS_REPONSE, 'en'));
+    expect(english).toContain('Your email to Léa Roy has had no reply. Sent on');
+    expect(english).toContain('Do you want a follow-up? Yes No');
+    expect(english).toContain('What you want to add, in a few words. You can leave it empty.');
+    expect(english).toContain('Prepare the follow-up');
+    expect(text(mailView(A_PLUSIEURS, 'en'))).toContain(
+      'Your email to Léa Roy and 2 other people has had no reply.',
+    );
+    expect(text(mailView({ ...A_PLUSIEURS, others: 1 }, 'en'))).toContain(
+      'Your email to Léa Roy and 1 other person has had no reply.',
+    );
+  });
+
+  it('son oui : Leon écrit sa relance, sous le nom de son destinataire, et « Écarter » vise la ligne de son oui', () => {
+    const done = { [`relance-${SANS_REPONSE.mail.sourceId}`]: id(98) };
+    const html = mailView(SANS_REPONSE, 'fr', { done });
+
+    expect(html).toMatch(/<h3[^>]*>Léa Roy<\/h3>/);
+    expect(text(html)).toContain('Envoyé le 14 nov. 2026');
+    expect(text(html)).toContain('J’écris votre relance. Actualiser Écarter');
+    expect(text(html)).not.toMatch(/Voulez-vous une relance|J’écris votre réponse/);
+    expect(text(mailView(SANS_REPONSE, 'en', { done }))).toContain(
+      'I’m writing your follow-up. Refresh Dismiss',
+    );
+  });
+
+  it('ses questions, puis la relance prête : comme un brouillon, avec « Relance prête » et « Envoyé le »', () => {
+    const asked = text(mailView({ ...DEVIS, relance: true }));
+    expect(asked).toContain('Léa Roy Envoyé le 10 nov. 2026');
+    expect(asked).toContain('Question 1 sur 2');
+
+    const html = mailView(RELANCE_PRETE);
+    expect(text(html)).toContain('Léa Roy Envoyé le 14 nov. 2026');
+    expect(text(html)).toContain('Relance prête Bonjour Léa');
+    expect(buttons(html)).toEqual(['Copier', 'Écarter']);
+    expect(text(html)).not.toMatch(/Brouillon prêt|Reçu le|Déposé/);
+    expect(text(mailView(RELANCE_PRETE, 'en'))).toContain('Léa Roy Sent on');
+    expect(text(mailView(RELANCE_PRETE, 'en'))).toContain('Follow-up ready');
   });
 });
 

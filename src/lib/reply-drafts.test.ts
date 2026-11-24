@@ -4,11 +4,13 @@ import type {
   HomeDemande,
   HomeInconnu,
   HomePreference,
+  HomeRelance,
 } from '@/server/portrait/screen';
 import {
   CLOSED,
   confirmsDiscard,
   countsOf,
+  isRelance,
   type Panel,
   type PanelAction,
   type PanelMail,
@@ -29,6 +31,7 @@ const demande = (n: number, day: number, repondue = false): HomeDemande => ({
   questions: ['Mardi ?'],
   choix: [['Oui', 'Non']],
   repondue,
+  relance: false,
   source,
 });
 const inconnu = (n: number, day: number): HomeInconnu => ({
@@ -50,6 +53,16 @@ const pret = (n: number, day: number, depose = false): HomeBrouillon => ({
   receivedAt: at(day),
   texte: 'Bonjour,\n\nC’est entendu.',
   depose,
+  relance: false,
+  source,
+});
+// Son mail resté sans réponse, envoyé ce jour-là : la question de relance.
+const relance = (n: number, day: number, others = 0): HomeRelance => ({
+  relance: true,
+  from: `Relance ${n}`,
+  others,
+  receivedAt: at(day),
+  mail: { sourceId: id(n), message: `message:${n}` },
   source,
 });
 
@@ -122,8 +135,20 @@ describe('countsOf : ce que la ligne de l’Accueil compte', () => {
       {},
     );
 
-    expect(countsOf(mails)).toEqual({ toComplete: 2, toConfirm: 0, ready: 3, writing: 1 });
-    expect(countsOf([])).toEqual({ toComplete: 0, toConfirm: 0, ready: 0, writing: 0 });
+    expect(countsOf(mails)).toEqual({
+      toComplete: 2,
+      toConfirm: 0,
+      toFollowUp: 0,
+      ready: 3,
+      writing: 1,
+    });
+    expect(countsOf([])).toEqual({
+      toComplete: 0,
+      toConfirm: 0,
+      toFollowUp: 0,
+      ready: 0,
+      writing: 0,
+    });
   });
 
   it('les préférences à valider, à part : elles aussi attendent un geste d’elle', () => {
@@ -133,7 +158,13 @@ describe('countsOf : ce que la ligne de l’Accueil compte', () => {
       {},
     );
 
-    expect(countsOf(mails)).toEqual({ toComplete: 1, toConfirm: 2, ready: 1, writing: 1 });
+    expect(countsOf(mails)).toEqual({
+      toComplete: 1,
+      toConfirm: 2,
+      toFollowUp: 0,
+      ready: 1,
+      writing: 1,
+    });
   });
 });
 
@@ -162,6 +193,69 @@ describe('panelMails : une préférence d’écriture proposée', () => {
       'Préférence 2 preference',
     );
     expect(closed.at).toBe(id(3));
+  });
+});
+
+describe('panelMails : son mail resté sans réponse, et la relance qui suit', () => {
+  it('la question de relance est un geste d’elle : avec les autres demandes, avant les brouillons prêts, par date du mail', () => {
+    const mails = panelMails(
+      [demande(1, 10), relance(2, 12), inconnu(3, 11), demande(4, 16, true)],
+      [pret(5, 20)],
+      {},
+    );
+
+    expect(seen(mails)).toEqual([
+      'Relance 2 relance',
+      'Inconnu 3 inconnu',
+      'Demande 1 questions',
+      'Prêt 5 pret',
+      'Demande 4 ecrit',
+    ]);
+    // Sa clé et son fil : pas ceux du mail d'un inconnu.
+    expect(mails[0]).toMatchObject({ key: `relance-${id(2)}`, id: id(2) });
+    expect(isRelance(mails[0] as PanelMail)).toBe(true);
+    expect(mails.filter(isRelance)).toHaveLength(1);
+  });
+
+  it('« Oui » : Leon l’écrit sur la ligne de son oui, à sa place ; « Non » : elle s’en va', () => {
+    const all = [relance(1, 10), relance(2, 9)];
+    const mails = panelMails(all, [], { [`relance-${id(1)}`]: id(42), [`relance-${id(2)}`]: null });
+
+    expect(seen(mails)).toEqual(['Relance 1 ecrit']);
+    expect(mails[0]).toMatchObject({ id: id(42), sorte: 'ecrit' });
+    expect(isRelance(mails[0] as PanelMail)).toBe(true);
+  });
+
+  it('ses questions, la relance où Leon écrit, la relance prête : des mails de relance, comptés avec les autres', () => {
+    const mails = panelMails(
+      [
+        { ...demande(1, 10), relance: true },
+        { ...demande(2, 11, true), relance: true },
+        relance(3, 12, 2),
+        relance(4, 13),
+        demande(5, 14),
+      ],
+      [{ ...pret(6, 8), relance: true }, pret(7, 9)],
+      {},
+    );
+
+    expect(mails.map((one) => [one.mail.from, isRelance(one)])).toEqual([
+      ['Demande 5', false],
+      ['Relance 4', true],
+      ['Relance 3', true],
+      ['Demande 1', true],
+      ['Prêt 7', false],
+      ['Prêt 6', true],
+      ['Demande 2', true],
+    ]);
+    // Les relances à décider à part ; ses questions sont des mails à compléter.
+    expect(countsOf(mails)).toEqual({
+      toComplete: 2,
+      toConfirm: 0,
+      toFollowUp: 2,
+      ready: 2,
+      writing: 1,
+    });
   });
 });
 
@@ -257,7 +351,13 @@ describe('panelReducer : mail par mail', () => {
 
     expect(shown).toBe('rien');
     expect(panel.at).toBeNull();
-    expect(countsOf(mails)).toEqual({ toComplete: 0, toConfirm: 0, ready: 0, writing: 0 });
+    expect(countsOf(mails)).toEqual({
+      toComplete: 0,
+      toConfirm: 0,
+      toFollowUp: 0,
+      ready: 0,
+      writing: 0,
+    });
   });
 
   it('rouvert, le panneau reprend au premier mail, ce que Leon écrit rangé à la fin', () => {

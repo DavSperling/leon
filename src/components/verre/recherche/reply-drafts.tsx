@@ -14,6 +14,7 @@ import {
 import {
   answerPreferenceAction,
   answerQuestionsAction,
+  answerRelanceAction,
   answerUnknownAction,
   discardBrouillonAction,
   sendBrouillonAction,
@@ -44,6 +45,7 @@ import {
   CLOSED,
   confirmsDiscard,
   countsOf,
+  isRelance,
   type PanelMail,
   panelMails,
   panelReducer,
@@ -56,6 +58,7 @@ import type {
   HomeDemande,
   HomeInconnu,
   HomePreference,
+  HomeRelance,
 } from '@/server/portrait/screen';
 
 const RADIO = 'mt-0.5 size-[18px] shrink-0 cursor-pointer accent-[var(--ink)]';
@@ -293,16 +296,19 @@ function Asked({
 // Le mail d'un inconnu (quelqu'un à qui elle n'a pas écrit depuis 90 jours), que Leon n'a pas lu : « Voulez-vous une
 // réponse ? », « Oui » et « Non ». « Non » le ferme pour de bon. « Oui » ouvre ses indications, facultatives, puis
 // « Préparer la réponse » : Leon ne lit le mail qu'alors, au passage suivant. « Écarter » y vaut « Non ». Rien du mail
-// ne se montre ici.
+// ne se montre ici. Son mail resté sans réponse (`relance`) : les mêmes gestes, « Voulez-vous une relance ? », puis
+// « Préparer la relance ».
 function Unknown({
   words,
   max,
+  relance,
   sending,
   discarding,
   onUnknown,
 }: {
   words: string;
   max: number;
+  relance?: boolean;
   sending?: boolean;
   discarding?: boolean;
   onUnknown: (oui: boolean, indications: string) => void;
@@ -320,7 +326,7 @@ function Unknown({
   return (
     <>
       <p id={ask} hidden={open} className="mb-3 text-lead font-medium text-fg">
-        {nb(t('strangerAsk'))}
+        {nb(t(relance ? 'relanceAsk' : 'strangerAsk'))}
       </p>
       <div hidden={open} className="flex flex-wrap items-center gap-2">
         <Button
@@ -342,7 +348,11 @@ function Unknown({
         </Button>
       </div>
       <div id={panel} hidden={!open} className="grid gap-3">
-        <Field id={field} label={t('instructions')} help={t('instructionsHelp')}>
+        <Field
+          id={field}
+          label={t('instructions')}
+          help={t(relance ? 'relanceInstructionsHelp' : 'instructionsHelp')}
+        >
           <Textarea
             value={indications}
             onChange={(event) => setIndications(event.target.value)}
@@ -359,7 +369,7 @@ function Unknown({
             loading={sending}
             onClick={() => onUnknown(true, indications)}
           >
-            {t('prepare')}
+            {t(relance ? 'relancePrepare' : 'prepare')}
           </Button>
           <Button
             size="sm"
@@ -381,8 +391,11 @@ function Unknown({
 /**
  * Un mail du panneau : son en-tête (le correspondant, la date du mail reçu, le fil lié à son outil), puis ce qu'il
  * attend. Des questions : une à la fois, puis le récapitulatif et « Envoyer mes réponses ». Le mail d'un inconnu :
- * « Voulez-vous une réponse ? ». Une préférence d'écriture tirée de sa retouche : l'en-tête dit la retouche remarquée,
- * puis la préférence, telle quelle, et « Dois-je en tenir compte pour vos prochains brouillons ? », « Oui » et « Non ».
+ * « Voulez-vous une réponse ? ». Son mail resté sans réponse : l'en-tête le dit (« Votre mail à Léa est resté sans
+ * réponse. », « Envoyé le … »), puis « Voulez-vous une relance ? » ; ce qui suit une relance (ses questions, Leon qui
+ * l'écrit, la relance prête) nomme son destinataire, avec « Envoyé le ». Une préférence d'écriture tirée de sa
+ * retouche : l'en-tête dit la retouche remarquée, puis la préférence, telle quelle, et « Dois-je en tenir compte pour
+ * vos prochains brouillons ? », « Oui » et « Non ».
  * Un brouillon prêt : son texte, tel quel, s'il est déposé dans ses brouillons Gmail, « Copier » et « Écarter » ; rien ne
  * s'y modifie, et rien ne part d'ici. Une réponse que Leon écrit : la phrase qui le dit, « Actualiser » pour voir
  * arriver le brouillon, et « Écarter ». L'en-tête prend le focus quand le mail se montre, et ses gestes le rappellent ;
@@ -400,6 +413,7 @@ export function MailView({
   onKeep,
   onAnswers,
   onUnknown,
+  onRelance,
   onPreference,
   onDiscard,
   onRefresh,
@@ -419,6 +433,7 @@ export function MailView({
   discarding?: boolean;
   onAnswers: (reponses: string[]) => void;
   onUnknown: (oui: boolean, indications: string) => void;
+  onRelance: (oui: boolean, indications: string) => void;
   onPreference: (oui: boolean) => void;
   onDiscard: () => void;
   onRefresh: () => void;
@@ -427,6 +442,7 @@ export function MailView({
   const f = useTranslations('fiche');
   const locale = useLocale();
   const words = mail.key;
+  const relance = isRelance(mail);
   const { from, receivedAt, source } = mail.mail;
   const noticed = from ? t('noticed', { name: from }) : t('noticedAnon');
   return (
@@ -445,11 +461,18 @@ export function MailView({
         className="grid gap-1 [overflow-wrap:anywhere] text-fg outline-none"
       >
         <h3 className="text-lead font-semibold">
-          {mail.sorte === 'preference' ? noticed : (from ?? t('someone'))}
+          {mail.sorte === 'preference'
+            ? noticed
+            : mail.sorte === 'relance'
+              ? t(mail.mail.others > 0 ? 'unansweredMany' : 'unanswered', {
+                  name: mail.mail.from,
+                  count: mail.mail.others,
+                })
+              : (from ?? t('someone'))}
         </h3>
         <p className="text-label text-muted">
           <time dateTime={receivedAt.toISOString()}>
-            {t('received', { date: formatDate(receivedAt, locale) })}
+            {t(relance ? 'sent' : 'received', { date: formatDate(receivedAt, locale) })}
           </time>
         </p>
       </div>
@@ -469,13 +492,14 @@ export function MailView({
             onAnswers={onAnswers}
             onDiscard={onDiscard}
           />
-        ) : mail.sorte === 'inconnu' ? (
+        ) : mail.sorte === 'inconnu' || mail.sorte === 'relance' ? (
           <Unknown
             words={words}
             max={max}
+            relance={relance}
             sending={sending}
             discarding={discarding}
-            onUnknown={onUnknown}
+            onUnknown={mail.sorte === 'relance' ? onRelance : onUnknown}
           />
         ) : mail.sorte === 'preference' ? (
           <div className="grid gap-3">
@@ -506,7 +530,7 @@ export function MailView({
           </div>
         ) : mail.sorte === 'pret' ? (
           <div className="grid gap-3">
-            <p className="text-label text-muted">{t('ready')}</p>
+            <p className="text-label text-muted">{t(relance ? 'relanceReady' : 'ready')}</p>
             <p className="whitespace-pre-wrap rounded-item border border-line bg-glass-3 px-4 py-3 text-body [overflow-wrap:anywhere] text-fg">
               {mail.mail.texte}
             </p>
@@ -543,7 +567,7 @@ export function MailView({
           <div className="grid gap-3">
             {/* En cours : le trait ambre du kit passe une fois sous les mots. */}
             <p id={`${words}-ecrit`} className="text-body text-fg">
-              <span className="mark is-working">{t('writing')}</span>
+              <span className="mark is-working">{t(relance ? 'relanceWriting' : 'writing')}</span>
             </p>
             <div className="flex flex-wrap items-center gap-2">
               <Button size="sm" aria-describedby={words} disabled={discarding} onClick={onRefresh}>
@@ -567,7 +591,7 @@ export function MailView({
   );
 }
 
-// Un geste réussi : `id`, la ligne écrite par son oui au mail d'un inconnu ; `resteDansGmail`, un brouillon écarté que
+// Un geste réussi : `id`, la ligne écrite par son oui au mail d'un inconnu ou à une relance ; `resteDansGmail`, un brouillon écarté que
 // Leon n'a pas pu retirer de Gmail.
 type Done = { ok: true; resteDansGmail?: boolean; id?: string };
 
@@ -593,7 +617,7 @@ const saveSkip = () => {
 type Result = Done | { error: string };
 
 /**
- * Ce que l'agent « Brouillons de réponse » a pour elle (portrait/brouillons.ts), sur l'Accueil : une seule ligne, sous
+ * Ce que les agents « Brouillons de réponse » et « Relances » ont pour elle (portrait/brouillons.ts), sur l'Accueil : une seule ligne, sous
  * le bonjour, qui l'appelle par son prénom et compte ce qui l'attend ; rien quand rien ne l'attend. Toute la ligne
  * ouvre le panneau, qui montre ce qui attend mail par mail, dans l'ordre de lib/reply-drafts.ts, avec sa place,
  * « Mail précédent » et « Mail suivant ». Un geste qui clôt un mail (ses réponses envoyées, son oui avec ses
@@ -610,7 +634,7 @@ export function ReplyDrafts({
 }: {
   // Son prénom, celui du bonjour.
   name: string | null;
-  demandes: Array<HomeDemande | HomeInconnu | HomePreference>;
+  demandes: Array<HomeDemande | HomeInconnu | HomePreference | HomeRelance>;
   prets: HomeBrouillon[];
   max: number;
 }) {
@@ -685,8 +709,8 @@ export function ReplyDrafts({
       dispatch({ type: 'close', mails, key: mail.key, id: 'ok' in result ? after(result) : null });
     });
   // Leon l'écrit : le mail garde sa place, et le panneau passe au suivant ; ce qui ne se voit plus se dit.
-  const writes = (id: string) => {
-    if (mails[index + 1]) toast.success(t('writing'));
+  const writes = (mail: PanelMail, id: string) => {
+    if (mails[index + 1]) toast.success(t(isRelance(mail) ? 'relanceWriting' : 'writing'));
     return id;
   };
   // « Envoyer », confirmé : le mail part de sa boîte, le panneau passe au suivant. Gmail qui refuse : le mail reste,
@@ -729,7 +753,7 @@ export function ReplyDrafts({
         mail,
         startSending,
         () => answerQuestionsAction({ id: mail.id, reponses }),
-        () => writes(mail.id),
+        () => writes(mail, mail.id),
       ),
     onUnknown: (oui: boolean, indications: string) => {
       if (mail.sorte !== 'inconnu') return;
@@ -737,7 +761,16 @@ export function ReplyDrafts({
         mail,
         oui ? startSending : startDiscarding,
         () => answerUnknownAction({ ...mail.mail.mail, oui, indications: oui ? indications : '' }),
-        (result) => (oui && result.id ? writes(result.id) : null),
+        (result) => (oui && result.id ? writes(mail, result.id) : null),
+      );
+    },
+    onRelance: (oui: boolean, indications: string) => {
+      if (mail.sorte !== 'relance') return;
+      close(
+        mail,
+        oui ? startSending : startDiscarding,
+        () => answerRelanceAction({ ...mail.mail.mail, oui, indications: oui ? indications : '' }),
+        (result) => (oui && result.id ? writes(mail, result.id) : null),
       );
     },
     // « Oui » ou « Non » à une préférence : l'un ou l'autre la clôt.
@@ -763,12 +796,17 @@ export function ReplyDrafts({
 
   // Le titre de la ligne : ce qui attend un geste d'elle d'abord, sinon ses brouillons prêts, sinon ce que Leon écrit.
   const kind =
-    counts.toComplete + counts.toConfirm > 0 ? 'questions' : counts.ready > 0 ? 'ready' : 'writing';
+    counts.toComplete + counts.toConfirm + counts.toFollowUp > 0
+      ? 'questions'
+      : counts.ready > 0
+        ? 'ready'
+        : 'writing';
   const count = kind === 'ready' ? counts.ready : counts.writing;
   const title = name ? t(`line.${kind}`, { name, count }) : t(`lineAnon.${kind}`, { count });
   const summary = [
     counts.toComplete > 0 && t('count.toComplete', { count: counts.toComplete }),
     counts.toConfirm > 0 && t('count.toConfirm', { count: counts.toConfirm }),
+    counts.toFollowUp > 0 && t('count.toFollowUp', { count: counts.toFollowUp }),
     counts.ready > 0 && t('count.ready', { count: counts.ready }),
     counts.writing > 0 && t('count.writing', { count: counts.writing }),
   ]

@@ -28,8 +28,8 @@ import {
   readPreferences,
 } from './preferences';
 import { readProposals } from './propositions';
-import { MESSAGE, readSentMails, SENT_MAIL_DAYS } from './sent-mails';
-import { unansweredMails } from './unanswered-mails';
+import { MESSAGE, notOwn, ownAddresses, readSentMails, SENT_MAIL_DAYS } from './sent-mails';
+import { recipientName, unansweredMails } from './unanswered-mails';
 import {
   ANSWERED_DAYS,
   type AnsweredMail,
@@ -305,9 +305,12 @@ export const HOME_MAX = 20;
 export type ReadyBrouillon = {
   id: string;
   sourceId: string;
-  // Le correspondant : son nom, à défaut son adresse.
+  // Le correspondant : son nom, à défaut son adresse. Pour une relance, le destinataire de son mail, jamais elle
+  // (recipientName), et `receivedAt` est la date de son mail.
   from: string | null;
   receivedAt: Date;
+  // Une relance (0088), pas une réponse.
+  relance: boolean;
   texte: string;
   // Déposé dans ses brouillons Gmail (brouillon-depot.ts) : un oui ou un non, jamais l'identifiant du brouillon Gmail.
   depose: boolean;
@@ -316,7 +319,10 @@ export type ReadyBrouillon = {
 // dans le même ordre (aucun pour une demande posée avant les choix, 0083). `repondue` : elle a répondu, et Leon écrit
 // le brouillon. Son oui au mail d'un inconnu, tant que le premier appel n'a rien rendu, en est une sans question, où
 // Leon écrit.
-export type Demande = Pick<ReadyBrouillon, 'id' | 'sourceId' | 'from' | 'receivedAt'> & {
+export type Demande = Pick<
+  ReadyBrouillon,
+  'id' | 'sourceId' | 'from' | 'receivedAt' | 'relance'
+> & {
   questions: string[];
   choix: string[][];
   repondue: boolean;
@@ -333,11 +339,15 @@ export type Demande = Pick<ReadyBrouillon, 'id' | 'sourceId' | 'from' | 'receive
 // Un mail jugé sans réponse à donner, ou son « non » à un inconnu (ni texte, ni question, ni oui), s'écarte sur sa
 // ligne seule, avant de chercher le dernier message de son fil : ces lignes ne se montrent jamais, et leur nombre ne
 // fait que grandir.
+// Une relance se lit de même, avec ses lignes de réponse : son mail est le dernier du fil, et elle s'y montre avec le
+// nom de son destinataire.
 // shortcut: au-delà de HOME_MAX, les plus anciens ne se montrent pas ; à paginer si une personne en garde autant sans
 // les écarter.
 export async function readShown(
   ctx: TenantContext,
 ): Promise<{ demandes: Demande[]; prets: ReadyBrouillon[] }> {
+  const own = ownAddresses(ctx, new Date(Date.now() - SENT_MAIL_DAYS * DAY_MS));
+  const first = sql`(${notOwn(sql`l.recipients_to`, own)})[1]`;
   const { rows } = await withTenant(ctx, (tx) =>
     tx.execute<{
       id: string;
@@ -349,9 +359,12 @@ export async function readShown(
       questions: string[] | null;
       choix: string[][] | null;
       repondue: boolean;
+      relance: boolean;
     }>(sql`
-      select id, "sourceId", "from", at, texte, depose, questions, choix, repondue from (
-        select b.id, b.source_id as "sourceId", coalesce(l.author_name, l.author_email) as "from",
+      select id, "sourceId", "from", at, texte, depose, questions, choix, repondue, relance from (
+        select b.id, b.source_id as "sourceId", b.sorte = 'relance' as relance,
+               case when b.sorte = 'relance' then ${recipientName(ctx, sql`b.source_id`, first)}
+                    else coalesce(l.author_name, l.author_email) end as "from",
                extract(epoch from l.ts) as at, b.texte, b.brouillon_gmail is not null as depose,
                b.questions, b.choix, (b.reponses is not null or b.questions is null) as repondue,
                -- Leon écrit (repondue) : vrai aussi de tout brouillon prêt, ce qui ne change pas leur ordre.
@@ -361,7 +374,7 @@ export async function readShown(
                ) as n
         from brouillons b
         cross join lateral (
-          select t.external_id, t.author_name, t.author_email, t.ts
+          select t.external_id, t.author_name, t.author_email, t.recipients_to, t.ts
           from turns t
           where t.tenant_id = b.tenant_id and t.source_id = b.source_id
           order by t.ts desc, substring(t.external_id from ${MESSAGE}) desc

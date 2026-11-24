@@ -50,6 +50,7 @@ const DEMANDE: HomeDemande = {
   questions: ['Acceptez-vous le rendez-vous de mardi ?'],
   choix: [['Oui', 'Non, proposer jeudi']],
   repondue: false,
+  relance: false,
   source: { title: 'Devis 2027', url: null, kind: 'gmail' },
 };
 const INCONNU: HomeInconnu = {
@@ -64,6 +65,7 @@ const PRET: HomeBrouillon = {
   receivedAt: new Date('2026-11-09T09:00:00Z'),
   texte: 'Bonjour Léa,\n\nC’est entendu.',
   depose: true,
+  relance: false,
   source: { title: 'Contrat', url: null, kind: 'gmail' },
 };
 

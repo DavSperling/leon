@@ -7,13 +7,14 @@ import { lignesFiche } from '@/server/db/schema/portrait';
 import { logError } from '@/server/log';
 import { adminDb, adminPool } from '@/test/db';
 import { createTestTenant, seedConnection } from '@/test/fixtures';
-import { mailThread, received, sent } from '@/test/mail-threads';
+import { LEA, mailThread, received, sent } from '@/test/mail-threads';
 import { seedRun } from '@/test/seed-search';
-import { HOME_MAX } from './brouillons';
+import { answerRelance, HOME_MAX } from './brouillons';
 import { type FicheLine, readFiche, retireLine } from './fiche';
 import { answerProposal } from './propositions';
 import { getFicheBoss } from './queue';
 import { readFicheScreen, readHomeBrouillons } from './screen';
+import { readUnansweredMails } from './unanswered-mails';
 import { readUnknownMails } from './waiting-mails';
 
 // Les fils de courrier des mails d'inconnus passent par l'ingestion, qui met leur indexation en file : seule cette mise
@@ -26,6 +27,11 @@ vi.mock('@/server/pipeline/queue', async (original) => ({
 vi.mock('./waiting-mails', async (original) => {
   const actual = await original<typeof import('./waiting-mails')>();
   return { ...actual, readUnknownMails: vi.fn(actual.readUnknownMails) };
+});
+// De même la lecture de ses mails sans réponse.
+vi.mock('./unanswered-mails', async (original) => {
+  const actual = await original<typeof import('./unanswered-mails')>();
+  return { ...actual, readUnansweredMails: vi.fn(actual.readUnansweredMails) };
 });
 vi.mock('@/server/log', async (original) => ({
   ...(await original<typeof import('@/server/log')>()),
@@ -357,6 +363,7 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
           questions: QUESTIONS,
           choix: CHOIX,
           repondue: true,
+          relance: false,
           source: { title: 'Répondue', url: 'https://mail.google.test/1', kind: 'gmail' },
         },
         {
@@ -366,6 +373,7 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
           questions: ['Mardi ?'],
           choix: [['Oui', 'Non']],
           repondue: false,
+          relance: false,
           source: { title: 'Devis 2027', url: 'https://mail.google.test/2', kind: 'gmail' },
         },
         {
@@ -375,6 +383,7 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
           questions: QUESTIONS,
           choix: CHOIX,
           repondue: false,
+          relance: false,
           source: { title: 'Contrat', url: 'https://mail.google.test/5', kind: 'gmail' },
         },
       ],
@@ -423,6 +432,7 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
           receivedAt: recent.receivedAt,
           texte: 'Brouillon pour Devis 2027.',
           depose: false,
+          relance: false,
           source: { title: 'Devis 2027', url: 'https://mail.google.test/2', kind: 'gmail' },
         },
         {
@@ -431,6 +441,7 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
           receivedAt: older.receivedAt,
           texte: 'Brouillon pour Contrat.',
           depose: true,
+          relance: false,
           source: { title: 'Contrat', url: 'https://mail.google.test/5', kind: 'gmail' },
         },
         {
@@ -439,6 +450,7 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
           receivedAt: expect.any(Date),
           texte: 'Bonjour Léa,\n\nJeudi me convient.',
           depose: false,
+          relance: false,
           source: {
             title: 'Écrit au second appel',
             url: 'https://mail.google.test/6',
@@ -508,6 +520,7 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
         questions: [],
         choix: [],
         repondue: true,
+        relance: false,
         source: { title: 'Partenariat', url: 'https://mail.google.test/2', kind: 'gmail' },
       },
       expect.objectContaining({ repondue: true, questions: [] }),
@@ -715,6 +728,151 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
 
     for (const ctx of [paul, { ...paul, equipe: true }, zoe])
       expect(await readHomeBrouillons(ctx)).toEqual(NOTHING);
+  });
+
+  describe('ce que l’agent « Relances » a pour elle', () => {
+    const DAY = 24 * 3_600_000;
+    // Sa boîte Gmail branchée par elle et une fiche qui dit qu'elle envoie des mails : « Relances » lui est proposé, et
+    // elle lui a répondu.
+    const followsUp = async (ctx: TenantContext, oui = true) => {
+      await seedConnection(ctx, { provider: 'gmail' });
+      await seedLine(ctx, RYTHME);
+      await adminPool.query(
+        `insert into reponses_agent (tenant_id, user_id, agent, oui, acl)
+       values ($1, $2, 'relance', $3, array[$2::uuid])`,
+        [ctx.tenantId, ctx.userId, oui],
+      );
+    };
+    // Son mail à Léa, et à `cc`, resté sans réponse depuis `days` jours, dans le fil nommé, après un mail de Léa.
+    const unanswered = async (
+      ctx: TenantContext,
+      title: string,
+      days: number,
+      cc: string[] = [],
+    ) => {
+      const at = new Date(Date.now() - days * DAY);
+      const mine = sent(
+        at,
+        'Bonjour Léa,\nAvez-vous pu relire le devis ?',
+        [LEA, 'marc@client.test'],
+        cc,
+      );
+      const url = `https://mail.google.test/relance-${days}`;
+      const before = received(new Date(at.getTime() - DAY), 'Bonjour Julie, un devis ?');
+      return {
+        sourceId: await mailThread(ctx, title, [before, mine], { url }),
+        message: mine.externalId,
+        at,
+      };
+    };
+
+    it('l’accueil reçoit, pour chaque mail sans réponse, son destinataire, les autres, la date de son mail, le fil lié à son outil, et de quoi répondre : rien de son texte ni d’une adresse', async () => {
+      const [julie, paul] = await people();
+      await followsUp(julie);
+      await followsUp(paul);
+      const older = await unanswered(julie, 'Devis', 8);
+      const recent = await unanswered(julie, 'Contrat', 6);
+
+      const home = await readHomeBrouillons(julie);
+
+      expect(home).toEqual({
+        demandes: [
+          {
+            relance: true,
+            from: 'Léa Roy',
+            others: 1,
+            receivedAt: recent.at,
+            mail: { sourceId: recent.sourceId, message: recent.message },
+            source: { title: 'Contrat', url: 'https://mail.google.test/relance-6', kind: 'gmail' },
+          },
+          expect.objectContaining({ from: 'Léa Roy', receivedAt: older.at }),
+        ],
+        prets: [],
+      });
+      expect(JSON.stringify(home)).not.toMatch(/relire|lea@client\.test|marc@client\.test/);
+      expect(await readHomeBrouillons(paul)).toEqual(NOTHING);
+    });
+
+    it('son oui : Leon écrit sous le nom de son destinataire, puis la relance prête de même ; son non ne se montre pas', async () => {
+      const [julie] = await people();
+      await followsUp(julie);
+      const oui = await unanswered(julie, 'Oui', 6);
+      const id = await answerRelance(julie, oui, 'Rappelez-lui l’échéance.');
+      await answerRelance(julie, await unanswered(julie, 'Non', 7), null);
+      const ready = await unanswered(julie, 'Prête', 8);
+      await adminPool.query(
+        `insert into brouillons (tenant_id, user_id, source_id, message, texte, indications, sorte, acl)
+       values ($1, $2, $3, $4, 'Bonjour Léa,', '', 'relance', array[$2::uuid])`,
+        [julie.tenantId, julie.userId, ready.sourceId, ready.message],
+      );
+
+      const home = await readHomeBrouillons(julie);
+
+      expect(home).toEqual({
+        demandes: [
+          {
+            id,
+            from: 'Léa Roy',
+            receivedAt: oui.at,
+            questions: [],
+            choix: [],
+            repondue: true,
+            relance: true,
+            source: { title: 'Oui', url: 'https://mail.google.test/relance-6', kind: 'gmail' },
+          },
+        ],
+        prets: [
+          {
+            id: expect.any(String),
+            from: 'Léa Roy',
+            receivedAt: ready.at,
+            texte: 'Bonjour Léa,',
+            depose: false,
+            relance: true,
+            source: { title: 'Prête', url: 'https://mail.google.test/relance-8', kind: 'gmail' },
+          },
+        ],
+      });
+      expect(JSON.stringify(home)).not.toMatch(/échéance|Julie Martin/);
+    });
+
+    it('rien de « Relances » sans son oui à lui : son non, ou son seul oui à « Brouillons de réponse » ; un oui remontre tout', async () => {
+      const [julie] = await people();
+      await answered(julie);
+      await followsUp(julie, false);
+      await unanswered(julie, 'Sans réponse', 6);
+      const ready = await unanswered(julie, 'Prête', 8);
+      await adminPool.query(
+        `insert into brouillons (tenant_id, user_id, source_id, message, texte, indications, sorte, acl)
+       values ($1, $2, $3, $4, 'Bonjour Léa,', '', 'relance', array[$2::uuid])`,
+        [julie.tenantId, julie.userId, ready.sourceId, ready.message],
+      );
+
+      expect(await readHomeBrouillons(julie)).toEqual(NOTHING);
+
+      await adminPool.query(
+        `update reponses_agent set oui = true where user_id = $1 and agent = 'relance'`,
+        [julie.userId],
+      );
+      expect(await titles(julie)).toEqual({ demandes: ['Sans réponse'], prets: ['Prête'] });
+    });
+
+    it('la lecture de ses mails sans réponse en panne : le reste se montre, et la panne est journalisée', async () => {
+      const [julie] = await people();
+      await answered(julie);
+      await followsUp(julie);
+      await unanswered(julie, 'Sans réponse', 6);
+      await asked(julie, 'Devis', 3);
+      const failure = new Error('base injoignable');
+      vi.mocked(logError).mockClear();
+      vi.mocked(readUnansweredMails).mockRejectedValueOnce(failure);
+
+      expect(await titles(julie)).toEqual({ demandes: ['Devis'], prets: [] });
+      expect(logError).toHaveBeenCalledExactlyOnceWith('accueil.relances', failure, {
+        userId: julie.userId,
+      });
+      expect((await titles(julie)).demandes).toEqual(['Devis', 'Sans réponse']);
+    });
   });
 });
 

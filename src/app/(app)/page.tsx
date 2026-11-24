@@ -120,8 +120,8 @@ const optional = <T,>(what: string, read: Promise<T>) =>
   });
 
 /**
- * L'Accueil : le bonjour et le fait du jour, la ligne de l'agent « Brouillons de réponse » quand il a quelque chose pour
- * elle, le champ où l'on demande et ses questions à essayer, puis le point du matin (s'il y en a un) et, à côté, le
+ * L'Accueil : le bonjour et le fait du jour, la ligne des agents « Brouillons de réponse » et « Relances » quand ils ont
+ * quelque chose pour elle, le champ où l'on demande et ses questions à essayer, puis le point du matin (s'il y en a un) et, à côté, le
  * calendrier de la semaine et la proposition « About you ».
  */
 async function Home({ ctx }: { ctx: TenantContext }) {

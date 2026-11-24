@@ -1710,6 +1710,7 @@ describe('readShown : ses brouillons prêts', () => {
         receivedAt: expect.any(Date),
         texte: 'Pour le devis.',
         depose: false,
+        relance: false,
       },
       {
         id: expect.any(String),
@@ -1718,6 +1719,7 @@ describe('readShown : ses brouillons prêts', () => {
         receivedAt: expect.any(Date),
         texte: 'Pour le contrat.',
         depose: false,
+        relance: false,
       },
     ]);
     // La date est celle du mail reçu, il y a une heure et deux heures, pas celle du brouillon.

@@ -6,6 +6,7 @@ import { lignesFiche } from '@/server/db/schema/portrait';
 import { withTenant } from '@/server/db/with-tenant';
 import { briefingSources } from '@/server/discussion/citation-sources';
 import { logError } from '@/server/log';
+import type { AgentId } from './agents';
 import { type Demande, HOME_MAX, type ReadyBrouillon, readShown } from './brouillons';
 import { type FicheLine, readFiche } from './fiche';
 import { type ProposedPreference, readProposedPreferences } from './preferences';
@@ -13,12 +14,13 @@ import { type Proposal, readProposals } from './propositions';
 import { enqueueFicheBuild, ficheBuildCompleted, ficheBuildPending } from './queue';
 import { MAIL_KINDS } from './sent-mails';
 import { synthesisDone } from './synthese';
+import { readUnansweredMails, type UnansweredMail } from './unanswered-mails';
 import { readUnknownMails, type UnknownMail } from './waiting-mails';
 
 // La fiche pour l'écran « Ma fiche » des réglages : son rôle et ses tâches, les préférences d'écriture qu'elle a
-// acceptées, où en est sa construction, les sources de ses tâches, et les agents de départ qui lui sont proposés. Et, pour l'accueil seulement, ce que l'agent « Brouillons
-// de réponse » a pour elle (readHomeBrouillons). Tout se lit sous les droits de la personne, et rien d'autre ne lit sa
-// fiche.
+// acceptées, où en est sa construction, les sources de ses tâches, et les agents de départ qui lui sont proposés. Et,
+// pour l'accueil seulement, ce que les agents « Brouillons de réponse » et « Relances » ont pour elle
+// (readHomeBrouillons). Tout se lit sous les droits de la personne, et rien d'autre ne lit sa fiche.
 
 // Où en est la construction, dans l'ordre où l'écran le décide :
 // - en-cours : une construction demandée ou en cours, ce que la file sait seule (queue.ts) ;
@@ -116,19 +118,32 @@ export type HomeInconnu = Pick<UnknownMail, 'from' | 'receivedAt'> & {
 // dont elle a retouché le brouillon, la date de ce mail, le fil (son objet, lié à son outil), et la préférence. `id`
 // sert à lui répondre « Oui » ou « Non ». Rien du mail, ni de sa réponse.
 export type HomePreference = Omit<ProposedPreference, 'sourceId'> & { source: FicheSource };
+// Son mail resté sans réponse, tel que l'accueil lui demande si elle veut une relance : `from`, le nom de son premier
+// destinataire qui n'est pas elle, et `others`, ses autres destinataires en « à » ; `receivedAt`, la date de son mail
+// (les mots du panneau sont ceux de tous ses mails) ; le fil (son objet, lié à son outil). `mail` sert à lui répondre
+// « Oui » ou « Non ». Rien de son texte, ni d'adresse que le nom.
+export type HomeRelance = Pick<UnansweredMail, 'others'> & {
+  relance: true;
+  from: string;
+  receivedAt: Date;
+  mail: Pick<UnansweredMail, 'sourceId' | 'message'>;
+  source: FicheSource;
+};
 export type HomeBrouillons = {
-  demandes: Array<HomeDemande | HomeInconnu | HomePreference>;
+  demandes: Array<HomeDemande | HomeInconnu | HomePreference | HomeRelance>;
   prets: HomeBrouillon[];
 };
 
-// Ce que l'agent « Brouillons de réponse » a pour elle, pour l'accueil : les demandes de Leon, les mails d'inconnus
-// qui l'attendent (waiting-mails.ts) et les préférences d'écriture qu'il lui propose (preferences.ts), puis les
-// brouillons prêts, les plus récents d'abord, HOME_MAX (vingt) au plus de
-// chaque sorte (brouillons.ts). L'accueil n'en montre qu'une ligne ; son panneau les range (lib/reply-drafts.ts). Seulement tant qu'elle dit oui à l'agent et qu'il lui est proposé : après un « non », ses lignes
-// restent en base, et un nouveau « oui » les remontre sans rappeler le modèle. Lu à chaque chargement de l'accueil : ses
-// lignes et les mails d'inconnus d'abord, sa fiche et ses outils seulement s'il y a de quoi montrer.
+// Ce que les agents « Brouillons de réponse » et « Relances » ont pour elle, pour l'accueil : les demandes de Leon, les
+// mails d'inconnus qui l'attendent (waiting-mails.ts), les préférences d'écriture qu'il lui propose (preferences.ts) et
+// ses mails restés sans réponse, à relancer ou non (unanswered-mails.ts), puis les brouillons prêts, relances comprises,
+// les plus récents d'abord, HOME_MAX (vingt) au plus de chaque sorte (brouillons.ts). L'accueil n'en montre qu'une
+// ligne ; son panneau les range (lib/reply-drafts.ts). Ce qui vient d'un agent ne se montre que tant qu'elle lui dit oui,
+// à lui, et qu'il lui est proposé : après un « non », ses lignes restent en base, et un nouveau « oui » les remontre
+// sans rappeler le modèle. Lu à chaque chargement de l'accueil : ses lignes, les mails d'inconnus et ses mails sans
+// réponse d'abord, sa fiche et ses outils seulement s'il y a de quoi montrer.
 export async function readHomeBrouillons(ctx: TenantContext): Promise<HomeBrouillons> {
-  const [shown, unknown, preferences] = await Promise.all([
+  const [shown, unknown, preferences, unanswered] = await Promise.all([
     readShown(ctx),
     // En panne, les mails d'inconnus manquent, sans emporter ses demandes ni ses brouillons prêts.
     readUnknownMails(ctx, HOME_MAX).catch((error) => {
@@ -136,21 +151,42 @@ export async function readHomeBrouillons(ctx: TenantContext): Promise<HomeBrouil
       return [];
     }),
     readProposedPreferences(ctx, HOME_MAX),
+    // De même ses mails sans réponse.
+    readUnansweredMails(ctx, HOME_MAX).catch((error) => {
+      logError('accueil.relances', error, { userId: ctx.userId });
+      return [];
+    }),
   ]);
   const inconnus = unknown.map(({ message, ...one }) => ({
     ...one,
     mail: { sourceId: one.sourceId, message },
   }));
-  const sourceIds = [...shown.demandes, ...inconnus, ...preferences, ...shown.prets].map(
-    (one) => one.sourceId,
-  );
+  const aRelancer = unanswered.map(({ message, to, sentAt, ...one }) => ({
+    ...one,
+    relance: true as const,
+    from: to,
+    receivedAt: sentAt,
+    mail: { sourceId: one.sourceId, message },
+  }));
+  const sourceIds = [
+    ...shown.demandes,
+    ...inconnus,
+    ...preferences,
+    ...aRelancer,
+    ...shown.prets,
+  ].map((one) => one.sourceId);
   if (sourceIds.length === 0) return { demandes: [], prets: [] };
   const [agents, seen] = await Promise.all([
     readProposals(ctx, await readFiche(ctx)),
     briefingSources(ctx, sourceIds),
   ]);
-  if (!agents.some((one) => one.agent === 'brouillon-reponse' && one.oui))
-    return { demandes: [], prets: [] };
+  const oui = (agent: AgentId) => agents.some((one) => one.agent === agent && one.oui);
+  const reponses = oui('brouillon-reponse');
+  const relances = oui('relance');
+  if (!reponses && !relances) return { demandes: [], prets: [] };
+  // Ses lignes, chacune sur le oui à son agent.
+  const mine = <T extends { relance: boolean }>(rows: T[]) =>
+    rows.filter((one) => (one.relance ? relances : reponses));
   // Le fil se relit sous ses droits : une ligne dont elle ne voit plus le fil ne part pas vers l'accueil.
   const withSource = <T extends { sourceId: string }>(rows: T[]) =>
     rows.flatMap(({ sourceId, ...one }) => {
@@ -159,20 +195,20 @@ export async function readHomeBrouillons(ctx: TenantContext): Promise<HomeBrouil
         ? [{ ...one, source: { title: source.title, url: source.url, kind: source.kind } }]
         : [];
     });
-  // Les mails d'inconnus et les préférences proposées partagent les places des demandes : celles qui attendent un geste
+  // Les mails d'inconnus, les préférences proposées et ses mails sans réponse partagent les places des demandes : celles qui attendent un geste
   // d'elle se comptent d'abord, les plus récentes d'abord, puis tout se rend par date du mail.
   const recent = (a: { receivedAt: Date }, b: { receivedAt: Date }) =>
     b.receivedAt.getTime() - a.receivedAt.getTime();
   const writing = (one: HomeBrouillons['demandes'][number]) => 'repondue' in one && one.repondue;
   const demandes = [
-    ...withSource(shown.demandes),
-    ...withSource(inconnus),
-    ...withSource(preferences),
+    ...withSource(mine(shown.demandes)),
+    ...(reponses ? [...withSource(inconnus), ...withSource(preferences)] : []),
+    ...(relances ? withSource(aRelancer) : []),
   ]
     .sort((a, b) => Number(writing(a)) - Number(writing(b)) || recent(a, b))
     .slice(0, HOME_MAX)
     .sort(recent);
-  return { demandes, prets: withSource(shown.prets) };
+  return { demandes, prets: withSource(mine(shown.prets)) };
 }
 
 // La demande du bouton « Construire ma fiche » : la construction part en file si l'écran la propose à la personne.

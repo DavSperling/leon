@@ -462,6 +462,39 @@ describe('writeBrouillons : une retouche, un appel au modèle, une préférence 
     expect(await preferenceLines(julie)).toEqual([]);
   });
 
+  it('son non à « Brouillons de réponse », même avec son oui à « Relances » : aucun appel, et la retouche attend', async () => {
+    const [julie] = await team();
+    await retouched(julie);
+    await adminPool.query('update reponses_agent set oui = false where user_id = $1', [
+      julie.userId,
+    ]);
+    // « Relances » lui est proposé : sa fiche dit qu'elle envoie des mails chaque semaine.
+    await adminPool.query("delete from lignes_fiche where user_id = $1 and genre = 'rythme'", [
+      julie.userId,
+    ]);
+    await adminDb.insert(lignesFiche).values({
+      tenantId: julie.tenantId,
+      userId: julie.userId,
+      genre: 'rythme',
+      valeur: { mailsParSemaine: 12 },
+      provenance: 'calcul',
+      mails: 40,
+      acl: [julie.userId],
+    });
+    await adminDb.insert(reponsesAgent).values({
+      tenantId: julie.tenantId,
+      userId: julie.userId,
+      agent: 'relance',
+      oui: true,
+      acl: [julie.userId],
+    });
+
+    expect(await learn(julie, PREFERENCE)).toHaveLength(0);
+
+    expect(await issues(julie)).toEqual([null]);
+    expect(await preferenceLines(julie)).toEqual([]);
+  });
+
   it('dans les cinq appels du passage, après ses mails qui attendent', async () => {
     const [julie] = await team();
     await retouched(julie);

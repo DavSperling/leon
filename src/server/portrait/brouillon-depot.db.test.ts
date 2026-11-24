@@ -214,6 +214,21 @@ describe('depositBrouillon : ce qui reste dans Leon seulement, sans aucune requ�
       },
     ],
     [
+      'son « non » à « Brouillons de réponse », même avec son oui à « Relances »',
+      async (julie) => {
+        const { id } = await drafted(julie, COMPLET, { connectionId: await gmailOf(julie) });
+        await adminPool.query('update reponses_agent set oui = false where user_id = $1', [
+          julie.userId,
+        ]);
+        await adminPool.query(
+          `insert into reponses_agent (tenant_id, user_id, agent, oui, acl)
+           values ($1, $2, 'relance', true, array[$2::uuid])`,
+          [julie.tenantId, julie.userId],
+        );
+        return id;
+      },
+    ],
+    [
       'une relance, même complète : jamais déposée dans ce morceau, quoi que dise son oui',
       async (julie) => {
         const { id } = await drafted(julie, COMPLET, { connectionId: await gmailOf(julie) });

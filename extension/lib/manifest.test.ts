@@ -10,7 +10,9 @@ describe('manifestFor', () => {
       gecko: {
         id: 'leon@leonmemory.com',
         strict_min_version: '140.0',
-        data_collection_permissions: { required: ['personalCommunications', 'websiteContent'] },
+        data_collection_permissions: {
+          required: ['personalCommunications', 'websiteContent', 'authenticationInfo'],
+        },
       },
     });
     expect(manifest.version).toBe('0.9.0');

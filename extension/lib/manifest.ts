@@ -32,8 +32,11 @@ export function manifestFor({
         id: GECKO_ID,
         // L'écran des données de Firefox existe depuis la 140 (le monde MAIN depuis la 128).
         strict_min_version: '140.0',
-        // Firefox les montre à l'installation : c'est un texte d'accord, validé par Amos.
-        data_collection_permissions: { required: ['personalCommunications', 'websiteContent'] },
+        // Firefox les montre à l'installation : c'est un texte d'accord, validé par Amos. authenticationInfo : le
+        // jeton Leon de la personne part vers le serveur à chaque appel (lib/api.ts).
+        data_collection_permissions: {
+          required: ['personalCommunications', 'websiteContent', 'authenticationInfo'],
+        },
       },
     },
   };

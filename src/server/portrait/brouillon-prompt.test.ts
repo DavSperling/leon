@@ -102,7 +102,7 @@ describe('buildBrouillonPrompt : ce que le modèle reçoit', () => {
 
     for (const rule of [
       'Réponds à ce que demande le dernier message',
-      'Écris dans la langue du mail reçu',
+      'Écris dans la langue du mail reçu, même quand ses indications ou ses réponses sont dans une autre langue : tu les traduis',
       "ses formules d'appel et de politesse, son registre, à peu près sa longueur habituelle",
       "N'invente rien : ni fait, ni date, ni prix, ni engagement",
       "Tu ne t'engages jamais à sa place",
@@ -570,7 +570,7 @@ describe('buildBrouillonPrompt : une relance, après son oui', () => {
       'celui qu’elle emploie avec le premier destinataire de son dernier message',
       "Le dernier message est le sien, resté sans réponse : celui qu'elle relance",
       "Une relance est courte et polie : elle rappelle ce qu'elle attendait (sa question, le document envoyé, la décision demandée), sans recopier son mail",
-      'Écris dans la langue de son dernier message',
+      'Écris dans la langue de son dernier message, même quand ses indications ou ses réponses sont dans une autre langue : tu les traduis',
       "ses formules d'appel et de politesse, son registre avec le premier destinataire de son dernier message (c'est à lui qu'elle écrit, pas à elle-même), une longueur courte",
       "N'invente rien : ni fait, ni date, ni délai, ni promesse, ni reproche, ni ultimatum, aucune pression qu'elle n'a pas exprimée",
       "Ses indications disent ce qu'il faut ajouter ; sans elles, la relance ne fait que relancer",

@@ -1,8 +1,11 @@
 import { browser } from '#imports';
 import {
+  type Access,
   type ConnectionToShow,
   checkAccess,
   connectionToShow,
+  type DropCause,
+  dropCauseToShow,
   type SiteNotice,
   siteNoticeToShow,
 } from '../../lib/access';
@@ -84,10 +87,14 @@ const accessAtOpen = checkAccess(SERVER_URL, (permissions) =>
   browser.permissions.contains(permissions),
 );
 
-const DROP_CAUSES: Record<DropReason, string> = {
+const DROP_CAUSES: Record<DropCause, string> = {
   full: t(
     "le tampon d'envoi était plein (serveur injoignable trop longtemps)",
     'the send buffer was full (server unreachable for too long)',
+  ),
+  full_access_removed: t(
+    "le tampon d'envoi était plein (accès au serveur retiré)",
+    'the send buffer was full (server access removed)',
   ),
   refused: t(
     "le serveur n'en a pas voulu (échange trop gros ou illisible)",
@@ -124,14 +131,14 @@ const SITE_NOTICE_DISPLAYS: Record<SiteNotice, { text: string; tone: 'error' | '
   },
 };
 
-function droppedText(counts: DroppedCounts): string {
+function droppedText(counts: DroppedCounts, access: Access): string {
   return Object.entries(counts)
     .map(([reason, count = 0]) => {
       const exchanges = t(
         count === 1 ? '1 échange perdu' : `${count} échanges perdus`,
         count === 1 ? '1 exchange lost' : `${count} exchanges lost`,
       );
-      return `${exchanges}${t(' : ', ': ')}${DROP_CAUSES[reason as DropReason]}.`;
+      return `${exchanges}${t(' : ', ': ')}${DROP_CAUSES[dropCauseToShow(reason as DropReason, access)]}.`;
     })
     .join(' ');
 }
@@ -166,7 +173,7 @@ async function render(): Promise<void> {
     element.className = display?.tone ?? '';
   }
   byId('pending').textContent = pendingText(status.pending);
-  byId('dropped').textContent = droppedText(droppedCounts);
+  byId('dropped').textContent = droppedText(droppedCounts, access);
   byId('dropped').hidden = byId('dropped').textContent === '';
   showSiteSwitches(document, settings);
 }

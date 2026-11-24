@@ -1,4 +1,5 @@
 import type { RejectReason, Site } from './exchange';
+import type { DropReason } from './outbox';
 import type { CAPTURE_HOSTS } from './permissions';
 import { type CaptureStatus, hasConsent, rejectionToShow, type Settings } from './settings';
 
@@ -61,4 +62,12 @@ export function siteNoticeToShow(
   access: Access,
 ): SiteNotice | null {
   return access[site] ? rejectionToShow(status, site) : 'access_removed';
+}
+
+export type DropCause = DropReason | 'full_access_removed';
+
+// La cause d'une perte affichée : sans l'accès au serveur, le tampon plein vient de l'accès retiré, pas d'un
+// serveur injoignable.
+export function dropCauseToShow(reason: DropReason, access: Access): DropCause {
+  return reason === 'full' && !access.server ? 'full_access_removed' : reason;
 }

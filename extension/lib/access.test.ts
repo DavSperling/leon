@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { type Access, checkAccess, connectionToShow, siteNoticeToShow } from './access';
+import {
+  type Access,
+  checkAccess,
+  connectionToShow,
+  dropCauseToShow,
+  siteNoticeToShow,
+} from './access';
 import { hostPermissionsFor } from './permissions';
 import { type CaptureStatus, CONSENT_VERSION, type Settings } from './settings';
 
@@ -125,5 +131,18 @@ describe('siteNoticeToShow', () => {
     expect(siteNoticeToShow(rejected, 'chatgpt', ALL)).toBe('format');
     expect(siteNoticeToShow(rejected, 'claude_ai', { ...ALL, chatgpt: false })).toBeNull();
     expect(siteNoticeToShow(rejected, 'chatgpt', { ...ALL, server: false })).toBe('format');
+  });
+});
+
+describe('dropCauseToShow', () => {
+  it('le tampon plein sans l’accès au serveur dit l’accès retiré, pas le serveur injoignable', () => {
+    expect(dropCauseToShow('full', { ...ALL, server: false })).toBe('full_access_removed');
+  });
+
+  it('sinon, la cause d’aujourd’hui', () => {
+    expect(dropCauseToShow('full', ALL)).toBe('full');
+    expect(dropCauseToShow('full', { ...ALL, chatgpt: false })).toBe('full');
+    expect(dropCauseToShow('refused', { ...ALL, server: false })).toBe('refused');
+    expect(dropCauseToShow('token', { ...ALL, server: false })).toBe('token');
   });
 });

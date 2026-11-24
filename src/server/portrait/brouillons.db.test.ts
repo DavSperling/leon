@@ -1845,6 +1845,7 @@ describe('readShown : ses brouillons prêts', () => {
         receivedAt: expect.any(Date),
         texte: 'Pour le devis.',
         depose: false,
+        others: 0,
         relance: false,
       },
       {
@@ -1854,6 +1855,7 @@ describe('readShown : ses brouillons prêts', () => {
         receivedAt: expect.any(Date),
         texte: 'Pour le contrat.',
         depose: false,
+        others: 0,
         relance: false,
       },
     ]);

@@ -101,6 +101,7 @@ const PRET: HomeBrouillon = {
   receivedAt: new Date('2026-11-20T08:30:00Z'),
   texte: 'Bonjour Léa,\n\nVoici le devis [à compléter : le montant] <b>.\n\nBien à vous',
   depose: false,
+  others: 0,
   relance: false,
   source: { title: 'Devis 2027', url: 'https://mail.google.test/fil/1', kind: 'gmail' },
 };
@@ -111,6 +112,7 @@ const DEPOSE: HomeBrouillon = {
   receivedAt: new Date('2026-11-18T08:30:00Z'),
   texte: 'Bonjour Marc,\n\nC’est entendu.',
   depose: true,
+  others: 0,
   relance: false,
   source: { title: 'Contrat', url: 'https://mail.google.test/fil/3', kind: 'gmail' },
 };
@@ -155,7 +157,7 @@ const render = (
 const mailView = (
   one: HomeDemande | HomeInconnu | HomePreference | HomeRelance | HomeBrouillon,
   locale: 'en' | 'fr' = 'fr',
-  over: { done?: Done; hidden?: boolean; failed?: boolean } = {},
+  over: { done?: Done; hidden?: boolean; failed?: boolean; send?: boolean } = {},
 ) => {
   const [mail] = panelMails(
     'texte' in one ? [] : [one],
@@ -176,6 +178,7 @@ const mailView = (
       onPreference: () => {},
       onDiscard: () => {},
       onRefresh: () => {},
+      onSendDraft: over.send ? () => {} : undefined,
     }),
     locale,
   ).replace(/^<link [^>]*>/, '');
@@ -687,6 +690,19 @@ describe('MailView : son mail resté sans réponse, et la relance', () => {
     expect(text(html)).not.toMatch(/Brouillon prêt|Reçu le|Déposé/);
     expect(text(mailView(RELANCE_PRETE, 'en'))).toContain('Léa Roy Sent on');
     expect(text(mailView(RELANCE_PRETE, 'en'))).toContain('Follow-up ready');
+  });
+
+  it('une relance déposée dans Gmail : « Envoyer », comme une réponse déposée', () => {
+    const deposee = mailView({ ...RELANCE_PRETE, depose: true, others: 2 }, 'fr', { send: true });
+
+    expect(buttons(deposee)).toEqual(['Envoyer', 'Copier', 'Écarter']);
+    expect(text(deposee)).toContain('Relance prête');
+    expect(text(deposee)).toContain('Déposé dans vos brouillons Gmail.');
+    expect(buttons(mailView(DEPOSE, 'fr', { send: true }))).toEqual([
+      'Envoyer',
+      'Copier',
+      'Écarter',
+    ]);
   });
 });
 

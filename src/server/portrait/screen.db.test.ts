@@ -7,7 +7,7 @@ import { lignesFiche } from '@/server/db/schema/portrait';
 import { logError } from '@/server/log';
 import { adminDb, adminPool } from '@/test/db';
 import { createTestTenant, seedConnection } from '@/test/fixtures';
-import { LEA, mailThread, received, sent } from '@/test/mail-threads';
+import { JULIE, LEA, mailThread, received, sent } from '@/test/mail-threads';
 import { seedRun } from '@/test/seed-search';
 import { answerRelance, HOME_MAX } from './brouillons';
 import { type FicheLine, readFiche, retireLine } from './fiche';
@@ -432,6 +432,7 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
           receivedAt: recent.receivedAt,
           texte: 'Brouillon pour Devis 2027.',
           depose: false,
+          others: 0,
           relance: false,
           source: { title: 'Devis 2027', url: 'https://mail.google.test/2', kind: 'gmail' },
         },
@@ -441,6 +442,7 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
           receivedAt: older.receivedAt,
           texte: 'Brouillon pour Contrat.',
           depose: true,
+          others: 0,
           relance: false,
           source: { title: 'Contrat', url: 'https://mail.google.test/5', kind: 'gmail' },
         },
@@ -450,6 +452,7 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
           receivedAt: expect.any(Date),
           texte: 'Bonjour Léa,\n\nJeudi me convient.',
           depose: false,
+          others: 0,
           relance: false,
           source: {
             title: 'Écrit au second appel',
@@ -793,13 +796,14 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
       expect(await readHomeBrouillons(paul)).toEqual(NOTHING);
     });
 
-    it('son oui : Leon écrit sous le nom de son destinataire, puis la relance prête de même ; son non ne se montre pas', async () => {
+    it('son oui : Leon écrit sous le nom de son destinataire, puis la relance prête de même, avec le nombre de ses autres destinataires ; son non ne se montre pas', async () => {
       const [julie] = await people();
       await followsUp(julie);
       const oui = await unanswered(julie, 'Oui', 6);
       const id = await answerRelance(julie, oui, 'Rappelez-lui l’échéance.');
       await answerRelance(julie, await unanswered(julie, 'Non', 7), null);
-      const ready = await unanswered(julie, 'Prête', 8);
+      // Sa relance prête part à Léa et Marc, et en copie à Zoé : à elle-même, non.
+      const ready = await unanswered(julie, 'Prête', 8, ['zoe@client.test', JULIE]);
       await adminPool.query(
         `insert into brouillons (tenant_id, user_id, source_id, message, texte, indications, sorte, acl)
        values ($1, $2, $3, $4, 'Bonjour Léa,', '', 'relance', array[$2::uuid])`,
@@ -828,6 +832,7 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
             receivedAt: ready.at,
             texte: 'Bonjour Léa,',
             depose: false,
+            others: 2,
             relance: true,
             source: { title: 'Prête', url: 'https://mail.google.test/relance-8', kind: 'gmail' },
           },

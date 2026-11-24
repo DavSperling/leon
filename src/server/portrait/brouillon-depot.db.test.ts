@@ -8,7 +8,12 @@ import { adminDb, adminPool } from '@/test/db';
 import { type FakeCall, type FakeRoute, fakeFetch } from '@/test/fake-fetch';
 import { createTestTenant } from '@/test/fixtures';
 import { extendThread, JULIE, LEA, mailThread, received, sent } from '@/test/mail-threads';
-import { depositBrouillon, withdrawBrouillon, withdrawRelances } from './brouillon-depot';
+import {
+  depositBrouillon,
+  sendBrouillon,
+  withdrawBrouillon,
+  withdrawRelances,
+} from './brouillon-depot';
 
 vi.mock('@/server/pipeline/queue');
 
@@ -889,4 +894,43 @@ describe('withdrawRelances : une relance devenue inutile quitte ses brouillons G
       expect(JSON.stringify(errors.mock.calls)).not.toMatch(/Devis|lea@|client\.test|Bonjour/);
     },
   );
+});
+
+// « Envoyer », depuis l'accueil, après sa confirmation : une relance déposée part de sa boîte comme une réponse.
+describe('sendBrouillon : une relance déposée part de sa boîte Gmail', () => {
+  it('envoie le brouillon Gmail de la relance, tel qu’il y est, par sa boîte à elle, puis Leon l’oublie', async () => {
+    const [julie] = await team();
+    const id = await relanced(julie, RELANCE, EVERYONE, { connectionId: await gmailOf(julie) });
+    await adminPool.query(`update brouillons set brouillon_gmail = 'r-relance' where id = $1`, [
+      id,
+    ]);
+    const fetchImpl = fakeFetch([
+      TOKEN,
+      {
+        method: 'POST',
+        url: proxied(`${GMAIL}/drafts/send`),
+        json: { id: 'm-envoye', threadId: 't', labelIds: ['SENT'] },
+      },
+    ]);
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    expect(await sendBrouillon(julie, id, { fetchImpl })).toBe('envoye');
+
+    const [, send] = fetchImpl.calls;
+    expect(fetchImpl.calls).toHaveLength(2);
+    expect(send?.method).toBe('POST');
+    expect(target(send)).toBe(`${GMAIL}/drafts/send`);
+    expect(new URL(send?.url ?? CONNECT).searchParams.get('account_id')).toBe('apn_gm1');
+    expect(send?.body).toEqual({ id: 'r-relance' });
+    expect(await stored(id)).toMatchObject({
+      sorte: 'relance',
+      brouillonGmail: null,
+      envoyeLe: expect.any(Date),
+    });
+    // Un second clic ne trouve plus rien à envoyer, et rien ne part.
+    const again = fakeFetch([]);
+    expect(await sendBrouillon(julie, id, { fetchImpl: again })).toBe('introuvable');
+    expect(again.calls).toHaveLength(0);
+    expect(errors).not.toHaveBeenCalled();
+  });
 });

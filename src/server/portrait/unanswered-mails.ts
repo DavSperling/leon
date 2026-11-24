@@ -65,7 +65,7 @@ export const recipientName = (ctx: TenantContext, source: SQL, first: SQL): SQL 
 // `cc`, ses destinataires en « à » et en copie, lus sur un seul de ses tours (un mail coupé a les mêmes sur chacun). En
 // « à », ceux qu'il avait en « à » qui ne sont pas elle (`own`, ses adresses) ; en copie, ceux qu'il avait en copie, ni
 // elle ni déjà en « à ». Sans doublon, la casse ignorée, dans leur ordre. Pas de copie cachée : Leon ne la connaît pas.
-// Le dépôt les écrit (brouillon-depot.ts).
+// Le dépôt les écrit (brouillon-depot.ts), l'accueil les compte (brouillons.ts, readShown).
 export function relanceRecipients(to: SQL, cc: SQL, own: SQL): { to: SQL; cc: SQL } {
   const kept = notOwn(to, own);
   return { to: kept, cc: notOwn(cc, sql`${own} || ${kept}`) };

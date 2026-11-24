@@ -423,9 +423,12 @@
       "button": "Envoyer",
       "confirm": "Envoyer cette réponse à {name} ?",
       "confirmAnon": "Envoyer cette réponse ?",
+      "confirmRelance": "Envoyer cette relance à {name} ?",
+      "confirmRelanceMany": "Envoyer cette relance à {name} et {count, plural, one {# autre personne} other {# autres personnes}} ?",
       "confirmText": "Elle part de votre boîte Gmail, telle qu’elle est dans vos brouillons. Un mail envoyé ne se rattrape pas.",
       "notYet": "Pas encore",
       "done": "Réponse envoyée.",
+      "doneRelance": "Relance envoyée.",
       "dontAsk": "Ne plus me demander"
     }
   },

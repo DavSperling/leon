@@ -49,6 +49,7 @@ import {
   type PanelMail,
   panelMails,
   panelReducer,
+  sendQuestion,
   shownIndex,
 } from '@/lib/reply-drafts';
 import { formatDate } from '@/lib/verre';
@@ -664,6 +665,7 @@ export function ReplyDrafts({
   const index = shownIndex(mails, panel.at);
   const shown = mails[index];
   const counts = countsOf(mails);
+  const question = shown && sendQuestion(shown);
 
   // Le mail montré change (« Mail suivant », un geste, un brouillon arrivé) : son en-tête prend le focus ; plus rien,
   // « Terminé ». Pendant un geste, le corps du panneau est figé : le focus attend la fin.
@@ -721,7 +723,7 @@ export function ReplyDrafts({
       startSending,
       () => sendBrouillonAction(mail.id),
       () => {
-        toast.success(t('sendDraft.done'));
+        toast.success(t(isRelance(mail) ? 'sendDraft.doneRelance' : 'sendDraft.done'));
         return null;
       },
       t('draftGone'),
@@ -914,11 +916,9 @@ export function ReplyDrafts({
                   document.getElementById(`${shown.key}-ecarter`)?.focus();
                 },
               }
-            : asking === 'send' && shown
+            : asking === 'send' && shown && question
               ? {
-                  title: shown.mail.from
-                    ? t('sendDraft.confirm', { name: shown.mail.from })
-                    : t('sendDraft.confirmAnon'),
+                  title: t(`sendDraft.${question.key}`, question.values),
                   text: (
                     <>
                       {t('sendDraft.confirmText')}

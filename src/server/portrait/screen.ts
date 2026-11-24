@@ -106,7 +106,8 @@ export async function readFicheScreen(ctx: TenantContext): Promise<FicheScreen> 
 // réponses, ni rien d'autre, ne part vers l'accueil.
 export type HomeDemande = Omit<Demande, 'sourceId'> & { source: FicheSource };
 // Un brouillon prêt, tel que l'accueil le montre : le correspondant, le fil (son objet, lié à son outil), la date du
-// mail reçu, le texte du brouillon, et s'il est déposé dans ses brouillons Gmail. `id` sert au geste « Écarter ».
+// mail reçu, le texte du brouillon, s'il est déposé dans ses brouillons Gmail, et, pour une relance, le nombre de ses
+// autres destinataires (la question avant « Envoyer »). `id` sert aux gestes « Écarter » et « Envoyer ».
 export type HomeBrouillon = Omit<ReadyBrouillon, 'sourceId'> & { source: FicheSource };
 // Le mail d'un inconnu qui l'attend, tel que l'accueil le montre : son auteur, le fil (son objet, lié à son outil), la
 // date du mail. `mail` sert à lui répondre « Oui » ou « Non ». Rien de son texte.

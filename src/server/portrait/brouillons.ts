@@ -28,8 +28,8 @@ import {
   readPreferences,
 } from './preferences';
 import { readProposals } from './propositions';
-import { MESSAGE, notOwn, ownAddresses, readSentMails, SENT_MAIL_DAYS } from './sent-mails';
-import { recipientName, unansweredMails } from './unanswered-mails';
+import { MESSAGE, ownAddresses, readSentMails, SENT_MAIL_DAYS } from './sent-mails';
+import { recipientName, relanceRecipients, unansweredMails } from './unanswered-mails';
 import {
   ANSWERED_DAYS,
   type AnsweredMail,
@@ -317,6 +317,9 @@ export type ReadyBrouillon = {
   texte: string;
   // Déposé dans ses brouillons Gmail (brouillon-depot.ts) : un oui ou un non, jamais l'identifiant du brouillon Gmail.
   depose: boolean;
+  // Pour une relance, ses autres destinataires, en « à » et en copie, après celui de `from` : ceux à qui elle part
+  // (unanswered-mails.ts, relanceRecipients). 0 pour une réponse, qui part à son seul correspondant.
+  others: number;
 };
 // Une demande de Leon : les questions qu'il lui pose avant d'écrire le brouillon, chacune avec ses choix de réponse,
 // dans le même ordre (aucun pour une demande posée avant les choix, 0083). `repondue` : elle a répondu, et Leon écrit
@@ -343,15 +346,21 @@ export type Demande = Pick<
 // ligne seule, avant de chercher le dernier message de son fil : ces lignes ne se montrent jamais, et leur nombre ne
 // fait que grandir.
 // Une relance se lit de même, avec ses lignes de réponse : son mail est le dernier du fil, et elle s'y montre avec le
-// nom de son destinataire. Les relances ont leurs HOME_MAX places à part : les lignes d'un agent auquel elle a dit non
-// ne cachent pas celles de l'autre (l'accueil filtre ensuite par agent, screen.ts).
+// nom de son premier destinataire et le nombre des autres, ceux à qui elle part (relanceRecipients). Les relances ont
+// leurs HOME_MAX places à part : les lignes d'un agent auquel elle a dit non ne cachent pas celles de l'autre
+// (l'accueil filtre ensuite par agent, screen.ts).
 // shortcut: au-delà de HOME_MAX, les plus anciens ne se montrent pas ; à paginer si une personne en garde autant sans
 // les écarter.
 export async function readShown(
   ctx: TenantContext,
 ): Promise<{ demandes: Demande[]; prets: ReadyBrouillon[] }> {
   const own = ownAddresses(ctx, new Date(Date.now() - SENT_MAIL_DAYS * DAY_MS));
-  const first = sql`(${notOwn(sql`l.recipients_to`, own)})[1]`;
+  const recipients = relanceRecipients(
+    sql`l.recipients_to`,
+    sql`l.recipients_cc`,
+    sql`o.addresses`,
+  );
+  const first = sql`(${recipients.to})[1]`;
   const { rows } = await withTenant(ctx, (tx) =>
     tx.execute<{
       id: string;
@@ -360,15 +369,19 @@ export async function readShown(
       at: string;
       texte: string | null;
       depose: boolean;
+      others: number;
       questions: string[] | null;
       choix: string[][] | null;
       repondue: boolean;
       relance: boolean;
     }>(sql`
-      select id, "sourceId", "from", at, texte, depose, questions, choix, repondue, relance from (
+      select id, "sourceId", "from", at, texte, depose, others, questions, choix, repondue, relance from (
         select b.id, b.source_id as "sourceId", b.sorte = 'relance' as relance,
                case when b.sorte = 'relance' then ${recipientName(ctx, sql`b.source_id`, first)}
                     else coalesce(l.author_name, l.author_email) end as "from",
+               case when b.sorte = 'relance'
+                    then greatest(cardinality(${recipients.to}) + cardinality(${recipients.cc}) - 1, 0)
+                    else 0 end as others,
                extract(epoch from l.ts) as at, b.texte, b.brouillon_gmail is not null as depose,
                b.questions, b.choix, (b.reponses is not null or b.questions is null) as repondue,
                -- Leon écrit (repondue) : vrai aussi de tout brouillon prêt, ce qui ne change pas leur ordre.
@@ -378,12 +391,13 @@ export async function readShown(
                ) as n
         from brouillons b
         cross join lateral (
-          select t.external_id, t.author_name, t.author_email, t.recipients_to, t.ts
+          select t.external_id, t.author_name, t.author_email, t.recipients_to, t.recipients_cc, t.ts
           from turns t
           where t.tenant_id = b.tenant_id and t.source_id = b.source_id
           order by t.ts desc, substring(t.external_id from ${MESSAGE}) desc
           limit 1
         ) l
+        cross join (select ${own} as addresses) o
         where b.tenant_id = ${ctx.tenantId} and b.user_id = ${ctx.userId}
           and b.ecarte_le is null
           -- envoyé depuis l'accueil (0088) : la ligne s'en va aussitôt, sans attendre la relève
@@ -397,10 +411,10 @@ export async function readShown(
   );
   const demandes: Demande[] = [];
   const prets: ReadyBrouillon[] = [];
-  for (const { at, texte, depose, questions, choix, repondue, ...row } of rows) {
+  for (const { at, texte, depose, others, questions, choix, repondue, ...row } of rows) {
     const one = { ...row, receivedAt: epochToDate(at) };
     const asked = questions ?? [];
-    if (texte !== null) prets.push({ ...one, texte, depose });
+    if (texte !== null) prets.push({ ...one, texte, depose, others });
     else demandes.push({ ...one, questions: asked, choix: choix ?? asked.map(() => []), repondue });
   }
   return { demandes, prets };

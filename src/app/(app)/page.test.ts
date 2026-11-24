@@ -65,6 +65,7 @@ const PRET: HomeBrouillon = {
   receivedAt: new Date('2026-11-09T09:00:00Z'),
   texte: 'Bonjour Léa,\n\nC’est entendu.',
   depose: true,
+  others: 0,
   relance: false,
   source: { title: 'Contrat', url: null, kind: 'gmail' },
 };

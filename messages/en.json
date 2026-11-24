@@ -423,9 +423,12 @@
       "button": "Send",
       "confirm": "Send this reply to {name}?",
       "confirmAnon": "Send this reply?",
+      "confirmRelance": "Send this follow-up to {name}?",
+      "confirmRelanceMany": "Send this follow-up to {name} and {count, plural, one {# other person} other {# other people}}?",
       "confirmText": "It is sent from your Gmail account, as it is in your drafts. A sent email cannot be taken back.",
       "notYet": "Not yet",
       "done": "Reply sent.",
+      "doneRelance": "Follow-up sent.",
       "dontAsk": "Don’t ask me again"
     }
   },

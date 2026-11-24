@@ -1,3 +1,4 @@
+import { createTranslator } from 'next-intl';
 import { describe, expect, it } from 'vitest';
 import type {
   HomeBrouillon,
@@ -6,6 +7,8 @@ import type {
   HomePreference,
   HomeRelance,
 } from '@/server/portrait/screen';
+import en from '../../messages/en.json';
+import fr from '../../messages/fr.json';
 import {
   CLOSED,
   confirmsDiscard,
@@ -16,6 +19,7 @@ import {
   type PanelMail,
   panelMails,
   panelReducer,
+  sendQuestion,
   shownIndex,
 } from './reply-drafts';
 
@@ -53,6 +57,7 @@ const pret = (n: number, day: number, depose = false): HomeBrouillon => ({
   receivedAt: at(day),
   texte: 'Bonjour,\n\nC’est entendu.',
   depose,
+  others: 0,
   relance: false,
   source,
 });
@@ -273,6 +278,59 @@ describe('confirmsDiscard : « Écarter » demande d’abord', () => {
       ['Prêt 5', false],
       ['Prêt 4', true],
       ['Demande 3', false],
+    ]);
+  });
+});
+
+describe('sendQuestion : la question avant « Envoyer »', () => {
+  // La question telle que la confirmation la pose, dans une langue.
+  const asked = (mail: PanelMail, locale: 'fr' | 'en') => {
+    const t = createTranslator({
+      locale,
+      messages: locale === 'fr' ? fr : en,
+      namespace: 'draftQuestions.sendDraft',
+    });
+    const { key, values } = sendQuestion(mail);
+    return t(key, values);
+  };
+  const [ready] = panelMails([], [{ ...pret(1, 10, true), from: 'Léa Roy' }], {});
+  const relance = (others: number) => {
+    const [mail] = panelMails(
+      [],
+      [{ ...pret(2, 10, true), from: 'Léa Roy', relance: true, others }],
+      {},
+    );
+    if (!mail) throw new Error('aucun mail');
+    return mail;
+  };
+
+  it('une relance nomme son premier destinataire, puis compte les autres, en « à » et en copie', () => {
+    expect(asked(relance(0), 'fr')).toBe('Envoyer cette relance à Léa Roy ?');
+    expect(asked(relance(1), 'fr')).toBe('Envoyer cette relance à Léa Roy et 1 autre personne ?');
+    expect(asked(relance(3), 'fr')).toBe('Envoyer cette relance à Léa Roy et 3 autres personnes ?');
+    expect(asked(relance(0), 'en')).toBe('Send this follow-up to Léa Roy?');
+    expect(asked(relance(1), 'en')).toBe('Send this follow-up to Léa Roy and 1 other person?');
+    expect(asked(relance(3), 'en')).toBe('Send this follow-up to Léa Roy and 3 other people?');
+  });
+
+  it('une réponse, comme avant : son correspondant, ou personne sans son nom', () => {
+    if (!ready) throw new Error('aucun mail');
+    expect(asked(ready, 'fr')).toBe('Envoyer cette réponse à Léa Roy ?');
+    expect(asked(ready, 'en')).toBe('Send this reply to Léa Roy?');
+    const [anonymous] = panelMails([], [{ ...pret(1, 10, true), from: null }], {});
+    if (!anonymous) throw new Error('aucun mail');
+    expect(asked(anonymous, 'fr')).toBe('Envoyer cette réponse ?');
+    expect(asked(anonymous, 'en')).toBe('Send this reply?');
+  });
+
+  it('« Relance envoyée. », « Réponse envoyée. » : les mots qui suivent l’envoi', () => {
+    expect([fr, en].map((one) => one.draftQuestions.sendDraft.doneRelance)).toEqual([
+      'Relance envoyée.',
+      'Follow-up sent.',
+    ]);
+    expect([fr, en].map((one) => one.draftQuestions.sendDraft.done)).toEqual([
+      'Réponse envoyée.',
+      'Reply sent.',
     ]);
   });
 });

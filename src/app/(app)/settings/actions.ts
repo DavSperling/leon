@@ -795,8 +795,8 @@ export async function retireFicheLineAction(
 }
 
 // « Oui » ou « Non » à un agent proposé : sa réponse s'enregistre, et remplace la précédente. Un agent qui ne lui est
-// pas proposé à ce moment-là est « introuvable ». Son oui à « Brouillons de réponse », le seul agent en service, lui
-// demande un premier passage (propositions.ts) ; les autres ne tournent pas encore.
+// pas proposé à ce moment-là est « introuvable ». Son oui à un agent en service (« Brouillons de réponse »,
+// « Relances ») lui demande un premier passage (propositions.ts) ; les autres ne tournent pas encore.
 export async function answerAgentAction(input: {
   agent: AgentId;
   oui: boolean;

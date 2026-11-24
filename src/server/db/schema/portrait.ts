@@ -114,5 +114,10 @@ export const brouillons = pgTable('brouillons', {
   // Ce qu'elle en a fait, vu sur sa réponse envoyée (0086, portrait/preferences.ts), posé une fois par poser_issue.
   // Nul : pas encore de réponse d'elle, ou une retouche dont Leon n'a pas encore tiré la leçon.
   issue: text('issue', { enum: ['tel-quel', 'retouche', 'reecrit'] }),
+  // « reponse » : le brouillon d'une réponse à un mail reçu. « relance » : la relance d'un mail qu'elle a envoyé, resté
+  // sans réponse (0088). Posée avec la ligne, elle ne change plus.
+  sorte: text('sorte', { enum: ['reponse', 'relance'] })
+    .notNull()
+    .default('reponse'),
   acl: uuid('acl').array().notNull(),
 });

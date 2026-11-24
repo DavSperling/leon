@@ -1578,12 +1578,13 @@ describe('ses brouillons sont privés à la personne', () => {
     await expect(write(julie, [julie.tenantId])).rejects.toMatchObject({
       cause: { code: '23514' },
     });
-    // L'app ne refait ni le texte, ni le message, ni l'accès d'un brouillon écrit : elle n'a le droit de changer que la
-    // date où il est écarté et l'identifiant du brouillon déposé dans sa boîte Gmail (0081).
+    // L'app ne refait ni le texte, ni le message, ni l'accès, ni la sorte d'un brouillon écrit : elle n'a le droit de
+    // changer que la date où il est écarté et l'identifiant du brouillon déposé dans sa boîte Gmail (0081).
     for (const set of [
       { texte: 'Autre texte.' },
       { message: 'message:autre' },
       { acl: [julie.tenantId] },
+      { sorte: 'relance' as const },
     ])
       await expect(withTenant(julie, (tx) => tx.update(brouillons).set(set))).rejects.toMatchObject(
         { cause: { code: '42501' } },

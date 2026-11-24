@@ -414,7 +414,8 @@
       "confirmAnon": "Envoyer cette réponse ?",
       "confirmText": "Elle part de votre boîte Gmail, telle qu’elle est dans vos brouillons. Un mail envoyé ne se rattrape pas.",
       "notYet": "Pas encore",
-      "done": "Réponse envoyée."
+      "done": "Réponse envoyée.",
+      "dontAsk": "Ne plus me demander"
     }
   },
   "search": {

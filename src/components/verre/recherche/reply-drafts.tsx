@@ -574,6 +574,22 @@ type Done = { ok: true; resteDansGmail?: boolean; id?: string };
 // Pendant que Leon écrit : relire l'Accueil toutes les 5 s, pendant 3 min au plus.
 const REFRESH_MS = 5_000;
 const REFRESH_MAX = 180_000;
+
+// « Ne plus me demander » avant « Envoyer » : retenu dans ce navigateur seulement. Un navigateur qui refuse le stockage
+// demande toujours.
+const SEND_KEY = 'leon-envoyer-sans-demander';
+const readSkip = () => {
+  try {
+    return localStorage.getItem(SEND_KEY) === 'oui';
+  } catch {
+    return false;
+  }
+};
+const saveSkip = () => {
+  try {
+    localStorage.setItem(SEND_KEY, 'oui');
+  } catch {}
+};
 type Result = Done | { error: string };
 
 /**
@@ -607,6 +623,11 @@ export function ReplyDrafts({
   const [open, setOpen] = useState(false);
   // La confirmation sur place : écarter un brouillon déposé, ou l'envoyer.
   const [asking, setAsking] = useState<false | 'discard' | 'send'>(false);
+  // « Ne plus me demander » : coché dans la confirmation, puis retenu (lu après le premier rendu, comme le thème).
+  const [dontAsk, setDontAsk] = useState(false);
+  const [skipSend, setSkipSend] = useState(false);
+  useEffect(() => setSkipSend(readSkip()), []);
+  const dontAskId = useId();
   const [failed, setFailed] = useState(false);
   const [panel, dispatch] = useReducer(panelReducer, CLOSED);
   // Ses réponses en cours, mail par mail : fermer le panneau (un clic à côté) ne les perd pas.
@@ -732,7 +753,11 @@ export function ReplyDrafts({
     // « Écarter » le retire de Gmail sans demander (son geste vise cette réponse). Une garde dans
     // discardBrouillonAction le jour où ça se voit.
     onDiscard: () => (confirmsDiscard(mail) ? setAsking('discard') : discard(mail)),
-    onSendDraft: () => setAsking('send'),
+    onSendDraft: () => {
+      if (skipSend) return send(mail);
+      setDontAsk(false);
+      setAsking('send');
+    },
     onRefresh: () => router.refresh(),
   });
 
@@ -848,12 +873,36 @@ export function ReplyDrafts({
                   title: shown.mail.from
                     ? t('sendDraft.confirm', { name: shown.mail.from })
                     : t('sendDraft.confirmAnon'),
-                  text: t('sendDraft.confirmText'),
+                  text: (
+                    <>
+                      {t('sendDraft.confirmText')}
+                      <label
+                        htmlFor={dontAskId}
+                        className="mt-2 flex cursor-pointer items-center gap-2 text-ui text-fg"
+                      >
+                        <input
+                          id={dontAskId}
+                          type="checkbox"
+                          className="size-4 cursor-pointer accent-[var(--ink)]"
+                          checked={dontAsk}
+                          disabled={sending}
+                          onChange={(event) => setDontAsk(event.target.checked)}
+                        />
+                        {t('sendDraft.dontAsk')}
+                      </label>
+                    </>
+                  ),
                   yes: t('sendDraft.button'),
                   yesVariant: 'primary',
                   no: t('sendDraft.notYet'),
                   busy: sending,
-                  onYes: () => send(shown),
+                  onYes: () => {
+                    if (dontAsk) {
+                      saveSkip();
+                      setSkipSend(true);
+                    }
+                    send(shown);
+                  },
                   onNo: () => {
                     setAsking(false);
                     document.getElementById(`${shown.key}-envoyer`)?.focus();

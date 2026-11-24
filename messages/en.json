@@ -414,7 +414,8 @@
       "confirmAnon": "Send this reply?",
       "confirmText": "It is sent from your Gmail account, as it is in your drafts. A sent email cannot be taken back.",
       "notYet": "Not yet",
-      "done": "Reply sent."
+      "done": "Reply sent.",
+      "dontAsk": "Don’t ask me again"
     }
   },
   "search": {

@@ -344,6 +344,8 @@ export async function readShown(
         ) l
         where b.tenant_id = ${ctx.tenantId} and b.user_id = ${ctx.userId}
           and b.ecarte_le is null
+          -- envoyé depuis l'accueil (0088) : la ligne s'en va aussitôt, sans attendre la relève
+          and b.envoye_le is null
           and (b.texte is not null or b.questions is not null or b.indications is not null)
           and substring(l.external_id from ${MESSAGE}) = b.message
           and (b.texte is not null or l.ts >= now() - make_interval(days => ${ANSWERED_DAYS}))

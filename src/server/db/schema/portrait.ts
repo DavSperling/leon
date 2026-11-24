@@ -109,6 +109,8 @@ export const brouillons = pgTable('brouillons', {
   ecarteLe: timestamp('ecarte_le', { withTimezone: true }),
   // Le brouillon Gmail créé pour lui (portrait/brouillon-depot.ts). Nul : rien n'est déposé dans sa boîte.
   brouillonGmail: text('brouillon_gmail'),
+  // Quand elle l'a envoyé depuis l'accueil (0088, portrait/brouillon-depot.ts). Nul : pas envoyé d'ici.
+  envoyeLe: timestamp('envoye_le', { withTimezone: true }),
   // Ce qu'elle en a fait, vu sur sa réponse envoyée (0086, portrait/preferences.ts), posé une fois par poser_issue.
   // Nul : pas encore de réponse d'elle, ou une retouche dont Leon n'a pas encore tiré la leçon.
   issue: text('issue', { enum: ['tel-quel', 'retouche', 'reecrit'] }),

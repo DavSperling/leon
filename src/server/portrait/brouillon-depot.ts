@@ -1,4 +1,4 @@
-import { and, eq, isNotNull, isNull } from 'drizzle-orm';
+import { and, eq, isNotNull, isNull, sql } from 'drizzle-orm';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { loadMyConnections } from '@/server/connectors/connections';
 import { gmailClient } from '@/server/connectors/gmail/client';
@@ -141,8 +141,7 @@ export async function depositBrouillon(
 // un second clic ne trouve plus rien à envoyer. Rend 'envoye', 'introuvable' (rien à envoyer d'ici : pas à elle,
 // écarté, jamais déposé, déjà envoyé) ou 'echec' (sa boîte débranchée ou en pause, Gmail qui refuse, ou le brouillon
 // qui n'y est plus), journalisé sans rien de capté.
-// shortcut: la ligne reste « prête » sur l'accueil jusqu'à la prochaine relève de sa boîte (son envoi arrive alors dans
-// le fil, qui n'attend plus), sans « Envoyer » ; une colonne « envoyé le » si cela se voit.
+// L'envoi posé (envoye_le, 0088), la ligne quitte l'accueil aussitôt.
 export async function sendBrouillon(
   ctx: TenantContext,
   id: string,
@@ -159,6 +158,7 @@ export async function sendBrouillon(
         .select({
           brouillonGmail: brouillons.brouillonGmail,
           ecarteLe: brouillons.ecarteLe,
+          envoyeLe: brouillons.envoyeLe,
           connectionId: sources.connectionId,
         })
         .from(brouillons)
@@ -168,11 +168,13 @@ export async function sendBrouillon(
         )
         .where(mine),
     );
-    if (!row || row.ecarteLe || row.brouillonGmail === null) return 'introuvable';
+    if (!row || row.ecarteLe || row.envoyeLe || row.brouillonGmail === null) return 'introuvable';
     const client = await gmailOf(ctx, row.connectionId, deps);
     if (!client) return 'echec';
     await client.sendDraft(row.brouillonGmail);
-    await withTenant(ctx, (tx) => tx.update(brouillons).set({ brouillonGmail: null }).where(mine));
+    await withTenant(ctx, (tx) =>
+      tx.update(brouillons).set({ brouillonGmail: null, envoyeLe: sql`now()` }).where(mine),
+    );
     return 'envoye';
   } catch (error) {
     logError('brouillons.send_failed', error, { userId: ctx.userId, brouillonId: id });

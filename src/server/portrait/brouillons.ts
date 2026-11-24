@@ -10,7 +10,7 @@ import { type Llm, LlmError } from '@/server/llm/llm';
 import { logError } from '@/server/log';
 import { epochToDate, textArray } from '@/server/search/filters-sql';
 import type { AgentId } from './agents';
-import { depositBrouillon } from './brouillon-depot';
+import { depositBrouillon, withdrawRelances } from './brouillon-depot';
 import {
   BROUILLON_MAX_CHARS,
   buildBrouillonPrompt,
@@ -64,7 +64,8 @@ import {
 // appel lit environ 4 000 jetons (la consigne, quatre messages et trois exemples coupés) et en écrit un millier :
 // 2 centimes avec Sonnet, donc 40 centimes par personne et par jour au plus (estimé d'après le tarif de models.ts, pas
 // mesuré). Le dépôt dans Gmail suit le même plafond : un brouillon écrit, un dépôt au plus, de deux requêtes, donc
-// 40 crédits Pipedream par personne et par jour au plus.
+// 40 crédits Pipedream par personne et par jour au plus ; et une relance déposée en coûte un de plus si son fil bouge
+// avant qu'elle l'envoie (withdrawRelances).
 export const BROUILLONS_DAILY_CAP = 20;
 const DAY_MS = 24 * 60 * 60 * 1000;
 // Borne le texte ET la réflexion du modèle (llm.ts) : un brouillon de 6 000 caractères en prend environ 2 000, le reste
@@ -74,14 +75,15 @@ const BROUILLON_TIMEOUT_MS = 90_000;
 // La préférence tirée d'une retouche, une phrase : la réponse entière, réflexion comprise, est bornée ici.
 const PREFERENCE_MAX_TOKENS = 4000;
 
-// Un passage : en tête, sans modèle, ses réponses envoyées aux brouillons de Leon se comparent à eux (preferences.ts) ;
-// puis les brouillons qu'elle attend (elle a répondu aux questions de Leon, le second appel ; ou dit
-// « Oui » au mail d'un inconnu, son premier appel, avec ses indications), puis ses mails qui attendent (le premier
-// appel), puis les leçons de ses retouches (learnFrom), cinq appels au modèle au plus en tout (WAITING_MAX), un par
-// mail ou par retouche. Rend le nombre de brouillons écrits. Ne fait rien pour un compte supprimé. Chaque agent en
-// service ne travaille que pour qui lui a dit « oui », à lui, tant qu'il lui est proposé (sa boîte branchée) : ses mails
-// qui attendent et ses retouches pour « Brouillons de réponse », ses relances pour « Relances » ; le même passage, sous
-// le même plafond, pour les deux. Passé le plafond du jour, il s'arrête.
+// Un passage : en tête, sans modèle, ses relances déposées dont le fil a bougé quittent Gmail (withdrawRelances : il ne
+// fait que défaire ce que Leon a écrit, quel que soit l'agent auquel elle dit oui), et ses réponses envoyées aux
+// brouillons de Leon se comparent à eux (preferences.ts) ; puis les brouillons qu'elle attend (elle a répondu aux
+// questions de Leon, le second appel ; ou dit « Oui » au mail d'un inconnu, son premier appel, avec ses indications),
+// puis ses mails qui attendent (le premier appel), puis les leçons de ses retouches (learnFrom), cinq appels au modèle
+// au plus en tout (WAITING_MAX), un par mail ou par retouche. Rend le nombre de brouillons écrits. Ne fait rien pour un
+// compte supprimé. Chaque agent en service ne travaille que pour qui lui a dit « oui », à lui, tant qu'il lui est
+// proposé (sa boîte branchée) : ses mails qui attendent et ses retouches pour « Brouillons de réponse », ses relances
+// pour « Relances » ; le même passage, sous le même plafond, pour les deux. Passé le plafond du jour, il s'arrête.
 // Un mail dont la réponse du modèle est illisible, refusée ou coupée n'écrit rien : il attend toujours, et le passage
 // suivant le retente, sous le même plafond. Un mail qui a son résultat (un brouillon, des questions, ou « sans
 // réponse ») n'est jamais redemandé au modèle, sauf une fois pour écrire le brouillon quand elle a répondu aux
@@ -97,6 +99,8 @@ export async function writeBrouillons(
   deps: { llm: Llm; now?: Date; fetchImpl?: typeof fetch }, // fetchImpl : tests
 ): Promise<number> {
   if (await accountIsGone(ctx.userId)) return 0;
+  // D'abord, sans modèle et quel que soit le plafond : ses relances déposées dont le fil a bougé quittent Gmail.
+  await withdrawRelances(ctx, deps);
   const lines = await readFiche(ctx);
   const proposals = await readProposals(ctx, lines);
   const oui = (agent: AgentId) => proposals.some((one) => one.agent === agent && one.oui);

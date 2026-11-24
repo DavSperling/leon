@@ -1746,6 +1746,75 @@ describe('writeBrouillons : un brouillon complet va aussi dans ses brouillons Gm
       [true, true],
     ]);
   });
+  // Sa relance du fil « Devis », déposée (« r-relance » chez Gmail), puis la réponse de Léa relevée par Leon : le fil a
+  // bougé. Rend sa ligne.
+  async function movedRelance(julie: TenantContext): Promise<string> {
+    await sendsMails(julie);
+    await answer(julie, true, 'relance');
+    const { rows: boxes } = await adminPool.query<{ id: string }>(
+      "select connection_id as id from sources where owner_user_id = $1 and title = 'Premier contact'",
+      [julie.userId],
+    );
+    const mine = sent(ago(7 * DAY), 'Bonjour Léa,\nVoici le devis. Qu’en pensez-vous ?');
+    const sourceId = await mailThread(julie, 'Devis', [mine], { connectionId: boxes[0]?.id });
+    const { rows } = await adminPool.query<{ id: string }>(
+      `insert into brouillons (tenant_id, user_id, source_id, message, texte, indications, sorte,
+                               brouillon_gmail, acl)
+       values ($1, $2, $3, $4, $5, '', 'relance', 'r-relance', array[$2::uuid]) returning id`,
+      [julie.tenantId, julie.userId, sourceId, mine.externalId, RELANCE],
+    );
+    await extendThread(julie, sourceId, [received(ago(HOUR), 'Bonjour Julie, je regarde.')]);
+    return rows[0]?.id ?? '';
+  }
+  const relanceDraft = async (id: string) =>
+    (await adminDb.select().from(brouillons).where(eq(brouillons.id, id)))[0]?.brouillonGmail;
+  const withdraw = (status = 200): FakeRoute => ({
+    method: 'DELETE',
+    url: proxied(`${GMAIL}/drafts/r-relance`),
+    status,
+    json: {},
+  });
+
+  it('une relance déposée dont le fil a bougé quitte Gmail au passage suivant, sans appel au modèle, même au plafond du jour', async () => {
+    const julie = await julieOnGmail();
+    const id = await movedRelance(julie);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    await adminPool.query(
+      `insert into brouillons_par_jour (user_id, jour, nombre)
+       values ($1, (now() at time zone 'UTC')::date, $2)`,
+      [julie.userId, BROUILLONS_DAILY_CAP],
+    );
+    const { llm, calls } = answering(draft());
+    const fetchImpl = fakeFetch([TOKEN, withdraw()]);
+
+    expect(await writeBrouillons(julie, { llm, fetchImpl })).toBe(0);
+
+    expect(calls).toHaveLength(0);
+    expect(fetchImpl.calls.map((call) => call.method)).toEqual(['POST', 'DELETE']);
+    expect(await relanceDraft(id)).toBeNull();
+    // La réponse de Léa attend la sienne : le plafond l'arrête, après le retrait.
+    expect(warn.mock.calls.map((args) => args[1])).toEqual(['brouillons.daily_cap']);
+  });
+
+  it('un retrait qui échoue ne casse pas le passage : il est journalisé, et le passage écrit ce qu’il a à écrire', async () => {
+    const julie = await julieOnGmail();
+    const id = await movedRelance(julie);
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+    // Un brouillon avec un blanc : écrit, jamais déposé.
+    const { llm, calls } = answering(draft());
+    const fetchImpl = fakeFetch([TOKEN, withdraw(500)]);
+
+    expect(await writeBrouillons(julie, { llm, fetchImpl })).toBe(1);
+
+    expect(calls).toHaveLength(1);
+    expect(fetchImpl.calls.map((call) => call.method)).toEqual(['POST', 'DELETE']);
+    expect(await relanceDraft(id)).toBe('r-relance');
+    expect(errors.mock.calls.map((args) => args[1])).toEqual([
+      'brouillons.relance_withdraw_failed',
+    ]);
+    expect(JSON.stringify(errors.mock.calls)).not.toMatch(/Devis|Bonjour|Léa|@/);
+  });
 });
 
 describe('readShown : ses brouillons prêts', () => {

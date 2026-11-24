@@ -20,9 +20,12 @@ import {
 // Les requêtes vers l'API Gmail. Les messages se lisent par lots (une requête, donc un crédit Pipedream,
 // pour BATCH_SIZE messages) : https://developers.google.com/workspace/gmail/api/guides/batch
 //
-// Les seules écritures : un brouillon de réponse créé dans un fil (replyHeaders, puis createDraft), pour l'agent
-// « Brouillons de réponse » (portrait/brouillon-depot.ts), et ce même brouillon supprimé quand elle l'écarte dans Leon
-// (deleteDraft). Rien n'est envoyé, et rien d'autre n'est supprimé ni modifié.
+// Les seules écritures (portrait/brouillon-depot.ts) : un brouillon créé dans un fil (replyHeaders, puis createDraft),
+// la réponse de l'agent « Brouillons de réponse » à l'auteur du mail reçu, ou la relance de l'agent « Relances » aux
+// destinataires de son mail resté sans réponse, en « à » et en copie, sans elle ; ce même brouillon supprimé
+// (deleteDraft) quand elle l'écarte dans Leon, ou, pour une relance, quand son fil a bougé avant qu'elle l'envoie ; et
+// ce brouillon envoyé (sendDraft) quand elle clique « Envoyer » dans Leon et le confirme. Rien d'autre n'est envoyé,
+// supprimé ni modifié.
 // Doc relue le 23/11/2026 :
 //   https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.threads/get (format=metadata,
 //     metadataHeaders répété, gmail.modify accepté ; ce format ne rend que « IDs, labels, and email headers »)
@@ -160,12 +163,12 @@ export function gmailClient(http: ConnectorHttp) {
       return read;
     },
 
-    // Ce qu'il faut d'un message pour lui répondre dans son fil (reply.ts) : trois en-têtes. C'est le fil qui se lit,
-    // sans les corps, pour savoir d'abord s'il attend toujours : Leon ne connaît la boîte que telle qu'à la dernière
-    // relève. Rend null quand il n'y a plus à répondre : le message n'y est plus, elle l'a mis à la corbeille ou en
-    // indésirable, ou un message plus récent le suit (elle a répondu depuis Gmail, ou on lui a récrit ; un brouillon
-    // ne compte pas). Une seule requête, un crédit ; jamais rejouée, sauf par le proxy de Pipedream sur un 401, une
-    // fois, avec un jeton neuf (pipedream.ts).
+    // Ce qu'il faut d'un message pour lui répondre dans son fil (reply.ts) : trois en-têtes. Le message reçu pour une
+    // réponse, son propre mail pour une relance. C'est le fil qui se lit, sans les corps, pour savoir d'abord s'il
+    // attend toujours : Leon ne connaît la boîte que telle qu'à la dernière relève. Rend null quand il n'y a plus à
+    // répondre : le message n'y est plus, il est à la corbeille ou en indésirable, ou un message plus récent le suit
+    // (elle a écrit depuis Gmail, ou on lui a écrit ; un brouillon ne compte pas). Une seule requête, un crédit ;
+    // jamais rejouée, sauf par le proxy de Pipedream sur un 401, une fois, avec un jeton neuf (pipedream.ts).
     async replyHeaders(threadId: string, messageId: string) {
       const { messages } = await http.json(
         {
@@ -220,10 +223,10 @@ export function gmailClient(http: ConnectorHttp) {
       });
     },
 
-    // Supprime un brouillon que Leon a déposé (createDraft), quand elle l'écarte dans Leon : la seule suppression de
-    // Leon dans une boîte, et jamais d'un autre message. Définitive, sans passer par la corbeille. Un brouillon qui
-    // n'y est plus (elle l'a envoyé ou supprimé) rend 404 : il n'y a plus rien à retirer. Jamais rejouée, sauf un 401
-    // par le proxy de Pipedream.
+    // Supprime un brouillon que Leon a déposé (createDraft), quand elle l'écarte dans Leon ou qu'une relance devient
+    // inutile : la seule suppression de Leon dans une boîte, et jamais d'un autre message. Définitive, sans passer par
+    // la corbeille. Un brouillon qui n'y est plus (elle l'a envoyé ou supprimé) rend 404 : il n'y a plus rien à
+    // retirer. Jamais rejouée, sauf un 401 par le proxy de Pipedream.
     async deleteDraft(draftId: string): Promise<void> {
       try {
         await http.text({

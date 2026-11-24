@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import en from '../../../../messages/en.json';
 import fr from '../../../../messages/fr.json';
 import { DocumentationPage } from './documentation';
-import { documentationMarkdown, READ_COMMANDS, SECTIONS } from './documentation-markdown';
+import { documentationMarkdown, PROBLEMS, READ_COMMANDS, SECTIONS } from './documentation-markdown';
 
 // L'interrupteur de la page lit le routeur ; ici, la page ne sert qu'à comparer ses commandes.
 vi.mock('next/navigation', () => ({
@@ -69,6 +69,37 @@ describe('documentationMarkdown', () => {
     },
   );
 
+  // « En cas de problème » : un ### par catégorie et un #### par entrée, comme les h3 et h4 de la page, dans le même ordre.
+  it.each(LOCALES)(
+    'a les catégories et les entrées de « En cas de problème » de la page, dans son ordre (%s)',
+    (locale, messages) => {
+      const { problems } = messages.site.documentation;
+      const expected = PROBLEMS.flatMap(({ group, entries }) => [
+        `### ${problems.groups[group]}`,
+        ...entries.map((key) => `#### ${problems[key].title}`),
+      ]);
+      const md = markdown(locale);
+      const html = page(locale);
+      const between = (text: string, from: string, to: string) =>
+        text.slice(text.indexOf(from), text.indexOf(to));
+
+      expect(
+        [...between(md, '{#problemes}', '{#clone}').matchAll(/^#{3,4} .+$/gm)].map((m) => m[0]),
+      ).toEqual(expected);
+      expect(
+        [
+          ...between(html, '<section id="problemes"', '<section id="clone"').matchAll(
+            /<h([34])[^>]*>(.*?)<\/h\1>/g,
+          ),
+        ].map(
+          // la page met des espaces fines insécables (nb) ; le Markdown, des espaces simples
+          ([, level, text]) =>
+            `${'#'.repeat(Number(level))} ${decode(text ?? '').replace(/ /g, ' ')}`,
+        ),
+      ).toEqual(expected);
+    },
+  );
+
   // Toutes les phrases de la page y sont, dans la langue demandée, sans les libellés d'interface.
   it.each(LOCALES)(
     'reprend chaque texte de la page, sans en recopier un seul (%s)',
@@ -89,7 +120,10 @@ describe('documentationMarkdown', () => {
 
       expect(texts.length).toBeGreaterThan(50);
       for (const text of texts)
-        for (const piece of text.replace(/<\/?code>/g, '`').split('{path}'))
+        for (const piece of text
+          .replace(/<\/?code>/g, '`')
+          .replace(/<\/?b>/g, '**')
+          .split('{path}'))
           expect(md, piece).toContain(piece);
       const s = messages.settings;
       expect(md).toContain(`${s.title} › ${s.tabIntegrations} › ${s.computersTitle} › ${s.revoke}`);
@@ -130,7 +164,8 @@ describe('documentationMarkdown', () => {
     const md = markdown(locale);
 
     expect(prose(md)).not.toMatch(/<\/?[a-z][^>]*>/i);
-    expect(md).not.toContain('&');
+    // pas d'entité HTML (`&&` et `2>&1` sont des bouts de code)
+    expect(prose(md)).not.toContain('&');
     expect(md).not.toContain(' '); // pas de typographie d'écran : du texte brut
     const { claudeCode, common } = messages;
     const d = messages.site.documentation;

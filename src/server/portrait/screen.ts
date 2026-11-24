@@ -208,7 +208,7 @@ export async function readHomeBrouillons(ctx: TenantContext): Promise<HomeBrouil
     .sort((a, b) => Number(writing(a)) - Number(writing(b)) || recent(a, b))
     .slice(0, HOME_MAX)
     .sort(recent);
-  return { demandes, prets: withSource(mine(shown.prets)) };
+  return { demandes, prets: withSource(mine(shown.prets)).slice(0, HOME_MAX) };
 }
 
 // La demande du bouton « Construire ma fiche » : la construction part en file si l'écran la propose à la personne.

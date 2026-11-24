@@ -857,6 +857,26 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
       expect(await titles(julie)).toEqual({ demandes: ['Sans réponse'], prets: ['Prête'] });
     });
 
+    it('les vingt places de chaque agent : ses brouillons de réponse, après son non, ne cachent pas sa relance ; avec ses deux oui, les vingt plus récents', async () => {
+      const [julie] = await people();
+      await answered(julie, false);
+      await followsUp(julie);
+      for (const hour of hours(1, HOME_MAX)) await seedBrouillon(julie, `Prêt ${hour}`, hour);
+      const ready = await unanswered(julie, 'Relance prête', 8);
+      await adminPool.query(
+        `insert into brouillons (tenant_id, user_id, source_id, message, texte, indications, sorte, acl)
+       values ($1, $2, $3, $4, 'Bonjour Léa,', '', 'relance', array[$2::uuid])`,
+        [julie.tenantId, julie.userId, ready.sourceId, ready.message],
+      );
+
+      expect(await titles(julie)).toEqual({ demandes: [], prets: ['Relance prête'] });
+
+      await adminPool.query('update reponses_agent set oui = true where user_id = $1', [
+        julie.userId,
+      ]);
+      expect((await titles(julie)).prets).toEqual(hours(1, HOME_MAX).map((hour) => `Prêt ${hour}`));
+    });
+
     it('la lecture de ses mails sans réponse en panne : le reste se montre, et la panne est journalisée', async () => {
       const [julie] = await people();
       await answered(julie);

@@ -340,7 +340,8 @@ export type Demande = Pick<
 // ligne seule, avant de chercher le dernier message de son fil : ces lignes ne se montrent jamais, et leur nombre ne
 // fait que grandir.
 // Une relance se lit de même, avec ses lignes de réponse : son mail est le dernier du fil, et elle s'y montre avec le
-// nom de son destinataire.
+// nom de son destinataire. Les relances ont leurs HOME_MAX places à part : les lignes d'un agent auquel elle a dit non
+// ne cachent pas celles de l'autre (l'accueil filtre ensuite par agent, screen.ts).
 // shortcut: au-delà de HOME_MAX, les plus anciens ne se montrent pas ; à paginer si une personne en garde autant sans
 // les écarter.
 export async function readShown(
@@ -369,7 +370,7 @@ export async function readShown(
                b.questions, b.choix, (b.reponses is not null or b.questions is null) as repondue,
                -- Leon écrit (repondue) : vrai aussi de tout brouillon prêt, ce qui ne change pas leur ordre.
                row_number() over (
-                 partition by b.texte is null
+                 partition by b.texte is null, b.sorte
                  order by (b.reponses is not null or b.questions is null), l.ts desc, b.id
                ) as n
         from brouillons b

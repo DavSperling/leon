@@ -149,6 +149,8 @@ async function render(): Promise<void> {
   state.className = `badge ${display.tone}`;
   byId('hint').hidden = display.hint === undefined;
   byId('hint-text').textContent = display.hint ?? '';
+  // L'accès se rend dans les réglages du navigateur, pas dans les options de Leon.
+  byId('hint-options').hidden = display === CONNECTION_DISPLAYS.access_removed;
   byId('paused-banner').hidden = !settings.paused;
   byId('pause-button').hidden = settings.paused;
   for (const element of document.querySelectorAll<HTMLElement>('[data-last]')) {

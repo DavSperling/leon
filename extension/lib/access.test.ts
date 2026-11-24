@@ -85,6 +85,9 @@ describe('connectionToShow', () => {
 
   it('en pause, non configuré et jeton refusé gardent leur priorité', () => {
     expect(connectionToShow({ ...CONFIGURED, paused: true }, status(), noServer)).toBe('paused');
+    expect(connectionToShow({ ...CONFIGURED, paused: true, token: null }, status(), noServer)).toBe(
+      'paused',
+    );
     expect(connectionToShow({ ...CONFIGURED, token: null }, status(), noServer)).toBe(
       'not_configured',
     );

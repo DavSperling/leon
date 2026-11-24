@@ -97,11 +97,18 @@ describe('readUnansweredMails : ce qui n’en est pas un', () => {
     expect(await subjects(julie)).toEqual(['5 jours', '30 jours']);
   });
 
-  it('un fil où quelqu’un a répondu après elle', async () => {
+  it('un fil où quelqu’un a répondu après elle, même à tous et par une question', async () => {
     const [julie] = await people();
     await mailThread(julie, 'Répondu', [
       sent(ago(8 * DAY), 'Une question ?'),
       received(ago(7 * DAY), 'Voici la réponse.'),
+    ]);
+    // Le dernier message a un destinataire qui n'est pas elle, mais il n'est pas d'elle.
+    await mailThread(julie, 'Répondu à tous', [
+      sent(ago(8 * DAY), 'Le devis vous convient-il ?', [LEA, MARC]),
+      received(ago(6 * DAY), 'Oui. Pouvez-vous nous envoyer le bon de commande ?', {
+        recipients: { to: [JULIE, MARC], cc: [] },
+      }),
     ]);
 
     expect(await subjects(julie)).toEqual([]);

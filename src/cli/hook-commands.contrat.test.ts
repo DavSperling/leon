@@ -5,11 +5,12 @@
 // au dossier d'où elle est lancée (briefing.ts en tire le projet). Aucun réseau : la seule dépendance est un dossier
 // local (`file:`), le magasin de pnpm est dans le dossier temporaire.
 //
-// Et la CLI de Leon : `leon` connaît bien les deux sous-commandes que lancent les crochets.
+// Et la CLI de Leon : `leon` connaît bien les sous-commandes que lancent les crochets, et `read-first` sort avec 0.
 //
 // Puis le vrai lanceur ~/.leon/bin/leon (launcher.ts, K8), écrit dans un dossier personnel qui a une espace et une
 // apostrophe, et lancé par `sh -c` comme Claude Code lance la commande d'un crochet (launcherHookCommand, K9) : sous
-// ses deux formes, il rend `leon --version`, et la forme clone garde les propriétés de la ligne pnpm ci-dessus.
+// ses deux formes, il rend `leon --version`, et la forme clone garde les propriétés de la ligne pnpm ci-dessus ; sous la
+// forme installée, la commande PreToolUse de l'installateur rend le refus de la lecture obligée.
 import { execFile, spawn } from 'node:child_process';
 import {
   copyFile,
@@ -28,6 +29,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { READ_FIRST_MARK } from '../capture/api-contract';
+import { addUsage, writeConsent } from './consent';
 import {
   hookCommand,
   launcherHookCommand,
@@ -35,6 +38,7 @@ import {
   shellQuote,
   singleQuote,
 } from './hook-commands';
+import { addLeonHooks } from './install-hooks';
 import { writeLauncher } from './launcher';
 import runtime from './runtime.json';
 
@@ -69,9 +73,14 @@ function cleanEnv(home: string): NodeJS.ProcessEnv {
   return kept as NodeJS.ProcessEnv;
 }
 
-function runShell(command: string, cwd: string, input: string): Promise<Outcome> {
+function runShell(
+  command: string,
+  cwd: string,
+  input: string,
+  extra: Record<string, string> = {},
+): Promise<Outcome> {
   return new Promise((done, fail) => {
-    const child = spawn('/bin/sh', ['-c', command], { cwd, env });
+    const child = spawn('/bin/sh', ['-c', command], { cwd, env: { ...env, ...extra } });
     let stdout = '';
     let stderr = '';
     child.stdout.on('data', (chunk: Buffer) => {
@@ -170,6 +179,54 @@ describe('la CLI de Leon', () => {
       expect(stdout).toMatch(/^ {2}briefing /m);
       expect(stdout).toMatch(/^ {2}capter-session /m);
       expect(stdout).toMatch(/^ {2}reminder /m);
+      expect(stdout).toMatch(/^ {2}read-first /m);
+      expect(stdout).toMatch(/^ {6}--mesure /m);
+      expect(stdout).toMatch(/^ {6}--usage passage /m);
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  // La lecture obligée (D40, T67) : par la vraie CLI, le refus seul sur la sortie standard, et toujours le code 0
+  // (essai T66 : un code 2 bloque l'écriture dans Claude Code).
+  it(
+    'read-first : le refus en JSON, puis rien, et le code 0 même sur une entrée illisible',
+    async () => {
+      const home = join(dir, 'home');
+      await writeConsent(home, 'claude_code', 2);
+      await addUsage(home, 'claude_code', 'lecture');
+      await addUsage(home, 'claude_code', 'passage');
+      const input = JSON.stringify({
+        session_id: 'session-contrat',
+        tool_name: 'Write',
+        tool_input: { file_path: join(project, 'a.js'), content: 'x' },
+        cwd: project,
+      });
+      const command = `${shellQuote(process.execPath)} --import tsx src/cli/leon.ts read-first`;
+
+      const first = await runShell(command, REPO_ROOT, input);
+      const second = await runShell(command, REPO_ROOT, input);
+      const unreadable = await runShell(command, REPO_ROOT, 'pas du json');
+
+      expect({ code: first.code, stderr: first.stderr }).toEqual({ code: 0, stderr: '' });
+      expect(first.stdout).toMatch(/^\{[^\n]*\}\n$/); // une seule ligne : le JSON du refus
+      const decision = JSON.parse(first.stdout).hookSpecificOutput;
+      expect(decision.permissionDecision).toBe('deny');
+      expect(decision.permissionDecisionReason.startsWith(`${READ_FIRST_MARK} `)).toBe(true);
+      expect(second).toEqual({ code: 0, stdout: '', stderr: '' });
+      expect({ code: unreadable.code, stdout: unreadable.stdout }).toEqual({ code: 0, stdout: '' });
+
+      // Un `claude -p` (sdk-cli) passe ; avec --mesure, l'option que passe la mesure (T68), il est arrêté.
+      const script = JSON.stringify({ ...JSON.parse(input), session_id: 'session-script' });
+      const plain = await runShell(`CLAUDE_CODE_ENTRYPOINT=sdk-cli ${command}`, REPO_ROOT, script);
+      const mesure = await runShell(
+        `CLAUDE_CODE_ENTRYPOINT=sdk-cli ${command} --mesure`,
+        REPO_ROOT,
+        script,
+      );
+
+      expect(plain).toEqual({ code: 0, stdout: '', stderr: '' });
+      expect(mesure.code).toBe(0);
+      expect(JSON.parse(mesure.stdout).hookSpecificOutput.permissionDecision).toBe('deny');
     },
     TEST_TIMEOUT_MS,
   );
@@ -254,6 +311,47 @@ describe('le lanceur réel', () => {
       expect(outcome.stdout).toBe(`point|briefing|${HOOK_JSON}|${project}\n`);
       expect(await installed()).toEqual(before);
       expect(before).not.toContain('dep-ter');
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  // La chaîne entière de la lecture obligée (T67) : le groupe PreToolUse que l'installateur écrit (addLeonHooks), lancé
+  // tel quel par `sh -c`, passe par le lanceur et la CLI construite, dans un dossier personnel à espace et apostrophe.
+  it(
+    'forme installée : la commande PreToolUse de l’installateur refuse une fois, en JSON, avec le code 0',
+    async () => {
+      await writeLauncher(launcherHome, { kind: 'installee' }, () => true);
+      await writeConsent(launcherHome, 'claude_code', 2);
+      await addUsage(launcherHome, 'claude_code', 'lecture');
+      await addUsage(launcherHome, 'claude_code', 'passage');
+      const hooks = addLeonHooks({}, launcherHome, ['passage']).settings.hooks as {
+        PreToolUse: { matcher: string; hooks: { command: string }[] }[];
+      };
+      const [group] = hooks.PreToolUse;
+      const command = group?.hooks[0]?.command ?? '';
+      const input = JSON.stringify({
+        session_id: 'session-chaine',
+        tool_name: 'Write',
+        tool_input: { file_path: join(project, 'b.js'), content: 'x' },
+        cwd: project,
+      });
+      const session = {
+        HOME: launcherHome,
+        CLAUDE_PROJECT_DIR: project,
+        CLAUDE_CODE_ENTRYPOINT: 'claude-desktop',
+      };
+
+      const first = await runShell(command, project, input, session);
+      const second = await runShell(command, project, input, session);
+
+      expect(group?.matcher).toBe('Edit|Write|MultiEdit|NotebookEdit');
+      expect(command).toBe(launcherHookCommand(launcherHome, 'read-first'));
+      expect({ code: first.code, stderr: first.stderr }).toEqual({ code: 0, stderr: '' });
+      expect(first.stdout).toMatch(/^\{[^\n]*\}\n$/);
+      const decision = JSON.parse(first.stdout).hookSpecificOutput;
+      expect(decision.permissionDecision).toBe('deny');
+      expect(decision.permissionDecisionReason).toContain('`~/.leon/bin/leon thread`');
+      expect(second).toEqual({ code: 0, stdout: '', stderr: '' });
     },
     TEST_TIMEOUT_MS,
   );

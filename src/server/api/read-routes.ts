@@ -10,6 +10,7 @@ import {
   type ReadResponse,
   VersionsRequestSchema,
 } from '@/capture/api-contract';
+import { maskSecrets } from '@/capture/mask-secrets';
 import type { CodeSessionKind } from '@/capture/turn';
 import { getEmbedder } from '@/server/embeddings/registry';
 import { env } from '@/server/env';
@@ -81,7 +82,8 @@ export const readRoutes = new Hono<ApiEnv>()
   .post('/chercher', requireApiToken, limit, (c) =>
     answer(c, ChercherRequestSchema, 'search', async (body, journal) => {
       const page = await searchPassages(c.var.ctx, {
-        query: body.requete,
+        // Masquée de nouveau, avant la recherche et le calcul de son vecteur (D40, C11), comme le rappel (D26).
+        query: maskSecrets(body.requete),
         filters: { depot: body.projet },
         page: 1,
         embedder: getEmbedder(env),

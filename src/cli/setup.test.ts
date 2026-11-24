@@ -714,6 +714,7 @@ describe('setup : les outils de code', () => {
     await addUsage(home, 'claude_code', 'lecture');
     await addRefusal(home, 'claude_code', 'rappel');
     await addRefusal(home, 'claude_code', 'noter');
+    await addRefusal(home, 'claude_code', 'passage');
     await addRefusal(home, 'claude_code', 'coulisses');
     const consent = await readFile(consentPath(home), 'utf8');
 
@@ -723,6 +724,39 @@ describe('setup : les outils de code', () => {
     expect(second.questions).toEqual([]);
     expect(second.output).toContain('Claude Code: hooks installed');
     expect(await readFile(consentPath(home), 'utf8')).toBe(consent);
+  });
+
+  // D40, T67 : `passage` pour Claude Code seul, juste après `noter` ; avec le bac à sable actif, son exception suit. La
+  // ligne finale compte le crochet de `passage` parmi ceux qui doivent être en place.
+  it('dans un terminal, passage puis l’exception du bac à sable : crochet et entrées posés, « hooks installed », puis plus rien', async () => {
+    await hasClaudeCode();
+    await writeFile(join(claudeDir, SETTINGS_FILE), JSON.stringify({ sandbox: { enabled: true } }));
+
+    const run = await setup(
+      {},
+      { interactive: true, answers: ['y', '', 'n', 'n', 'y', 'n', 'n', 'y'] },
+    );
+
+    expect(run.code).toBe(0);
+    expect(run.questions[4]).toContain('have the agent read Leon first');
+    expect(run.questions.at(-1)).toContain(
+      "Let Leon's read commands run outside the Claude Code sandbox",
+    );
+    expect(run.output).toContain('Claude Code: hooks installed');
+    const settings = JSON.parse(await readFile(join(claudeDir, SETTINGS_FILE), 'utf8'));
+    expect(settings.hooks.PreToolUse).toEqual([
+      {
+        matcher: 'Edit|Write|MultiEdit|NotebookEdit',
+        hooks: [{ type: 'command', command: launcherHookCommand(home, 'read-first'), timeout: 5 }],
+      },
+    ]);
+    expect(settings.sandbox.excludedCommands).toContain('~/.leon/bin/leon search *');
+    expect(settings.sandbox.filesystem).toEqual({ denyWrite: ['~/.leon'] });
+
+    const again = await setup({}, { interactive: true });
+
+    expect(again.questions).toEqual([]);
+    expect(again.output).toContain('Claude Code: hooks installed');
   });
 
   // Décision d'Amos du 11/11 : une question par usage pour tous les outils trouvés, au premier qui en manque ; la
@@ -740,19 +774,22 @@ describe('setup : les outils de code', () => {
   it('dans un terminal : une question par usage pour tous les outils du passage, écrite pour chacun après son accord', async () => {
     await allTools();
 
-    // Claude Code, lecture, rappel, noter, coulisses (sans réponse), resume, puis Codex et sa question coulisses,
-    // Cursor (refusé), et Antigravity et sa question coulisses, rappel compris.
+    // Claude Code, lecture, rappel, noter, passage et coulisses (sans réponse), resume, puis Codex et sa question
+    // coulisses, Cursor (refusé), et Antigravity et sa question coulisses, rappel compris. `passage` (T67) n'est demandé
+    // qu'à Claude Code.
     const run = await setup(
       {},
-      { interactive: true, answers: ['y', '', '', '', null, 'n', 'y', null, 'n', 'y', null] },
+      { interactive: true, answers: ['y', '', '', '', null, null, 'n', 'y', null, 'n', 'y', null] },
     );
 
     expect(run.code).toBe(0);
-    expect(run.questions).toHaveLength(11);
+    expect(run.questions).toHaveLength(12);
     expect(checkedAsked(run)).toHaveLength(3);
-    expect(run.output.split('usage "lecture"')).toHaveLength(2);
-    expect(run.output.split('usage "rappel"')).toHaveLength(2);
-    expect(run.output.split('usage "noter"')).toHaveLength(2);
+    // Le titre de chaque texte (le texte de `passage` cite aussi `lecture`, sans parenthèse).
+    expect(run.output.split('(usage "lecture"')).toHaveLength(2);
+    expect(run.output.split('(usage "rappel"')).toHaveLength(2);
+    expect(run.output.split('(usage "noter"')).toHaveLength(2);
+    expect(run.output.split('(usage "passage"')).toHaveLength(2);
     for (const tool of ['claude_code', 'codex', 'antigravity'] as const) {
       expect(await factsConsent(home, tool), tool).toMatchObject({
         usages: ['lecture', 'rappel', 'noter'],
@@ -1246,7 +1283,7 @@ describe('setup : les cases de la page « Autoriser »', () => {
 
     const run = await setup(
       {},
-      { interactive: true, answers: ['y', '', 'plus tard', 'plus tard', null, 'n'] },
+      { interactive: true, answers: ['y', '', 'plus tard', 'plus tard', null, null, 'n'] },
     );
 
     expect(run.logins).toEqual([]);

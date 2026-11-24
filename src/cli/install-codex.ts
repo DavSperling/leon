@@ -53,7 +53,7 @@ import {
   type UsageOptions,
   usagesToOffer,
   writeAtomically,
-  writeReminderHook,
+  writeUsageHooks,
 } from './install-hooks';
 import { removeUnusedLauncher, type UninstallDeps, withdrawOnServer } from './uninstall-hooks';
 
@@ -323,7 +323,7 @@ async function offerCodexUsages(
 ): Promise<number> {
   if (!(await offerUsages('codex', options, deps))) return 1;
   if (!(await factsConsent(options.home, 'codex'))?.usages.includes('rappel')) return 0;
-  const outcome = await writeReminderHook(
+  const outcome = await writeUsageHooks(
     path,
     (settings) => addCodexHooks(settings, options.home, true)?.next ?? null,
     deps,

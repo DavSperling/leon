@@ -49,6 +49,7 @@ import { runNoteCommand } from './note-command';
 import { ADAPTATEURS } from './outils';
 import { gitInDirectory } from './project-key';
 import { runReadCommand } from './read-commands';
+import { runReadFirst } from './read-first';
 import { runReminder } from './reminder';
 import {
   NODE_DIST,
@@ -63,6 +64,7 @@ import {
   tellBeforeConsent,
   type UninstallDeps,
   uninstallHooks,
+  uninstallPassage,
 } from './uninstall-hooks';
 
 // Le dépôt de Leon qui lance la commande (le dossier qui contient src/cli/leon.ts). Cette valeur ne vaut que sous la
@@ -86,10 +88,11 @@ Commands:
   setup                Set up this computer in one go: write the launcher ~/.leon/bin/leon, connect the computer (leon
                        login) if it is not yet, then put the hooks in the code tools found here (Claude Code, Codex,
                        Cursor, Antigravity), after showing what is sent and asking. In a terminal, it then offers
-                       the usages (\`lecture\`, \`rappel\`, \`noter\`, \`coulisses\`, \`resume\`) once for all these
-                       tools, except \`coulisses\`, asked for each of Claude Code, Codex and Antigravity with the text
-                       of that tool (never for Cursor); when it opens the browser, the authorization page shows
-                       \`lecture\`, \`rappel\` and \`noter\` as boxes, yours to tick or untick.
+                       the usages (\`lecture\`, \`rappel\`, \`noter\`, \`passage\`, \`coulisses\`, \`resume\`) once
+                       for all these tools, except \`coulisses\`, asked for each of Claude Code, Codex and Antigravity
+                       with the text of that tool (never for Cursor), and \`passage\`, for Claude Code only, followed
+                       by the exception of its sandbox when that sandbox is on; when it opens the browser, the
+                       authorization page shows \`lecture\`, \`rappel\` and \`noter\` as boxes, yours to tick or untick.
                        Older hooks that ran pnpm in a clone are replaced in place; your other hooks and your consent
                        in ~/.leon/accord.json are kept. Run it again at any time: what is in place is left alone
       --url <address>      the Leon server for leon login (default: LEON_URL, then the saved connection)
@@ -120,6 +123,13 @@ Commands:
                        the message, with secrets masked, and the project, the branch, the session and the consents of
                        the tool, go to your Leon server, which neither stores nor logs the message. A slow, missing or
                        older server prints nothing, within 2 seconds
+  read-first           Before the first change of a file of the project in a Claude Code session you lead, stop that
+                       change once and ask the agent to read Leon first (for Claude Code's PreToolUse hook: the hook
+                       JSON is read from standard input). Only with the \`passage\` and \`lecture\` consents of Claude
+                       Code in ~/.leon/accord.json; never for subagents, the agents of a workflow or scripts
+                       (\`claude -p\`). It sends nothing, writes an empty file per session in
+                       ~/.leon/temoins/claude_code, and always exits with code 0
+      --mesure             stop scripts (\`claude -p\`) too, for the measurement only
   crochet <tool> <event>
                        The hook of a code tool other than Claude Code (what its hooks run, the hook JSON on standard
                        input), for codex, cursor or antigravity: \`demarrage\` (start of a session) and \`prompt\` (first
@@ -184,8 +194,8 @@ Commands:
                        (briefing) and SessionEnd (capter-session) hooks into Claude Code's settings
                        (~/.claude/settings.json, or CLAUDE_CONFIG_DIR) and record your consent in ~/.leon/accord.json,
                        after confirmation (only the consent when the hooks are already there); in a terminal, then
-                       the usages (\`lecture\`, \`rappel\`, \`noter\`, \`coulisses\` except for Cursor, \`resume\`)
-                       that are neither accepted nor refused
+                       the usages (\`lecture\`, \`rappel\`, \`noter\`, \`passage\` for Claude Code only, \`coulisses\`
+                       except for Cursor, \`resume\`) that are neither accepted nor refused
       --oui                do not ask for confirmation (a launcher that points to a clone is still asked about)
       --depot <path>       Leon repository the launcher runs (default: the one running this command)
       --outil <tool>       codex: its hooks in \${CODEX_HOME:-~/.codex}/hooks.json; cursor: in ~/.cursor/hooks.json;
@@ -196,6 +206,9 @@ Commands:
                        ~/.leon/bin/leon goes too, once no tool is left that uses it
                        and the server was told
       --outil <tool>       the tool to remove: claude_code (the default), codex, cursor or antigravity
+      --usage passage      remove only the hook of the usage \`passage\` and Leon's sandbox exceptions from Claude
+                           Code's settings, and forget your answers to them, on this computer only: your consent, your
+                           other usages and the server are not touched
   --version            Print the version of this CLI ("dev" when run from a clone)
 
 Real uploads (import-claude-code without --dry-run), briefing, capter-session and the reading commands need a
@@ -321,6 +334,28 @@ async function runReminderCommand(): Promise<number> {
     });
   } catch {
     console.error('Leon: reminder unavailable (unexpected error).');
+    return 0;
+  } finally {
+    process.stdin.destroy(); // une entrée restée ouverte garderait la commande en vie
+  }
+}
+
+// Le crochet PreToolUse de Claude Code (D40, T67) : toujours le code 0 (un code 2 bloquerait l'écriture), et rien sur
+// la sortie standard hors du refus (read-first.ts).
+async function runReadFirstCommand(args: string[]): Promise<number> {
+  try {
+    return await runReadFirst({
+      // Depuis un clone, le message cite pnpm dans ce clone quand le lanceur manque, comme le bloc de démarrage.
+      ...(CLI_VERSION === 'dev' ? { depot: CLI_REPO_DIR } : {}),
+      stdin: process.stdin,
+      env: process.env,
+      home: homedir(),
+      mesure: args.includes('--mesure'),
+      out: console.log,
+      err: console.error,
+    });
+  } catch {
+    console.error('Leon: read-first unavailable (unexpected error).');
     return 0;
   } finally {
     process.stdin.destroy(); // une entrée restée ouverte garderait la commande en vie
@@ -572,10 +607,22 @@ const uninstallDeps = (): UninstallDeps => ({
 // `--outil` n'accepte que les outils que Leon capte (claude_code au lot 1) : un autre, ou une option inconnue,
 // arrête la commande sans rien retirer. Le message ne recopie pas la valeur reçue.
 async function runUninstallHooks(args: string[]): Promise<number> {
-  const { values } = parseArgs({ args, options: { outil: { type: 'string' } } });
+  const { values } = parseArgs({
+    args,
+    options: { outil: { type: 'string' }, usage: { type: 'string' } },
+  });
   const tools: readonly string[] = [...new Set([...CODE_SESSION_KINDS, ...OUTILS])];
   if (values.outil !== undefined && !tools.includes(values.outil)) {
     throw new Error(`--outil: unknown tool (one of: ${tools.join(', ')}).`);
+  }
+  // `passage` seul s'éteint à part (D40, T67), et seulement pour Claude Code.
+  if (values.usage !== undefined) {
+    if (values.usage !== 'passage' || (values.outil ?? 'claude_code') !== 'claude_code') {
+      throw new Error('--usage: only passage, for Claude Code, can be removed alone.');
+    }
+    const configDir = claudeConfigDir(process.env);
+    if (!isAbsolute(configDir)) throw new Error('CLAUDE_CONFIG_DIR must be an absolute path.');
+    return uninstallPassage({ configDir, home: homedir() }, uninstallDeps());
   }
   if (values.outil === 'cursor') return uninstallCursorHooks({ home: homedir() }, uninstallDeps());
   if (values.outil === 'antigravity') {
@@ -691,6 +738,7 @@ async function main(argv: string[]): Promise<number> {
     if (command === 'import-claude-code') return await runImport(args);
     if (command === 'briefing') return await runBriefingCommand();
     if (command === 'reminder') return await runReminderCommand();
+    if (command === 'read-first') return await runReadFirstCommand(args);
     if (command === 'capter-session') return await runCaptureSession(args);
     // Les crochets des autres outils (C6) : le démarrage et le premier message (le bloc), le tour et la fin (la capture).
     // Un outil ou un évènement inconnu ne fait rien et sort avec 0, pour qu'un crochet d'une version plus récente ne

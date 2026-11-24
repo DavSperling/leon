@@ -1,6 +1,7 @@
 import { eq, sql } from 'drizzle-orm';
 import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
 import { API_PATHS, READ_BODY_MAX_BYTES, ReadResponseSchema } from '@/capture/api-contract';
+import { SECRET_MASK } from '@/capture/mask-secrets';
 import { createApiToken } from '@/server/auth/api-tokens';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { lecons, readLog, sources } from '@/server/db/schema/memory';
@@ -292,6 +293,19 @@ describe('POST /api/v1/chercher', () => {
     expect(new Set(reads.map(({ tool, client }) => `${tool} ${client}`))).toEqual(
       new Set(['search codex']),
     );
+  });
+
+  it('masque la requête avant la recherche et le calcul de son vecteur (D40, C11)', async () => {
+    const [paul] = await team();
+    const secret = `sk-ant-${'a1B2c3D4'.repeat(4)}`;
+    const embedder = createFakeEmbedder();
+    const embed = vi.spyOn(embedder, 'embed');
+    vi.spyOn(registryModule, 'getEmbedder').mockReturnValue(embedder);
+
+    await texte(await post(API_PATHS.chercher, paul.token, { requete: `quokka ${secret}` }));
+
+    expect(embed).toHaveBeenCalledTimes(1);
+    expect(embed.mock.calls[0]?.[0]).toEqual([`quokka ${SECRET_MASK}`]);
   });
 
   it('une session trouvée cite son fil et ses PR, comme au MCP', async () => {

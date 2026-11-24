@@ -327,6 +327,7 @@ async function relanced(
   texte: string,
   recipients: { to: string[]; cc: string[] },
   options: Parameters<typeof mailThread>[3] = {},
+  mail = 'Bonjour Léa, qu’en pensez-vous ?',
 ): Promise<string> {
   await mailThread(ctx, 'Autre fil', [
     received(ago(48 * HOUR), 'Bonjour Paul, à demain.', {
@@ -335,12 +336,7 @@ async function relanced(
       recipients: { to: ['paul@acme.test'], cc: [] },
     }),
   ]);
-  const mine = sent(
-    ago(7 * 24 * HOUR),
-    'Bonjour Léa, qu’en pensez-vous ?',
-    recipients.to,
-    recipients.cc,
-  );
+  const mine = sent(ago(7 * 24 * HOUR), mail, recipients.to, recipients.cc);
   const sourceId = await mailThread(
     ctx,
     'Devis 2027',
@@ -404,6 +400,40 @@ describe('depositBrouillon : une relance va dans ses brouillons Gmail, aux desti
     expect(text.replaceAll('\r\n', '\n')).toBe(RELANCE);
     expect(await stored(id)).toMatchObject({ brouillonGmail: 'r-1', sorte: 'relance' });
     expect(errors).not.toHaveBeenCalled();
+  });
+
+  it('son mail coupé en plusieurs tours : ses destinataires se lisent une fois, sans doublon', async () => {
+    const [julie] = await team();
+    const long = `Bonjour Léa, qu’en pensez-vous ?\n${'Voici le détail du devis. '.repeat(500)}`;
+    const id = await relanced(
+      julie,
+      RELANCE,
+      EVERYONE,
+      { connectionId: await gmailOf(julie) },
+      long,
+    );
+    const { rows } = await adminPool.query<{ n: number }>(
+      `select count(*)::int as n from turns
+       where tenant_id = $1 and external_id like 'message:m-relance:%'`,
+      [julie.tenantId],
+    );
+    expect(rows[0]?.n).toBeGreaterThan(1);
+    const fetchImpl = fakeFetch([
+      TOKEN,
+      readRoute({ json: { id: 't', messages: [SENT_MAIL] } }),
+      createRoute(),
+    ]);
+
+    expect(await depositBrouillon(julie, id, { fetchImpl })).toBe(true);
+
+    const body = fetchImpl.calls[2]?.body as { message: { raw: string } };
+    const message = Buffer.from(body.message.raw, 'base64url').toString('utf8');
+    expect(message.split('\r\n').slice(0, 4)).toEqual([
+      'To: lea@client.test,',
+      ' marc@client.test,',
+      ' paul@acme.test',
+      'Cc: zoe@client.test',
+    ]);
   });
 
   it.each<[string, (julie: TenantContext) => Promise<string>]>([

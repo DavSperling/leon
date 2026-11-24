@@ -812,6 +812,14 @@ export function ReplyDrafts({
   ]
     .filter(Boolean)
     .join(' · ');
+  // Le titre du panneau : l'agent dont il montre les mails, ou les deux ; « Brouillons de réponse » quand tout est fait.
+  const relances = mails.filter(isRelance).length;
+  const panelTitle =
+    relances === 0
+      ? f('agents.brouillon-reponse.name')
+      : relances === mails.length
+        ? f('agents.relance.name')
+        : t('titleBoth');
   // La colonne de gauche : tout ce qui attend, dans l'ordre du panneau ; un clic montre ce mail.
   const list = shown && (
     <ol aria-label={t('list')} className="grid gap-1">
@@ -882,7 +890,7 @@ export function ReplyDrafts({
         }}
         wide
         aside={list}
-        title={f('agents.brouillon-reponse.name')}
+        title={panelTitle}
         sub={
           shown && (
             <span id={place} className="tabular-nums">

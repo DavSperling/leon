@@ -354,20 +354,21 @@
     "line": {
       "questions": "{name}, j’ai quelques questions à vous poser.",
       "ready": "{name}, {count, plural, one {votre brouillon est prêt} other {vos # brouillons sont prêts}}.",
-      "writing": "{name}, {count, plural, one {j’écris votre réponse} other {j’écris vos # réponses}}."
+      "writing": "{name}, {count, plural, one {j’écris votre brouillon} other {j’écris vos # brouillons}}."
     },
     "lineAnon": {
       "questions": "J’ai quelques questions à vous poser.",
       "ready": "{count, plural, one {Votre brouillon est prêt} other {Vos # brouillons sont prêts}}.",
-      "writing": "{count, plural, one {J’écris votre réponse} other {J’écris vos # réponses}}."
+      "writing": "{count, plural, one {J’écris votre brouillon} other {J’écris vos # brouillons}}."
     },
     "count": {
       "toComplete": "{count, plural, one {# mail à compléter} other {# mails à compléter}}",
       "toConfirm": "{count, plural, one {# préférence à valider} other {# préférences à valider}}",
       "toFollowUp": "{count, plural, one {# relance à décider} other {# relances à décider}}",
       "ready": "{count, plural, one {# brouillon prêt} other {# brouillons prêts}}",
-      "writing": "{count, plural, one {# réponse en cours} other {# réponses en cours}}"
+      "writing": "{count, plural, one {# brouillon en cours} other {# brouillons en cours}}"
     },
+    "titleBoth": "Brouillons et relances",
     "mail": "Mail {n} sur {total}",
     "previousMail": "Mail précédent",
     "nextMail": "Mail suivant",

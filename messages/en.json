@@ -354,20 +354,21 @@
     "line": {
       "questions": "{name}, I have a few questions for you.",
       "ready": "{name}, {count, plural, one {your draft is ready} other {your # drafts are ready}}.",
-      "writing": "{name}, {count, plural, one {I’m writing your reply} other {I’m writing your # replies}}."
+      "writing": "{name}, {count, plural, one {I’m writing your draft} other {I’m writing your # drafts}}."
     },
     "lineAnon": {
       "questions": "I have a few questions for you.",
       "ready": "{count, plural, one {Your draft is ready} other {Your # drafts are ready}}.",
-      "writing": "{count, plural, one {I’m writing your reply} other {I’m writing your # replies}}."
+      "writing": "{count, plural, one {I’m writing your draft} other {I’m writing your # drafts}}."
     },
     "count": {
       "toComplete": "{count, plural, one {# email to complete} other {# emails to complete}}",
       "toConfirm": "{count, plural, one {# preference to confirm} other {# preferences to confirm}}",
       "toFollowUp": "{count, plural, one {# follow-up to decide} other {# follow-ups to decide}}",
       "ready": "{count, plural, one {# draft ready} other {# drafts ready}}",
-      "writing": "{count, plural, one {# reply in progress} other {# replies in progress}}"
+      "writing": "{count, plural, one {# draft in progress} other {# drafts in progress}}"
     },
+    "titleBoth": "Drafts and follow-ups",
     "mail": "Email {n} of {total}",
     "previousMail": "Previous email",
     "nextMail": "Next email",

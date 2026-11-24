@@ -222,12 +222,12 @@ describe('ReplyDrafts : la ligne de l’Accueil', () => {
     const html = render([DEVIS, CONTRAT, INES, REPONDUE], [PRET]);
 
     expect(text(html)).toBe(
-      'Julie, j’ai quelques questions à vous poser. 3 mails à compléter · 1 brouillon prêt · 1 réponse en cours',
+      'Julie, j’ai quelques questions à vous poser. 3 mails à compléter · 1 brouillon prêt · 1 brouillon en cours',
     );
     expect(count(html, '<button')).toBe(1);
     // Son nom accessible dit le titre et le compte ; il dit qu'il ouvre une fenêtre, et la flèche du kit le montre.
     expect(label(html)).toBe(
-      'Julie, j’ai quelques questions à vous poser. 3 mails à compléter · 1 brouillon prêt · 1 réponse en cours',
+      'Julie, j’ai quelques questions à vous poser. 3 mails à compléter · 1 brouillon prêt · 1 brouillon en cours',
     );
     expect(html).toMatch(
       /<button type="button" class="tl card tl--wrap [^"]*"[^>]*aria-haspopup="dialog"/,
@@ -246,14 +246,14 @@ describe('ReplyDrafts : la ligne de l’Accueil', () => {
   it('sans rien à compléter, ses brouillons prêts : au singulier, au pluriel, sans les sortes absentes', () => {
     expect(text(render([], [PRET]))).toBe('Julie, votre brouillon est prêt. 1 brouillon prêt');
     expect(text(render([REPONDUE], [PRET, DEPOSE]))).toBe(
-      'Julie, vos 2 brouillons sont prêts. 2 brouillons prêts · 1 réponse en cours',
+      'Julie, vos 2 brouillons sont prêts. 2 brouillons prêts · 1 brouillon en cours',
     );
   });
 
   it('sans rien d’autre, ce que Leon écrit : au singulier, au pluriel', () => {
-    expect(text(render([REPONDUE]))).toBe('Julie, j’écris votre réponse. 1 réponse en cours');
+    expect(text(render([REPONDUE]))).toBe('Julie, j’écris votre brouillon. 1 brouillon en cours');
     expect(text(render([REPONDUE, { ...CONTRAT, repondue: true }]))).toBe(
-      'Julie, j’écris vos 2 réponses. 2 réponses en cours',
+      'Julie, j’écris vos 2 brouillons. 2 brouillons en cours',
     );
   });
 
@@ -264,7 +264,7 @@ describe('ReplyDrafts : la ligne de l’Accueil', () => {
       'Julie, j’ai quelques questions à vous poser. 1 préférence à valider',
     );
     expect(text(render([DEVIS, RETOUCHE, autre, REPONDUE], [PRET]))).toBe(
-      'Julie, j’ai quelques questions à vous poser. 1 mail à compléter · 2 préférences à valider · 1 brouillon prêt · 1 réponse en cours',
+      'Julie, j’ai quelques questions à vous poser. 1 mail à compléter · 2 préférences à valider · 1 brouillon prêt · 1 brouillon en cours',
     );
     expect(text(render([RETOUCHE], [], 'en'))).toBe(
       'Julie, I have a few questions for you. 1 preference to confirm',
@@ -296,7 +296,7 @@ describe('ReplyDrafts : la ligne de l’Accueil', () => {
     expect(anon([DEVIS])).toBe('J’ai quelques questions à vous poser. 1 mail à compléter');
     expect(anon([], [PRET])).toBe('Votre brouillon est prêt. 1 brouillon prêt');
     expect(anon([], [PRET, DEPOSE])).toBe('Vos 2 brouillons sont prêts. 2 brouillons prêts');
-    expect(anon([REPONDUE])).toBe('J’écris votre réponse. 1 réponse en cours');
+    expect(anon([REPONDUE])).toBe('J’écris votre brouillon. 1 brouillon en cours');
   });
 
   it('en anglais, les mêmes phrases', () => {
@@ -307,26 +307,26 @@ describe('ReplyDrafts : la ligne de l’Accueil', () => {
     ) => text(render(demandes, prets, 'en', name));
 
     expect(english([DEVIS, INES, REPONDUE], [PRET])).toBe(
-      'Julie, I have a few questions for you. 2 emails to complete · 1 draft ready · 1 reply in progress',
+      'Julie, I have a few questions for you. 2 emails to complete · 1 draft ready · 1 draft in progress',
     );
     expect(english([INES])).toBe('Julie, I have a few questions for you. 1 email to complete');
     expect(english([], [PRET])).toBe('Julie, your draft is ready. 1 draft ready');
     expect(english([REPONDUE], [PRET, DEPOSE])).toBe(
-      'Julie, your 2 drafts are ready. 2 drafts ready · 1 reply in progress',
+      'Julie, your 2 drafts are ready. 2 drafts ready · 1 draft in progress',
     );
-    expect(english([REPONDUE])).toBe('Julie, I’m writing your reply. 1 reply in progress');
+    expect(english([REPONDUE])).toBe('Julie, I’m writing your draft. 1 draft in progress');
     expect(english([REPONDUE, { ...CONTRAT, repondue: true }])).toBe(
-      'Julie, I’m writing your 2 replies. 2 replies in progress',
+      'Julie, I’m writing your 2 drafts. 2 drafts in progress',
     );
     expect(english([DEVIS], [], null)).toBe('I have a few questions for you. 1 email to complete');
     expect(english([], [PRET, DEPOSE], null)).toBe('Your 2 drafts are ready. 2 drafts ready');
-    expect(english([REPONDUE], [], null)).toBe('I’m writing your reply. 1 reply in progress');
+    expect(english([REPONDUE], [], null)).toBe('I’m writing your draft. 1 draft in progress');
   });
 });
 
 describe('ReplyDrafts : le panneau, tel qu’il s’ouvre', () => {
   const open = (
-    demandes: Array<HomeDemande | HomeInconnu>,
+    demandes: Array<HomeDemande | HomeInconnu | HomeRelance>,
     prets: HomeBrouillon[] = [],
     locale: 'en' | 'fr' = 'fr',
   ) => {
@@ -371,6 +371,13 @@ describe('ReplyDrafts : le panneau, tel qu’il s’ouvre', () => {
     expect(count(html, 'data-autofocus')).toBe(1);
     expect(count(html, '<div hidden="">')).toBe(4);
     expect(html.indexOf('<div hidden="">')).toBeGreaterThan(html.indexOf('Inès Garnier'));
+  });
+
+  it('son titre suit ce qu’il montre : « Relances » pour des relances seules, « Brouillons et relances » pour les deux', () => {
+    expect(open([SANS_REPONSE], [RELANCE_PRETE])).toContain('<h2>Relances</h2>');
+    expect(open([SANS_REPONSE, DEVIS])).toContain('<h2>Brouillons et relances</h2>');
+    expect(open([A_PLUSIEURS], [PRET], 'en')).toContain('<h2>Drafts and follow-ups</h2>');
+    expect(open([DEVIS], [PRET])).toContain('<h2>Brouillons de réponse</h2>');
   });
 
   it('au premier mail, « Mail suivant » seul ; un seul mail, « Terminé » ; plus rien, le panneau le dit, avec de quoi le fermer', () => {

@@ -210,7 +210,7 @@ describe('readFicheScreen : les agents proposés', () => {
     const screen = await readFicheScreen(julie);
 
     expect(screen.agents).toEqual([
-      { agent: 'relance', oui: false, enService: false },
+      { agent: 'relance', oui: false, enService: true },
       { agent: 'point-du-jour', oui: null, enService: false },
     ]);
     expect(screen.lines.map((line) => line.genre)).toEqual(['role']);
@@ -662,6 +662,23 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
 
     // Sa boîte débranchée : son oui ne suffit plus.
     await adminPool.query('delete from connections where created_by = $1', [julie.userId]);
+    expect(await readHomeBrouillons(julie)).toEqual(NOTHING);
+  });
+
+  it('son oui à « Relances » seul : rien de « Brouillons de réponse » ne part vers l’accueil', async () => {
+    const [julie] = await people();
+    await answered(julie, false);
+    await seedLine(julie, RYTHME);
+    await adminPool.query(
+      `insert into reponses_agent (tenant_id, user_id, agent, oui, acl)
+       values ($1, $2, 'relance', true, array[$2::uuid])`,
+      [julie.tenantId, julie.userId],
+    );
+    await wroteToLea(julie);
+    await stranger(julie, 'Partenariat', 2);
+    await asked(julie, 'Devis', 1);
+    await seedBrouillon(julie, 'Prêt', 3);
+
     expect(await readHomeBrouillons(julie)).toEqual(NOTHING);
   });
 

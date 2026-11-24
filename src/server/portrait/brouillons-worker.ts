@@ -6,11 +6,11 @@ import { writeBrouillons } from './brouillons';
 import { BROUILLONS_QUEUE, getBrouillonsBoss } from './brouillons-queue';
 import { FicheJobSchema } from './queue';
 
-// Le worker de la file `brouillons-ecrire` (brouillons-queue.ts) : un passage de l'agent « Brouillons de réponse » sous
-// les droits de la personne (brouillons.ts). Sans modèle branché, le passage ne fait rien. Le passage décide seul s'il
-// a à travailler : elle a dit oui, l'agent lui est toujours proposé, un mail attend, ses réponses aux questions de
-// Leon sont là ou elle a envoyé sa réponse à un brouillon de Leon (preferences.ts), le plafond du jour n'est pas
-// atteint.
+// Le worker de la file `brouillons-ecrire` (brouillons-queue.ts) : un passage des agents « Brouillons de réponse » et
+// « Relances » sous les droits de la personne (brouillons.ts). Sans modèle branché, le passage ne fait rien. Le passage
+// décide seul s'il a à travailler : elle a dit oui à l'agent, il lui est toujours proposé, un mail attend, ses réponses
+// aux questions de Leon ou son oui à une relance sont là, ou elle a envoyé sa réponse à un brouillon de Leon
+// (preferences.ts), le plafond du jour n'est pas atteint.
 
 // Chaque passage fait au plus cinq appels au modèle de 90 secondes, l'un après l'autre, chacun suivi au plus d'un dépôt
 // dans Gmail (deux requêtes, brouillon-depot.ts).

@@ -8,8 +8,8 @@ import { requestBrouillons } from './brouillons-queue';
 import { type FicheLine, lockAccount, readFiche } from './fiche';
 
 // Les agents de départ proposés à une personne, et sa réponse à chacun. La proposition se calcule à chaque lecture
-// (agents.ts), sous ses droits ; seule sa réponse, oui ou non, s'enregistre (0078). Seul l'agent en service la lit :
-// « Brouillons de réponse » ne travaille que pour qui lui a dit oui (brouillons.ts).
+// (agents.ts), sous ses droits ; seule sa réponse, oui ou non, s'enregistre (0078). Seuls les agents en service la
+// lisent : chacun ne travaille que pour qui lui a dit oui (brouillons.ts).
 
 // `oui` : la réponse enregistrée ; null tant qu'elle n'a pas répondu. `enService` : l'agent travaille déjà pour qui lui
 // a dit oui ; les autres se proposent sans tourner encore.
@@ -41,13 +41,13 @@ export async function readProposals(ctx: TenantContext, lines: FicheLine[]): Pro
   return agents.map((agent) => ({
     agent,
     oui: given.get(agent) ?? null,
-    enService: agent === EN_SERVICE,
+    enService: EN_SERVICE.includes(agent),
   }));
 }
 
 // Sa réponse à un agent, oui ou non : elle remplace la précédente. Rend false, sans rien écrire, pour un agent hors
 // du catalogue ou qui ne lui est pas proposé à ce moment-là, et pour un compte supprimé (lockAccount). Son « oui » à
-// l'agent en service lui demande un premier passage.
+// un agent en service lui demande un premier passage.
 export async function answerProposal(
   ctx: TenantContext,
   agent: string,
@@ -72,6 +72,6 @@ export async function answerProposal(
       });
     return true;
   });
-  if (saved && oui && proposed === EN_SERVICE) await requestBrouillons(ctx);
+  if (saved && oui && EN_SERVICE.includes(proposed)) await requestBrouillons(ctx);
   return saved;
 }

@@ -135,6 +135,20 @@ describe('requestBrouillons : un passage seulement pour qui a dit oui', () => {
     expect(await statesOf(ctx)).toEqual(['created']);
   });
 
+  it('son oui à « Relances » seul en demande un aussi : un passage pour les deux agents en service', async () => {
+    const ctx = await julie();
+    await adminPool.query(
+      `insert into reponses_agent (tenant_id, user_id, agent, oui, acl)
+       values ($1, $2, 'relance', true, array[$2::uuid])`,
+      [ctx.tenantId, ctx.userId],
+    );
+    await answer(ctx, false);
+
+    await requestBrouillons(ctx);
+
+    expect(await statesOf(ctx)).toEqual(['created']);
+  });
+
   it('son oui à un autre agent ne demande rien', async () => {
     const ctx = await julie();
     await adminPool.query(
@@ -170,6 +184,24 @@ describe('answerProposal : son « oui » à l’agent en service demande un prem
 
     expect(await statesOf(yes)).toEqual(['created']);
     expect(await statesOf(no)).toEqual([]);
+  });
+
+  it('son oui à « Relances » demande aussi un premier passage', async () => {
+    const ctx = await julie();
+    // Sa fiche montre qu'elle envoie des mails : « Relances » lui est proposé.
+    await adminDb.insert(lignesFiche).values({
+      tenantId: ctx.tenantId,
+      userId: ctx.userId,
+      genre: 'rythme',
+      valeur: { mailsParSemaine: 12 },
+      provenance: 'calcul',
+      mails: 40,
+      acl: [ctx.userId],
+    });
+
+    expect(await answerProposal(ctx, 'relance', true)).toBe(true);
+
+    expect(await statesOf(ctx)).toEqual(['created']);
   });
 
   it('un oui à un agent qui n’est pas en service ne demande rien', async () => {

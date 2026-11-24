@@ -6,7 +6,7 @@ import type { TenantContext } from '@/server/auth/tenant-context';
 import { createConnection } from '@/server/connectors/connections';
 import { forgetPipedreamToken, PIPEDREAM_SECRET_FIELDS } from '@/server/connectors/pipedream';
 import { members, users } from '@/server/db/schema/auth';
-import { brouillons, reponsesAgent } from '@/server/db/schema/portrait';
+import { brouillons, lignesFiche, reponsesAgent } from '@/server/db/schema/portrait';
 import { withTenant } from '@/server/db/with-tenant';
 import { createFakeLlm } from '@/server/llm/fake-llm';
 import { type Llm, LlmError } from '@/server/llm/llm';
@@ -16,6 +16,7 @@ import { adminDb, adminPool } from '@/test/db';
 import { type FakeRoute, fakeFetch } from '@/test/fake-fetch';
 import { createTestTenant } from '@/test/fixtures';
 import { extendThread, mailThread, received, sent } from '@/test/mail-threads';
+import type { AgentId } from './agents';
 import {
   answerQuestions,
   answerUnknownMail,
@@ -25,7 +26,8 @@ import {
   readShown,
   writeBrouillons,
 } from './brouillons';
-import { buildFiche } from './fiche';
+import { buildFiche, readFiche } from './fiche';
+import { readProposals } from './propositions';
 import { readUnknownMails } from './waiting-mails';
 
 vi.mock('@/server/pipeline/queue');
@@ -74,13 +76,14 @@ async function team(): Promise<[TenantContext, TenantContext, TenantContext]> {
   return people as [TenantContext, TenantContext, TenantContext];
 }
 
-const answer = (ctx: TenantContext, oui: boolean) =>
+// Sa réponse à un agent, « Brouillons de réponse » sauf mention contraire.
+const answer = (ctx: TenantContext, oui: boolean, agent: AgentId = 'brouillon-reponse') =>
   adminDb
     .insert(reponsesAgent)
     .values({
       tenantId: ctx.tenantId,
       userId: ctx.userId,
-      agent: 'brouillon-reponse',
+      agent,
       oui,
       acl: [ctx.userId],
     })
@@ -88,6 +91,18 @@ const answer = (ctx: TenantContext, oui: boolean) =>
       target: [reponsesAgent.tenantId, reponsesAgent.userId, reponsesAgent.agent],
       set: { oui },
     });
+
+// Sa fiche dit qu'elle envoie des mails : « Relances » lui est proposé. Un seul mail envoyé ne donne pas de rythme.
+const sendsMails = (ctx: TenantContext) =>
+  adminDb.insert(lignesFiche).values({
+    tenantId: ctx.tenantId,
+    userId: ctx.userId,
+    genre: 'rythme',
+    valeur: { mailsParSemaine: 12 },
+    provenance: 'calcul',
+    mails: 40,
+    acl: [ctx.userId],
+  });
 
 // Sa boîte Gmail et un échange avec Léa, à qui elle a répondu : sa fiche calculée compte une réponse, l'agent lui est
 // proposé. Sans son « oui ». Les fils des fixtures sont ceux de Julie (son nom, son adresse), dans la boîte de qui les
@@ -422,6 +437,25 @@ describe('writeBrouillons : l’agent ne travaille que pour qui lui a dit oui', 
     await answer(julie, true);
     expect(await writeBrouillons(julie, { llm })).toBe(1);
     expect(calls).toHaveLength(1);
+  });
+
+  it('son oui à « Relances » seul ne traite pas ses mails qui attendent sa réponse', async () => {
+    const julie = await undecided();
+    await sendsMails(julie);
+    await answer(julie, false);
+    await answer(julie, true, 'relance');
+    const { llm, calls } = answering(draft());
+
+    expect(await writeBrouillons(julie, { llm })).toBe(0);
+
+    expect(await readProposals(julie, await readFiche(julie))).toEqual(
+      expect.arrayContaining([
+        { agent: 'brouillon-reponse', oui: false, enService: true },
+        { agent: 'relance', oui: true, enService: true },
+      ]),
+    );
+    expect(calls).toHaveLength(0);
+    expect(await stored(julie)).toEqual([]);
   });
 
   it('un oui ne suffit plus quand l’agent ne lui est plus proposé : sa boîte débranchée', async () => {

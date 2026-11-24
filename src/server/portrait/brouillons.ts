@@ -9,7 +9,7 @@ import { withTenant } from '@/server/db/with-tenant';
 import { type Llm, LlmError } from '@/server/llm/llm';
 import { logError } from '@/server/log';
 import { epochToDate, textArray } from '@/server/search/filters-sql';
-import { EN_SERVICE } from './agents';
+import type { AgentId } from './agents';
 import { depositBrouillon } from './brouillon-depot';
 import {
   BROUILLON_MAX_CHARS,
@@ -72,8 +72,10 @@ const PREFERENCE_MAX_TOKENS = 4000;
 // puis les brouillons qu'elle attend (elle a répondu aux questions de Leon, le second appel ; ou dit
 // « Oui » au mail d'un inconnu, son premier appel, avec ses indications), puis ses mails qui attendent (le premier
 // appel), puis les leçons de ses retouches (learnFrom), cinq appels au modèle au plus en tout (WAITING_MAX), un par
-// mail ou par retouche. Rend le nombre de brouillons écrits. Ne fait rien pour un compte supprimé, ni pour qui n'a pas répondu « oui » à l'agent, ni
-// quand il ne lui est plus proposé (sa boîte débranchée). Passé le plafond du jour, il s'arrête.
+// mail ou par retouche. Rend le nombre de brouillons écrits. Ne fait rien pour un compte supprimé. Chaque agent en
+// service ne travaille que pour qui lui a dit « oui », à lui, tant qu'il lui est proposé (sa boîte branchée) : ses mails
+// qui attendent et ses retouches pour « Brouillons de réponse », ses relances pour « Relances » ; le même passage, sous
+// le même plafond, pour les deux. Passé le plafond du jour, il s'arrête.
 // Un mail dont la réponse du modèle est illisible, refusée ou coupée n'écrit rien : il attend toujours, et le passage
 // suivant le retente, sous le même plafond. Un mail qui a son résultat (un brouillon, des questions, ou « sans
 // réponse ») n'est jamais redemandé au modèle, sauf une fois pour écrire le brouillon quand elle a répondu aux
@@ -89,13 +91,19 @@ export async function writeBrouillons(
   if (await accountIsGone(ctx.userId)) return 0;
   const lines = await readFiche(ctx);
   const proposals = await readProposals(ctx, lines);
-  if (!proposals.some((one) => one.agent === EN_SERVICE && one.oui)) return 0;
+  const oui = (agent: AgentId) => proposals.some((one) => one.agent === agent && one.oui);
+  const reponses = oui('brouillon-reponse');
+  const relances = oui('relance');
+  if (!reponses && !relances) return 0;
   const now = deps.now ?? new Date();
   // En tête : ses réponses envoyées depuis le dernier passage, comparées aux brouillons de Leon (preferences.ts).
-  const retouches = await compareReplies(ctx, now);
+  const retouches = reponses ? await compareReplies(ctx, now) : [];
+  const sortes = (['reponse', 'relance'] as const).filter((sorte) =>
+    sorte === 'reponse' ? reponses : relances,
+  );
   const mails: Array<AnsweredMail | WaitingMail> = [
-    ...(await readAnsweredMails(ctx)),
-    ...(await readWaitingMails(ctx, now)),
+    ...(await readAnsweredMails(ctx, sortes)),
+    ...(reponses ? await readWaitingMails(ctx, now) : []),
   ].slice(0, WAITING_MAX);
   if (mails.length === 0 && retouches.length === 0) return 0;
   const [person] = await db

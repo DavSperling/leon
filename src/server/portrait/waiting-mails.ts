@@ -64,8 +64,9 @@ export type WaitingMail = {
 // Un mail pour lequel elle a répondu à Leon, et dont le brouillon reste à écrire : à ses questions (le second appel),
 // ou « Oui » au mail d'un inconnu (le premier appel).
 export type AnsweredMail = WaitingMail & {
-  // La ligne du brouillon (0082, 0084).
+  // La ligne du brouillon (0082, 0084), et sa sorte (0088).
   id: string;
+  sorte: 'reponse' | 'relance';
   // Ses questions et ses réponses, une par question, dans le même ordre ; une réponse peut être vide. Nulles pour son
   // oui à un inconnu, tant que le premier appel n'a pas posé de questions.
   questions: string[] | null;
@@ -232,10 +233,14 @@ export async function readUnknownMails(
 // toujours son dernier message. Les règles d'un mail qui attend ne se rejouent pas : il les passait quand Leon a posé
 // ses questions, ou quand elle a dit oui, et un passage peut venir plus de WAITING_DAYS jours après. Mais pas plus de
 // ANSWERED_DAYS jours après le mail : un appel resté illisible se retente à chaque passage, et c'est ce qui l'arrête.
-export async function readAnsweredMails(ctx: TenantContext): Promise<AnsweredMail[]> {
+// Seulement les lignes des `sortes` dont elle veut l'agent (brouillons.ts).
+export async function readAnsweredMails(
+  ctx: TenantContext,
+  sortes: Array<AnsweredMail['sorte']>,
+): Promise<AnsweredMail[]> {
   return withTenant(ctx, async (tx) => {
     const { rows: mails } = await tx.execute<Omit<AnsweredMail, 'messages'>>(sql`
-      select b.id, b.source_id as "sourceId", b.message, l.address as "from", s.title as subject,
+      select b.id, b.sorte, b.source_id as "sourceId", b.message, l.address as "from", s.title as subject,
              b.questions, b.reponses, b.indications
       from brouillons b
       join sources s on s.tenant_id = b.tenant_id and s.id = b.source_id
@@ -247,7 +252,7 @@ export async function readAnsweredMails(ctx: TenantContext): Promise<AnsweredMai
         limit 1
       ) l
       where b.tenant_id = ${ctx.tenantId} and b.user_id = ${ctx.userId}
-        and b.texte is null and b.ecarte_le is null
+        and b.sorte = any(${textArray(sortes)}) and b.texte is null and b.ecarte_le is null
         and (b.reponses is not null or (b.indications is not null and b.questions is null))
         and l.message = b.message and l.ts >= now() - make_interval(days => ${ANSWERED_DAYS})
       order by l.ts desc, b.id

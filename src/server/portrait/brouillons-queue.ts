@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import type { PgBoss } from 'pg-boss';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { reponsesAgent } from '@/server/db/schema/portrait';
@@ -8,10 +8,11 @@ import { ensureQueue, getBoss } from '@/server/pipeline/queue';
 import { EN_SERVICE } from './agents';
 import { FicheJobSchema } from './queue';
 
-// La file des passages de l'agent « Brouillons de réponse » (brouillons-worker.ts), sur le modèle de `fiche-construire`
-// (queue.ts) : « stately », clé (organisation, personne), donc un seul passage en attente et un seul en cours par
-// personne, et jamais deux appels au modèle au même instant pour le même mail. Un échec (la base) est repris deux fois,
-// de plus en plus tard. Le travail ne porte que la personne, comme celui de la fiche.
+// La file des passages des agents en service, « Brouillons de réponse » et « Relances », un passage pour les deux
+// (brouillons-worker.ts), sur le modèle de `fiche-construire` (queue.ts) : « stately », clé (organisation, personne),
+// donc un seul passage en attente et un seul en cours par personne, et jamais deux appels au modèle au même instant
+// pour le même mail. Un échec (la base) est repris deux fois, de plus en plus tard. Le travail ne porte que la
+// personne, comme celui de la fiche.
 
 export const BROUILLONS_QUEUE = 'brouillons-ecrire';
 const QUEUE = { policy: 'stately', retryLimit: 2, retryDelay: 60, retryBackoff: true } as const;
@@ -44,25 +45,27 @@ export async function enqueueBrouillons(job: {
   return (await boss.send(BROUILLONS_QUEUE, data, { singletonKey })) !== null;
 }
 
-// Demande un passage pour la personne, si elle a dit oui à l'agent : quand elle lui répond (propositions.ts), quand
-// elle répond aux questions de Leon (settings/actions.ts), puis à la fin de chaque relève de sa boîte
-// (connectors/sync.ts). Une demande qui échoue est journalisée sans faire échouer sa réponse ni la relève : la relève
-// suivante en refait une.
+// Demande un passage pour la personne, si elle a dit oui à l'un des agents en service : quand elle lui répond
+// (propositions.ts), quand elle répond aux questions de Leon ou à l'accueil (settings/actions.ts), puis à la fin de
+// chaque relève de sa boîte (connectors/sync.ts). Une demande qui échoue est journalisée sans faire échouer sa réponse
+// ni la relève : la relève suivante en refait une.
 export async function requestBrouillons(ctx: TenantContext): Promise<void> {
   try {
-    const [answer] = await withTenant(ctx, (tx) =>
+    const [oui] = await withTenant(ctx, (tx) =>
       tx
-        .select({ oui: reponsesAgent.oui })
+        .select({ agent: reponsesAgent.agent })
         .from(reponsesAgent)
         .where(
           and(
             eq(reponsesAgent.tenantId, ctx.tenantId),
             eq(reponsesAgent.userId, ctx.userId),
-            eq(reponsesAgent.agent, EN_SERVICE),
+            inArray(reponsesAgent.agent, EN_SERVICE),
+            eq(reponsesAgent.oui, true),
           ),
-        ),
+        )
+        .limit(1),
     );
-    if (answer?.oui) await enqueueBrouillons(ctx);
+    if (oui) await enqueueBrouillons(ctx);
   } catch (error) {
     logError('brouillons.enqueue', error, { userId: ctx.userId });
   }

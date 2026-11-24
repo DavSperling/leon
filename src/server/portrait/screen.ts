@@ -6,7 +6,6 @@ import { lignesFiche } from '@/server/db/schema/portrait';
 import { withTenant } from '@/server/db/with-tenant';
 import { briefingSources } from '@/server/discussion/citation-sources';
 import { logError } from '@/server/log';
-import { EN_SERVICE } from './agents';
 import { type Demande, HOME_MAX, type ReadyBrouillon, readShown } from './brouillons';
 import { type FicheLine, readFiche } from './fiche';
 import { type ProposedPreference, readProposedPreferences } from './preferences';
@@ -150,7 +149,7 @@ export async function readHomeBrouillons(ctx: TenantContext): Promise<HomeBrouil
     readProposals(ctx, await readFiche(ctx)),
     briefingSources(ctx, sourceIds),
   ]);
-  if (!agents.some((one) => one.agent === EN_SERVICE && one.oui))
+  if (!agents.some((one) => one.agent === 'brouillon-reponse' && one.oui))
     return { demandes: [], prets: [] };
   // Le fil se relit sous ses droits : une ligne dont elle ne voit plus le fil ne part pas vers l'accueil.
   const withSource = <T extends { sourceId: string }>(rows: T[]) =>

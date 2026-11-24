@@ -1,5 +1,5 @@
 import { and, eq } from 'drizzle-orm';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
 import { deleteAccount } from '@/server/auth/delete-account';
 import { setManager } from '@/server/auth/organisation';
 import type { TenantContext } from '@/server/auth/tenant-context';
@@ -10,6 +10,9 @@ import { adminDb, adminPool } from '@/test/db';
 import { createTestTenant, seedConnection } from '@/test/fixtures';
 import { type FicheLine, readFiche } from './fiche';
 import { answerProposal, readProposals } from './propositions';
+
+// Son oui à un agent en service demande un passage : la file se teste avec lui (brouillons-queue.db.test.ts).
+vi.mock('./brouillons-queue', () => ({ requestBrouillons: vi.fn() }));
 
 // Les agents de départ proposés à une personne, et sa réponse à chacun, oui ou non : enregistrée, changée, privée à
 // elle, partie avec son compte. Données inventées : Julie, Paul et Marc dans une organisation, Zoé dans une autre.
@@ -85,7 +88,7 @@ describe('readProposals : ce que Leon propose à la personne', () => {
     await seedConnection(julie, { provider: 'gmail' });
 
     expect(await proposals(julie)).toEqual([
-      { agent: 'relance', oui: null, enService: false },
+      { agent: 'relance', oui: null, enService: true },
       { agent: 'point-du-jour', oui: null, enService: false },
     ]);
   });
@@ -104,9 +107,11 @@ describe('readProposals : ce que Leon propose à la personne', () => {
       'relance',
       'point-du-jour',
     ]);
-    // Un seul est en service : « Brouillons de réponse ». Les quatre autres se proposent sans tourner encore.
+    // Deux sont en service : « Brouillons de réponse » et « Relances ». Les trois autres se proposent sans tourner
+    // encore.
     expect((await proposals(julie)).filter((one) => one.enService)).toEqual([
       { agent: 'brouillon-reponse', oui: null, enService: true },
+      { agent: 'relance', oui: null, enService: true },
     ]);
   });
 });
@@ -118,7 +123,7 @@ describe('answerProposal : sa réponse, oui ou non', () => {
 
     expect(await answerProposal(julie, 'relance', true)).toBe(true);
     expect(await proposals(julie)).toEqual([
-      { agent: 'relance', oui: true, enService: false },
+      { agent: 'relance', oui: true, enService: true },
       { agent: 'point-du-jour', oui: null, enService: false },
     ]);
 
@@ -126,7 +131,7 @@ describe('answerProposal : sa réponse, oui ou non', () => {
     expect(await answerProposal(julie, 'point-du-jour', true)).toBe(true);
 
     expect(await proposals(julie)).toEqual([
-      { agent: 'relance', oui: false, enService: false },
+      { agent: 'relance', oui: false, enService: true },
       { agent: 'point-du-jour', oui: true, enService: false },
     ]);
     // Une ligne par agent : changer d'avis ne garde pas l'ancienne réponse.

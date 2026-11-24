@@ -10,7 +10,6 @@ import { sources } from '@/server/db/schema/memory';
 import { brouillons, reponsesAgent } from '@/server/db/schema/portrait';
 import { withTenant } from '@/server/db/with-tenant';
 import { logError } from '@/server/log';
-import { EN_SERVICE } from './agents';
 import { hasBlank } from './brouillon-prompt';
 
 // Le dépôt d'un brouillon dans les brouillons Gmail de la personne, en réponse dans le fil, juste après qu'un passage
@@ -24,8 +23,8 @@ import { hasBlank } from './brouillon-prompt';
 // - son fil est un fil Gmail relevé par une connexion Gmail qu'elle a branchée elle-même, par Pipedream, et qui n'est
 //   pas en pause (loadMyConnections) : ni le fil d'un collègue, ni une boîte branchée par un autre ;
 // - il n'est pas déjà déposé (0081) ;
-// - à l'instant du dépôt, elle dit toujours oui à l'agent et n'a pas écarté ce brouillon : c'est son oui qui autorise
-//   Leon à écrire dans sa boîte, et un passage dure plusieurs minutes après l'avoir lu (brouillons.ts) ;
+// - à l'instant du dépôt, elle dit toujours oui à « Brouillons de réponse » et n'a pas écarté ce brouillon : c'est son
+//   oui qui autorise Leon à écrire dans sa boîte, et un passage dure plusieurs minutes après l'avoir lu (brouillons.ts) ;
 // - chez Gmail, au même instant, le fil attend toujours sa réponse (client.ts, replyHeaders) : Leon ne relève sa boîte
 //   que quelques fois par jour, et un brouillon déposé dans un fil auquel elle a déjà répondu y resterait.
 // shortcut: Gmail seulement, un brouillon sur un fil Outlook reste dans Leon ; à déposer par Microsoft Graph quand
@@ -82,7 +81,7 @@ export async function depositBrouillon(
           and(
             eq(reponsesAgent.tenantId, brouillons.tenantId),
             eq(reponsesAgent.userId, brouillons.userId),
-            eq(reponsesAgent.agent, EN_SERVICE),
+            eq(reponsesAgent.agent, 'brouillon-reponse'),
             eq(reponsesAgent.oui, true),
           ),
         )

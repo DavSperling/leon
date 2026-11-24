@@ -16,9 +16,10 @@ export const AGENTS = [
 ] as const;
 export type AgentId = (typeof AGENTS)[number];
 
-// Le seul agent en service : il prépare des brouillons (brouillons.ts) pour qui lui a répondu oui. Les quatre autres se
-// proposent sans tourner encore.
-export const EN_SERVICE = 'brouillon-reponse' satisfies AgentId;
+// Les agents en service : chacun ne travaille que pour qui lui a répondu oui, à lui (brouillons.ts). « Brouillons de
+// réponse » prépare la réponse à un mail reçu ; « Relances » la relance d'un mail resté sans réponse. Les trois autres
+// se proposent sans tourner encore.
+export const EN_SERVICE: readonly AgentId[] = ['brouillon-reponse', 'relance'];
 
 const MAILBOXES: ProviderId[] = ['gmail', 'outlook'];
 

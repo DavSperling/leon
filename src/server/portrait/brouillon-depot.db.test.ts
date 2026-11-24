@@ -7,7 +7,7 @@ import { brouillons } from '@/server/db/schema/portrait';
 import { adminDb, adminPool } from '@/test/db';
 import { type FakeCall, type FakeRoute, fakeFetch } from '@/test/fake-fetch';
 import { createTestTenant } from '@/test/fixtures';
-import { LEA, mailThread, received } from '@/test/mail-threads';
+import { JULIE, LEA, mailThread, received, sent } from '@/test/mail-threads';
 import { depositBrouillon, withdrawBrouillon } from './brouillon-depot';
 
 vi.mock('@/server/pipeline/queue');
@@ -138,7 +138,7 @@ describe('depositBrouillon : un brouillon complet va dans ses brouillons Gmail',
     const fetchImpl = fakeFetch([TOKEN, readRoute(), createRoute()]);
     const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    expect(await depositBrouillon(julie, { id, to: LEA }, { fetchImpl })).toBe(true);
+    expect(await depositBrouillon(julie, id, { fetchImpl })).toBe(true);
 
     // Le jeton de Pipedream, puis deux requêtes par son proxy, avec le compte qu'elle a branché.
     const [, read, create] = fetchImpl.calls;
@@ -187,10 +187,10 @@ describe('depositBrouillon : un brouillon complet va dans ses brouillons Gmail',
     const [julie] = await team();
     const { id } = await drafted(julie, COMPLET, { connectionId: await gmailOf(julie) });
     const first = fakeFetch([TOKEN, readRoute(), createRoute()]);
-    expect(await depositBrouillon(julie, { id, to: LEA }, { fetchImpl: first })).toBe(true);
+    expect(await depositBrouillon(julie, id, { fetchImpl: first })).toBe(true);
 
     const again = fakeFetch([]);
-    expect(await depositBrouillon(julie, { id, to: LEA }, { fetchImpl: again })).toBe(false);
+    expect(await depositBrouillon(julie, id, { fetchImpl: again })).toBe(false);
 
     expect(again.calls).toHaveLength(0);
     expect(await stored(id)).toMatchObject({ brouillonGmail: 'r-1' });
@@ -225,19 +225,6 @@ describe('depositBrouillon : ce qui reste dans Leon seulement, sans aucune requ�
            values ($1, $2, 'relance', true, array[$2::uuid])`,
           [julie.tenantId, julie.userId],
         );
-        return id;
-      },
-    ],
-    [
-      'une relance, même complète : jamais déposée dans ce morceau, quoi que dise son oui',
-      async (julie) => {
-        const { id } = await drafted(julie, COMPLET, { connectionId: await gmailOf(julie) });
-        await adminPool.query(
-          `insert into reponses_agent (tenant_id, user_id, agent, oui, acl)
-           values ($1, $2, 'relance', true, array[$2::uuid])`,
-          [julie.tenantId, julie.userId],
-        );
-        await adminPool.query("update brouillons set sorte = 'relance' where id = $1", [id]);
         return id;
       },
     ],
@@ -285,7 +272,7 @@ describe('depositBrouillon : ce qui reste dans Leon seulement, sans aucune requ�
     const fetchImpl = fakeFetch([]);
     const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    expect(await depositBrouillon(julie, { id, to: LEA }, { fetchImpl })).toBe(false);
+    expect(await depositBrouillon(julie, id, { fetchImpl })).toBe(false);
 
     expect(fetchImpl.calls).toHaveLength(0);
     expect(await stored(id)).toMatchObject({ brouillonGmail: null, ecarteLe: null });
@@ -298,7 +285,7 @@ describe('depositBrouillon : ce qui reste dans Leon seulement, sans aucune requ�
     await adminPool.query('update brouillons set ecarte_le = now() where id = $1', [id]);
     const fetchImpl = fakeFetch([]);
 
-    expect(await depositBrouillon(julie, { id, to: LEA }, { fetchImpl })).toBe(false);
+    expect(await depositBrouillon(julie, id, { fetchImpl })).toBe(false);
 
     expect(fetchImpl.calls).toHaveLength(0);
     expect(await stored(id)).toMatchObject({ brouillonGmail: null });
@@ -310,10 +297,172 @@ describe('depositBrouillon : ce qui reste dans Leon seulement, sans aucune requ�
     await gmailOf(paul);
     const fetchImpl = fakeFetch([]);
 
-    expect(await depositBrouillon(paul, { id, to: LEA }, { fetchImpl })).toBe(false);
+    expect(await depositBrouillon(paul, id, { fetchImpl })).toBe(false);
 
     expect(fetchImpl.calls).toHaveLength(0);
     expect(await stored(id)).toMatchObject({ brouillonGmail: null });
+  });
+});
+
+// Une relance part aux destinataires de son mail relancé, fixés par le code : ses « à » et ses copies, sans elle.
+describe('depositBrouillon : une relance va dans ses brouillons Gmail, aux destinataires de son mail', () => {
+  const RELANCE = 'Bonjour Léa,\n\nAvez-vous pu regarder le devis ?\n\nBien à vous';
+  // Une autre de ses adresses : elle en a envoyé un mail ces derniers jours.
+  const ALIAS = 'j.martin@acme.test';
+  const MINE = [
+    { name: 'Message-ID', value: '<m-relance@acme.test>' },
+    { name: 'References', value: '<m-lea@mail.client.test>' },
+    { name: 'Subject', value: 'Re: Devis 2027' },
+  ];
+  const SENT_MAIL = inThread('m-relance', 0, ['SENT'], MINE);
+
+  // Son mail du fil « Devis 2027 » (« message:m-relance »), envoyé il y a une semaine après un mail de Léa, avec ces
+  // destinataires, et la relance écrite pour elle, qui a dit oui à « Relances » seulement.
+  async function relanced(
+    ctx: TenantContext,
+    texte: string,
+    recipients: { to: string[]; cc: string[] },
+    options: Parameters<typeof mailThread>[3] = {},
+  ): Promise<string> {
+    await mailThread(ctx, 'Autre fil', [
+      received(ago(48 * HOUR), 'Bonjour Paul, à demain.', {
+        author: { name: 'Julie Martin', email: ALIAS },
+        side: 'team',
+        recipients: { to: ['paul@acme.test'], cc: [] },
+      }),
+    ]);
+    const mine = sent(
+      ago(7 * 24 * HOUR),
+      'Bonjour Léa, qu’en pensez-vous ?',
+      recipients.to,
+      recipients.cc,
+    );
+    const sourceId = await mailThread(
+      ctx,
+      'Devis 2027',
+      [
+        received(ago(8 * 24 * HOUR), 'Bonjour Julie, un devis ?', { externalId: 'message:m-lea' }),
+        { ...mine, externalId: 'message:m-relance' },
+      ],
+      options,
+    );
+    await adminPool.query(
+      `insert into reponses_agent (tenant_id, user_id, agent, oui, acl)
+       values ($1, $2, 'relance', true, array[$2::uuid])`,
+      [ctx.tenantId, ctx.userId],
+    );
+    const { rows } = await adminPool.query<{ id: string }>(
+      `insert into brouillons (tenant_id, user_id, source_id, message, texte, indications, sorte, acl)
+       values ($1, $2, $3, 'message:m-relance', $4, '', 'relance', array[$2::uuid]) returning id`,
+      [ctx.tenantId, ctx.userId, sourceId, texte],
+    );
+    if (!rows[0]) throw new Error('relance de test non créée');
+    return rows[0].id;
+  }
+  // Ses destinataires : Léa, Marc (deux fois, en « à » et en copie, dans deux casses), Paul son collègue, Zoé en copie,
+  // et elle-même, sous ses deux adresses.
+  const EVERYONE = {
+    to: [LEA, 'Marc@Client.test', JULIE, 'paul@acme.test'],
+    cc: ['MARC@client.test', 'J.Martin@acme.test', 'zoe@client.test', 'lea@client.test'],
+  };
+
+  it('en « à » ses destinataires en « à », en copie ses copies, sans elle ni doublon, en réponse à son mail', async () => {
+    const [julie] = await team();
+    const id = await relanced(julie, RELANCE, EVERYONE, { connectionId: await gmailOf(julie) });
+    const fetchImpl = fakeFetch([
+      TOKEN,
+      readRoute({ json: { id: 't', messages: [inThread('m-lea', -1440, ['INBOX']), SENT_MAIL] } }),
+      createRoute(),
+    ]);
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    expect(await depositBrouillon(julie, id, { fetchImpl })).toBe(true);
+
+    expect(fetchImpl.calls.slice(1).map((call) => call.method)).toEqual(['GET', 'POST']);
+    const body = fetchImpl.calls[2]?.body as { message: { raw: string } };
+    const message = Buffer.from(body.message.raw, 'base64url').toString('utf8');
+    const cut = message.indexOf('\r\n\r\n');
+    expect(message.slice(0, cut).split('\r\n')).toEqual([
+      'To: lea@client.test,',
+      ' marc@client.test,',
+      ' paul@acme.test',
+      'Cc: zoe@client.test',
+      'Subject: Re: Devis 2027',
+      'In-Reply-To: <m-relance@acme.test>',
+      'References: <m-lea@mail.client.test>',
+      ' <m-relance@acme.test>',
+      'MIME-Version: 1.0',
+      'Content-Type: text/plain; charset=UTF-8',
+      'Content-Transfer-Encoding: base64',
+    ]);
+    const text = Buffer.from(message.slice(cut), 'base64').toString('utf8');
+    expect(text.replaceAll('\r\n', '\n')).toBe(RELANCE);
+    expect(await stored(id)).toMatchObject({ brouillonGmail: 'r-1', sorte: 'relance' });
+    expect(errors).not.toHaveBeenCalled();
+  });
+
+  it.each<[string, (julie: TenantContext) => Promise<string>]>([
+    [
+      'sans son oui à « Relances », même avec son oui à « Brouillons de réponse »',
+      async (julie) => {
+        const id = await relanced(julie, RELANCE, EVERYONE, { connectionId: await gmailOf(julie) });
+        await adminPool.query(
+          `update reponses_agent set oui = false where user_id = $1 and agent = 'relance'`,
+          [julie.userId],
+        );
+        await adminPool.query(
+          `insert into reponses_agent (tenant_id, user_id, agent, oui, acl)
+           values ($1, $2, 'brouillon-reponse', true, array[$2::uuid])`,
+          [julie.tenantId, julie.userId],
+        );
+        return id;
+      },
+    ],
+    ['un fil Outlook', (julie) => relanced(julie, RELANCE, EVERYONE, { provider: 'outlook' })],
+    [
+      'une relance qui porte un blanc entre crochets',
+      async (julie) => relanced(julie, A_TROU, EVERYONE, { connectionId: await gmailOf(julie) }),
+    ],
+    [
+      'plus personne en « à » une fois ses adresses retirées, même avec une copie',
+      async (julie) =>
+        relanced(
+          julie,
+          RELANCE,
+          { to: [JULIE, 'J.Martin@Acme.test'], cc: [LEA] },
+          { connectionId: await gmailOf(julie) },
+        ),
+    ],
+  ])('%s : rien n’est déposé, sans aucune requête ni erreur', async (_, setup) => {
+    const [julie] = await team();
+    const id = await setup(julie);
+    const fetchImpl = fakeFetch([]);
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    expect(await depositBrouillon(julie, id, { fetchImpl })).toBe(false);
+
+    expect(fetchImpl.calls).toHaveLength(0);
+    expect(await stored(id)).toMatchObject({ brouillonGmail: null, texte: expect.any(String) });
+    expect(errors).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['Léa a répondu après son mail', inThread('m-reponse', 60, ['INBOX', 'UNREAD'])],
+    ['elle a récrit dans le fil depuis Gmail', inThread('m-encore', 60, ['SENT'])],
+  ])('chez Gmail, %s : une lecture, aucune création, aucune erreur', async (_, after) => {
+    const [julie] = await team();
+    const id = await relanced(julie, RELANCE, EVERYONE, { connectionId: await gmailOf(julie) });
+    const fetchImpl = fakeFetch([
+      TOKEN,
+      readRoute({ json: { id: 't', messages: [SENT_MAIL, after] } }),
+    ]);
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    expect(await depositBrouillon(julie, id, { fetchImpl })).toBe(false);
+
+    expect(fetchImpl.calls.slice(1).map((call) => call.method)).toEqual(['GET']);
+    expect(await stored(id)).toMatchObject({ brouillonGmail: null });
+    expect(errors).not.toHaveBeenCalled();
   });
 });
 
@@ -330,7 +479,7 @@ describe('depositBrouillon : chez Gmail, le fil n’attend plus sa réponse', ()
     const fetchImpl = fakeFetch([TOKEN, readRoute({ json: { id: 't', messages } })]);
     const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    expect(await depositBrouillon(julie, { id, to: LEA }, { fetchImpl })).toBe(false);
+    expect(await depositBrouillon(julie, id, { fetchImpl })).toBe(false);
 
     expect(fetchImpl.calls.slice(1).map((call) => call.method)).toEqual(['GET']);
     expect(await stored(id)).toMatchObject({ brouillonGmail: null, ecarteLe: null });
@@ -385,7 +534,7 @@ describe('depositBrouillon : un dépôt qui échoue', () => {
       const fetchImpl = fakeFetch(routes);
       const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      expect(await depositBrouillon(julie, { id, to: LEA }, { fetchImpl })).toBe(false);
+      expect(await depositBrouillon(julie, id, { fetchImpl })).toBe(false);
 
       // Chaque requête au proxy est payée : aucune n'est rejouée, sauf sur un 401, une fois (pipedream.ts).
       const paid = fetchImpl.calls.filter((call) => call.url.includes('/proxy/'));
@@ -416,7 +565,7 @@ describe('depositBrouillon : un dépôt qui échoue', () => {
     const fetchImpl = fakeFetch([]);
     const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    expect(await depositBrouillon(julie, { id, to: LEA }, { fetchImpl })).toBe(false);
+    expect(await depositBrouillon(julie, id, { fetchImpl })).toBe(false);
 
     expect(fetchImpl.calls).toHaveLength(0);
     expect(await stored(id)).toMatchObject({ brouillonGmail: null });
@@ -431,7 +580,7 @@ describe('depositBrouillon : un dépôt qui échoue', () => {
     };
     const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    expect(await depositBrouillon(julie, { id, to: LEA }, { fetchImpl })).toBe(false);
+    expect(await depositBrouillon(julie, id, { fetchImpl })).toBe(false);
 
     expect(await stored(id)).toMatchObject({ brouillonGmail: null });
     expect(String(errors.mock.calls[0]?.[2])).toContain('Pipedream is unreachable');
@@ -540,7 +689,7 @@ describe('withdrawBrouillon : un brouillon écarté quitte ses brouillons Gmail'
       return routes(input, init);
     };
 
-    expect(await depositBrouillon(julie, { id, to: LEA }, { fetchImpl })).toBe(false);
+    expect(await depositBrouillon(julie, id, { fetchImpl })).toBe(false);
 
     expect(routes.calls.map((call) => call.method)).toEqual(['POST', 'GET', 'POST', 'DELETE']);
     expect(target(routes.calls[3])).toBe(`${GMAIL}/drafts/r-1`);

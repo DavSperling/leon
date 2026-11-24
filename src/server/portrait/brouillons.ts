@@ -52,12 +52,11 @@ import {
 // L'agent « Relances » suit le même chemin, dans le même passage : l'accueil lui demande, pour chacun de ses mails
 // restés sans réponse (unanswered-mails.ts), si elle veut une relance (answerRelance) ; son « oui » fait faire le
 // premier appel au passage suivant, avec la consigne d'une relance (brouillon-prompt.ts), sur une ligne de sorte
-// « relance » (0089). Aucun modèle ne lit ce mail avant son oui. Une relance reste dans Leon : elle n'est jamais
-// déposée dans Gmail (brouillon-depot.ts).
-// Un brouillon complet est aussi déposé dans ses brouillons Gmail, en réponse dans le fil (brouillon-depot.ts) : c'est
-// tout ce que Leon écrit dans sa boîte. Rien n'est envoyé : l'agent prépare, elle valide. Tout se lit et s'écrit sous
-// withTenant de la personne ; l'appel au modèle et le dépôt se font hors de toute transaction. Le worker de la file
-// `brouillons-ecrire` lance un passage (brouillons-worker.ts).
+// « relance » (0089). Aucun modèle ne lit ce mail avant son oui.
+// Un brouillon complet, réponse ou relance, est aussi déposé dans ses brouillons Gmail, en réponse dans le fil
+// (brouillon-depot.ts) : c'est tout ce que Leon écrit dans sa boîte. Rien ne part sans son geste : l'agent prépare, elle
+// valide. Tout se lit et s'écrit sous withTenant de la personne ; l'appel au modèle et le dépôt se font hors de toute
+// transaction. Le worker de la file `brouillons-ecrire` lance un passage (brouillons-worker.ts).
 
 // Le plafond de dépense : au plus 20 appels au modèle par personne et par jour (UTC, reserver_brouillon, 0080), un par
 // mail, deux quand Leon lui a posé des questions : le premier et le second appel comptent sous le même plafond, comme
@@ -214,9 +213,9 @@ export async function writeBrouillons(
     });
     if (!kept || result.texte === null) continue;
     written += 1;
-    // Le destinataire est l'auteur du mail reçu, jamais ce qu'écrit le modèle ni ce qu'elle a répondu. Un dépôt qui
-    // échoue n'arrête rien. Une relance n'est pas déposée : depositBrouillon la refuse.
-    await depositBrouillon(ctx, { id: kept, to: mail.from }, deps);
+    // Les destinataires se fixent au dépôt, d'après le mail : jamais ce qu'écrit le modèle ni ce qu'elle a répondu. Un
+    // dépôt qui échoue n'arrête rien.
+    await depositBrouillon(ctx, kept, deps);
   }
   await learnFrom(ctx, retouches, WAITING_MAX - mails.length, deps.llm);
   return written;

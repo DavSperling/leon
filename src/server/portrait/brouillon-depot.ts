@@ -1,4 +1,4 @@
-import { and, eq, isNotNull, isNull, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { loadMyConnections } from '@/server/connectors/connections';
 import { gmailClient } from '@/server/connectors/gmail/client';
@@ -7,37 +7,46 @@ import { replyRaw } from '@/server/connectors/gmail/reply';
 import { ConnectorHttpError } from '@/server/connectors/http';
 import { connectorHttp } from '@/server/connectors/pipedream';
 import { sources } from '@/server/db/schema/memory';
-import { brouillons, reponsesAgent } from '@/server/db/schema/portrait';
+import { brouillons } from '@/server/db/schema/portrait';
 import { withTenant } from '@/server/db/with-tenant';
 import { logError } from '@/server/log';
 import { hasBlank } from './brouillon-prompt';
+import { MESSAGE, ownAddresses, SENT_MAIL_DAYS } from './sent-mails';
+import { relanceRecipients } from './unanswered-mails';
 
 // Le dépôt d'un brouillon dans les brouillons Gmail de la personne, en réponse dans le fil, juste après qu'un passage
-// l'a écrit (brouillons.ts), et son retrait quand elle l'écarte dans Leon (withdrawBrouillon). Ce sont les seules
-// écritures de Leon dans une boîte : un brouillon de plus, puis ce même brouillon de moins, ou ce brouillon envoyé
-// quand elle clique « Envoyer » et le confirme (sendBrouillon). Rien d'autre n'y est envoyé, supprimé ni modifié.
+// l'a écrit (brouillons.ts) : la réponse à un mail reçu (« Brouillons de réponse ») comme la relance de son mail resté
+// sans réponse (« Relances », 0089). Puis son retrait : quand elle l'écarte dans Leon (withdrawBrouillon). Ce sont les
+// seules écritures de Leon dans une boîte : un brouillon de plus, puis ce même brouillon de moins, ou ce brouillon
+// envoyé quand elle clique « Envoyer » et le confirme (sendBrouillon). Rien d'autre n'y est envoyé, supprimé ni modifié.
 //
 // Un brouillon est déposé si, et seulement si :
-// - c'est une réponse : une relance (0089) reste dans Leon, son destinataire n'étant pas l'auteur du dernier message
-//   (qui est elle) ;
 // - il est complet : son texte ne porte aucun blanc entre crochets (hasBlank). Un brouillon incomplet reste dans Leon
 //   seulement, d'où il ne peut pas partir par erreur ;
 // - son fil est un fil Gmail relevé par une connexion Gmail qu'elle a branchée elle-même, par Pipedream, et qui n'est
 //   pas en pause (loadMyConnections) : ni le fil d'un collègue, ni une boîte branchée par un autre ;
 // - il n'est pas déjà déposé (0081) ;
-// - à l'instant du dépôt, elle dit toujours oui à « Brouillons de réponse » et n'a pas écarté ce brouillon : c'est son
-//   oui qui autorise Leon à écrire dans sa boîte, et un passage dure plusieurs minutes après l'avoir lu (brouillons.ts) ;
-// - chez Gmail, au même instant, le fil attend toujours sa réponse (client.ts, replyHeaders) : Leon ne relève sa boîte
-//   que quelques fois par jour, et un brouillon déposé dans un fil auquel elle a déjà répondu y resterait.
+// - à l'instant du dépôt, elle dit toujours oui à l'agent de sa sorte, « Brouillons de réponse » pour une réponse,
+//   « Relances » pour une relance (un oui à l'un ne dépose jamais la sorte de l'autre), et n'a pas écarté ce
+//   brouillon : c'est son oui qui autorise Leon à écrire dans sa boîte, et un passage dure plusieurs minutes après
+//   l'avoir lu (brouillons.ts) ;
+// - il a au moins un destinataire en « à » (plus bas) ;
+// - chez Gmail, au même instant, personne n'a écrit dans le fil après le message auquel il répond (client.ts,
+//   replyHeaders) : le mail reçu attend toujours sa réponse, ou son mail relancé est toujours sans réponse. Leon ne
+//   relève sa boîte que quelques fois par jour, et un brouillon déposé dans un fil qui a bougé y resterait.
 // shortcut: Gmail seulement, un brouillon sur un fil Outlook reste dans Leon ; à déposer par Microsoft Graph quand
 // l'agent doit servir les boîtes Outlook.
 //
 // Deux requêtes par le proxy de Pipedream, donc deux crédits par brouillon déposé : la lecture du fil (s'il attend
-// toujours, et les en-têtes du message reçu), puis la création du brouillon. Hors de toute transaction. Le destinataire
-// est fixé ici, jamais par le modèle : l'auteur du mail reçu, à qui elle a déjà écrit, ou l'inconnu dont elle a
-// voulu une réponse (waiting-mails.ts).
-// shortcut: Reply-To est ignoré et personne n'est mis en copie ; à revoir si de vraies boîtes montrent des réponses
-// qui partent à la mauvaise adresse.
+// toujours, et les en-têtes du message auquel répondre), puis la création du brouillon. Hors de toute transaction. Les
+// destinataires sont fixés ici, d'après le mail, jamais par le modèle ni par l'appelant :
+// - une réponse va à l'auteur du mail reçu, à qui elle a déjà écrit, ou l'inconnu dont elle a voulu une réponse
+//   (waiting-mails.ts), sans copie ;
+// - une relance va aux destinataires de son mail relancé (unanswered-mails.ts, relanceRecipients) : en « à », ceux
+//   qu'il avait en « à », sans ses adresses à elle ; en copie, ceux qu'il avait en copie, sans elle ni ceux déjà en
+//   « à ». Sans copie cachée, que Leon ne connaît pas. Personne en « à » : rien n'est déposé, et ce n'est pas un échec.
+// shortcut: Reply-To est ignoré, et une réponse ne met personne en copie ; à revoir si de vraies boîtes montrent des
+// réponses qui partent à la mauvaise adresse.
 //
 // Un dépôt qui échoue (Pipedream non configuré ou injoignable, accès refusé, fil supprimé entre-temps, réponse
 // inattendue) ne lève pas : le brouillon reste dans Leon, non déposé, l'échec est journalisé sans rien de capté, et
@@ -57,59 +66,62 @@ async function gmailOf(ctx: TenantContext, connectionId: string | null, deps: De
     : null;
 }
 
-// `to` : l'adresse de l'auteur du mail reçu. Rend true quand le brouillon est déposé.
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+// Rend true quand le brouillon `id` est déposé.
 export async function depositBrouillon(
   ctx: TenantContext,
-  draft: { id: string; to: string },
+  id: string,
   deps: Deps = {},
 ): Promise<boolean> {
   try {
-    const [row] = await withTenant(ctx, (tx) =>
-      tx
-        .select({
-          message: brouillons.message,
-          texte: brouillons.texte,
-          kind: sources.kind,
-          thread: sources.externalId,
-          connectionId: sources.connectionId,
-        })
-        .from(brouillons)
-        .innerJoin(
-          sources,
-          and(eq(sources.tenantId, brouillons.tenantId), eq(sources.id, brouillons.sourceId)),
-        )
-        .innerJoin(
-          reponsesAgent,
-          and(
-            eq(reponsesAgent.tenantId, brouillons.tenantId),
-            eq(reponsesAgent.userId, brouillons.userId),
-            eq(reponsesAgent.agent, 'brouillon-reponse'),
-            eq(reponsesAgent.oui, true),
-          ),
-        )
-        .where(
-          and(
-            eq(brouillons.tenantId, ctx.tenantId),
-            eq(brouillons.userId, ctx.userId),
-            eq(brouillons.id, draft.id),
-            eq(brouillons.sorte, 'reponse'),
-            isNotNull(brouillons.texte),
-            isNull(brouillons.brouillonGmail),
-            isNull(brouillons.ecarteLe),
-          ),
-        ),
+    const own = ownAddresses(ctx, new Date(Date.now() - SENT_MAIL_DAYS * DAY_MS));
+    const relance = relanceRecipients(sql`m.recipients_to`, sql`m.recipients_cc`, sql`o.addresses`);
+    const { rows } = await withTenant(ctx, (tx) =>
+      tx.execute<{
+        message: string;
+        texte: string;
+        kind: string;
+        thread: string;
+        connectionId: string | null;
+        to: string[];
+        cc: string[];
+      }>(sql`
+        select b.message, b.texte, s.kind, s.external_id as thread, s.connection_id as "connectionId",
+               case when b.sorte = 'relance' then ${relance.to}
+                    else array[lower(m.author_email)] end as "to",
+               case when b.sorte = 'relance' then ${relance.cc} else '{}'::text[] end as cc
+        from brouillons b
+        join sources s on s.tenant_id = b.tenant_id and s.id = b.source_id
+        join reponses_agent r on r.tenant_id = b.tenant_id and r.user_id = b.user_id and r.oui
+          and r.agent = case when b.sorte = 'relance' then 'relance' else 'brouillon-reponse' end
+        -- Un seul tour de son message : un mail coupé a le même auteur et les mêmes destinataires sur chacun.
+        cross join lateral (
+          select t.author_email, t.recipients_to, t.recipients_cc
+          from turns t
+          where t.tenant_id = b.tenant_id and t.source_id = b.source_id
+            and substring(t.external_id from ${MESSAGE}) = b.message
+          limit 1
+        ) m
+        cross join (select ${own} as addresses) o
+        where b.tenant_id = ${ctx.tenantId} and b.user_id = ${ctx.userId} and b.id = ${id}
+          and b.texte is not null and b.brouillon_gmail is null and b.ecarte_le is null`),
     );
+    const [row] = rows;
     if (!row?.texte || hasBlank(row.texte) || row.kind !== 'gmail') return false;
+    // Une relance dont aucun destinataire en « à » n'est quelqu'un d'autre qu'elle : rien à déposer.
+    if (row.to.length === 0) return false;
     const messageId = /^message:(.+)$/.exec(row.message)?.[1];
     const threadId = /^thread:(.+)$/.exec(row.thread)?.[1];
     if (!messageId || !threadId) return false;
     const client = await gmailOf(ctx, row.connectionId, deps);
     if (!client) return false;
     const headers = await client.replyHeaders(threadId, messageId);
-    // Depuis la relève, elle a répondu ou supprimé le mail, ou on lui a récrit : rien à déposer, et ce n'est pas un échec.
+    // Depuis la relève, le fil a bougé (une réponse, un autre mail) ou le message n'y est plus : rien à déposer, et ce
+    // n'est pas un échec.
     if (!headers) return false;
-    const raw = replyRaw({ ...headers, to: [draft.to], text: row.texte });
-    // Un message reçu sans identifiant, ou une adresse qui n'en est pas une : pas de réponse dans le fil.
+    const raw = replyRaw({ ...headers, to: row.to, cc: row.cc, text: row.texte });
+    // Un message sans identifiant, ou une adresse qui n'en est pas une : pas de réponse dans le fil.
     if (raw === null) throw new ConnectorHttpError(null, 'Unexpected response');
     const brouillonGmail = await client.createDraft(threadId, raw);
     await withTenant(ctx, (tx) =>
@@ -120,16 +132,16 @@ export async function depositBrouillon(
           and(
             eq(brouillons.tenantId, ctx.tenantId),
             eq(brouillons.userId, ctx.userId),
-            eq(brouillons.id, draft.id),
+            eq(brouillons.id, id),
           ),
         ),
     );
     // Elle a pu l'écarter pendant le dépôt (deux requêtes, quelques secondes) : son « Écarter » n'avait alors rien vu
     // à retirer. Un brouillon écarté ne reste pas dans sa boîte : il en repart aussitôt. Sans cela, rien à retirer.
-    return !(await withdrawBrouillon(ctx, draft.id, deps));
+    return !(await withdrawBrouillon(ctx, id, deps));
   } catch (error) {
     // Des identifiants seulement : les erreurs du client HTTP portent un message fixe, jamais une réponse de Gmail.
-    logError('brouillons.deposit_failed', error, { userId: ctx.userId, brouillonId: draft.id });
+    logError('brouillons.deposit_failed', error, { userId: ctx.userId, brouillonId: id });
     return false;
   }
 }

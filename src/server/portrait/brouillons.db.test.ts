@@ -1034,12 +1034,13 @@ const RELANCE = 'Bonjour Léa,\n\nAvez-vous pu regarder le devis ?\n\nBien à vo
 describe('writeBrouillons : une relance, après son oui', () => {
   const INDICATIONS = 'Rappelez-lui que le tarif vaut jusqu’à fin décembre.';
 
-  it('aucun appel avant son oui ; au passage suivant, un appel, avec la consigne de relance et ses indications échappées, et la relance reste dans Leon', async () => {
+  it('aucun appel avant son oui ; au passage suivant, un appel, avec la consigne de relance et ses indications échappées ; sans boîte branchée par Pipedream, la relance reste dans Leon', async () => {
     const julie = await julieRelance();
     const info = vi.spyOn(console, 'info').mockImplementation(() => {});
     const mail = await unanswered(julie);
     const { llm, calls } = answering(draft(RELANCE));
-    // Aucune requête ne doit partir vers Gmail : le faux fetch n'en connaît aucune.
+    // Aucune requête ne doit partir vers Gmail : sa boîte n'est pas branchée par Pipedream, le faux fetch n'en connaît
+    // aucune.
     const fetchImpl = fakeFetch([]);
 
     expect(await writeBrouillons(julie, { llm, fetchImpl })).toBe(0);
@@ -1679,6 +1680,71 @@ describe('writeBrouillons : un brouillon complet va aussi dans ses brouillons Gm
     ]);
     expect(reply).not.toContain('intrus');
     expect((await readBrouillons(julie)).map((one) => one.depose)).toEqual([true]);
+  });
+  it('une relance écrite est déposée juste après, aux destinataires de son mail, en réponse à son mail', async () => {
+    const julie = await julieOnGmail();
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    await sendsMails(julie);
+    await answer(julie, true, 'relance');
+    const { rows } = await adminPool.query<{ id: string }>(
+      "select connection_id as id from sources where owner_user_id = $1 and title = 'Premier contact'",
+      [julie.userId],
+    );
+    const mine = sent(
+      ago(7 * DAY),
+      'Bonjour Léa,\nVoici le devis. Qu’en pensez-vous ?',
+      [LEA],
+      ['paul@acme.test'],
+    );
+    const sourceId = await mailThread(
+      julie,
+      'Devis',
+      [{ ...mine, externalId: 'message:relance' }],
+      {
+        connectionId: rows[0]?.id,
+      },
+    );
+    await answerRelance(julie, { sourceId, message: 'message:relance' }, '');
+    const fetchImpl = fakeFetch([
+      TOKEN,
+      {
+        url: proxied(`${GMAIL}/threads/`),
+        json: {
+          messages: [
+            {
+              id: 'relance',
+              threadId: 't',
+              labelIds: ['SENT'],
+              internalDate: '1795000000000',
+              payload: {
+                headers: [
+                  { name: 'Message-ID', value: '<relance@acme.test>' },
+                  { name: 'Subject', value: 'Devis' },
+                ],
+              },
+            },
+          ],
+        },
+      },
+      { method: 'POST', url: proxied(`${GMAIL}/drafts`), json: { id: 'r-relance' } },
+    ]);
+
+    expect(await writeBrouillons(julie, { llm: answering(draft(RELANCE)).llm, fetchImpl })).toBe(1);
+
+    expect(fetchImpl.calls.map((call) => call.method)).toEqual(['POST', 'GET', 'POST']);
+    expect(await deposits(julie)).toEqual([['Devis', 'r-relance']]);
+    const created = fetchImpl.calls[2]?.body as { message: { raw: string } } | undefined;
+    const relance = Buffer.from(created?.message.raw ?? '', 'base64url').toString('utf8');
+    expect(relance.split('\r\n').slice(0, 5)).toEqual([
+      'To: lea@client.test',
+      'Cc: paul@acme.test',
+      'Subject: Re: Devis',
+      'In-Reply-To: <relance@acme.test>',
+      'References: <relance@acme.test>',
+    ]);
+    expect((await readBrouillons(julie)).map((one) => [one.relance, one.depose])).toEqual([
+      [true, true],
+    ]);
   });
 });
 

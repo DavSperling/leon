@@ -58,7 +58,12 @@ import {
 import { AGENTS, type AgentId } from '@/server/portrait/agents';
 import { sendBrouillon, withdrawBrouillon } from '@/server/portrait/brouillon-depot';
 import { QUESTIONS_MAX, REPONSE_MAX_CHARS } from '@/server/portrait/brouillon-prompt';
-import { answerQuestions, answerUnknownMail, discardBrouillon } from '@/server/portrait/brouillons';
+import {
+  answerQuestions,
+  answerRelance,
+  answerUnknownMail,
+  discardBrouillon,
+} from '@/server/portrait/brouillons';
 import { requestBrouillons } from '@/server/portrait/brouillons-queue';
 import { correctFields, retireLine } from '@/server/portrait/fiche';
 import { answerPreference } from '@/server/portrait/preferences';
@@ -728,8 +733,8 @@ export async function readMemoryVersionAction(input: {
 
 // L'onglet « Ma fiche » (portrait/) : la personne connectée construit sa fiche, en corrige et en retire les lignes, et
 // répond aux agents qui lui sont proposés, sous la session du navigateur. Et, depuis l'accueil, elle répond aux
-// questions de Leon, écarte sa demande, écarte un brouillon de réponse ou répond à une préférence d'écriture
-// proposée. Les siens seulement : chaque fonction
+// questions de Leon, écarte sa demande, écarte un brouillon de réponse, dit oui ou non à une relance ou répond à une
+// préférence d'écriture proposée. Les siens seulement : chaque fonction
 // appelée filtre sur elle, sous ses droits, et la ligne d'un autre est « introuvable ». Aucune erreur ne recopie une
 // valeur reçue.
 type FicheError = 'introuvable' | 'invalide';
@@ -745,6 +750,7 @@ const QuestionAnswersSchema = z.object({
     .min(1)
     .max(QUESTIONS_MAX),
 });
+// Sa réponse au mail d'un inconnu, ou à une relance.
 const UnknownAnswerSchema = z.object({
   sourceId: z.uuid(),
   message: z.string().min(1).max(200),
@@ -887,6 +893,36 @@ export async function answerUnknownAction(input: {
   if (oui) await requestBrouillons(ctx);
   // Pas de revalidatePath : le panneau tient le mail (Leon écrit, avec `id`), qu'un accueil relu remplacerait par un
   // autre, sous une autre clé, rangé à la fin du panneau.
+  return { ok: true, id };
+}
+
+// Sa réponse à une relance, depuis le panneau de l'accueil, comme au mail d'un inconnu : « Oui », avec ses indications
+// (REPONSE_MAX_CHARS caractères au plus, vides quand elle n'en donne pas), ou « Non », qui ne garde pas d'indications.
+// Hors de ces bornes : « invalide ». Un mail qui n'attend plus de relance (à une autre, déjà traité, d'un fil qui a
+// bougé, hors de la fenêtre) : « introuvable » (portrait/brouillons.ts, answerRelance). Rien n'est écrit dans les deux
+// cas. Son oui gardé, un passage est demandé à la file : il écrira la relance ; `id`, sa ligne, sert à l'écarter
+// ensuite. Son non ne demande rien. Rien n'est envoyé. Une panne de la base est « echec » : son erreur citerait ses
+// indications.
+export async function answerRelanceAction(input: {
+  sourceId: string;
+  message: string;
+  oui: boolean;
+  indications: string;
+}): Promise<{ ok: true; id: string } | { error: FicheError | 'echec' }> {
+  const ctx = await requireUserContext();
+  const parsed = UnknownAnswerSchema.safeParse(input);
+  if (!parsed.success) return { error: 'invalide' };
+  const { sourceId, message, oui, indications } = parsed.data;
+  let id: string | null;
+  try {
+    id = await answerRelance(ctx, { sourceId, message }, oui ? indications : null);
+  } catch (error) {
+    logError('brouillons.relance', error, { userId: ctx.userId });
+    return { error: 'echec' };
+  }
+  if (!id) return { error: 'introuvable' };
+  if (oui) await requestBrouillons(ctx);
+  // Pas de revalidatePath, comme pour un inconnu : le panneau tient le mail, où Leon écrit.
   return { ok: true, id };
 }
 

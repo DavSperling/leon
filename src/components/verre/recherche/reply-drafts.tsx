@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import {
   type Dispatch,
+  type ReactNode,
   type TransitionStartFunction,
   useEffect,
   useId,
@@ -19,6 +20,7 @@ import {
   discardBrouillonAction,
   sendBrouillonAction,
 } from '@/app/(app)/settings/actions';
+import type { SourceKind } from '@/capture/turn';
 import {
   Badge,
   Button,
@@ -29,7 +31,6 @@ import {
   PanelDone,
   SidePanel,
   Textarea,
-  Thing,
   toast,
 } from '@/components/verre';
 import { SourceThing } from '@/components/verre/reglages/source-thing';
@@ -41,6 +42,7 @@ import {
   OTHER,
   startFlow,
 } from '@/lib/draft-questions';
+import { SOURCE_KIND_LABELS } from '@/lib/labels';
 import {
   CLOSED,
   confirmsDiscard,
@@ -53,6 +55,7 @@ import {
   shownIndex,
 } from '@/lib/reply-drafts';
 import { formatDate } from '@/lib/verre';
+import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
 import type {
   HomeBrouillon,
@@ -169,19 +172,33 @@ export function Questions({
             </label>
           ))}
           {/* Sans choix (une demande posée avant eux), le texte libre seul. */}
-          {choices.length > 0 && (
-            <label className={CHOICE}>
-              <input
-                type="radio"
-                name={shown}
-                className={RADIO}
-                checked={pick.choice === OTHER}
-                onChange={() => dispatch({ type: 'pick', choice: OTHER })}
-              />
-              {t('other')}
-            </label>
-          )}
-          {pick.choice === OTHER && (
+          {/* « Autre » : son texte s'écrit dans sa tuile, qui s'ouvre quand on la choisit. */}
+          {choices.length > 0 ? (
+            <div className={cn(CHOICE, 'flex-wrap')}>
+              <label className="flex flex-1 cursor-pointer items-start gap-3">
+                <input
+                  type="radio"
+                  name={shown}
+                  className={RADIO}
+                  checked={pick.choice === OTHER}
+                  onChange={() => dispatch({ type: 'pick', choice: OTHER })}
+                />
+                {t('other')}
+              </label>
+              {pick.choice === OTHER && (
+                <Textarea
+                  aria-label={t('otherAnswer')}
+                  className="basis-full"
+                  value={pick.text}
+                  onChange={(event) => dispatch({ type: 'write', text: event.target.value })}
+                  maxLength={max}
+                  rows={2}
+                  autoGrow
+                  autoFocus
+                />
+              )}
+            </div>
+          ) : (
             <Textarea
               aria-label={t('otherAnswer')}
               value={pick.text}
@@ -419,8 +436,13 @@ export function MailView({
   onDiscard,
   onRefresh,
   onSendDraft,
+  reading,
+  onRead,
 }: {
   mail: PanelMail;
+  // « Voir le mail » : l'accueil montre le texte à côté (`onRead`) ; sans, dans le panneau, il se déplie ici.
+  reading?: boolean;
+  onRead?: () => void;
   // « Envoyer » un brouillon déposé : le panneau demande d'abord.
   onSendDraft?: () => void;
   kept?: Flow;
@@ -446,6 +468,9 @@ export function MailView({
   const relance = isRelance(mail);
   const { from, receivedAt, source } = mail.mail;
   const noticed = from ? t('noticed', { name: from }) : t('noticedAnon');
+  const [ownRead, setOwnRead] = useState(false);
+  const read = onRead ? Boolean(reading) : ownRead;
+  const text = source.mailText;
   return (
     <div hidden={hidden}>
       {failed && (
@@ -475,11 +500,31 @@ export function MailView({
           <time dateTime={receivedAt.toISOString()}>
             {t(relance ? 'sent' : 'received', { date: formatDate(receivedAt, locale) })}
           </time>
+          {/* l'outil d'où vient le mail : Gmail, Outlook */}
+          {' · '}
+          {toolOf(source.kind)}
         </p>
       </div>
-      <div className="mt-3 max-w-[680px]">
-        <SourceThing source={source} />
+      <div className="mt-3 flex max-w-[680px] flex-wrap items-center gap-2">
+        <div className="min-w-0 flex-1">
+          <SourceThing source={source} />
+        </div>
+        {text && (
+          <Button
+            size="sm"
+            variant={read ? 'secondary' : 'quiet'}
+            aria-expanded={read}
+            onClick={onRead ?? (() => setOwnRead(!ownRead))}
+          >
+            {t(read ? 'readHide' : 'read')}
+          </Button>
+        )}
       </div>
+      {!onRead && ownRead && text && (
+        <p className="mt-3 max-h-[320px] max-w-[680px] overflow-y-auto whitespace-pre-wrap rounded-item border border-line bg-glass-3 px-4 py-3 text-body [overflow-wrap:anywhere] text-fg">
+          {text}
+        </p>
+      )}
       <div className="mt-6 max-w-[680px]">
         {mail.sorte === 'questions' ? (
           <Asked
@@ -592,6 +637,53 @@ export function MailView({
   );
 }
 
+// L'outil d'un fil, en mots : « Gmail », « Outlook ».
+const toolOf = (kind: string) => SOURCE_KIND_LABELS[kind as SourceKind] ?? kind;
+
+// « Voir le mail », sur l'accueil : le texte du dernier message du fil, à côté de la pile, avec l'outil d'où il vient,
+// « Ouvrir dans Gmail » et « Fermer ».
+function MailPane({ mail, onClose }: { mail: PanelMail; onClose: () => void }) {
+  const t = useTranslations('draftQuestions');
+  const c = useTranslations('common');
+  const f = useTranslations('fiche');
+  const locale = useLocale();
+  const { from, receivedAt, source } = mail.mail;
+  const tool = toolOf(source.kind);
+  return (
+    <section
+      aria-label={t('read')}
+      className="rounded-card border border-line bg-sheet p-6 shadow-sheet"
+    >
+      <div className="flex items-start gap-3">
+        <div className="min-w-0 flex-1 [overflow-wrap:anywhere]">
+          <h2 className="text-lead font-semibold text-fg">{source.title ?? f('untitled')}</h2>
+          <p className="mt-1 text-ui text-muted">
+            {from ?? t('someone')} · {formatDate(receivedAt, locale)} · {tool}
+          </p>
+        </div>
+        <Button size="sm" variant="quiet" onClick={onClose}>
+          {c('close')}
+        </Button>
+      </div>
+      <p className="mt-4 max-h-[60vh] overflow-y-auto whitespace-pre-wrap text-body leading-[1.6] [overflow-wrap:anywhere] text-fg">
+        {source.mailText}
+      </p>
+      {source.url && (
+        <p className="mt-5 border-t border-line pt-3 text-ui">
+          <a
+            href={source.url}
+            target="_blank"
+            rel="noreferrer"
+            className="font-medium text-fg underline-offset-4 hover:underline"
+          >
+            {t('openIn', { tool })}
+          </a>
+        </p>
+      )}
+    </section>
+  );
+}
+
 // Un geste réussi : `id`, la ligne écrite par son oui au mail d'un inconnu ou à une relance ; `resteDansGmail`, un brouillon écarté que
 // Leon n'a pas pu retirer de Gmail.
 type Done = { ok: true; resteDansGmail?: boolean; id?: string };
@@ -632,7 +724,12 @@ export function ReplyDrafts({
   demandes,
   prets,
   max,
+  lead,
+  side,
 }: {
+  // L'accueil autour de la pile : au-dessus (le bonjour, le champ), et la colonne de droite (la semaine, le point).
+  lead?: ReactNode;
+  side?: ReactNode;
   // Son prénom, celui du bonjour.
   name: string | null;
   demandes: Array<HomeDemande | HomeInconnu | HomePreference | HomeRelance>;
@@ -654,6 +751,11 @@ export function ReplyDrafts({
   useEffect(() => setSkipSend(readSkip()), []);
   const dontAskId = useId();
   const [failed, setFailed] = useState(false);
+  // « Voir le mail » sur l'accueil : la clé du mail dont le texte est à droite.
+  const [reading, setReading] = useState<string | null>(null);
+  // Un geste a été fait sur l'accueil : le mail suivant prend le focus, comme dans le panneau. Jamais au chargement.
+  const [acted, setActed] = useState(false);
+  const pileId = useId();
   const [panel, dispatch] = useReducer(panelReducer, CLOSED);
   // Ses réponses en cours, mail par mail : fermer le panneau (un clic à côté) ne les perd pas.
   const [kept, setKept] = useState<Record<string, Flow>>({});
@@ -685,8 +787,8 @@ export function ReplyDrafts({
 
   const target = shown?.key ?? doneId;
   useEffect(() => {
-    if (!working) document.getElementById(target)?.focus();
-  }, [target, working]);
+    if (!working && (open || acted)) document.getElementById(target)?.focus();
+  }, [target, working, open, acted]);
 
   const show = (at: number) => {
     setFailed(false);
@@ -708,6 +810,8 @@ export function ReplyDrafts({
       if ('error' in result && result.error !== 'introuvable') return setFailed(true);
       if ('error' in result) toast.error(goneWord);
       setAsking(false);
+      setActed(true);
+      setReading(null);
       dispatch({ type: 'close', mails, key: mail.key, id: 'ok' in result ? after(result) : null });
     });
   // Leon l'écrit : le mail garde sa place, et le panneau passe au suivant ; ce qui ne se voit plus se dit.
@@ -741,6 +845,15 @@ export function ReplyDrafts({
       },
       mail.sorte === 'pret' ? t('draftGone') : t('gone'),
     );
+  // Le panneau s'ouvre sur `at` (le mail montré par défaut) : « Tout traiter », un mail de la pile, ou une confirmation
+  // demandée depuis l'accueil (elle vit dans le pied du panneau).
+  const openPanel = (at?: PanelMail) => {
+    setFailed(false);
+    const target = at ?? shown;
+    dispatch({ type: 'open', keys: panelMails(demandes, prets, panel.done).map((one) => one.key) });
+    if (target) dispatch({ type: 'show', id: target.id });
+    setOpen(true);
+  };
   const gestures = (mail: PanelMail) => ({
     ...(mail.sorte === 'questions' && {
       kept: kept[mail.key],
@@ -787,10 +900,15 @@ export function ReplyDrafts({
     // shortcut: un mail où Leon écrit est celui de l'Accueil chargé ; si son brouillon a été déposé depuis,
     // « Écarter » le retire de Gmail sans demander (son geste vise cette réponse). Une garde dans
     // discardBrouillonAction le jour où ça se voit.
-    onDiscard: () => (confirmsDiscard(mail) ? setAsking('discard') : discard(mail)),
+    onDiscard: () => {
+      if (!confirmsDiscard(mail)) return discard(mail);
+      if (!open) openPanel(mail);
+      setAsking('discard');
+    },
     onSendDraft: () => {
       if (skipSend) return send(mail);
       setDontAsk(false);
+      if (!open) openPanel(mail);
       setAsking('send');
     },
     onRefresh: () => router.refresh(),
@@ -861,28 +979,113 @@ export function ReplyDrafts({
   const hasPrevious = shown && index > 0;
   const hasNext = shown && index < mails.length - 1;
 
+  const others = mails.filter((one) => one !== shown);
+  const readMail = reading ? mails.find((one) => one.key === reading) : undefined;
+  // La pile : le mail montré, ouvert dans la page (on y répond sans fenêtre), puis les suivants glissés dessous ; un
+  // clic sur l'un d'eux, ou « Tout traiter », ouvre le panneau. Panneau ouvert, la carte du dessus s'efface (le même
+  // mail y est).
+  const pile = mails.length > 0 && (
+    <section aria-labelledby={pileId} className="mt-10">
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <h2 id={pileId} className="text-head font-semibold tracking-[-0.015em] text-fg">
+          {t('pile.title')}
+        </h2>
+        <span className="text-ui text-muted">{summary}</span>
+        {/* la phrase de Leon, celle de l'ancienne ligne */}
+        <p className="basis-full text-body text-fg-2">{nb(title)}</p>
+      </div>
+      {shown && !open && (
+        <article className="relative z-10 mt-4 rounded-card border border-line bg-sheet p-7 shadow-lift max-sm:p-5">
+          <MailView
+            mail={shown}
+            max={max}
+            failed={failed}
+            sending={sending}
+            discarding={discarding}
+            reading={reading === shown.key}
+            onRead={() => setReading(reading === shown.key ? null : shown.key)}
+            {...gestures(shown)}
+          />
+        </article>
+      )}
+      {others.length > 0 && (
+        <ul className={cn('relative grid', !open && 'mx-3.5 -mt-1.5', open && 'mt-4')}>
+          {others.map((mail) => (
+            <li key={mail.key}>
+              <button
+                type="button"
+                aria-haspopup="dialog"
+                disabled={working}
+                onClick={() => openPanel(mail)}
+                className="flex w-full items-center gap-3 border border-t-0 border-line bg-sheet px-[18px] py-3 text-left transition-colors duration-150 first:border-t last:rounded-b-card hover:bg-hover disabled:cursor-default"
+              >
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    'size-2 shrink-0 rounded-full',
+                    mail.sorte === 'pret'
+                      ? 'bg-f2'
+                      : mail.sorte === 'ecrit'
+                        ? 'bg-line-strong'
+                        : 'bg-f4',
+                  )}
+                />
+                <span className="shrink-0 text-body font-medium text-fg">
+                  {mail.mail.from ?? t('someone')}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-ui text-muted">
+                  {mail.mail.source.title ?? f('untitled')}
+                </span>
+                <span className="shrink-0 text-label text-muted max-sm:hidden">
+                  {t(`kind.${mail.sorte}`)}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <Button
+        variant="quiet"
+        className="mt-3 -ml-3"
+        aria-haspopup="dialog"
+        onClick={() => openPanel()}
+      >
+        {t('pile.all')}
+      </Button>
+    </section>
+  );
+
+  // Rien n'attend : la section reste, calme, et dit ce que Leon fera. Le point du matin et la semaine restent à droite.
+  const empty = mails.length === 0 && (
+    <section aria-labelledby={pileId} className="mt-10">
+      <h2 id={pileId} className="text-head font-semibold tracking-[-0.015em] text-fg">
+        {t('pile.title')}
+      </h2>
+      <div className="mt-4 rounded-card border border-dashed border-line-strong px-6 py-5">
+        <p className="text-body font-medium text-fg">{nb(t('pile.empty'))}</p>
+        <p className="mt-1 text-ui text-muted">{nb(t('pile.emptyText'))}</p>
+      </div>
+    </section>
+  );
+
   return (
     <>
-      {mails.length > 0 && (
-        <Thing
-          size="card"
-          wrap
-          name={nb(title)}
-          // au téléphone, le titre et le compte passent à la ligne plutôt que d'être coupés : la carte grandit
-          caption={<span className="whitespace-normal">{summary}</span>}
-          label={`${title} ${summary}`}
-          aria-haspopup="dialog"
-          className="mt-6 h-auto min-h-[88px] max-w-[772px] py-3"
-          onClick={() => {
-            setFailed(false);
-            dispatch({
-              type: 'open',
-              keys: panelMails(demandes, prets, panel.done).map((one) => one.key),
-            });
-            setOpen(true);
-          }}
-        />
-      )}
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-x-10 gap-y-10 @[60rem]:grid-cols-[minmax(0,1fr)_clamp(320px,32cqi,440px)]">
+        <div className="min-w-0">
+          {lead}
+          {pile}
+          {empty}
+        </div>
+        {(side || readMail) && (
+          <aside className="grid grid-cols-[minmax(0,1fr)] gap-8 @[60rem]:sticky @[60rem]:top-6">
+            {readMail?.mail.source.mailText ? (
+              <MailPane mail={readMail} onClose={() => setReading(null)} />
+            ) : (
+              side
+            )}
+          </aside>
+        )}
+      </div>
       <SidePanel
         open={open}
         onOpenChange={(next) => {

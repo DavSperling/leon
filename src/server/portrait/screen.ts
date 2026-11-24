@@ -9,6 +9,7 @@ import { logError } from '@/server/log';
 import type { AgentId } from './agents';
 import { type Demande, HOME_MAX, type ReadyBrouillon, readShown } from './brouillons';
 import { type FicheLine, readFiche } from './fiche';
+import { readLastMessages } from './mail-text';
 import { type ProposedPreference, readProposedPreferences } from './preferences';
 import { type Proposal, readProposals } from './propositions';
 import { enqueueFicheBuild, ficheBuildCompleted, ficheBuildPending } from './queue';
@@ -38,6 +39,9 @@ export type FicheEtat =
   | 'sans-mail'
   | 'a-construire';
 export type FicheSource = { title: string | null; url: string | null; kind: string };
+// Une source telle que l'accueil la montre : avec le texte du dernier message du fil, pour « Voir le mail »
+// (mail-text.ts). Nul quand il n'a pas pu se lire.
+export type HomeSource = FicheSource & { mailText?: string | null };
 export type FicheScreen = {
   etat: FicheEtat;
   // Son rôle, ses tâches et ses préférences d'écriture acceptées seulement.
@@ -104,21 +108,21 @@ export async function readFicheScreen(ctx: TenantContext): Promise<FicheScreen> 
 // Une demande de Leon, telle que l'accueil la montre : le correspondant, le fil (son objet, lié à son outil), la date du
 // mail reçu, les questions et leurs choix, et si elle y a répondu. `id` sert à lui répondre ou à l'écarter. Ni ses
 // réponses, ni rien d'autre, ne part vers l'accueil.
-export type HomeDemande = Omit<Demande, 'sourceId'> & { source: FicheSource };
+export type HomeDemande = Omit<Demande, 'sourceId'> & { source: HomeSource };
 // Un brouillon prêt, tel que l'accueil le montre : le correspondant, le fil (son objet, lié à son outil), la date du
 // mail reçu, le texte du brouillon, s'il est déposé dans ses brouillons Gmail, et, pour une relance, le nombre de ses
 // autres destinataires (la question avant « Envoyer »). `id` sert aux gestes « Écarter » et « Envoyer ».
-export type HomeBrouillon = Omit<ReadyBrouillon, 'sourceId'> & { source: FicheSource };
+export type HomeBrouillon = Omit<ReadyBrouillon, 'sourceId'> & { source: HomeSource };
 // Le mail d'un inconnu qui l'attend, tel que l'accueil le montre : son auteur, le fil (son objet, lié à son outil), la
 // date du mail. `mail` sert à lui répondre « Oui » ou « Non ». Rien de son texte.
 export type HomeInconnu = Pick<UnknownMail, 'from' | 'receivedAt'> & {
   mail: Pick<UnknownMail, 'sourceId' | 'message'>;
-  source: FicheSource;
+  source: HomeSource;
 };
 // Une préférence d'écriture que Leon a tirée d'une retouche, telle que l'accueil la propose : le correspondant du mail
 // dont elle a retouché le brouillon, la date de ce mail, le fil (son objet, lié à son outil), et la préférence. `id`
 // sert à lui répondre « Oui » ou « Non ». Rien du mail, ni de sa réponse.
-export type HomePreference = Omit<ProposedPreference, 'sourceId'> & { source: FicheSource };
+export type HomePreference = Omit<ProposedPreference, 'sourceId'> & { source: HomeSource };
 // Son mail resté sans réponse, tel que l'accueil lui demande si elle veut une relance : `from`, le nom de son premier
 // destinataire qui n'est pas elle, et `others`, ses autres destinataires en « à » ; `receivedAt`, la date de son mail
 // (les mots du panneau sont ceux de tous ses mails) ; le fil (son objet, lié à son outil). `mail` sert à lui répondre
@@ -128,7 +132,7 @@ export type HomeRelance = Pick<UnansweredMail, 'others'> & {
   from: string;
   receivedAt: Date;
   mail: Pick<UnansweredMail, 'sourceId' | 'message'>;
-  source: FicheSource;
+  source: HomeSource;
 };
 export type HomeBrouillons = {
   demandes: Array<HomeDemande | HomeInconnu | HomePreference | HomeRelance>;
@@ -198,9 +202,14 @@ export async function readHomeBrouillons(ctx: TenantContext): Promise<HomeBrouil
     ...shown.prets,
   ].map((one) => one.sourceId);
   if (sourceIds.length === 0) return { demandes: [], prets: [] };
-  const [agents, seen] = await Promise.all([
+  const [agents, seen, texts] = await Promise.all([
     readProposals(ctx, await readFiche(ctx)),
     briefingSources(ctx, sourceIds),
+    // En panne, les mails se montrent sans leur texte : « Voir le mail » ne se propose pas.
+    readLastMessages(ctx, sourceIds).catch((error) => {
+      logError('accueil.textes', error, { userId: ctx.userId });
+      return new Map<string, string>();
+    }),
   ]);
   const oui = (agent: AgentId) => agents.some((one) => one.agent === agent && one.oui);
   const reponses = oui('brouillon-reponse');
@@ -214,7 +223,17 @@ export async function readHomeBrouillons(ctx: TenantContext): Promise<HomeBrouil
     rows.flatMap(({ sourceId, ...one }) => {
       const source = seen.find((found) => found.sourceId === sourceId);
       return source
-        ? [{ ...one, source: { title: source.title, url: source.url, kind: source.kind } }]
+        ? [
+            {
+              ...one,
+              source: {
+                title: source.title,
+                url: source.url,
+                kind: source.kind,
+                mailText: texts.get(sourceId) ?? null,
+              },
+            },
+          ]
         : [];
     });
   // Les mails d'inconnus, les préférences proposées et ses mails sans réponse partagent les places des demandes : celles qui attendent un geste

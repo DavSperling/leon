@@ -24,7 +24,6 @@ import { SearchSyntax } from '@/components/verre/recherche/welcome';
 import { parisTime } from '@/lib/agenda';
 import { briefingFact } from '@/lib/briefing-view';
 import { dayPart } from '@/lib/day-part';
-import { cn } from '@/lib/verre/cn';
 import { formatDateTime } from '@/lib/verre/format';
 import { agendaIsStale, readWeek } from '@/server/agenda/agenda';
 import { readOnboardingMember } from '@/server/auth/onboarding';
@@ -163,75 +162,76 @@ async function Home({ ctx }: { ctx: TenantContext }) {
   return (
     // group/home : le fait du jour et sa ligne dans le point se répondent quand on pointe l'un (home.tsx)
     <div className="group/home @container w-full shell:pt-5">
-      <Greeting
+      {/* La pile de l'agent : le bonjour et le champ au-dessus ; à droite, la semaine, le point du matin et « About
+          you », ou le texte d'un mail quand elle clique « Voir le mail ». Toujours montée : quand le dernier mail s'en
+          va, son panneau reste ouvert pour le dire. */}
+      <ReplyDrafts
         name={name}
-        serverPart={dayPart(now.getHours())}
-        fact={first && briefingFact(first.sections)}
-        sources={first ? viewOf(first) : undefined}
-      />
-      {/* Leon a besoin d'elle, un brouillon est prêt, ou il écrit sa réponse : une ligne sous le bonjour, et le détail
-          dans son panneau. Toujours montée : quand le dernier mail s'en va, son panneau reste ouvert pour le dire. */}
-      <ReplyDrafts name={name} demandes={demandes} prets={prets} max={REPONSE_MAX_CHARS} />
-      <HomeAsk canAsk={modelAvailable} />
-      {questions.length > 0 && (
-        <div className="mt-3">
-          <AskTiles questions={questions} />
-        </div>
-      )}
-
-      {/* Le point du matin est la feuille de l'écran ; à sa droite, sur le bureau, le calendrier de la semaine. Sans
-          point, ou à l'étroit, il passe dans la colonne de lecture. */}
-      <div
-        className={cn(
-          'mt-9 grid grid-cols-[minmax(0,1fr)] items-start gap-x-12 gap-y-10',
-          first && aside && '@[55rem]:grid-cols-[minmax(0,1fr)_clamp(300px,30cqi,380px)]',
-        )}
-      >
-        {first && (
-          <Section id="point" title={t('briefing.title')} className="mt-0">
-            <div className="grid gap-6">
-              {shown.map((point) => (
-                <BriefingSheet
-                  // un autre point (refait, autre projet) : les lignes retirées sur la page repartent de zéro
-                  key={`${point.project}\u0000${point.preparedAt.toISOString()}`}
-                  project={point.project}
-                  heading={
-                    <>
-                      {/* un seul point : pas besoin de dire de quel dossier il parle */}
-                      {shown.length > 1 && (
-                        <span className="truncate font-semibold text-fg">
-                          {pointLabel(point) ?? t('briefing.folder')}
-                        </span>
-                      )}
-                      <time dateTime={point.preparedAt.toISOString()} className="shrink-0">
-                        {formatDateTime(point.preparedAt, locale)}
-                      </time>
-                    </>
-                  }
-                  sections={point.sections}
-                  sources={viewOf(point)}
-                  canRedo={modelAvailable}
+        demandes={demandes}
+        prets={prets}
+        max={REPONSE_MAX_CHARS}
+        lead={
+          <>
+            <Greeting
+              name={name}
+              serverPart={dayPart(now.getHours())}
+              fact={first && briefingFact(first.sections)}
+              sources={first ? viewOf(first) : undefined}
+            />
+            <HomeAsk canAsk={modelAvailable} />
+            {questions.length > 0 && (
+              <div className="mt-3">
+                <AskTiles questions={questions} />
+              </div>
+            )}
+          </>
+        }
+        side={
+          (first || aside) && (
+            <>
+              {week && (
+                <WeekCalendar days={week.days} rendezVous={week.rendezVous} now={parisTime(now)} />
+              )}
+              {first && (
+                <Section id="point" title={t('briefing.title')} className="mt-0">
+                  <div className="grid gap-6">
+                    {shown.map((point) => (
+                      <BriefingSheet
+                        // un autre point (refait, autre projet) : les lignes retirées sur la page repartent de zéro
+                        key={`${point.project}\u0000${point.preparedAt.toISOString()}`}
+                        project={point.project}
+                        heading={
+                          <>
+                            {/* un seul point : pas besoin de dire de quel dossier il parle */}
+                            {shown.length > 1 && (
+                              <span className="truncate font-semibold text-fg">
+                                {pointLabel(point) ?? t('briefing.folder')}
+                              </span>
+                            )}
+                            <time dateTime={point.preparedAt.toISOString()} className="shrink-0">
+                              {formatDateTime(point.preparedAt, locale)}
+                            </time>
+                          </>
+                        }
+                        sections={point.sections}
+                        sources={viewOf(point)}
+                        canRedo={modelAvailable}
+                      />
+                    ))}
+                  </div>
+                </Section>
+              )}
+              {suggestion && (
+                <AboutSuggestionCard
+                  text={suggestion.text}
+                  kinds={suggestion.kinds}
+                  max={ABOUT_MAX_CHARS}
                 />
-              ))}
-            </div>
-          </Section>
-        )}
-
-        {aside && (
-          <div className={cn('grid grid-cols-[minmax(0,1fr)] gap-8', !first && 'max-w-[772px]')}>
-            {week && (
-              <WeekCalendar days={week.days} rendezVous={week.rendezVous} now={parisTime(now)} />
-            )}
-            {suggestion && (
-              <AboutSuggestionCard
-                text={suggestion.text}
-                kinds={suggestion.kinds}
-                max={ABOUT_MAX_CHARS}
-              />
-            )}
-          </div>
-        )}
-      </div>
+              )}
+            </>
+          )
+        }
+      />
     </div>
   );
 }

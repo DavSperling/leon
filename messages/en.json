@@ -430,7 +430,16 @@
       "done": "Reply sent.",
       "doneRelance": "Follow-up sent.",
       "dontAsk": "Don’t ask me again"
-    }
+    },
+    "pile": {
+      "title": "For you",
+      "all": "Go through them all",
+      "empty": "Nothing is waiting for you right now.",
+      "emptyText": "When an email needs a reply, Leon will ask its questions here, then show you its draft."
+    },
+    "read": "Show the email",
+    "readHide": "Hide the email",
+    "openIn": "Open in {tool}"
   },
   "search": {
     "memoryLabel": "Search the team’s memory",

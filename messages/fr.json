@@ -430,7 +430,16 @@
       "done": "Réponse envoyée.",
       "doneRelance": "Relance envoyée.",
       "dontAsk": "Ne plus me demander"
-    }
+    },
+    "pile": {
+      "title": "À vous",
+      "all": "Tout traiter",
+      "empty": "Rien ne vous attend pour l’instant.",
+      "emptyText": "Quand un mail demandera une réponse, Leon vous posera ici ses questions, puis vous montrera son brouillon."
+    },
+    "read": "Voir le mail",
+    "readHide": "Masquer le mail",
+    "openIn": "Ouvrir dans {tool}"
   },
   "search": {
     "memoryLabel": "Recherche dans la mémoire de l’équipe",

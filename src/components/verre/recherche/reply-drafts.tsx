@@ -553,6 +553,10 @@ export function MailView({
 // Un geste réussi : `id`, la ligne écrite par son oui au mail d'un inconnu ; `resteDansGmail`, un brouillon écarté que
 // Leon n'a pas pu retirer de Gmail.
 type Done = { ok: true; resteDansGmail?: boolean; id?: string };
+
+// Pendant que Leon écrit : relire l'Accueil toutes les 5 s, pendant 3 min au plus.
+const REFRESH_MS = 5_000;
+const REFRESH_MAX = 180_000;
 type Result = Done | { error: string };
 
 /**
@@ -600,6 +604,20 @@ export function ReplyDrafts({
 
   // Le mail montré change (« Mail suivant », un geste, un brouillon arrivé) : son en-tête prend le focus ; plus rien,
   // « Terminé ». Pendant un geste, le corps du panneau est figé : le focus attend la fin.
+  // Leon écrit : l'Accueil se relit seul, toutes les REFRESH_MS, tant que l'onglet se voit et que rien ne travaille ici,
+  // REFRESH_MAX au plus (l'appel au modèle dure jusqu'à 90 s) ; « Actualiser » reste là. Ses réponses en cours et ses
+  // indications tiennent : le panneau reste monté.
+  const pending = counts.writing > 0;
+  useEffect(() => {
+    if (!pending || working) return;
+    const until = Date.now() + REFRESH_MAX;
+    const timer = setInterval(() => {
+      if (Date.now() > until) return clearInterval(timer);
+      if (document.visibilityState === 'visible') router.refresh();
+    }, REFRESH_MS);
+    return () => clearInterval(timer);
+  }, [pending, working, router]);
+
   const target = shown?.key ?? doneId;
   useEffect(() => {
     if (!working) document.getElementById(target)?.focus();

@@ -457,6 +457,8 @@ Comme contre-épreuve, le nombre de lectures notées par le serveur (`read_log`,
 
 **Si elle passe**, l'option reste, éteinte par défaut, et la documentation du site la décrit. La cocher par défaut serait une autre décision d'Amos.
 
+> **Amendé le 24/11 (décision d'Amos) :** la section « En cas de problème » de la documentation décrit dès maintenant les pannes de l'usage `passage` et du bac à sable : l'arrêt, la lecture qui échoue, la commande à lancer seule, l'exception. `leon setup` propose déjà l'usage à tout le monde, donc ces pannes peuvent arriver aujourd'hui. La description complète de l'option, dans les sections « Ce qui part » et « Lire Leon », attend toujours le résultat de T68.
+
 **Le coût.**
 - Environ 70 $ au tarif API pour les 60 passages : un passage à coder coûtait environ 1,1 $ le 19/11.
 - La notation vient en plus.

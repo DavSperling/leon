@@ -2150,7 +2150,7 @@ Effort : 0,5 j.
   2. sur les 18 passages des tâches mémoire, D a au moins 5 réponses justes de plus que C, et aucune de ces tâches n'a D à 0 sur 3 quand C est à 2 ou plus ;
   3. sur les 12 passages des tâches témoins, D a au plus une réponse juste de moins que C, et aucune de ces tâches n'a D à 0 sur 3 quand C est à 2 ou plus ;
   4. les tokens totaux des passages D ne dépassent pas 110 % de ceux des passages C.
-- **S'il passe** : l'option reste, éteinte par défaut, et la documentation du site la décrit (`documentation.tsx`, `documentation-markdown.ts`, `messages/en.json`, `messages/fr.json`).
+- **S'il passe** : l'option reste, éteinte par défaut, et la documentation du site la décrit (`documentation.tsx`, `documentation-markdown.ts`, `messages/en.json`, `messages/fr.json`). Amendé le 24/11 (décision d'Amos) : les pannes de `passage` et du bac à sable sont déjà dans la section « En cas de problème », puisque `leon setup` propose l'usage ; seule la description complète de l'option attend T68.
 - **S'il échoue** :
   - `passage` sort d'`OFFERED`, avec ses tests et le README ;
   - l'usage, la commande et le crochet restent dans le code, et dans le retrait ;

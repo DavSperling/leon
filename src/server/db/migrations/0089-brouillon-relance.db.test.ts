@@ -4,7 +4,7 @@ import { MIGRATIONS_DIR } from '@/server/db/migrate';
 import { adminPool } from '@/test/db';
 import { createTestTenant, seedSource } from '@/test/fixtures';
 
-// Migration 0088 : brouillons.sorte, « reponse » ou « relance », posée avec la ligne. Les lignes d'avant sont des
+// Migration 0089 : brouillons.sorte, « reponse » ou « relance », posée avec la ligne. Les lignes d'avant sont des
 // réponses. Données inventées.
 
 // Deux lignes de Paul, comme les écrivait l'agent « Brouillons de réponse » : un brouillon, et un mail jugé sans réponse
@@ -47,7 +47,7 @@ describe('brouillons.sorte', () => {
   // touchée. Ses lignes prennent « reponse », sans que la table soit réécrite (son fichier ne change pas).
   it('sur une table déjà remplie, ses lignes sont des réponses, sans la réécrire', async () => {
     const ids = await seededLines();
-    const migration = await readFile(`${MIGRATIONS_DIR}/0088-brouillon-relance.sql`, 'utf8');
+    const migration = await readFile(`${MIGRATIONS_DIR}/0089-brouillon-relance.sql`, 'utf8');
     const client = await adminPool.connect();
     try {
       await client.query('begin');

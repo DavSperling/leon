@@ -28,7 +28,7 @@ import { ANSWERED_DAYS } from './waiting-mails';
 //   pas), collègues compris. Ses adresses sont celles d'où partent ses mails envoyés des 90 derniers jours ;
 // - a au plus RECIPIENTS_MAX destinataires, « à » et copie : au-delà, c'est une annonce ;
 // - n'a aucun destinataire qui soit une adresse de machine (MACHINE_SENDER, connectors/gmail/map.ts) ;
-// - n'a pas déjà été traité : aucune ligne dans brouillons pour ce message (son oui ou son non, 0088) ;
+// - n'a pas déjà été traité : aucune ligne dans brouillons pour ce message (son oui ou son non, 0089) ;
 // - n'est pas un simple accusé ou remerciement (asksForReply).
 // shortcut: un mail Outlook où elle se met en copie laisse après le sien une copie reçue, sans côté : il ne se propose
 // pas ; à reconnaître par son adresse d'auteur si de vraies boîtes le montrent.

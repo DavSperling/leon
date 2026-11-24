@@ -115,7 +115,7 @@ export const brouillons = pgTable('brouillons', {
   // Nul : pas encore de réponse d'elle, ou une retouche dont Leon n'a pas encore tiré la leçon.
   issue: text('issue', { enum: ['tel-quel', 'retouche', 'reecrit'] }),
   // « reponse » : le brouillon d'une réponse à un mail reçu. « relance » : la relance d'un mail qu'elle a envoyé, resté
-  // sans réponse (0088). Posée avec la ligne, elle ne change plus.
+  // sans réponse (0089). Posée avec la ligne, elle ne change plus.
   sorte: text('sorte', { enum: ['reponse', 'relance'] })
     .notNull()
     .default('reponse'),

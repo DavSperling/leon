@@ -1,4 +1,4 @@
--- 0088-brouillon-relance.sql : l'agent « Relances » garde ses lignes dans la table des brouillons (0080), privées comme
+-- 0089-brouillon-relance.sql : l'agent « Relances » garde ses lignes dans la table des brouillons (0080), privées comme
 -- elles : la même politique, le même contrôle de l'accès, supprimées avec le compte et avec le fil. Une ligne dit
 -- désormais sa sorte : « reponse », le brouillon d'une réponse à un mail reçu (toutes les lignes d'avant) ; « relance »,
 -- la relance d'un mail qu'elle a envoyé et resté sans réponse (portrait/unanswered-mails.ts), dont le message est le

@@ -74,7 +74,7 @@ export type WaitingMail = {
 // ou « Oui » au mail d'un inconnu ou à une relance (le premier appel). Pour une relance, `from` est le premier
 // destinataire en « à » de son mail qui n'est pas elle : celui à qui elle écrit.
 export type AnsweredMail = WaitingMail & {
-  // La ligne du brouillon (0082, 0084), et sa sorte (0088).
+  // La ligne du brouillon (0082, 0084), et sa sorte (0089).
   id: string;
   sorte: 'reponse' | 'relance';
   // Ses questions et ses réponses, une par question, dans le même ordre ; une réponse peut être vide. Nulles pour son

@@ -52,7 +52,7 @@ import {
 // L'agent « Relances » suit le même chemin, dans le même passage : l'accueil lui demande, pour chacun de ses mails
 // restés sans réponse (unanswered-mails.ts), si elle veut une relance (answerRelance) ; son « oui » fait faire le
 // premier appel au passage suivant, avec la consigne d'une relance (brouillon-prompt.ts), sur une ligne de sorte
-// « relance » (0088). Aucun modèle ne lit ce mail avant son oui. Une relance reste dans Leon : elle n'est jamais
+// « relance » (0089). Aucun modèle ne lit ce mail avant son oui. Une relance reste dans Leon : elle n'est jamais
 // déposée dans Gmail (brouillon-depot.ts).
 // Un brouillon complet est aussi déposé dans ses brouillons Gmail, en réponse dans le fil (brouillon-depot.ts) : c'est
 // tout ce que Leon écrit dans sa boîte. Rien n'est envoyé : l'agent prépare, elle valide. Tout se lit et s'écrit sous
@@ -309,7 +309,7 @@ export type ReadyBrouillon = {
   // (recipientName), et `receivedAt` est la date de son mail.
   from: string | null;
   receivedAt: Date;
-  // Une relance (0088), pas une réponse.
+  // Une relance (0089), pas une réponse.
   relance: boolean;
   texte: string;
   // Déposé dans ses brouillons Gmail (brouillon-depot.ts) : un oui ou un non, jamais l'identifiant du brouillon Gmail.
@@ -461,7 +461,7 @@ export async function answerUnknownMail(
 
 // Sa réponse à son mail resté sans réponse (unanswered-mails.ts), depuis l'accueil, comme au mail d'un inconnu : « Oui »,
 // avec ses indications (vides quand elle n'en donne pas), ou « Non » (null). Une ligne de relance s'écrit pour ce mail
-// (0088) : son oui attend le passage suivant, qui fera le premier appel ; son non le ferme pour de bon, sans appel. Rend
+// (0089) : son oui attend le passage suivant, qui fera le premier appel ; son non le ferme pour de bon, sans appel. Rend
 // l'identifiant de la ligne, ou null sans rien écrire si ce n'est plus un mail sans réponse : à elle, toujours le
 // dernier de son fil, dans la fenêtre, pas encore traité (unansweredMails, la même requête que l'accueil, sans le filtre
 // du texte) ; ou si son compte est supprimé. Deux envois simultanés n'en gardent qu'un : une seule ligne par message

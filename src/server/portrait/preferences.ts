@@ -28,7 +28,7 @@ export type Reply = { id: string; texte: string; envoye: string };
 // avec sa réponse : le premier de ses mails envoyés dans le même fil, après le message auquel le brouillon répondait,
 // à son auteur (en « à » ou en copie). Ni un envoi d'avant, ni un transfert à un collègue, ni le mail d'un collègue
 // (il n'est pas de son côté), ni un fil d'une autre boîte. Un brouillon sans réponse d'elle n'est pas rendu. Un mail
-// coupé en plusieurs tours se recolle dans l'ordre de ses morceaux. Pas encore une relance (0088) : son message est le
+// coupé en plusieurs tours se recolle dans l'ordre de ses morceaux. Pas encore une relance (0089) : son message est le
 // sien, et un envoi où elle se met en copie passerait pour sa réponse.
 async function readReplies(ctx: TenantContext, now: Date): Promise<Reply[]> {
   const since = new Date(now.getTime() - ANSWERED_DAYS * DAY_MS);

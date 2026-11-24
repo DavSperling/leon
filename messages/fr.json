@@ -1199,7 +1199,7 @@
       },
       "relance": {
         "name": "Relances",
-        "text": "Quand un mail envoyé reste sans réponse, le fil remonte avec un brouillon de relance."
+        "text": "Quand un mail que vous avez envoyé reste cinq jours sans réponse, Leon vous demande s’il faut relancer, et écrit la relance après votre oui."
       },
       "point-du-jour": {
         "name": "Point du jour",

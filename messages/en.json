@@ -1199,7 +1199,7 @@
       },
       "relance": {
         "name": "Follow-ups",
-        "text": "When an email you sent gets no reply, the thread comes back with a draft follow-up."
+        "text": "When an email you sent has had no reply for five days, Leon asks whether to follow up, and writes the follow-up after your yes."
       },
       "point-du-jour": {
         "name": "Daily brief",

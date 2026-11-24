@@ -327,7 +327,7 @@ describe('FicheSection : les agents proposés', () => {
       'Brouillons de réponse Quand un mail attend une réponse, un brouillon écrit comme vous, sur l’accueil. Avec Gmail, un brouillon complet est aussi déposé dans vos brouillons. Rien ne part sans votre clic sur « Envoyer ». En service Oui Non',
     );
     expect(words('relance')).toBe(
-      'Relances Quand un mail envoyé reste sans réponse, le fil remonte avec un brouillon de relance. Pas encore en service Oui Non',
+      'Relances Quand un mail que vous avez envoyé reste cinq jours sans réponse, Leon vous demande s’il faut relancer, et écrit la relance après votre oui. Pas encore en service Oui Non',
     );
     expect(words('point-du-jour')).toBe(
       'Point du jour Chaque matin, votre agenda, les mails qui attendent, vos tâches. Pas encore en service Oui Non',

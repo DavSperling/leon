@@ -1,22 +1,24 @@
 import { browser } from '#imports';
+import {
+  type ConnectionToShow,
+  checkAccess,
+  connectionToShow,
+  type SiteNotice,
+  siteNoticeToShow,
+} from '../../lib/access';
+import { SERVER_URL } from '../../lib/api';
 import { browserStore } from '../../lib/browser-store';
-import type { RejectReason } from '../../lib/exchange';
 import { dateLocale, t, translatePage } from '../../lib/i18n';
 import { type DroppedCounts, type DropReason, takeDropped } from '../../lib/outbox';
-import {
-  type CaptureStatus,
-  hasConsent,
-  loadSettings,
-  loadStatus,
-  rejectionToShow,
-  type Settings,
-  saveSettings,
-} from '../../lib/settings';
+import { loadSettings, loadStatus, saveSettings } from '../../lib/settings';
 import { bindSiteSwitches, showSiteSwitches, siteOf } from '../../lib/site-switches';
 
 type Display = { label: string; tone: 'success' | 'warning' | 'danger' | 'info'; hint?: string };
 
-const CONNECTION_DISPLAYS: Record<CaptureStatus['connection'], Display> = {
+const SERVER_HOST = new URL(SERVER_URL).host;
+
+const CONNECTION_DISPLAYS: Record<ConnectionToShow, Display> = {
+  paused: { label: t('❚❚ En pause', '❚❚ Paused'), tone: 'info' },
   connected: { label: t('● Connecté', '● Connected'), tone: 'success' },
   not_configured: {
     label: t('▲ Non configuré', '▲ Not set up'),
@@ -37,6 +39,14 @@ const CONNECTION_DISPLAYS: Record<CaptureStatus['connection'], Display> = {
     hint: t('Nouvel essai dans 1 min.', 'Trying again in 1 min.'),
   },
   unknown: { label: t('● Vérification…', '● Checking…'), tone: 'info' },
+  access_removed: {
+    label: t('■ Accès retiré', '■ Access removed'),
+    tone: 'danger',
+    hint: t(
+      `Leon n’a plus accès à ${SERVER_HOST}. Rendez-le dans les réglages de l’extension de votre navigateur : rien n’est perdu, les échanges partiront ensuite.`,
+      `Leon no longer has access to ${SERVER_HOST}. Turn it back on in your browser’s extension settings: nothing is lost, exchanges will be sent afterwards.`,
+    ),
+  },
 };
 
 function byId<T extends HTMLElement>(id: string): T {
@@ -58,14 +68,6 @@ function formatAgo(iso: string | undefined): string {
   return t(`il y a ${days} j`, `${days} d ago`);
 }
 
-function displayFor(settings: Settings, status: CaptureStatus): Display {
-  if (settings.paused) return { label: t('❚❚ En pause', '❚❚ Paused'), tone: 'info' };
-  if (!hasConsent(settings) || settings.token === null) {
-    return CONNECTION_DISPLAYS.not_configured;
-  }
-  return CONNECTION_DISPLAYS[status.connection];
-}
-
 function pendingText(count: number): string {
   if (count === 0) return t("Rien en attente d'envoi", 'Nothing waiting to be sent');
   return t(
@@ -76,6 +78,11 @@ function pendingText(count: number): string {
 
 // Lu une fois à l'ouverture (puis noté comme vu) : la popup garde le message tant qu'elle est ouverte.
 const dropped = takeDropped(browserStore);
+
+// Les accès que la personne a laissés à l'extension, lus une fois à l'ouverture.
+const accessAtOpen = checkAccess(SERVER_URL, (permissions) =>
+  browser.permissions.contains(permissions),
+);
 
 const DROP_CAUSES: Record<DropReason, string> = {
   full: t(
@@ -92,8 +99,15 @@ const DROP_CAUSES: Record<DropReason, string> = {
   ),
 };
 
-// Le dernier échange non capté d'un site, tant que rien n'a été capté après lui.
-const REJECTION_DISPLAYS: Record<RejectReason, { text: string; tone: 'error' | 'muted' }> = {
+// Sous un site : l'accès retiré, ou son dernier échange non capté tant que rien n'a été capté après lui.
+const SITE_NOTICE_DISPLAYS: Record<SiteNotice, { text: string; tone: 'error' | 'muted' }> = {
+  access_removed: {
+    text: t(
+      'Leon n’a plus accès à ce site : rien n’y est capté. Rendez-le dans les réglages de l’extension de votre navigateur.',
+      'Leon no longer has access to this site: nothing is captured there. Turn it back on in your browser’s extension settings.',
+    ),
+    tone: 'error',
+  },
   format: {
     text: t(
       'Dernier échange non capté : Leon n’a pas su le lire (le site a peut-être changé).',
@@ -123,12 +137,13 @@ function droppedText(counts: DroppedCounts): string {
 }
 
 async function render(): Promise<void> {
-  const [settings, status, droppedCounts] = await Promise.all([
+  const [settings, status, droppedCounts, access] = await Promise.all([
     loadSettings(browserStore),
     loadStatus(browserStore),
     dropped,
+    accessAtOpen,
   ]);
-  const display = displayFor(settings, status);
+  const display = CONNECTION_DISPLAYS[connectionToShow(settings, status, access)];
   const state = byId('state');
   state.textContent = display.label;
   state.className = `badge ${display.tone}`;
@@ -142,8 +157,8 @@ async function render(): Promise<void> {
     element.title = iso ? new Date(iso).toLocaleString(dateLocale) : '';
   }
   for (const element of document.querySelectorAll<HTMLElement>('[data-rejection]')) {
-    const reason = rejectionToShow(status, siteOf(element));
-    const display = reason === null ? null : REJECTION_DISPLAYS[reason];
+    const notice = siteNoticeToShow(status, siteOf(element), access);
+    const display = notice === null ? null : SITE_NOTICE_DISPLAYS[notice];
     element.hidden = display === null;
     element.textContent = display?.text ?? '';
     element.className = display?.tone ?? '';

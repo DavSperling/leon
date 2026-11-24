@@ -108,7 +108,7 @@ export async function depositBrouillon(
     const headers = await client.replyHeaders(threadId, messageId);
     // Depuis la relève, elle a répondu ou supprimé le mail, ou on lui a récrit : rien à déposer, et ce n'est pas un échec.
     if (!headers) return false;
-    const raw = replyRaw({ ...headers, to: draft.to, text: row.texte });
+    const raw = replyRaw({ ...headers, to: [draft.to], text: row.texte });
     // Un message reçu sans identifiant, ou une adresse qui n'en est pas une : pas de réponse dans le fil.
     if (raw === null) throw new ConnectorHttpError(null, 'Unexpected response');
     const brouillonGmail = await client.createDraft(threadId, raw);

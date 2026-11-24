@@ -5,7 +5,7 @@ import { type Reply, replyRaw } from './reply';
 // n'existent pas.
 
 const REPLY: Reply = {
-  to: 'lea@client.test',
+  to: ['lea@client.test'],
   subject: 'Devis 2027',
   messageId: '<m2@mail.client.test>',
   references: null,
@@ -70,6 +70,62 @@ describe('replyRaw : le message d’une réponse dans un fil', () => {
     expect(message.text).toBe('Bonjour Léa,\r\n\r\nVoici le devis.\r\n\r\nBien à vous');
     // Ni expéditeur, ni copie, ni date : Gmail les pose, et personne n'est mis en copie.
     expect(message.lines.join('\n')).not.toMatch(/^(from|cc|bcc|reply-to|date):/im);
+  });
+
+  it('une réponse à une seule adresse : le même message qu’avant les listes, octet pour octet', () => {
+    const before = [
+      'To: lea@client.test',
+      'Subject: Re: Devis 2027',
+      'In-Reply-To: <m2@mail.client.test>',
+      'References: <m2@mail.client.test>',
+      'MIME-Version: 1.0',
+      'Content-Type: text/plain; charset=UTF-8',
+      'Content-Transfer-Encoding: base64',
+      '',
+      'Qm9uam91ciBMw6lhLA0KDQpWb2ljaSBsZSBkZXZpcy4NCg0KQmllbiDDoCB2b3Vz',
+      '',
+    ].join('\r\n');
+
+    expect(replyRaw(REPLY)).toBe(Buffer.from(before).toString('base64url'));
+    expect(replyRaw({ ...REPLY, cc: [] })).toBe(replyRaw(REPLY));
+  });
+
+  it('plusieurs destinataires en « à », et une copie : une adresse par ligne repliée, dans leur ordre', () => {
+    const message = read({
+      to: ['lea@client.test', 'marc@client.test'],
+      cc: ['paul@acme.test', 'zoe@client.test'],
+    });
+
+    expect(message.names).toEqual(['To', 'Cc', ...HEADERS.slice(1)]);
+    expect(message.header('To')).toBe('lea@client.test, marc@client.test');
+    expect(message.header('Cc')).toBe('paul@acme.test, zoe@client.test');
+    expect(message.lines.slice(0, 4)).toEqual([
+      'To: lea@client.test,',
+      ' marc@client.test',
+      'Cc: paul@acme.test,',
+      ' zoe@client.test',
+    ]);
+    expect(message.lines.join('\n')).not.toMatch(/^bcc:/im);
+  });
+
+  it('dix destinataires en tout passent ; au-delà, ou sans personne en « à », aucun message', () => {
+    const many = (n: number, who: string) =>
+      Array.from({ length: n }, (_, index) => `${who}${index}@client.test`);
+
+    expect(
+      read({ to: many(4, 'a'), cc: many(6, 'c') })
+        .header('Cc')
+        ?.split(', '),
+    ).toHaveLength(6);
+    expect(
+      read({ to: many(10, 'a') })
+        .header('To')
+        ?.split(', '),
+    ).toHaveLength(10);
+    expect(replyRaw({ ...REPLY, to: many(4, 'a'), cc: many(7, 'c') })).toBeNull();
+    expect(replyRaw({ ...REPLY, to: many(11, 'a') })).toBeNull();
+    expect(replyRaw({ ...REPLY, to: [] })).toBeNull();
+    expect(replyRaw({ ...REPLY, to: [], cc: ['lea@client.test'] })).toBeNull();
   });
 
   it.each([['Re: Devis 2027'], ['RE : Devis 2027'], ['re:Devis 2027']])(
@@ -162,8 +218,26 @@ describe('replyRaw : le message d’une réponse dans un fil', () => {
     ['une espace', 'lea @client.test'],
     ['aucune arobase', 'lea.client.test'],
     ['rien', ''],
-  ])('une adresse qui n’en est pas une seule (%s) : aucun message', (_, to) => {
-    expect(replyRaw({ ...REPLY, to })).toBeNull();
+  ])(
+    'une adresse qui n’en est pas une seule (%s) : aucun message, où qu’elle soit',
+    (_, address) => {
+      expect(replyRaw({ ...REPLY, to: [address] })).toBeNull();
+      expect(replyRaw({ ...REPLY, to: ['marc@client.test', address] })).toBeNull();
+      expect(replyRaw({ ...REPLY, cc: [address] })).toBeNull();
+      expect(replyRaw({ ...REPLY, cc: ['paul@acme.test', address, 'zoe@client.test'] })).toBeNull();
+    },
+  );
+
+  it('une copie qui tente d’ajouter un en-tête ou un destinataire : aucun message', () => {
+    for (const address of [
+      'paul@acme.test\r\nBcc: intrus@ailleurs.test',
+      'paul@acme.test\nTo: intrus@ailleurs.test',
+      'paul@acme.test, intrus@ailleurs.test',
+      'paul@acme.test;intrus@ailleurs.test',
+      'Paul <paul@acme.test>, <intrus@ailleurs.test>',
+      'paul@acme.test>\r\n\r\nBonjour',
+    ])
+      expect(replyRaw({ ...REPLY, cc: [address] }), JSON.stringify(address)).toBeNull();
   });
 
   it('ne garde des identifiants de message que ce qui en est un', () => {

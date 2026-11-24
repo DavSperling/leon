@@ -1,13 +1,15 @@
 // Le message d'une réponse dans un fil, en RFC 2822, tel que Gmail l'attend pour créer un brouillon (client.ts,
-// createDraft) : le champ `raw`, en base64url. Module pur, sans dépendance. Le destinataire, l'objet et les identifiants
-// de message sont des valeurs captées dans une boîte : aucune ne peut ajouter un en-tête, un destinataire, ni couper
-// le message. Ni De, ni date, ni identifiant : Gmail les pose. Ni citation du message d'origine, ni signature.
+// createDraft) : le champ `raw`, en base64url. Module pur, sans dépendance. Les destinataires, l'objet et les
+// identifiants de message sont des valeurs captées dans une boîte : aucune ne peut ajouter un en-tête, un destinataire,
+// ni couper le message. Ni De, ni date, ni identifiant : Gmail les pose. Ni copie cachée, ni citation du message
+// d'origine, ni signature.
 // Non vérifié (la documentation de Google, relue le 23/11/2026, ne le dit pas, et ses exemples posent De) : que Gmail
 // pose De sur un brouillon créé sans lui, et qu'il n'ajoute pas la signature de la personne.
 
 export type Reply = {
-  // L'adresse du destinataire, seule.
-  to: string;
+  // Les destinataires, chacun une adresse seule : en « à », un au moins ; en copie, aucun le plus souvent.
+  to: string[];
+  cc?: string[];
   // Les en-têtes Subject, Message-ID et References du message auquel répondre, tels que Gmail les rend.
   subject: string | null;
   messageId: string | null;
@@ -20,6 +22,8 @@ const CRLF = '\r\n';
 
 // Une adresse seule (« lea@client.test ») : ni nom, ni liste, ni espace, ni caractère de contrôle.
 const ADDRESS = /^[^\s\p{C}<>()[\]:;,"\\@]+@[^\s\p{C}<>()[\]:;,"\\@]+$/u;
+// Au plus, « à » et copie ensemble : au-delà, ce serait une annonce (comme unanswered-mails.ts, RECIPIENTS_MAX).
+const RECIPIENTS_MAX = 10;
 
 // Les identifiants de message d'un en-tête (« <a@x> <b@y> »), et rien de ce qui les entoure.
 const messageIds = (value: string | null) => value?.match(/<[^<>\s\p{C}]+>/gu) ?? [];
@@ -53,17 +57,23 @@ function encodeSubject(subject: string): string {
     .join(`${CRLF} `);
 }
 
-// Le champ `raw` d'un brouillon de réponse, ou null quand on ne peut pas répondre dans le fil : une adresse qui n'en est
-// pas une, ou un message reçu sans identifiant. Le corps part en base64 : aucune de ses lignes ne se lit comme un
-// en-tête, et aucune ne passe 76 caractères.
+// Le champ `raw` d'un brouillon de réponse, ou null quand on ne peut pas répondre dans le fil : aucun destinataire en
+// « à », plus de RECIPIENTS_MAX en tout, une seule adresse qui n'en est pas une, ou un message reçu sans identifiant.
+// Une adresse par ligne repliée : dix adresses longues ne font pas une ligne de plus de 998 caractères. « Cc: » ne
+// s'écrit qu'avec une copie. Le corps part en base64 : aucune de ses lignes ne se lit comme un en-tête, et aucune ne
+// passe 76 caractères.
 export function replyRaw(reply: Reply): string | null {
   const [parent] = messageIds(reply.messageId);
-  if (!ADDRESS.test(reply.to) || parent === undefined) return null;
+  const cc = reply.cc ?? [];
+  const all = [...reply.to, ...cc];
+  if (reply.to.length === 0 || all.length > RECIPIENTS_MAX) return null;
+  if (!all.every((address) => ADDRESS.test(address)) || parent === undefined) return null;
   const body = Buffer.from(reply.text.replace(/\r\n?|\n/g, CRLF))
     .toString('base64')
     .replace(/.{76}(?=.)/g, `$&${CRLF}`);
   const message = [
-    `To: ${reply.to}`,
+    `To: ${reply.to.join(`,${CRLF} `)}`,
+    ...(cc.length > 0 ? [`Cc: ${cc.join(`,${CRLF} `)}`] : []),
     `Subject: ${encodeSubject(replySubject(reply.subject))}`,
     `In-Reply-To: ${parent}`,
     `References: ${[...messageIds(reply.references), parent].join(`${CRLF} `)}`,

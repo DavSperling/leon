@@ -70,11 +70,17 @@ const PRET: HomeBrouillon = {
   source: { title: 'Contrat', url: null, kind: 'gmail' },
 };
 
-// Les éléments de l'Accueil, dans l'ordre où il les rend (fragments compris).
+// Les éléments de l'Accueil, dans l'ordre où il les rend (fragments compris), et ceux que la pile reçoit à placer :
+// au-dessus d'elle (`lead`), puis à droite (`side`).
 function flat(node: ReactNode): ReactElement<Record<string, unknown>>[] {
   if (Array.isArray(node)) return node.flatMap(flat);
   if (!isValidElement<Record<string, unknown>>(node)) return [];
-  return [node, ...flat(node.props.children as ReactNode)];
+  return [
+    node,
+    ...flat(node.props.children as ReactNode),
+    ...flat(node.props.lead as ReactNode),
+    ...flat(node.props.side as ReactNode),
+  ];
 }
 // `/` sans recherche : la page rend l'Accueil, un composant asynchrone, bâti ici à la main.
 async function home() {
@@ -88,17 +94,21 @@ beforeEach(() => vi.mocked(logError).mockClear());
 
 describe('l’Accueil : la ligne de l’agent « Brouillons de réponse »', () => {
   // Ce que la ligne reçoit de l'Accueil.
-  const received = (elements: ReactElement<Record<string, unknown>>[]) =>
-    elements.find((element) => element.type === ReplyDrafts)?.props;
+  const received = (elements: ReactElement<Record<string, unknown>>[]) => {
+    const props = elements.find((element) => element.type === ReplyDrafts)?.props;
+    return (
+      props && { name: props.name, demandes: props.demandes, prets: props.prets, max: props.max }
+    );
+  };
 
-  it('sous le bonjour et avant le champ, avec ce que l’Accueil a lu, son prénom, et la borne d’une réponse', async () => {
+  it('la pile porte l’Accueil : le bonjour puis le champ au-dessus d’elle, avec ce que l’Accueil a lu, son prénom, et la borne d’une réponse', async () => {
     vi.mocked(readHomeBrouillons).mockResolvedValue({ demandes: [DEMANDE], prets: [] });
 
     const { elements, types } = await home();
 
-    expect(types.indexOf(Greeting)).toBeGreaterThanOrEqual(0);
-    expect(types.indexOf(ReplyDrafts)).toBeGreaterThan(types.indexOf(Greeting));
-    expect(types.indexOf(HomeAsk)).toBeGreaterThan(types.indexOf(ReplyDrafts));
+    expect(types.indexOf(ReplyDrafts)).toBeGreaterThanOrEqual(0);
+    expect(types.indexOf(Greeting)).toBeGreaterThan(types.indexOf(ReplyDrafts));
+    expect(types.indexOf(HomeAsk)).toBeGreaterThan(types.indexOf(Greeting));
     expect(received(elements)).toEqual({
       name: 'Julie',
       demandes: [DEMANDE],

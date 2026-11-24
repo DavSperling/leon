@@ -207,55 +207,59 @@ const text = (html: string) =>
     .replace(/[\s\u00a0\u202f]+/g, ' ')
     .trim();
 const count = (html: string, needle: string) => html.split(needle).length - 1;
+// L'en-tête de « À vous », la pile de l'Accueil : la phrase de Leon, puis le compte de ce qui attend.
+const line = (html: string) => {
+  const pile = html.slice(html.indexOf('<section'));
+  const summary = /<\/h2><span[^>]*>(.*?)<\/span>/.exec(pile)?.[1] ?? '';
+  const title = /<p class="basis-full[^"]*">(.*?)<\/p>/.exec(pile)?.[1] ?? '';
+  return text(`${title} ${summary}`);
+};
 // Les libellés des boutons, dans l'ordre.
 const buttons = (html: string) =>
   [...html.matchAll(/<button [^>]*>(?:<span[^>]*><\/span>)?([^<]+)</g)].map((match) => match[1]);
 // Les boutons radio, dans l'ordre : cochés ou non.
 const radios = (html: string) =>
   [...html.matchAll(/<input type="radio"[^>]*>/g)].map((match) => match[0].includes('checked=""'));
-// La ligne de l'Accueil : son nom accessible.
-const label = (html: string) => /<button [^>]*aria-label="([^"]*)"/.exec(html)?.[1];
 
-describe('ReplyDrafts : la ligne de l’Accueil', () => {
-  it('rien ne l’attend : pas de ligne', () => {
-    expect(render([])).toBe('');
-  });
-
-  it('une seule ligne, un seul bouton, qui ouvre le panneau : son prénom, « j’ai quelques questions », et le compte de ce qui attend', () => {
-    const html = render([DEVIS, CONTRAT, INES, REPONDUE], [PRET]);
+describe('ReplyDrafts : la pile « À vous » de l’Accueil', () => {
+  it('rien ne l’attend : « À vous » le dit, sans bouton', () => {
+    const html = render([]);
 
     expect(text(html)).toBe(
+      'À vous Rien ne vous attend pour l’instant. Quand un mail demandera une réponse, Leon vous posera ici ses questions, puis vous montrera son brouillon.',
+    );
+    expect(count(html, '<button')).toBe(0);
+  });
+
+  it('la phrase de Leon et le compte, le mail montré ouvert dans la page, les suivants dessous, « Tout traiter »', () => {
+    const html = render([DEVIS, CONTRAT, INES, REPONDUE], [PRET]);
+
+    expect(line(html)).toBe(
       'Julie, j’ai quelques questions à vous poser. 3 mails à compléter · 1 brouillon prêt · 1 brouillon en cours',
     );
-    expect(count(html, '<button')).toBe(1);
-    // Son nom accessible dit le titre et le compte ; il dit qu'il ouvre une fenêtre, et la flèche du kit le montre.
-    expect(label(html)).toBe(
-      'Julie, j’ai quelques questions à vous poser. 3 mails à compléter · 1 brouillon prêt · 1 brouillon en cours',
-    );
-    expect(html).toMatch(
-      /<button type="button" class="tl card tl--wrap [^"]*"[^>]*aria-haspopup="dialog"/,
-    );
-    expect(html).toMatch(/<svg [^>]*class="[^"]*tl__chev" aria-hidden="true"/);
-    // Le détail n'est plus sur l'Accueil : ni la carte, ni un correspondant, ni une question, ni un brouillon.
-    expect(html).not.toMatch(/<ul|Leon a besoin de vous|Léa Roy|Inès|Acceptez-vous|Bonjour Léa/);
+    // Le mail montré, ouvert : son en-tête, sans prendre le focus au chargement.
+    expect(count(html, '<article')).toBe(1);
+    // Les quatre autres, puis « Tout traiter » : chacun ouvre le panneau.
+    expect(count(html, 'aria-haspopup="dialog"')).toBe(5);
+    expect(html).toContain('>Tout traiter</button>');
   });
 
   it('le mail d’un inconnu attend son geste aussi : une question, au singulier', () => {
-    expect(text(render([INES]))).toBe(
+    expect(line(render([INES]))).toBe(
       'Julie, j’ai quelques questions à vous poser. 1 mail à compléter',
     );
   });
 
   it('sans rien à compléter, ses brouillons prêts : au singulier, au pluriel, sans les sortes absentes', () => {
-    expect(text(render([], [PRET]))).toBe('Julie, votre brouillon est prêt. 1 brouillon prêt');
-    expect(text(render([REPONDUE], [PRET, DEPOSE]))).toBe(
+    expect(line(render([], [PRET]))).toBe('Julie, votre brouillon est prêt. 1 brouillon prêt');
+    expect(line(render([REPONDUE], [PRET, DEPOSE]))).toBe(
       'Julie, vos 2 brouillons sont prêts. 2 brouillons prêts · 1 brouillon en cours',
     );
   });
 
   it('sans rien d’autre, ce que Leon écrit : au singulier, au pluriel', () => {
-    expect(text(render([REPONDUE]))).toBe('Julie, j’écris votre brouillon. 1 brouillon en cours');
-    expect(text(render([REPONDUE, { ...CONTRAT, repondue: true }]))).toBe(
+    expect(line(render([REPONDUE]))).toBe('Julie, j’écris votre brouillon. 1 brouillon en cours');
+    expect(line(render([REPONDUE, { ...CONTRAT, repondue: true }]))).toBe(
       'Julie, j’écris vos 2 brouillons. 2 brouillons en cours',
     );
   });
@@ -263,38 +267,38 @@ describe('ReplyDrafts : la ligne de l’Accueil', () => {
   it('une préférence à valider attend son geste aussi : « j’ai quelques questions », et son compte, au singulier, au pluriel', () => {
     const autre = { ...RETOUCHE, id: id(802) };
 
-    expect(text(render([RETOUCHE]))).toBe(
+    expect(line(render([RETOUCHE]))).toBe(
       'Julie, j’ai quelques questions à vous poser. 1 préférence à valider',
     );
-    expect(text(render([DEVIS, RETOUCHE, autre, REPONDUE], [PRET]))).toBe(
+    expect(line(render([DEVIS, RETOUCHE, autre, REPONDUE], [PRET]))).toBe(
       'Julie, j’ai quelques questions à vous poser. 1 mail à compléter · 2 préférences à valider · 1 brouillon prêt · 1 brouillon en cours',
     );
-    expect(text(render([RETOUCHE], [], 'en'))).toBe(
+    expect(line(render([RETOUCHE], [], 'en'))).toBe(
       'Julie, I have a few questions for you. 1 preference to confirm',
     );
-    expect(text(render([RETOUCHE, autre], [PRET], 'en', null))).toBe(
+    expect(line(render([RETOUCHE, autre], [PRET], 'en', null))).toBe(
       'I have a few questions for you. 2 preferences to confirm · 1 draft ready',
     );
   });
 
   it('une relance à décider attend son geste aussi : « j’ai quelques questions », et son compte à part, au singulier, au pluriel', () => {
-    expect(text(render([SANS_REPONSE]))).toBe(
+    expect(line(render([SANS_REPONSE]))).toBe(
       'Julie, j’ai quelques questions à vous poser. 1 relance à décider',
     );
-    expect(text(render([DEVIS, SANS_REPONSE, A_PLUSIEURS], [RELANCE_PRETE]))).toBe(
+    expect(line(render([DEVIS, SANS_REPONSE, A_PLUSIEURS], [RELANCE_PRETE]))).toBe(
       'Julie, j’ai quelques questions à vous poser. 1 mail à compléter · 2 relances à décider · 1 brouillon prêt',
     );
-    expect(text(render([SANS_REPONSE], [], 'en'))).toBe(
+    expect(line(render([SANS_REPONSE], [], 'en'))).toBe(
       'Julie, I have a few questions for you. 1 follow-up to decide',
     );
-    expect(text(render([SANS_REPONSE, A_PLUSIEURS], [], 'en', null))).toBe(
+    expect(line(render([SANS_REPONSE, A_PLUSIEURS], [], 'en', null))).toBe(
       'I have a few questions for you. 2 follow-ups to decide',
     );
   });
 
   it('sans prénom, les mêmes phrases sans le nommer', () => {
     const anon = (demandes: Array<HomeDemande | HomeInconnu>, prets: HomeBrouillon[] = []) =>
-      text(render(demandes, prets, 'fr', null));
+      line(render(demandes, prets, 'fr', null));
 
     expect(anon([DEVIS])).toBe('J’ai quelques questions à vous poser. 1 mail à compléter');
     expect(anon([], [PRET])).toBe('Votre brouillon est prêt. 1 brouillon prêt');
@@ -307,7 +311,7 @@ describe('ReplyDrafts : la ligne de l’Accueil', () => {
       demandes: Array<HomeDemande | HomeInconnu>,
       prets: HomeBrouillon[] = [],
       name: string | null = 'Julie',
-    ) => text(render(demandes, prets, 'en', name));
+    ) => line(render(demandes, prets, 'en', name));
 
     expect(english([DEVIS, INES, REPONDUE], [PRET])).toBe(
       'Julie, I have a few questions for you. 2 emails to complete · 1 draft ready · 1 draft in progress',
@@ -557,7 +561,7 @@ describe('MailView : un mail du panneau', () => {
       ),
     );
     expect(text(html)).toBe(
-      'J’ai remarqué une retouche sur ma réponse à Léa Roy. Reçu le 13 nov. 2026 Devis 2027 Gmail Vous terminez vos mails par « Belle journée », jamais par &lt;b&gt;. Dois-je en tenir compte pour vos prochains brouillons ? Oui Non',
+      'J’ai remarqué une retouche sur ma réponse à Léa Roy. Reçu le 13 nov. 2026 · Gmail Devis 2027 Gmail Vous terminez vos mails par « Belle journée », jamais par &lt;b&gt;. Dois-je en tenir compte pour vos prochains brouillons ? Oui Non',
     );
     expect(html).toContain('href="https://mail.google.test/8"');
     // Le texte tel quel, échappé.
@@ -726,8 +730,8 @@ describe('Questions : une question à la fois, puis le récapitulatif', () => {
     expect(html).toMatch(
       /<textarea [^>]*aria-label="Votre réponse"[^>]*maxLength="1000"[^>]*>Plutôt mercredi\.<\/textarea>/,
     );
-    // Dans le groupe de la question, après « Autre ».
-    expect(html).toMatch(/Autre<\/label><textarea [^>]*>[^<]*<\/textarea><\/fieldset>/);
+    // Dans la tuile « Autre », sous son libellé, à la fin du groupe de la question.
+    expect(html).toMatch(/Autre<\/label><textarea [^>]*>[^<]*<\/textarea><\/div><\/fieldset>/);
   });
 
   it('la question suivante : sa place, ses choix, « Précédent » et « Suivant »', () => {

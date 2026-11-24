@@ -676,7 +676,7 @@ Le point 9 (Codex) demande d'approuver le crochet dans `/hooks`. Il vient avec C
 - **2.**
   - `CLAUDE_CODE_ENTRYPOINT` vaut `claude-desktop`.
   - Dans une session en worktree, `CLAUDE_PROJECT_DIR` est le dossier ouvert, et le `cwd` est le worktree. Ici, le worktree était sous `.claude/worktrees` du dossier : le fichier était donc dans les deux.
-  - Le test 6 de `leon read-first` doit compter un fichier comme du projet s'il est sous `CLAUDE_PROJECT_DIR` **ou** sous le `cwd`. Sinon, un worktree rangé ailleurs ne serait jamais arrêté.
+  - Le test 6 de `leon read-first` compte un fichier comme du projet s'il est sous `CLAUDE_PROJECT_DIR`, le dossier où la session a commencé. Le `cwd` ne sert qu'en repli, quand cette variable manque : il suit les `/cd`, et une écriture dans un autre dossier prendrait sinon le seul arrêt de la session (relecture de Codex sur #237, 24/11). Les worktrees de Claude Code sont rangés sous le dossier ouvert, donc ils sont couverts. Un worktree rangé ailleurs n'est pas arrêté : c'est une limite connue, et la modification passe.
 - **Le refus.** L'humain voit le bloc « Bloqué par un hook », avec tout le message, et la modification « Non appliqué ». L'agent a lancé la lecture puis refait sa modification.
 - **10. La lecture a échoué.**
   - Le bac à sable de Bash de l'app est actif chez Amos (`sandbox.enabled`, `allowUnsandboxedCommands: true`). Son réseau ne sort que vers une liste de domaines, et `leonmemory.com` n'en fait pas partie.
@@ -729,7 +729,7 @@ La question : ``Let Leon's read commands run outside the Claude Code sandbox (wr
 
 **T66 est fait** (23/11). Les points 1 à 8 et 10 ont leur réponse. Le point 9 (Codex) vient avec Codex, après une approbation dans `/hooks`. Trois choses changent pour T67 :
 - le texte d'arrêt V2 ;
-- la règle du code 0 et du projet (`CLAUDE_PROJECT_DIR` ou `cwd`) ;
+- la règle du code 0 et du projet (`CLAUDE_PROJECT_DIR`, le `cwd` en repli) ;
 - l'exception du bac à sable proposée par l'installateur.
 
 Le dépôt `~/leon-essai-t66` reste jusqu'à la fin de T67, pour un dernier essai du vrai crochet avec Amos.

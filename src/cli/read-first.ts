@@ -50,20 +50,20 @@ const isUnder = (file: string, dir: string): boolean => {
   return rel !== '..' && !rel.startsWith(`..${sep}`) && !isAbsolute(rel);
 };
 
-// Le test 6 : sous CLAUDE_PROJECT_DIR ou sous le `cwd` de l'entrée (une session en worktree a l'un et l'autre, essai
-// T66), jamais sous le dossier de Claude Code (son plan, sa mémoire automatique). Le dossier parent du fichier passe
-// par realpath, pas le fichier : un lien du projet vers ailleurs compte encore comme du projet.
+// Le test 6 : sous le dossier où la session a commencé (CLAUDE_PROJECT_DIR), jamais sous le dossier de Claude Code (son
+// plan, sa mémoire automatique). Le `cwd` de l'entrée ne sert qu'en repli, sans CLAUDE_PROJECT_DIR : il suit les `/cd`,
+// et une écriture ailleurs prendrait sinon le seul arrêt de la session (relecture de Codex sur #237). Les worktrees de
+// l'essai T66 sont sous le dossier ouvert. Le dossier parent du fichier passe par realpath, pas le fichier : un lien du
+// projet vers ailleurs compte encore comme du projet.
 async function inProject(
   file: string,
-  projectDirs: (string | undefined)[],
+  projectDir: string | undefined,
   claudeDir: string,
 ): Promise<boolean> {
+  if (projectDir === undefined || !isAbsolute(projectDir)) return false;
   const target = join(await realDir(dirname(file)), basename(file));
   if (isUnder(target, await realDir(claudeDir))) return false;
-  for (const dir of projectDirs) {
-    if (dir !== undefined && isAbsolute(dir) && isUnder(target, await realDir(dir))) return true;
-  }
-  return false;
+  return isUnder(target, await realDir(projectDir));
 }
 
 export type ReadFirstDeps = {
@@ -106,8 +106,8 @@ export async function runReadFirst(deps: ReadFirstDeps): Promise<0> {
     const file = input.data.tool_input?.file_path ?? input.data.tool_input?.notebook_path;
     if (file === undefined || !isAbsolute(file)) return 0;
     const claudeDir = deps.env.CLAUDE_CONFIG_DIR || join(deps.home, '.claude'); // claudeConfigDir, sous ce home
-    const projectDirs = [deps.env.CLAUDE_PROJECT_DIR, input.data.cwd];
-    if (!(await inProject(file, projectDirs, claudeDir))) return 0; // 6
+    const projectDir = deps.env.CLAUDE_PROJECT_DIR || input.data.cwd;
+    if (!(await inProject(file, projectDir, claudeDir))) return 0; // 6
     const reason = readFirstMessage(await leonCommand(deps.home, deps.depot));
     // 7 et 8 : la création exclusive dit à la fois « déjà arrêtée » (le témoin existe) et « créé par ce passage ».
     if (!(await claimTemoin(deps.home, 'claude_code', input.data.session_id))) return 0;

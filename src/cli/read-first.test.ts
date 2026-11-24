@@ -187,13 +187,34 @@ describe('leon read-first', () => {
     expect(byLinkedFile.out).toHaveLength(1);
   });
 
-  it('une session en worktree : le fichier sous le `cwd` compte, même hors de CLAUDE_PROJECT_DIR', async () => {
-    const worktree = join(base, 'worktrees', 'sujet');
+  it('une session en worktree sous le dossier ouvert (essai T66) : le fichier du worktree compte', async () => {
+    const worktree = join(project, '.claude', 'worktrees', 'sujet');
     await mkdir(worktree, { recursive: true });
 
     const { out } = await run({
       stdin: hookJson({ cwd: worktree, tool_input: { file_path: join(worktree, 'a.js') } }),
     });
+
+    expect(out).toHaveLength(1);
+  });
+
+  // Le `cwd` suit les `/cd` (relecture de Codex sur #237) : une écriture ailleurs ne prend pas l'arrêt de la session,
+  // qui reste pour la première modification du projet.
+  it('après un `/cd` hors du projet, une écriture dans ce dossier passe, et l’arrêt reste pour le projet', async () => {
+    const ailleurs = join(base, 'ailleurs');
+    await mkdir(ailleurs, { recursive: true });
+
+    const elsewhere = await run({
+      stdin: hookJson({ cwd: ailleurs, tool_input: { file_path: join(ailleurs, 'a.js') } }),
+    });
+    const inProjectAfter = await run();
+
+    expect(elsewhere.out).toEqual([]);
+    expect(inProjectAfter.out).toHaveLength(1);
+  });
+
+  it('sans CLAUDE_PROJECT_DIR, le `cwd` de l’entrée sert de projet', async () => {
+    const { out } = await run({ env: { CLAUDE_CODE_ENTRYPOINT: 'claude-desktop' } });
 
     expect(out).toHaveLength(1);
   });

@@ -32,6 +32,9 @@ import { ANSWERED_DAYS } from './waiting-mails';
 // - n'est pas un simple accusé ou remerciement (asksForReply).
 // shortcut: un mail Outlook où elle se met en copie laisse après le sien une copie reçue, sans côté : il ne se propose
 // pas ; à reconnaître par son adresse d'auteur si de vraies boîtes le montrent.
+// shortcut: la fenêtre est celle des lignes que le passage écrit (readAnsweredMails), sans marge : son oui à un mail de
+// près de ANSWERED_DAYS jours se perd sans un mot si le passage ne l'écrit pas avant qu'il en sorte (le plafond du jour
+// atteint, le modèle en panne) ; à ne proposer que jusqu'à ANSWERED_DAYS - 1 jours si de vrais oui s'y perdent.
 
 const UNANSWERED_DAYS = 5;
 const RECIPIENTS_MAX = 10;

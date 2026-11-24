@@ -25,7 +25,7 @@ const KEPT_MIN = 0.5;
 const CUT_FROM_DRAFT = 0.75;
 const CUT_WORDS = 10;
 
-const wordsOf = (text: string) => text.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
+export const wordsOf = (text: string) => text.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [];
 
 // La longueur de la plus longue sous-suite commune, ligne à ligne : deux mails de mille mots, un million de cases.
 function common(a: string[], b: string[]): number {

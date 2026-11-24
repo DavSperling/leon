@@ -92,8 +92,9 @@ const iso = (internalDate: string) => new Date(Number(internalDate)).toISOString
 // (CATEGORY_FORUMS) ; Promotions et Réseaux sociaux ne sont pas relevés (connector.ts). Rien n'en est gardé que ce fait.
 // Une adresse de machine : « no-reply » et ses formes, au début ou après un séparateur (comments-noreply@…,
 // no_reply@…, ne-pas-repondre@…), ou une boîte de service au début (mailer-daemon@…, notifications@…). Une personne
-// dont l'adresse contient « notifications » plus loin (julie.notifications@…) reste une personne.
-const MACHINE_SENDER =
+// dont l'adresse contient « notifications » plus loin (julie.notifications@…) reste une personne. Les relances la lisent
+// aussi, en SQL, pour écarter un mail envoyé à une machine (portrait/unanswered-mails.ts).
+export const MACHINE_SENDER =
   /^(?:[^@]*[._+-])?(?:no[-_]?reply|do[-_]?not[-_]?reply|ne[-_]?pas[-_]?repondre)|^(?:mailer-daemon|postmaster|notifications)/i;
 const BULK_TABS = ['CATEGORY_UPDATES', 'CATEGORY_FORUMS'];
 

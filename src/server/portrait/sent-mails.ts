@@ -36,6 +36,18 @@ export const sentTurns = (ctx: TenantContext, since: Date): SQL =>
     and t.author_side = ${TEAM} and t.external_id like 'message:%'
     and t.ts >= ${since.toISOString()}::timestamptz`;
 
+// Ses adresses, en minuscules : celles d'où partent ses mails envoyés depuis `since` (sentTurns), comme pour les mails
+// qui attendent sa réponse (waiting-mails.ts).
+export const ownAddresses = (ctx: TenantContext, since: Date): SQL =>
+  sql`array(select distinct lower(t.author_email) from turns t
+    join sources s on s.tenant_id = t.tenant_id and s.id = t.source_id
+    where ${sentTurns(ctx, since)} and t.author_email is not null)`;
+
+// Les destinataires `recipients` d'un de ses mails qui ne sont pas elle (`own`, ses adresses), dans leur ordre. Les
+// adresses des destinataires sont gardées en minuscules (normalize.ts).
+export const notOwn = (recipients: SQL, own: SQL): SQL =>
+  sql`array(select r from unnest(${recipients}) with ordinality u(r, i) where r <> all(${own}) order by i)`;
+
 type Row = {
   sourceId: string;
   sent: string;

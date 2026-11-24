@@ -46,8 +46,8 @@ const CONNECTION_DISPLAYS: Record<ConnectionToShow, Display> = {
     label: t('■ Accès retiré', '■ Access removed'),
     tone: 'danger',
     hint: t(
-      `Leon n’a plus accès à ${SERVER_HOST}. Rendez-le dans les réglages de l’extension de votre navigateur : rien n’est perdu, les échanges partiront ensuite.`,
-      `Leon no longer has access to ${SERVER_HOST}. Turn it back on in your browser’s extension settings: nothing is lost, exchanges will be sent afterwards.`,
+      `Leon n’a plus accès à ${SERVER_HOST}. Rendez-le dans les réglages de l’extension de votre navigateur : les échanges captés attendent et partiront ensuite.`,
+      `Leon no longer has access to ${SERVER_HOST}. Turn it back on in your browser’s extension settings: captured exchanges are kept and will be sent afterwards.`,
     ),
   },
 };

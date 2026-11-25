@@ -1042,4 +1042,54 @@
     font: 400 13px / 1 var(--font);
     color: var(--muted);
   }
+
+  /* La grande fenêtre d'un agent (SidePanel wide) : à gauche l'exemple sur sa bande de bureau, à droite son état, son
+     geste et ce qu'il est. Quand le corps est étroit (le téléphone), l'un sous l'autre. Passer d'un agent à l'autre
+     pose sa feuille, puis son surligneur passe. */
+  .agent-open {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 36px;
+  }
+  @media (max-width: 1023px) {
+    .agent-open {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 20px;
+    }
+  }
+  .agent-open > .agent-well {
+    display: grid;
+    place-items: center;
+    min-height: 360px;
+    margin: 0;
+    padding: 48px 28px 40px 40px;
+    border: 0;
+    border-radius: 12px;
+  }
+  @media (max-width: 1023px) {
+    .agent-open > .agent-well {
+      min-height: 0;
+      padding: 40px 24px 28px 36px;
+    }
+  }
+  .agent-open .agent-sheet--lg {
+    width: 100%;
+    animation: agent-swap 420ms var(--ease-out) backwards;
+  }
+  @keyframes agent-swap {
+    from {
+      opacity: 0;
+      translate: 0 10px;
+      rotate: 1.4deg;
+    }
+  }
+  /* Dans sa liste, le drapeau de l'agent en petit, devant son nom. */
+  .agent-row__flag {
+    min-width: 0;
+    width: 12px;
+    height: 10px;
+    padding: 0;
+    clip-path: polygon(0 0, 100% 0, calc(100% - 4px) 50%, 100% 100%, 0 100%);
+  }
 }

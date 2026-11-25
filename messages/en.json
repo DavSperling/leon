@@ -104,6 +104,7 @@
   "navigation": {
     "home": "Home",
     "discussions": "Chat",
+    "agents": "Agents",
     "documents": "Documents",
     "team": "Team",
     "connections": "Connections",
@@ -721,6 +722,119 @@
     "sources": "Sources",
     "untitled": "Untitled"
   },
+  "agents": {
+    "title": "Agents",
+    "ready": "Ready to use",
+    "promise": "They prepare, you decide: nothing goes out without you.",
+    "soon": "Coming soon",
+    "active": "Active",
+    "activate": "Turn on",
+    "asked": "Requested",
+    "own": "Your own agents",
+    "ownCaption": "You’ll build them yourself.",
+    "example": "Fictional example",
+    "state": {
+      "on": "Active",
+      "off": "Off",
+      "soon": "Not running yet"
+    },
+    "switchOn": "Turn on {name}",
+    "switchSoon": "Get it as soon as it’s out",
+    "facts": {
+      "does": "What it does",
+      "where": "Where to find it",
+      "needs": "What it needs",
+      "who": "Who sees its work"
+    },
+    "whereHome": "On the home page, under “For you”.",
+    "whoYou": "Only you.",
+    "needs": {
+      "boite": "Gmail or Outlook, connected by you, and your work profile.",
+      "reunions": "A meeting recorder connected by you (tl;dv, Fireflies, Fathom…), and your work profile.",
+      "outlook": "Outlook, connected by you, and your work profile."
+    },
+    "missing": {
+      "boite": "It needs your mailbox.",
+      "reunions": "It needs a meeting recorder.",
+      "outlook": "It needs Outlook, the only calendar Leon reads today.",
+      "fiche": "It needs your work profile.",
+      "usage": "Your work profile doesn’t show enough email for it yet."
+    },
+    "fix": {
+      "boite": "Connect my mailbox",
+      "reunions": "Connect a recorder",
+      "outlook": "Connect Outlook",
+      "fiche": "Build my profile"
+    },
+    "saved": {
+      "on": "{name} is on.",
+      "off": "{name} is off.",
+      "wanted": "Noted: it will work for you as soon as it’s out.",
+      "unwanted": "Noted."
+    },
+    "gone": "This agent is no longer available to you. The page was reloaded.",
+    "failed": "Your answer couldn’t be saved. Try again.",
+    "loadFailed": "Your agents couldn’t be loaded. Reload the page.",
+    "notice": {
+      "building": "Leon is building your work profile. Your agents will be offered next.",
+      "noMailbox": "Your agents start from your mailbox. Connect Gmail or Outlook to turn them on.",
+      "noFiche": "Your agents start from your work profile. Build it to turn them on.",
+      "refresh": "Reload"
+    },
+    "list": {
+      "suite-reunion": {
+        "name": "Meeting follow-up",
+        "text": "After a recorded meeting, a summary and a draft follow-up email.",
+        "when": "After a recorded meeting",
+        "sheet": {
+          "meta": "Site meeting · Thursday",
+          "a": "<hl>Approve the plans by Friday</hl>",
+          "b": "Send Paul the revised quote",
+          "foot": "Follow-up draft"
+        }
+      },
+      "brouillon-reponse": {
+        "name": "Reply drafts",
+        "text": "When an email is waiting for a reply, a draft written the way you write, on the home page. With Gmail, a complete draft is also saved to your drafts. Nothing is sent until you click Send.",
+        "when": "When an email awaits your reply",
+        "sheet": {
+          "meta": "Reply to Sophie",
+          "a": "Hi Sophie, <hl>Thursday at 10 works for me</hl> for the site visit.",
+          "foot": "Send"
+        }
+      },
+      "brief-rendez-vous": {
+        "name": "Pre-meeting brief",
+        "text": "Before a meeting, who you’re meeting, where things stand, what was promised.",
+        "when": "Before a meeting",
+        "sheet": {
+          "meta": "2:30 pm · Meeting with Julie",
+          "a": "Status: quote signed, work starts in March.",
+          "b": "Promised: <hl>the schedule this week</hl>."
+        }
+      },
+      "relance": {
+        "name": "Follow-ups",
+        "text": "When an email you sent has had no reply for five days, Leon asks whether to follow up, and writes the follow-up after your yes.",
+        "when": "After five days without a reply",
+        "sheet": {
+          "meta": "No reply for five days",
+          "a": "Hi Marc, <hl>just following up</hl> on the quote I sent on Monday.",
+          "foot": "Send"
+        }
+      },
+      "point-du-jour": {
+        "name": "Daily brief",
+        "text": "Every morning, your calendar, the emails waiting for a reply, your tasks.",
+        "when": "Every morning",
+        "sheet": {
+          "meta": "This morning",
+          "a": "9:00 · Team check-in",
+          "b": "<hl>Two emails are waiting for your reply</hl>"
+        }
+      }
+    }
+  },
   "answer": {
     "unavailable": "The answer is unavailable right now. The results below are complete.",
     "title": "Leon’s answer",
@@ -1188,37 +1302,7 @@
     "fieldDetail": "Detail",
     "errorNotFound": "This line no longer exists. The profile was reloaded.",
     "errorInvalid": "This isn’t valid. Check the text and its length.",
-    "errorFailed": "Something went wrong. Try again.",
-    "agentsTitle": "Suggested agents",
-    "agentsHint": "Answer yes or no to each: Leon keeps your answer, and you can change it. An agent that is running only works for you after your yes.",
-    "agentRunning": "Running",
-    "agentNotYet": "Not running yet",
-    "agentYes": "Yes",
-    "agentNo": "No",
-    "agentSaved": "Answer saved.",
-    "agentGone": "This agent is no longer suggested to you. The profile was reloaded.",
-    "agents": {
-      "suite-reunion": {
-        "name": "Meeting follow-up",
-        "text": "After a recorded meeting, a summary and a draft follow-up email."
-      },
-      "brouillon-reponse": {
-        "name": "Reply drafts",
-        "text": "When an email is waiting for a reply, a draft written the way you write, on the home page. With Gmail, a complete draft is also saved to your drafts. Nothing is sent until you click Send."
-      },
-      "brief-rendez-vous": {
-        "name": "Pre-meeting brief",
-        "text": "Before a meeting, who you’re meeting, where things stand, what was promised."
-      },
-      "relance": {
-        "name": "Follow-ups",
-        "text": "When an email you sent has had no reply for five days, Leon asks whether to follow up, and writes the follow-up after your yes."
-      },
-      "point-du-jour": {
-        "name": "Daily brief",
-        "text": "Every morning, your calendar, the emails waiting for a reply, your tasks."
-      }
-    }
+    "errorFailed": "Something went wrong. Try again."
   },
   "security": {
     "name": "Name",

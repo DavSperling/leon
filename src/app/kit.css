@@ -675,4 +675,371 @@
   .doc-list > li::marker {
     color: var(--muted);
   }
+
+  /* ---------- L'écran Agents : chaque agent par la feuille qu'il laisse sur le bureau (agents/sheet.tsx) ---------- */
+  /* Deux colonnes : les agents en service, en grand. */
+  .things-2 {
+    grid-template-columns: repeat(auto-fill, minmax(max(320px, (100% - 12px) / 2), 1fr));
+  }
+  @media (max-width: 599px) {
+    .things-2 {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+  /* La carte : une bande de bureau où la pile de l'agent est posée, puis le nom, le déclencheur, l'état. Toute la
+     carte est le contrôle, comme une chose du bureau (.tl). */
+  .agent {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    background: var(--glass);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: var(--sh-1);
+    color: var(--text);
+    text-align: left;
+    transition:
+      transform var(--fast) var(--ease-out),
+      box-shadow var(--med) var(--ease-out),
+      border-color var(--fast);
+  }
+  @media (hover: hover) {
+    .agent:hover {
+      transform: translateY(-1px);
+      border-color: var(--line-strong);
+      box-shadow: var(--sh-2);
+    }
+  }
+  .agent:active {
+    transform: none;
+    box-shadow: var(--sh-1);
+  }
+  /* La bande grandit avec sa pile (une feuille n'est jamais coupée) et remplit la carte : les pieds d'une rangée
+     restent alignés. */
+  .agent__desk {
+    display: grid;
+    flex: 1;
+    place-items: center;
+    min-height: 212px;
+    margin: 6px 6px 0;
+    padding: 24px 20px;
+    overflow: hidden;
+    border-radius: 8px;
+    background: var(--bg);
+  }
+  .agent--wide .agent__desk {
+    min-height: 236px;
+  }
+  @media (max-width: 599px) {
+    .agent__desk,
+    .agent--wide .agent__desk {
+      min-height: 0;
+      padding: 18px 16px;
+    }
+  }
+  .agent__foot {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px 16px;
+  }
+  .agent__id {
+    display: grid;
+    flex: 1;
+    min-width: 0;
+  }
+  .agent__name {
+    margin-inline: -4px;
+    padding-inline: 4px;
+    overflow: hidden;
+    font: 600 15px / 20px var(--font);
+    letter-spacing: -0.003em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .agent__when {
+    overflow: hidden;
+    font: 400 13px / 18px var(--font);
+    color: var(--muted);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .agent:focus-visible .mark::before {
+    transform: scaleX(1);
+  }
+  .agent:focus-visible .tl__pill {
+    border-color: var(--text);
+  }
+  @media (hover: hover) {
+    .agent:hover .mark::before {
+      transform: scaleX(1);
+    }
+    .agent:hover .tl__pill {
+      border-color: var(--text);
+    }
+    .agent:hover .tl__chev {
+      color: var(--text);
+      transform: translateX(2px);
+    }
+  }
+  /* Actif : le point vert d'un état sain, et le mot. Demandé (un agent à venir qu'elle veut) : le mot, discret. */
+  .agent__on,
+  .agent__asked {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 7px;
+    font: 500 13px / 1 var(--font);
+  }
+  .agent__on::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ok);
+  }
+  .agent__asked {
+    color: var(--muted);
+  }
+
+  /* La pile : la feuille de l'agent posée de travers, sur celle d'avant, au milieu de la bande. Pointée, la feuille
+     du dessus se redresse et monte, celle d'avant s'écarte. Elle se pose une fois à l'arrivée, l'une après l'autre
+     (--i), puis le surligneur de l'agent passe sous ses mots. */
+  .agent-pile {
+    position: relative;
+    display: block;
+    width: min(84%, 336px);
+  }
+  .agent--wide .agent-pile {
+    width: min(72%, 420px);
+  }
+  @media (max-width: 599px) {
+    .agent-pile,
+    .agent--wide .agent-pile {
+      width: min(88%, 340px);
+    }
+  }
+  .agent-pile::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--glass);
+    box-shadow: var(--sh-1);
+    rotate: calc(var(--tilt, 0deg) * -1.6);
+    translate: 5px 3px;
+    transition: rotate var(--med) var(--ease-out);
+    animation: agent-under 620ms var(--ease-out) backwards;
+    animation-delay: calc(var(--i, 0) * 70ms);
+  }
+  /* Sombre : le bureau et la feuille sont proches ; un trait plus marqué détache la pile. */
+  [data-theme="dark"] .agent-pile::before {
+    border-color: var(--line-strong);
+  }
+  .agent:focus-visible .agent-pile::before {
+    rotate: calc(var(--tilt, 0deg) * -2.6);
+  }
+  @keyframes agent-under {
+    from {
+      opacity: 0;
+    }
+  }
+  .agent-sheet {
+    position: relative;
+    display: block;
+    padding: 14px 18px 18px 24px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--glass);
+    box-shadow: var(--sh-2);
+    color: var(--text);
+    rotate: var(--tilt, 0deg);
+    transition:
+      translate var(--med) var(--ease-out),
+      rotate var(--med) var(--ease-out),
+      box-shadow var(--med) var(--ease-out);
+    animation: agent-settle 620ms var(--ease-out) backwards;
+    animation-delay: calc(var(--i, 0) * 70ms + 90ms);
+  }
+  [data-theme="dark"] .agent-sheet {
+    border-color: var(--line-strong);
+  }
+  .agent:focus-visible .agent-sheet {
+    translate: 0 -6px;
+    rotate: 0deg;
+    box-shadow: var(--sh-3);
+  }
+  @media (hover: hover) {
+    .agent:hover .agent-pile::before {
+      rotate: calc(var(--tilt, 0deg) * -2.6);
+    }
+    .agent:hover .agent-sheet {
+      translate: 0 -6px;
+      rotate: 0deg;
+      box-shadow: var(--sh-3);
+    }
+    .agent:hover .agent-sheet .hl {
+      background-image: linear-gradient(var(--hl-deep), var(--hl-deep));
+    }
+  }
+  @keyframes agent-settle {
+    from {
+      opacity: 0;
+      translate: 0 22px;
+      rotate: calc(var(--tilt, 0deg) + 3deg);
+    }
+  }
+  /* Son drapeau sort du bord gauche, comme celui de l'original d'une source (.doc). */
+  .agent-sheet > .flag--left {
+    position: absolute;
+    top: 14px;
+    left: -11px;
+    min-width: 0;
+    width: 22px;
+    height: 18px;
+    padding: 0;
+  }
+  .agent-sheet__meta {
+    display: block;
+    overflow: hidden;
+    font: 400 13px / 1.45 var(--font);
+    color: var(--muted);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .agent-sheet__body {
+    display: grid;
+    gap: 3px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+    font: 400 15px / 1.45 var(--serif);
+    text-wrap: pretty;
+  }
+  .agent-sheet__body.hl-arrive {
+    animation-delay: calc(var(--i, 0) * 70ms + 560ms);
+  }
+  .agent:focus-visible .agent-sheet .hl {
+    background-image: linear-gradient(var(--hl-deep), var(--hl-deep));
+  }
+  .agent-sheet__row {
+    display: block;
+  }
+  /* Le pied : le bouton « Envoyer » d'un brouillon prêt, en encre, ou une étiquette. Dessiné, pas un bouton. */
+  .agent-sheet__foot {
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    margin-top: 12px;
+    padding: 0 10px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font: 500 13px / 1 var(--font);
+    white-space: nowrap;
+  }
+  .agent-sheet__foot.is-ink {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: var(--on-ink);
+  }
+
+  /* Ce qui ferme la page : les agents qu'on construira soi-même. Le pointillé des choses vides (EmptyState), sans
+     ombre ; rien ne s'y ouvre encore. */
+  .agent-own {
+    display: grid;
+    grid-template-columns: calc((100% - 24px) / 3) minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+    border: 1px dashed var(--line-strong);
+    border-radius: 12px;
+  }
+  @media (max-width: 599px) {
+    .agent-own {
+      grid-template-columns: 128px minmax(0, 1fr);
+    }
+  }
+  .agent-own__desk {
+    display: grid;
+    place-items: center;
+    height: 132px;
+    margin: 6px;
+    overflow: hidden;
+  }
+  .agent-pile--blank {
+    width: min(84%, 176px);
+  }
+  .agent-pile--blank::before {
+    border-style: dashed;
+    border-color: var(--line-strong);
+    background: transparent;
+    box-shadow: none;
+  }
+  .agent-own__text {
+    display: grid;
+    min-width: 0;
+    padding: 0 20px 0 17px;
+  }
+  .agent-own .agent__name,
+  .agent-own .agent__when {
+    white-space: normal;
+    text-wrap: balance;
+  }
+  /* La feuille vierge : réglée, en pointillé. */
+  .agent-sheet--blank {
+    display: grid;
+    gap: 18px;
+    height: 96px;
+    padding: 30px 20px 0;
+    border: 1px dashed var(--line-strong);
+    background: var(--bg);
+    box-shadow: none;
+  }
+  .agent-sheet--blank > i {
+    display: block;
+    height: 1px;
+    background: var(--line-strong);
+    opacity: 0.6;
+  }
+
+  /* Dans le panneau : l'exemple en grand, droit et entier, sur une bande de bureau qui touche les bords (.well). */
+  .agent-well {
+    position: relative;
+    margin: -20px -24px 20px;
+    padding: 40px 32px 32px 44px;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg);
+  }
+  .agent-sheet--lg {
+    max-width: 400px;
+    margin-inline: auto;
+    padding: 18px 24px 22px 28px;
+    rotate: -0.6deg;
+    animation: none;
+  }
+  .agent-sheet--lg > .flag--left {
+    top: 18px;
+    left: -12px;
+    width: 24px;
+    height: 20px;
+  }
+  .agent-sheet--lg .agent-sheet__body {
+    gap: 4px;
+    margin-top: 12px;
+    padding-top: 12px;
+    font-size: 18px;
+  }
+  .agent-sheet--lg .agent-sheet__body.hl-arrive {
+    animation-delay: 240ms;
+  }
+  .agent-well__label {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    font: 400 13px / 1 var(--font);
+    color: var(--muted);
+  }
 }

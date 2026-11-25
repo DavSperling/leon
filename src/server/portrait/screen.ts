@@ -11,7 +11,7 @@ import { type Demande, HOME_MAX, type ReadyBrouillon, readShown } from './brouil
 import { type FicheLine, readFiche } from './fiche';
 import { readLastMessages } from './mail-text';
 import { type ProposedPreference, readProposedPreferences } from './preferences';
-import { type Proposal, readProposals } from './propositions';
+import { type AgentState, readAgentStates, readProposals } from './propositions';
 import { enqueueFicheBuild, ficheBuildCompleted, ficheBuildPending } from './queue';
 import { MAIL_KINDS } from './sent-mails';
 import { synthesisDone } from './synthese';
@@ -19,9 +19,10 @@ import { readUnansweredMails, type UnansweredMail } from './unanswered-mails';
 import { readUnknownMails, type UnknownMail } from './waiting-mails';
 
 // La fiche pour l'écran « Ma fiche » des réglages : son rôle et ses tâches, les préférences d'écriture qu'elle a
-// acceptées, où en est sa construction, les sources de ses tâches, et les agents de départ qui lui sont proposés. Et,
-// pour l'accueil seulement, ce que les agents « Brouillons de réponse » et « Relances » ont pour elle
-// (readHomeBrouillons). Tout se lit sous les droits de la personne, et rien d'autre ne lit sa fiche.
+// acceptées, où en est sa construction et les sources de ses tâches. Pour l'écran Agents, les agents de départ et sa
+// réponse à chacun (readAgentsScreen). Et, pour l'accueil seulement, ce que les agents « Brouillons de réponse » et
+// « Relances » ont pour elle (readHomeBrouillons). Tout se lit sous les droits de la personne, et rien d'autre ne lit
+// sa fiche.
 
 // Où en est la construction, dans l'ordre où l'écran le décide :
 // - en-cours : une construction demandée ou en cours, ce que la file sait seule (queue.ts) ;
@@ -48,9 +49,10 @@ export type FicheScreen = {
   lines: FicheLine[];
   // Les sources des tâches que la personne voit encore, par identifiant.
   sources: Record<string, FicheSource>;
-  // Les agents de départ proposés d'après ses outils et sa fiche entière, avec sa réponse à chacun (propositions.ts).
-  agents: Proposal[];
 };
+// L'écran Agents : où en est sa fiche (les agents partent d'elle), et les cinq agents du catalogue, chacun avec sa
+// réponse ou ce qui lui manque (propositions.ts). Les mesures qui les proposent ne partent pas vers l'écran.
+export type AgentsScreen = { etat: FicheEtat; agents: AgentState[] };
 
 async function etatOf(ctx: TenantContext, hasLines: boolean): Promise<FicheEtat> {
   if (await ficheBuildPending(ctx)) return 'en-cours';
@@ -87,11 +89,9 @@ export async function readFicheScreen(ctx: TenantContext): Promise<FicheScreen> 
       (line.genre === 'preference' && 'etat' in line.valeur && line.valeur.etat === 'acceptee'),
   );
   const taskIds = [...new Set(linesOf(lines, 'tache').flatMap((line) => line.valeur.sources))];
-  const [etat, seen, agents] = await Promise.all([
+  const [etat, seen] = await Promise.all([
     etatOf(ctx, all.length > 0),
     briefingSources(ctx, taskIds),
-    // Les mesures servent à proposer, sans partir vers l'écran : il ne reçoit que l'agent et sa réponse.
-    readProposals(ctx, all),
   ]);
   const found = new Map(
     seen.map(({ sourceId, title, url, kind }) => [sourceId, { title, url, kind }]),
@@ -102,7 +102,16 @@ export async function readFicheScreen(ctx: TenantContext): Promise<FicheScreen> 
       return source ? [[id, source]] : [];
     }),
   );
-  return { etat, lines, sources, agents };
+  return { etat, lines, sources };
+}
+
+export async function readAgentsScreen(ctx: TenantContext): Promise<AgentsScreen> {
+  const lines = await readFiche(ctx);
+  const [etat, agents] = await Promise.all([
+    etatOf(ctx, lines.length > 0),
+    readAgentStates(ctx, lines),
+  ]);
+  return { etat, agents };
 }
 
 // Une demande de Leon, telle que l'accueil la montre : le correspondant, le fil (son objet, lié à son outil), la date du

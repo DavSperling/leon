@@ -738,6 +738,7 @@ export function ReplyDrafts({
 }) {
   const t = useTranslations('draftQuestions');
   const f = useTranslations('fiche');
+  const a = useTranslations('agents');
   const c = useTranslations('common');
   const router = useRouter();
   const place = useId();
@@ -936,9 +937,9 @@ export function ReplyDrafts({
   const relances = mails.filter(isRelance).length;
   const panelTitle =
     relances === 0
-      ? f('agents.brouillon-reponse.name')
+      ? a('list.brouillon-reponse.name')
       : relances === mails.length
-        ? f('agents.relance.name')
+        ? a('list.relance.name')
         : t('titleBoth');
   // La colonne de gauche : tout ce qui attend, dans l'ordre du panneau ; un clic montre ce mail.
   const list = shown && (

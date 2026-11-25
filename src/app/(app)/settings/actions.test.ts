@@ -1167,7 +1167,7 @@ describe('les actions de l’onglet « Ma fiche »', () => {
       [ctx, 'relance', true],
       [ctx, 'relance', false],
     ]);
-    expect(revalidatePath).toHaveBeenCalledWith('/settings');
+    expect(revalidatePath).toHaveBeenCalledWith('/agents');
   });
 
   it('répondre : un agent qui ne lui est pas proposé à ce moment-là est introuvable, rien n’est relu', async () => {

@@ -3,7 +3,14 @@ import type { TenantContext } from '@/server/auth/tenant-context';
 import { listConnections } from '@/server/connectors/connections';
 import { reponsesAgent } from '@/server/db/schema/portrait';
 import { withTenant } from '@/server/db/with-tenant';
-import { type AgentId, EN_SERVICE, proposeAgents } from './agents';
+import {
+  AGENTS,
+  type AgentId,
+  EN_SERVICE,
+  type Missing,
+  missingFor,
+  proposeAgents,
+} from './agents';
 import { requestBrouillons } from './brouillons-queue';
 import { type FicheLine, lockAccount, readFiche } from './fiche';
 
@@ -26,23 +33,51 @@ async function proposedTo(ctx: TenantContext, lines: FicheLine[]): Promise<Agent
   return proposeAgents(tools, lines);
 }
 
-// Chaque agent proposé, avec sa réponse. Une réponse donnée à un agent qui ne lui est plus proposé (un outil
-// débranché depuis) reste enregistrée, sans se montrer.
-export async function readProposals(ctx: TenantContext, lines: FicheLine[]): Promise<Proposal[]> {
-  const agents = await proposedTo(ctx, lines);
-  if (agents.length === 0) return [];
+// Ses réponses enregistrées, par agent, sous ses droits.
+async function readAnswers(ctx: TenantContext): Promise<Map<AgentId, boolean>> {
   const answers = await withTenant(ctx, (tx) =>
     tx
       .select({ agent: reponsesAgent.agent, oui: reponsesAgent.oui })
       .from(reponsesAgent)
       .where(and(eq(reponsesAgent.tenantId, ctx.tenantId), eq(reponsesAgent.userId, ctx.userId))),
   );
-  const given = new Map(answers.map((one) => [one.agent, one.oui]));
+  return new Map(answers.map((one) => [one.agent, one.oui]));
+}
+
+// Chaque agent proposé, avec sa réponse. Une réponse donnée à un agent qui ne lui est plus proposé (un outil
+// débranché depuis) reste enregistrée, sans se montrer.
+export async function readProposals(ctx: TenantContext, lines: FicheLine[]): Promise<Proposal[]> {
+  const agents = await proposedTo(ctx, lines);
+  if (agents.length === 0) return [];
+  const given = await readAnswers(ctx);
   return agents.map((agent) => ({
     agent,
     oui: given.get(agent) ?? null,
     enService: EN_SERVICE.includes(agent),
   }));
+}
+
+// Un agent du catalogue tel que l'écran Agents le montre : proposé ou non, et ce qui lui manque sinon. `oui` est nul
+// pour un agent qui ne lui est pas proposé : une réponse d'avant reste enregistrée, sans compter ni se montrer.
+export type AgentState = Proposal & { missing: Missing | null };
+
+// Les cinq agents du catalogue, dans son ordre, pour l'écran Agents. `lines` : les lignes de sa fiche (readFiche).
+// Ses connexions se lisent même sans fiche : l'écran lui dit alors quel outil brancher.
+export async function readAgentStates(
+  ctx: TenantContext,
+  lines: FicheLine[],
+): Promise<AgentState[]> {
+  const [connections, given] = await Promise.all([listConnections(ctx), readAnswers(ctx)]);
+  const tools = connections.flatMap((one) => (one.isCreator ? [one.provider] : []));
+  return AGENTS.map((agent) => {
+    const missing = missingFor(agent, tools, lines);
+    return {
+      agent,
+      oui: missing ? null : (given.get(agent) ?? null),
+      enService: EN_SERVICE.includes(agent),
+      missing,
+    };
+  });
 }
 
 // Sa réponse à un agent, oui ou non : elle remplace la précédente. Rend false, sans rien écrire, pour un agent hors

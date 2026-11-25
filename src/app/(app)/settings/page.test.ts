@@ -47,7 +47,6 @@ vi.mock('@/server/portrait/screen', () => ({
     etat: 'sans-boite',
     lines: [],
     sources: {},
-    agents: [],
   })),
 }));
 vi.mock('@/server/log', () => ({ logError: vi.fn() }));
@@ -306,7 +305,6 @@ describe('page de Réglages : l’onglet « Ma fiche »', () => {
       etat: 'a-construire' as const,
       lines: [],
       sources: {},
-      agents: [],
     };
     vi.mocked(readFicheScreen).mockResolvedValueOnce(screen);
 

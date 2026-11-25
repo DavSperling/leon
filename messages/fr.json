@@ -104,6 +104,7 @@
   "navigation": {
     "home": "Accueil",
     "discussions": "Discussions",
+    "agents": "Agents",
     "documents": "Documents",
     "team": "Équipe",
     "connections": "Connexions",
@@ -721,6 +722,119 @@
     "sources": "Sources",
     "untitled": "Sans titre"
   },
+  "agents": {
+    "title": "Agents",
+    "ready": "Prêts à l’emploi",
+    "promise": "Ils préparent, vous décidez : rien ne part sans vous.",
+    "soon": "Bientôt",
+    "active": "Actif",
+    "activate": "Activer",
+    "asked": "Demandé",
+    "own": "Vos propres agents",
+    "ownCaption": "Vous les construirez vous-même.",
+    "example": "Exemple fictif",
+    "state": {
+      "on": "Actif",
+      "off": "Désactivé",
+      "soon": "Pas encore en service"
+    },
+    "switchOn": "Activer « {name} »",
+    "switchSoon": "Le recevoir dès sa sortie",
+    "facts": {
+      "does": "Ce qu’il fait",
+      "where": "Où le retrouver",
+      "needs": "Ce qu’il lui faut",
+      "who": "Qui voit son travail"
+    },
+    "whereHome": "Sur l’accueil, dans « À vous ».",
+    "whoYou": "Vous seulement.",
+    "needs": {
+      "boite": "Gmail ou Outlook, branché par vous, et votre fiche.",
+      "reunions": "Un enregistreur de réunion branché par vous (tl;dv, Fireflies, Fathom…), et votre fiche.",
+      "outlook": "Outlook, branché par vous, et votre fiche."
+    },
+    "missing": {
+      "boite": "Il lui faut votre boîte mail.",
+      "reunions": "Il lui faut un enregistreur de réunion.",
+      "outlook": "Il lui faut Outlook, le seul agenda que Leon lit aujourd’hui.",
+      "fiche": "Il lui faut votre fiche.",
+      "usage": "Votre fiche ne montre pas encore assez de mails pour lui."
+    },
+    "fix": {
+      "boite": "Brancher ma boîte mail",
+      "reunions": "Brancher un enregistreur",
+      "outlook": "Brancher Outlook",
+      "fiche": "Construire ma fiche"
+    },
+    "saved": {
+      "on": "{name} est actif.",
+      "off": "{name} est désactivé.",
+      "wanted": "C’est noté : il travaillera pour vous dès sa sortie.",
+      "unwanted": "C’est noté."
+    },
+    "gone": "Cet agent ne vous est plus proposé. La page est rechargée.",
+    "failed": "Votre réponse n’a pas pu s’enregistrer. Réessayez.",
+    "loadFailed": "Les agents n’ont pas pu se lire. Rechargez la page.",
+    "notice": {
+      "building": "Leon construit votre fiche. Vos agents vous seront proposés ensuite.",
+      "noMailbox": "Vos agents partent de votre boîte mail. Branchez Gmail ou Outlook pour les activer.",
+      "noFiche": "Vos agents partent de votre fiche. Construisez-la pour les activer.",
+      "refresh": "Recharger"
+    },
+    "list": {
+      "suite-reunion": {
+        "name": "Suite de réunion",
+        "text": "Après une réunion enregistrée, un résumé et un brouillon de mail de suivi.",
+        "when": "Après une réunion enregistrée",
+        "sheet": {
+          "meta": "Réunion chantier · jeudi",
+          "a": "<hl>Valider les plans avant vendredi</hl>",
+          "b": "Envoyer le devis révisé à Paul",
+          "foot": "Brouillon de suivi"
+        }
+      },
+      "brouillon-reponse": {
+        "name": "Brouillons de réponse",
+        "text": "Quand un mail attend une réponse, un brouillon écrit comme vous, sur l’accueil. Avec Gmail, un brouillon complet est aussi déposé dans vos brouillons. Rien ne part sans votre clic sur « Envoyer ».",
+        "when": "Quand un mail attend votre réponse",
+        "sheet": {
+          "meta": "Réponse à Sophie",
+          "a": "Bonjour Sophie, <hl>je vous confirme jeudi à 10 h</hl> pour la visite du chantier.",
+          "foot": "Envoyer"
+        }
+      },
+      "brief-rendez-vous": {
+        "name": "Brief avant rendez-vous",
+        "text": "Avant un rendez-vous, qui est en face, où en est le dossier, ce qui a été promis.",
+        "when": "Avant un rendez-vous",
+        "sheet": {
+          "meta": "14 h 30 · Rendez-vous avec Julie",
+          "a": "Le dossier : devis signé, chantier en mars.",
+          "b": "Promis : <hl>le planning cette semaine</hl>."
+        }
+      },
+      "relance": {
+        "name": "Relances",
+        "text": "Quand un mail que vous avez envoyé reste cinq jours sans réponse, Leon vous demande s’il faut relancer, et écrit la relance après votre oui.",
+        "when": "Après cinq jours sans réponse",
+        "sheet": {
+          "meta": "Sans réponse depuis cinq jours",
+          "a": "Bonjour Marc, <hl>je reviens vers vous</hl> au sujet du devis envoyé lundi.",
+          "foot": "Envoyer"
+        }
+      },
+      "point-du-jour": {
+        "name": "Point du jour",
+        "text": "Chaque matin, votre agenda, les mails qui attendent, vos tâches.",
+        "when": "Chaque matin",
+        "sheet": {
+          "meta": "Ce matin",
+          "a": "9 h 00 · Point équipe",
+          "b": "<hl>Deux mails attendent votre réponse</hl>"
+        }
+      }
+    }
+  },
   "answer": {
     "unavailable": "Réponse indisponible pour le moment. Les résultats ci-dessous restent complets.",
     "title": "Réponse de Leon",
@@ -1188,37 +1302,7 @@
     "fieldDetail": "Détail",
     "errorNotFound": "Cette ligne n’existe plus. La fiche est rechargée.",
     "errorInvalid": "Ce n’est pas valide. Vérifiez le texte et sa longueur.",
-    "errorFailed": "Une erreur est survenue. Réessayez.",
-    "agentsTitle": "Agents proposés",
-    "agentsHint": "Répondez oui ou non à chacun : Leon garde votre réponse, et vous pouvez en changer. Un agent en service ne travaille pour vous qu’après votre oui.",
-    "agentRunning": "En service",
-    "agentNotYet": "Pas encore en service",
-    "agentYes": "Oui",
-    "agentNo": "Non",
-    "agentSaved": "Réponse enregistrée.",
-    "agentGone": "Cet agent ne vous est plus proposé. La fiche est rechargée.",
-    "agents": {
-      "suite-reunion": {
-        "name": "Suite de réunion",
-        "text": "Après une réunion enregistrée, un résumé et un brouillon de mail de suivi."
-      },
-      "brouillon-reponse": {
-        "name": "Brouillons de réponse",
-        "text": "Quand un mail attend une réponse, un brouillon écrit comme vous, sur l’accueil. Avec Gmail, un brouillon complet est aussi déposé dans vos brouillons. Rien ne part sans votre clic sur « Envoyer »."
-      },
-      "brief-rendez-vous": {
-        "name": "Brief avant rendez-vous",
-        "text": "Avant un rendez-vous, qui est en face, où en est le dossier, ce qui a été promis."
-      },
-      "relance": {
-        "name": "Relances",
-        "text": "Quand un mail que vous avez envoyé reste cinq jours sans réponse, Leon vous demande s’il faut relancer, et écrit la relance après votre oui."
-      },
-      "point-du-jour": {
-        "name": "Point du jour",
-        "text": "Chaque matin, votre agenda, les mails qui attendent, vos tâches."
-      }
-    }
+    "errorFailed": "Une erreur est survenue. Réessayez."
   },
   "security": {
     "name": "Nom",

@@ -1,12 +1,10 @@
 'use client';
 
-import { Check } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { type ReactNode, useRef, useState, useTransition } from 'react';
 import {
-  answerAgentAction,
   buildFicheAction,
   correctFicheLineAction,
   retireFicheLineAction,
@@ -19,17 +17,14 @@ import {
   GlassCard,
   Input,
   Notice,
-  Pill,
   Section,
   Textarea,
   toast,
 } from '@/components/verre';
 import { FICHE_MAX, linesOf } from '@/lib/fiche-view';
 import { formatDate } from '@/lib/verre';
-import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
 import type { FicheLine } from '@/server/portrait/fiche';
-import type { Proposal } from '@/server/portrait/propositions';
 import type { FicheEtat, FicheScreen, FicheSource } from '@/server/portrait/screen';
 import { SourceThing } from './source-thing';
 
@@ -38,9 +33,8 @@ import { SourceThing } from './source-thing';
 // ses mails (interlocuteurs, façon d'écrire, rythme, signature) restent enregistrées, sans s'afficher. Les gestes sont
 // ceux des leçons de l'onglet Mémoire (memoire.tsx), sans la connexion récente : la fiche n'est lue que par elle.
 // Sous ses tâches, les préférences d'écriture qu'elle a acceptées sur l'Accueil, chacune à retirer seulement : retirée,
-// elle ne sert plus et ne se repropose pas. Puis les agents de départ que Leon lui propose : un oui ou un non par
-// agent, rien d'autre. Ce que l'agent « Brouillons de réponse » lui prépare ne se montre pas ici, mais sur l'Accueil
-// (recherche/reply-drafts.tsx), avec les préférences qu'il lui propose.
+// elle ne sert plus et ne se repropose pas. Les agents de départ ont leur écran (agents/) ; ce que « Brouillons de
+// réponse » lui prépare se montre sur l'Accueil (recherche/reply-drafts.tsx), avec les préférences qu'il lui propose.
 
 type Result = { ok: true } | { error: string };
 type ErrorKey = 'errorNotFound' | 'errorInvalid' | 'errorFailed';
@@ -296,61 +290,6 @@ function Sources({ id, sources }: { id: string; sources: Array<FicheSource & { i
   );
 }
 
-// Un agent de départ proposé : son nom, sa phrase, s'il est en service, « Oui » et « Non ». Le bouton enfoncé est la
-// réponse que Leon garde (aucun tant qu'elle n'a pas répondu) ; l'autre la change. Ni raison ni mesure : l'écran ne
-// reçoit que l'agent, son état et sa réponse.
-function Agent({ agent, oui, enService }: Proposal) {
-  const t = useTranslations('fiche');
-  const router = useRouter();
-  const [failed, setFailed] = useState(false);
-  const [answering, startAnswering] = useTransition();
-  const words = `agent-${agent}`;
-  const answer = (value: boolean) =>
-    startAnswering(async () => {
-      const result = await attempt(() => answerAgentAction({ agent, oui: value }));
-      // Un agent qui ne lui est plus proposé (un outil débranché depuis) disparaît quand la page relit la fiche.
-      const gone = 'error' in result && result.error === 'introuvable';
-      setFailed('error' in result && !gone);
-      if ('ok' in result) toast.success(t('agentSaved'));
-      if (gone) {
-        toast.error(t('agentGone'));
-        router.refresh();
-      }
-    });
-  return (
-    <li className="px-3 py-3.5">
-      {failed && (
-        <Notice tone="error" live="alert" className="mb-3">
-          {nb(t('errorFailed'))}
-        </Notice>
-      )}
-      <div id={words} className="grid gap-1 text-body [overflow-wrap:anywhere] text-fg">
-        <p className="font-medium">{t(`agents.${agent}.name`)}</p>
-        <p className="text-fg-2">{nb(t(`agents.${agent}.text`))}</p>
-        <p className="text-label text-muted">{t(enService ? 'agentRunning' : 'agentNotYet')}</p>
-      </div>
-      <div
-        aria-busy={answering}
-        className={cn('mt-2 flex flex-wrap gap-2 transition-opacity', answering && 'opacity-60')}
-      >
-        {[true, false].map((value) => (
-          // Un état, pas une action : contour et coche, comme les familles suivies de l'écran Équipe.
-          <Pill
-            key={String(value)}
-            aria-pressed={oui === value}
-            aria-describedby={words}
-            icon={oui === value ? Check : undefined}
-            className="aria-pressed:border-fg aria-pressed:bg-sheet aria-pressed:text-fg aria-pressed:[&_svg]:text-fg"
-            onClick={() => !answering && oui !== value && answer(value)}
-          >
-            {t(value ? 'agentYes' : 'agentNo')}
-          </Pill>
-        ))}
-      </div>
-    </li>
-  );
-}
-
 // Où en est la construction : ce qu'il faut pour commencer, le bouton (avec ce qu'une construction finie n'a pas
 // trouvé), ou « en cours ». La page relit l'état à chaque chargement (la file le dit) ; une fois le rôle ou les tâches
 // écrits, plus rien ici.
@@ -465,12 +404,6 @@ export function FicheSection({ data }: { data: FicheScreen | null }) {
           <Row key={line.id} line={line} onGone={onGone}>
             <p>{line.valeur.texte}</p>
           </Row>
-        ))}
-      </Part>
-
-      <Part title={t('agentsTitle')} description={t('agentsHint')}>
-        {data.agents.map((one) => (
-          <Agent key={one.agent} {...one} />
         ))}
       </Part>
     </div>

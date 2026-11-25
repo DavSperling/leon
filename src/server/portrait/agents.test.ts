@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ProviderId } from '@/capture/turn';
-import { AGENTS, proposeAgents } from './agents';
+import { AGENTS, missingFor, proposeAgents } from './agents';
 import type { FicheLine } from './fiche';
 
 // La règle qui propose les agents de départ : une fonction pure des outils que la personne a branchés elle-même et des
@@ -120,5 +120,32 @@ describe('proposeAgents : chaque agent et ses conditions', () => {
 
   it('une boîte Gmail et une fiche sans mesure : le point du jour seul', () => {
     expect(proposeAgents(['gmail'], [ROLE])).toEqual(['point-du-jour']);
+  });
+});
+
+describe('missingFor : ce qui manque à un agent, dans l’ordre où l’écran Agents le dit', () => {
+  it('sans rien : l’outil d’abord, celui de chaque agent', () => {
+    expect(AGENTS.map((agent) => missingFor(agent, [], []))).toEqual([
+      'reunions',
+      'boite',
+      'outlook',
+      'boite',
+      'boite',
+    ]);
+  });
+
+  it('avec ses outils mais sans fiche : la fiche, pour les cinq', () => {
+    expect(AGENTS.map((agent) => missingFor(agent, ALL_TOOLS, []))).toEqual(Array(5).fill('fiche'));
+  });
+
+  it('une fiche qui ne montre ni réponse ni envoi : ce que la fiche doit montrer, pour les deux agents qui le lisent', () => {
+    expect(AGENTS.map((agent) => missingFor(agent, ALL_TOOLS, [ROLE]))).toEqual([
+      null,
+      'usage',
+      null,
+      'usage',
+      null,
+    ]);
+    expect(AGENTS.map((agent) => missingFor(agent, ALL_TOOLS, FICHE))).toEqual(Array(5).fill(null));
   });
 });

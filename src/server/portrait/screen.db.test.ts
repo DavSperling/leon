@@ -13,7 +13,7 @@ import { answerRelance, HOME_MAX } from './brouillons';
 import { type FicheLine, readFiche, retireLine } from './fiche';
 import { answerProposal } from './propositions';
 import { getFicheBoss } from './queue';
-import { readFicheScreen, readHomeBrouillons } from './screen';
+import { readAgentsScreen, readFicheScreen, readHomeBrouillons } from './screen';
 import { readUnansweredMails } from './unanswered-mails';
 import { readUnknownMails } from './waiting-mails';
 
@@ -100,7 +100,6 @@ describe('readFicheScreen : où en est la fiche', () => {
       etat: 'sans-boite',
       lines: [],
       sources: {},
-      agents: [],
     });
 
     await seedConnection(paul, { provider: 'gmail' });
@@ -127,7 +126,6 @@ describe('readFicheScreen : où en est la fiche', () => {
       etat: 'a-completer',
       lines: [],
       sources: {},
-      agents: [],
     });
   });
 
@@ -199,13 +197,12 @@ describe('readFicheScreen : où en est la fiche', () => {
       etat: 'sans-boite',
       lines: [],
       sources: {},
-      agents: [],
     });
   });
 });
 
-describe('readFicheScreen : les agents proposés', () => {
-  it('l’écran reçoit les agents proposés d’après sa fiche entière, avec sa réponse, sans la mesure qui les propose', async () => {
+describe('readAgentsScreen : les cinq agents du catalogue', () => {
+  it('chacun avec sa réponse quand il lui est proposé, ou ce qui lui manque ; les mesures ne partent pas vers l’écran', async () => {
     const [julie, paul] = await people();
     await seedConnection(julie, { provider: 'gmail' });
     await seedConnection(paul, { provider: 'fathom' });
@@ -213,13 +210,35 @@ describe('readFicheScreen : les agents proposés', () => {
     await seedLine(julie, ROLE);
     await answerProposal(julie, 'relance', false);
 
-    const screen = await readFicheScreen(julie);
+    const screen = await readAgentsScreen(julie);
 
-    expect(screen.agents).toEqual([
-      { agent: 'relance', oui: false, enService: true },
-      { agent: 'point-du-jour', oui: null, enService: false },
+    expect(screen).toEqual({
+      etat: 'faite',
+      agents: [
+        // l'enregistreur d'un collègue ne compte pas
+        { agent: 'suite-reunion', oui: null, enService: false, missing: 'reunions' },
+        // sa fiche ne montre aucune réponse à un mail
+        { agent: 'brouillon-reponse', oui: null, enService: true, missing: 'usage' },
+        { agent: 'brief-rendez-vous', oui: null, enService: false, missing: 'outlook' },
+        { agent: 'relance', oui: false, enService: true, missing: null },
+        { agent: 'point-du-jour', oui: null, enService: false, missing: null },
+      ],
+    });
+  });
+
+  it('sans fiche ni boîte : l’outil d’abord, et la fiche à faire ; une réponse d’avant ne compte plus', async () => {
+    const [julie] = await people();
+    const screen = await readAgentsScreen(julie);
+
+    expect(screen.etat).toBe('sans-boite');
+    expect(screen.agents.map((one) => one.missing)).toEqual([
+      'reunions',
+      'boite',
+      'outlook',
+      'boite',
+      'boite',
     ]);
-    expect(screen.lines.map((line) => line.genre)).toEqual(['role']);
+    expect(screen.agents.every((one) => one.oui === null)).toBe(true);
   });
 });
 
@@ -299,7 +318,7 @@ describe('readFicheScreen : « Ma fiche » ne lit plus ses brouillons de répons
 
     const screen = await readFicheScreen(julie);
 
-    expect(Object.keys(screen).sort()).toEqual(['agents', 'etat', 'lines', 'sources']);
+    expect(Object.keys(screen).sort()).toEqual(['etat', 'lines', 'sources']);
     // Ni le texte d'un brouillon, ni une question, ni leur fil parmi les sources des tâches.
     expect(JSON.stringify(screen)).not.toMatch(/Brouillon pour|Mardi|mail\.google\.test/);
     expect(screen.sources).toEqual({});

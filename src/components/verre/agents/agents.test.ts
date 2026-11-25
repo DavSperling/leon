@@ -74,7 +74,7 @@ describe('Agents', () => {
     expect(card(html, 'suite-reunion')).toContain('Demandé');
     for (const agent of ['brief-rendez-vous', 'point-du-jour'] as const) {
       expect(card(html, agent)).not.toMatch(/Actif|Activer|Demandé/);
-      expect(card(html, agent)).toContain('tl__chev');
+      expect(card(html, agent)).not.toMatch(/agent__on|tl__pill|agent__asked|tl__chev/);
     }
   });
 
@@ -82,6 +82,8 @@ describe('Agents', () => {
     const sheet = card(render(), 'brouillon-reponse');
 
     expect(sheet).toContain('<span class="hl">je vous confirme jeudi à 10 h</span>');
+    // Sans sa première ligne (« Réponse à Sophie ») : le nom et le déclencheur du rabat la disent déjà.
+    expect(sheet).not.toContain('agent-sheet__meta');
     expect(card(render(), 'point-du-jour')).toContain('9 h 00');
     expect(card(render(), 'brief-rendez-vous')).toContain('Le dossier : devis');
   });

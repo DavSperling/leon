@@ -56,8 +56,9 @@ const marked = (text: string) =>
     );
 
 /**
- * La feuille d'exemple d'un agent. `large` : dans le panneau, droite et entière ; sinon sur la pile d'une carte
- * (AgentPile). Décorative : l'appelant la cache aux lecteurs d'écran.
+ * La feuille d'exemple d'un agent. `large` : dans le panneau, droite et entière ; sinon dans la chemise d'une carte
+ * (AgentPile), sans sa première ligne, que le nom et le déclencheur de la carte disent déjà. Décorative : l'appelant la
+ * cache aux lecteurs d'écran.
  */
 export function AgentSheet({ agent, large }: { agent: AgentId; large?: boolean }) {
   const t = useTranslations('agents.list');
@@ -65,7 +66,7 @@ export function AgentSheet({ agent, large }: { agent: AgentId; large?: boolean }
   return (
     <span className={cn('agent-sheet', large && 'agent-sheet--lg', `c${TONE[agent]}`)}>
       <span className="flag flag--left" />
-      <span className="agent-sheet__meta">{marked(t.raw(`${agent}.sheet.meta`))}</span>
+      {large && <span className="agent-sheet__meta">{marked(t.raw(`${agent}.sheet.meta`))}</span>}
       <span className="agent-sheet__body hl-arrive">
         <span className="agent-sheet__row">{marked(t.raw(`${agent}.sheet.a`))}</span>
         {SECOND.has(agent) && (
@@ -83,30 +84,11 @@ export function AgentSheet({ agent, large }: { agent: AgentId; large?: boolean }
   );
 }
 
-/**
- * La feuille d'un agent posée sur la bande de bureau d'une carte, sur celle d'avant (la pile : un agent en laisse une
- * à chaque passage). `order` règle quand elle s'y pose à l'arrivée.
- */
-export function AgentPile({ agent, order }: { agent: AgentId; order: number }) {
+/** La feuille d'un agent glissée dans sa chemise, sur celle d'avant (la pile : un agent en laisse une à chaque passage). */
+export function AgentPile({ agent }: { agent: AgentId }) {
   return (
-    <span className="agent-pile" style={{ '--tilt': TILT[agent], '--i': order } as CSSProperties}>
+    <span className="agent-pile" style={{ '--tilt': TILT[agent] } as CSSProperties}>
       <AgentSheet agent={agent} />
-    </span>
-  );
-}
-
-/** Les agents qu'on construira soi-même : une feuille vierge, réglée, en pointillé, sur une autre. */
-export function BlankPile({ order }: { order: number }) {
-  return (
-    <span
-      className="agent-pile agent-pile--blank"
-      style={{ '--tilt': '-2deg', '--i': order } as CSSProperties}
-    >
-      <span className="agent-sheet agent-sheet--blank">
-        <i />
-        <i />
-        <i />
-      </span>
     </span>
   );
 }

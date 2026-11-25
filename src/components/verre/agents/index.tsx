@@ -14,7 +14,6 @@ import {
   Facts,
   Notice,
   PageHeader,
-  PanelClose,
   PanelNote,
   Section,
   SidePanel,
@@ -91,6 +90,7 @@ export function Agents({ data, openAgent = null }: AgentsProps) {
   // Rangés par service, dans l'ordre du catalogue : une carte ne change pas de place quand on l'allume.
   const ready = data.agents.filter((one) => one.enService);
   const soon = data.agents.filter((one) => !one.enService);
+  const current = data.agents.find((one) => one.agent === shown) ?? null;
   // L'ordre d'arrivée des feuilles, d'une section à l'autre.
   let order = 0;
   const card = (one: AgentState, wide?: boolean) => (
@@ -110,14 +110,7 @@ export function Agents({ data, openAgent = null }: AgentsProps) {
         {soon.length > 0 && <ThingGrid cols={3}>{soon.map((one) => card(one))}</ThingGrid>}
         <OwnAgents order={order} />
       </Section>
-      <AgentPanel
-        ready={ready}
-        soon={soon}
-        shown={shown}
-        onShow={show}
-        open={open}
-        onOpenChange={setOpen}
-      />
+      <AgentPanel state={current} open={open} onOpenChange={setOpen} />
     </>
   );
 }
@@ -219,105 +212,26 @@ function OwnAgents({ order }: { order: number }) {
   );
 }
 
-// Le panneau d'un agent : la grande fenêtre centrée (SidePanel wide), comme celle des brouillons de réponse. À gauche,
-// les agents de la page rangés comme elle, un clic montre le sien ; sous 768 px la liste se cache et le pied garde
-// « Précédent » et « Suivant ». Le corps est rendu par agent (key) : passer d'un agent à l'autre ne garde
-// pas l'état du précédent.
+// Le panneau d'un agent : la grande fenêtre centrée (SidePanel wide), comme celle des brouillons de réponse, pour lui
+// seul. Son corps est rendu par agent (key) : passer d'un agent à l'autre ne garde pas l'état du précédent.
 export function AgentPanel({
-  ready,
-  soon,
-  shown,
-  onShow,
+  state,
   open,
   onOpenChange,
 }: {
-  ready: AgentState[];
-  soon: AgentState[];
-  shown: AgentId | null;
-  onShow: (agent: AgentId) => void;
+  state: AgentState | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
   const t = useTranslations('agents');
-  const c = useTranslations('common');
-  const agents = [...ready, ...soon];
-  const at = agents.findIndex((one) => one.agent === shown);
-  const state = agents[at];
   if (!state) return null;
-  const previous = agents[at - 1];
-  const next = agents[at + 1];
-  const group = (title: string, items: AgentState[]) =>
-    items.length > 0 && (
-      <div>
-        <h3 className="px-3 pt-3 pb-1.5 text-label text-muted">{title}</h3>
-        <ol className="grid gap-1">
-          {items.map((one) => (
-            <li key={one.agent}>
-              <button
-                type="button"
-                aria-current={one.agent === state.agent || undefined}
-                onClick={() => onShow(one.agent)}
-                className="grid w-full gap-0.5 rounded-item px-3 py-2.5 text-left transition-colors duration-150 hover:bg-hover aria-[current]:bg-sheet aria-[current]:shadow-sheet"
-              >
-                <span className="flex items-center gap-2.5">
-                  <span
-                    aria-hidden="true"
-                    className={cn('flag agent-row__flag', `c${TONE[one.agent]}`)}
-                  />
-                  <span className="min-w-0 flex-1 truncate text-body font-medium text-fg">
-                    {t(`list.${one.agent}.name`)}
-                  </span>
-                  {isOn(one) ? (
-                    <span className="agent__on">{t('active')}</span>
-                  ) : (
-                    !one.enService && one.oui && <span className="agent__asked">{t('asked')}</span>
-                  )}
-                </span>
-                <span className="truncate pl-[22px] text-label text-muted">
-                  {t(`list.${one.agent}.when`)}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ol>
-      </div>
-    );
   return (
     <SidePanel
       open={open}
       onOpenChange={onOpenChange}
       wide
-      aside={
-        <>
-          {group(t('ready'), ready)}
-          {group(t('soon'), soon)}
-        </>
-      }
       title={t(`list.${state.agent}.name`)}
       sub={t(`list.${state.agent}.when`)}
-      foot={
-        <>
-          {previous && (
-            <Button
-              variant="quiet"
-              className="-ml-4 md:hidden"
-              onClick={() => onShow(previous.agent)}
-            >
-              {c('previous')}
-            </Button>
-          )}
-          {next && (
-            <Button variant="quiet" className="md:hidden" onClick={() => onShow(next.agent)}>
-              {c('next')}
-            </Button>
-          )}
-          <PanelClose asChild>
-            <Button variant="secondary" className="ml-auto">
-              {c('done')}
-            </Button>
-          </PanelClose>
-        </>
-      }
     >
       <PanelBody key={state.agent} state={state} />
     </SidePanel>

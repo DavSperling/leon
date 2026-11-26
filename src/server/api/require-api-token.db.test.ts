@@ -268,18 +268,25 @@ describe('montage de Better Auth', () => {
   });
 
   // Aucun e-mail n'est vérifié dans ce jet : quiconque s'inscrit avec l'adresse invitée ne doit pas
-  // pouvoir rejoindre l'organisation, même en connaissant l'identifiant de l'invitation.
-  it("refuse d'accepter une invitation avec un e-mail non vérifié", async () => {
+  // pouvoir rejoindre l'organisation, même en connaissant l'identifiant de l'invitation. L'appli n'invite que par ses
+  // propres liens (0033) : les routes d'invitation de Better Auth sont fermées (auth.ts), l'invitation est créée ici
+  // côté serveur.
+  it("refuse d'accepter une invitation de Better Auth, avec un e-mail non vérifié", async () => {
     const paulEmail = `paul-${randomUUID()}@example.com`;
     const paul = await signUp(paulEmail);
     const invitedEmail = `marie-${randomUUID()}@example.com`;
+    const byPaul = { cookie: await sessionCookie(paulEmail), ...jsonFromApp };
+    const body = { email: invitedEmail, role: 'member' as const, organizationId: paul.tenantId };
     const invite = await app.request('/api/auth/organization/invite-member', {
       method: 'POST',
-      headers: { cookie: await sessionCookie(paulEmail), ...jsonFromApp },
-      body: JSON.stringify({ email: invitedEmail, role: 'member', organizationId: paul.tenantId }),
+      headers: byPaul,
+      body: JSON.stringify(body),
     });
-    expect(invite.status).toBe(200);
-    const { id: invitationId } = (await invite.json()) as { id: string };
+    expect(invite.status).toBe(404);
+    const { id: invitationId } = await auth.api.createInvitation({
+      body,
+      headers: new Headers(byPaul),
+    });
 
     const attacker = await signUp(invitedEmail);
     const response = await app.request('/api/auth/organization/accept-invitation', {

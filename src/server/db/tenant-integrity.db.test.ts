@@ -88,6 +88,7 @@ describe('références vers une autre organisation', () => {
 // Toutes les clés vers une table du brut, de l'index (0011) ou des leçons (0066), y compris celles que les tests
 // ci-dessus n'exercent pas.
 const COMPOSITE_KEYS = [
+  'brouillons.source_id → sources',
   'ingest_runs.source_id → sources',
   'passage_vectors.passage_id → passages',
   'passages.source_id → sources',

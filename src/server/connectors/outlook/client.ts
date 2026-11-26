@@ -7,7 +7,8 @@ import { EventsPageSchema, MeSchema, MessagesPageSchema } from './schemas';
 
 const GRAPH = 'https://graph.microsoft.com/v1.0';
 export const PAGE_SIZE = 25;
-const MESSAGE_FIELDS = 'id,conversationId,subject,receivedDateTime,from,body,webLink';
+const MESSAGE_FIELDS =
+  'id,conversationId,subject,receivedDateTime,from,toRecipients,ccRecipients,body,webLink';
 const EVENT_FIELDS =
   'id,subject,lastModifiedDateTime,start,end,location,organizer,isOrganizer,isCancelled,sensitivity,attendees,body,webLink';
 

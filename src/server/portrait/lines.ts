@@ -1,0 +1,117 @@
+import { z } from 'zod';
+import { FICHE_MAX } from '@/lib/fiche-view';
+import type { lignesFiche } from '@/server/db/schema/portrait';
+import type { PortraitFacts } from './facts';
+
+// Des faits (facts.ts) aux lignes de la fiche (0076) : une ligne par chose que la personne peut corriger ou retirer
+// seule. Une fonction pure, comme computeFacts. La forme de la valeur de chaque genre est ici : celle que rend
+// computeFacts, ou celle des genres qu'écrit un modèle (0077, 0087), validée à chaque écriture et à chaque lecture
+// (fiche.ts).
+
+export type Genre = (typeof lignesFiche.$inferSelect)['genre'];
+
+// Une préférence d'écriture : une phrase courte.
+export const PREFERENCE_MAX_CHARS = 200;
+
+const count = z.number().int().nonnegative();
+const part = z.number().min(0).max(1);
+const formules = z.strictObject({
+  formules: z
+    .array(z.strictObject({ formule: z.string().min(1).max(100), mails: count }))
+    .min(1)
+    .max(10),
+});
+const delai = z.strictObject({
+  medianeMinutes: z.number().nonnegative().nullable(),
+  reponses: count,
+});
+
+const VALEURS = {
+  // Clé : son adresse. `a`, `copie` : les mails où elle est en « à », ou seulement en copie.
+  interlocuteur: z.strictObject({
+    a: count,
+    copie: count,
+    dernier: z.iso.datetime(),
+    type: z.enum(['interne', 'externe']).nullable(),
+    registre: z.enum(['tutoiement', 'vouvoiement']).nullable(),
+    tutoiement: count,
+    vouvoiement: count,
+  }),
+  // Les faits de style. Clé : le type de destinataire, « tous », « interne » ou « externe ».
+  mots: z.strictObject({ mediane: z.number().nonnegative() }),
+  appels: formules,
+  politesses: formules,
+  registre: z.strictObject({ tutoiement: part, vouvoiement: part }),
+  // Une ligne chacun, sans clé.
+  rythme: z.strictObject({ mailsParSemaine: z.number().nonnegative() }),
+  langues: z.strictObject({ fr: count, en: count, autre: count, inconnue: count }),
+  'delai-reponse': z.strictObject({ tous: delai, interne: delai, externe: delai }),
+  horaires: z.strictObject({ heures: z.array(count).length(24), jours: z.array(count).length(7) }),
+  signature: z.strictObject({ texte: z.string().min(1).max(2000) }),
+  // Écrits par un modèle (synthese.ts), sans nombre de mails. Son rôle : une ligne, sans clé.
+  role: z.strictObject({ texte: z.string().min(1).max(FICHE_MAX.role) }),
+  // Une tâche qu'elle refait. Clé : son rang, de « 1 » à « 8 ». `sources` : les sources où on la voit la faire.
+  // Une source supprimée ou devenue invisible depuis reste dans la liste : l'écran ne la compte ni ne la montre
+  // (screen.ts).
+  tache: z.strictObject({
+    titre: z.string().min(1).max(FICHE_MAX.titre),
+    detail: z.string().max(FICHE_MAX.detail),
+    sources: z.array(z.uuid()).max(20),
+  }),
+  // Une préférence d'écriture, tirée par un modèle d'une retouche qu'elle a faite (preferences.ts). Clé : le brouillon
+  // d'où elle vient. Proposée, puis acceptée ou refusée par elle.
+  preference: z.strictObject({
+    texte: z.string().min(1).max(PREFERENCE_MAX_CHARS),
+    etat: z.enum(['proposee', 'acceptee', 'refusee']),
+  }),
+} satisfies Record<Genre, z.ZodType>;
+
+export type ValeurDe<G extends Genre> = z.infer<(typeof VALEURS)[G]>;
+export type LineValue = ValeurDe<Genre>;
+
+// La valeur dans la forme de son genre, ou null.
+export function parseValeur(genre: Genre, valeur: unknown): LineValue | null {
+  const parsed = VALEURS[genre].safeParse(valeur);
+  return parsed.success ? parsed.data : null;
+}
+
+// `mails` : le nombre de mails sur lequel la ligne repose.
+export type ComputedLine = { genre: Genre; cle: string; valeur: LineValue; mails: number };
+
+const SIDES = ['tous', 'interne', 'externe'] as const;
+
+// Un fait nul ou vide ne donne pas de ligne, une valeur hors de la forme de son genre non plus (une signature de plus
+// de 2 000 caractères) : le reste de la fiche s'écrit quand même.
+export function factsToLines(facts: PortraitFacts): ComputedLine[] {
+  const lines: ComputedLine[] = [];
+  const add = (genre: Genre, cle: string, valeur: unknown, mails: number) => {
+    const valid = parseValeur(genre, valeur);
+    if (valid) lines.push({ genre, cle, valeur: valid, mails });
+  };
+
+  for (const { adresse, ...valeur } of facts.interlocuteurs)
+    add('interlocuteur', adresse, valeur, valeur.a + valeur.copie);
+  for (const side of SIDES) {
+    const style = facts.style[side];
+    if (style.mots.mediane !== null)
+      add('mots', side, { mediane: style.mots.mediane }, style.mots.mails);
+    if (style.appels.length > 0) add('appels', side, { formules: style.appels }, style.mails);
+    if (style.politesses.length > 0)
+      add('politesses', side, { formules: style.politesses }, style.mails);
+    if (style.registre.mails > 0) {
+      const { mails, ...parts } = style.registre;
+      add('registre', side, parts, mails);
+    }
+  }
+  if (facts.mailsParSemaine !== null)
+    add('rythme', '', { mailsParSemaine: facts.mailsParSemaine }, facts.mails);
+  if (facts.mails > 0) {
+    add('langues', '', facts.langues, facts.mails);
+    add('horaires', '', { heures: facts.heures, jours: facts.jours }, facts.mails);
+  }
+  if (facts.delaiReponse.tous.medianeMinutes !== null)
+    add('delai-reponse', '', facts.delaiReponse, facts.delaiReponse.tous.reponses);
+  if (facts.signature)
+    add('signature', '', { texte: facts.signature.texte }, facts.signature.mails);
+  return lines;
+}

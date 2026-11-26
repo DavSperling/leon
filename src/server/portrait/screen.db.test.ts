@@ -1,0 +1,1017 @@
+import { eq } from 'drizzle-orm';
+import { afterAll, describe, expect, it, vi } from 'vitest';
+import { linesOf } from '@/lib/fiche-view';
+import type { TenantContext } from '@/server/auth/tenant-context';
+import { sources } from '@/server/db/schema/memory';
+import { lignesFiche } from '@/server/db/schema/portrait';
+import { logError } from '@/server/log';
+import { adminDb, adminPool } from '@/test/db';
+import { createTestTenant, seedConnection } from '@/test/fixtures';
+import { JULIE, LEA, mailThread, received, sent } from '@/test/mail-threads';
+import { seedRun } from '@/test/seed-search';
+import { answerRelance, HOME_MAX } from './brouillons';
+import { type FicheLine, readFiche, retireLine } from './fiche';
+import { answerProposal } from './propositions';
+import { getFicheBoss } from './queue';
+import { readAgentsScreen, readFicheScreen, readHomeBrouillons } from './screen';
+import { readUnansweredMails } from './unanswered-mails';
+import { readUnknownMails } from './waiting-mails';
+
+// Les fils de courrier des mails d'inconnus passent par l'ingestion, qui met leur indexation en file : seule cette mise
+// en file est simulée, la file de la fiche restant la vraie.
+vi.mock('@/server/pipeline/queue', async (original) => ({
+  ...(await original<typeof import('@/server/pipeline/queue')>()),
+  enqueuePipelineStep: vi.fn(),
+}));
+// La lecture des mails d'inconnus reste la vraie : un seul test la fait tomber en panne, une fois.
+vi.mock('./waiting-mails', async (original) => {
+  const actual = await original<typeof import('./waiting-mails')>();
+  return { ...actual, readUnknownMails: vi.fn(actual.readUnknownMails) };
+});
+// De même la lecture de ses mails sans réponse.
+vi.mock('./unanswered-mails', async (original) => {
+  const actual = await original<typeof import('./unanswered-mails')>();
+  return { ...actual, readUnansweredMails: vi.fn(actual.readUnansweredMails) };
+});
+vi.mock('@/server/log', async (original) => ({
+  ...(await original<typeof import('@/server/log')>()),
+  logError: vi.fn(),
+}));
+
+// La fiche telle que l'écran « Ma fiche » la reçoit, sous les droits de la personne : son rôle et ses tâches, où en est
+// sa construction, et les sources de ses tâches qu'elle voit encore. Et ce que l'accueil reçoit de l'agent « Brouillons
+// de réponse ». Aucune construction n'est demandée ici : la file est lue, vide (l'état
+// « en cours » se teste avec elle, queue.db.test.ts). Données inventées : Julie et Paul dans une organisation, Zoé dans
+// une autre.
+
+const tenantIds: string[] = [];
+afterAll(async () => {
+  await adminPool.query('delete from sources where tenant_id = any($1)', [tenantIds]);
+  await adminPool.query('delete from connections where tenant_id = any($1)', [tenantIds]);
+  await (await getFicheBoss()).stop();
+});
+
+async function people(): Promise<[TenantContext, TenantContext, TenantContext]> {
+  const team = await createTestTenant(['Julie Martin', 'Paul Durand']);
+  const other = await createTestTenant(['Zoé Bernard']);
+  tenantIds.push(team.tenantId, other.tenantId);
+  return [...team.members, ...other.members] as [TenantContext, TenantContext, TenantContext];
+}
+
+// Une ligne de sa fiche, comme la construction (« calcul ») ou la synthèse l'écrivent.
+async function seedLine(
+  ctx: TenantContext,
+  line: Pick<FicheLine, 'genre' | 'cle' | 'valeur'>,
+): Promise<void> {
+  await adminDb.insert(lignesFiche).values({
+    ...line,
+    tenantId: ctx.tenantId,
+    userId: ctx.userId,
+    provenance: line.genre === 'role' || line.genre === 'tache' ? 'synthese' : 'calcul',
+    mails: line.genre === 'role' || line.genre === 'tache' ? null : 12,
+    acl: [ctx.userId],
+  });
+}
+const RYTHME = { genre: 'rythme' as const, cle: '', valeur: { mailsParSemaine: 12 } };
+const ROLE = { genre: 'role' as const, cle: '', valeur: { texte: 'Commerciale.' } };
+const side = { medianeMinutes: 42, reponses: 3 };
+const DELAI = {
+  genre: 'delai-reponse' as const,
+  cle: '',
+  valeur: { tous: side, interne: side, externe: side },
+};
+
+// Sa boîte Gmail branchée par elle et une fiche qui compte une réponse : l'agent « Brouillons de réponse » lui est
+// proposé, et elle lui a répondu.
+async function answered(ctx: TenantContext, oui = true): Promise<void> {
+  await seedConnection(ctx, { provider: 'gmail' });
+  await seedLine(ctx, DELAI);
+  await adminPool.query(
+    `insert into reponses_agent (tenant_id, user_id, agent, oui, acl)
+     values ($1, $2, 'brouillon-reponse', $3, array[$2::uuid])`,
+    [ctx.tenantId, ctx.userId, oui],
+  );
+}
+
+describe('readFicheScreen : où en est la fiche', () => {
+  it('sans fiche ni boîte à elle, il lui faut une boîte : celle d’un collègue ou un autre outil ne comptent pas', async () => {
+    const [julie, paul] = await people();
+    expect(await readFicheScreen(julie)).toEqual({
+      etat: 'sans-boite',
+      lines: [],
+      sources: {},
+    });
+
+    await seedConnection(paul, { provider: 'gmail' });
+    await seedConnection(julie, { provider: 'notion' });
+
+    expect((await readFicheScreen(julie)).etat).toBe('sans-boite');
+  });
+
+  it.each(['gmail', 'outlook'] as const)(
+    'sans fiche, avec sa boîte %s branchée, la fiche est à construire',
+    async (provider) => {
+      const [julie] = await people();
+      await seedConnection(julie, { provider });
+
+      expect((await readFicheScreen(julie)).etat).toBe('a-construire');
+    },
+  );
+
+  it('des mesures calculées sans rôle ni tâche : la fiche reste à compléter, et les mesures ne partent pas vers l’écran', async () => {
+    const [julie] = await people();
+    await seedLine(julie, RYTHME);
+
+    expect(await readFicheScreen(julie)).toEqual({
+      etat: 'a-completer',
+      lines: [],
+      sources: {},
+    });
+  });
+
+  it('l’écran ne reçoit que son rôle et ses tâches : les mesures restent en base', async () => {
+    const [julie] = await people();
+    await seedLine(julie, RYTHME);
+    await seedLine(julie, ROLE);
+
+    expect((await readFicheScreen(julie)).lines.map((line) => line.genre)).toEqual(['role']);
+    expect((await readFiche(julie)).map((line) => line.genre).sort()).toEqual(['role', 'rythme']);
+  });
+
+  it('de ses préférences d’écriture, l’écran ne reçoit que celles qu’elle a acceptées ; retirée, une préférence ne se montre plus', async () => {
+    const [julie] = await people();
+    await seedLine(julie, ROLE);
+    await adminDb.insert(lignesFiche).values(
+      (['acceptee', 'proposee', 'refusee'] as const).map((etat) => ({
+        tenantId: julie.tenantId,
+        userId: julie.userId,
+        genre: 'preference' as const,
+        cle: `brouillon-${etat}`,
+        valeur: { texte: `Préférence ${etat}.`, etat },
+        provenance: 'apprise' as const,
+        acl: [julie.userId],
+      })),
+    );
+
+    const { lines } = await readFicheScreen(julie);
+    expect(lines.map((line) => `${line.genre} ${line.cle}`).sort()).toEqual([
+      'preference brouillon-acceptee',
+      'role ',
+    ]);
+    const accepted = lines.find((line) => line.genre === 'preference');
+    expect(accepted).toMatchObject({
+      valeur: { texte: 'Préférence acceptee.', etat: 'acceptee' },
+      provenance: 'apprise',
+    });
+
+    expect(await retireLine(julie, accepted?.id ?? '')).toBe(true);
+    expect((await readFicheScreen(julie)).lines.map((line) => line.genre)).toEqual(['role']);
+    // Retirée, elle sort aussi de sa fiche lue pour les brouillons.
+    expect(
+      (await readFiche(julie))
+        .filter((line) => line.genre === 'preference')
+        .map((one) => one.cle)
+        .sort(),
+    ).toEqual(['brouillon-proposee', 'brouillon-refusee']);
+  });
+
+  it('une fois le rôle écrit, même retiré depuis, la fiche est faite', async () => {
+    const [julie] = await people();
+    await seedConnection(julie, { provider: 'gmail' });
+    await seedLine(julie, RYTHME);
+    await seedLine(julie, ROLE);
+    expect((await readFicheScreen(julie)).etat).toBe('faite');
+
+    const role = (await readFiche(julie)).find((line) => line.genre === 'role');
+    await retireLine(julie, role?.id ?? '');
+
+    // Sa boîte et la mesure de son rythme lui valent des propositions (propositions.db.test.ts) : pas le sujet ici.
+    expect(await readFicheScreen(julie)).toMatchObject({ etat: 'faite', lines: [], sources: {} });
+  });
+
+  it('la fiche d’un collègue ne change rien à la sienne', async () => {
+    const [julie, paul] = await people();
+    await seedLine(paul, ROLE);
+
+    expect(await readFicheScreen(julie)).toEqual({
+      etat: 'sans-boite',
+      lines: [],
+      sources: {},
+    });
+  });
+});
+
+describe('readAgentsScreen : les cinq agents du catalogue', () => {
+  it('chacun avec sa réponse quand il lui est proposé, ou ce qui lui manque ; les mesures ne partent pas vers l’écran', async () => {
+    const [julie, paul] = await people();
+    await seedConnection(julie, { provider: 'gmail' });
+    await seedConnection(paul, { provider: 'fathom' });
+    await seedLine(julie, RYTHME);
+    await seedLine(julie, ROLE);
+    await answerProposal(julie, 'relance', false);
+
+    const screen = await readAgentsScreen(julie);
+
+    expect(screen).toEqual({
+      etat: 'faite',
+      agents: [
+        // l'enregistreur d'un collègue ne compte pas
+        { agent: 'suite-reunion', oui: null, enService: false, missing: 'reunions' },
+        // sa fiche ne montre aucune réponse à un mail
+        { agent: 'brouillon-reponse', oui: null, enService: true, missing: 'usage' },
+        { agent: 'brief-rendez-vous', oui: null, enService: false, missing: 'outlook' },
+        { agent: 'relance', oui: false, enService: true, missing: null },
+        { agent: 'point-du-jour', oui: null, enService: false, missing: null },
+      ],
+    });
+  });
+
+  it('sans fiche ni boîte : l’outil d’abord, et la fiche à faire ; une réponse d’avant ne compte plus', async () => {
+    const [julie] = await people();
+    const screen = await readAgentsScreen(julie);
+
+    expect(screen.etat).toBe('sans-boite');
+    expect(screen.agents.map((one) => one.missing)).toEqual([
+      'reunions',
+      'boite',
+      'outlook',
+      'boite',
+      'boite',
+    ]);
+    expect(screen.agents.every((one) => one.oui === null)).toBe(true);
+  });
+});
+
+// Un fil de courrier de la personne, son dernier message reçu de Léa, et le brouillon qui y répond, ou les questions
+// de Leon avant de l'écrire, ou son oui (ses indications) ou son non au mail d'une inconnue.
+async function seedBrouillon(
+  ctx: TenantContext,
+  title: string,
+  hoursAgo: number,
+  over: {
+    texte?: string | null;
+    ecarte?: boolean;
+    depot?: string;
+    questions?: string[];
+    choix?: string[][];
+    reponses?: string[];
+    indications?: string | null;
+  } = {},
+): Promise<{ sourceId: string; receivedAt: Date }> {
+  const receivedAt = new Date(Date.now() - hoursAgo * 3_600_000);
+  const { sourceId } = await seedRun(ctx, {
+    kind: 'gmail',
+    title,
+    metadata: { nature: 'fil', url: `https://mail.google.test/${hoursAgo}` },
+    turns: [
+      {
+        text: 'Bonjour Julie, et le devis ?',
+        ts: receivedAt,
+        role: 'participant',
+        authorName: 'Léa Roy',
+        authorEmail: 'lea@client.test',
+      },
+    ],
+    lastTurnAt: receivedAt,
+  });
+  // L'identifiant d'un tour de courrier, comme la relève l'écrit.
+  await adminPool.query(
+    "update turns set external_id = 'message:42#0123456789ab' where source_id = $1",
+    [sourceId],
+  );
+  await adminPool.query(
+    `insert into brouillons
+       (tenant_id, user_id, source_id, message, texte, ecarte_le, brouillon_gmail, questions, reponses, choix,
+        indications, acl)
+     values ($1, $2, $3, 'message:42', $4, $5, $6, $7, $8, $9, $10, array[$2::uuid])`,
+    [
+      ctx.tenantId,
+      ctx.userId,
+      sourceId,
+      over.texte === undefined ? `Brouillon pour ${title}.` : over.texte,
+      over.ecarte ? new Date() : null,
+      over.depot ?? null,
+      over.questions ?? null,
+      over.reponses ?? null,
+      over.choix ? JSON.stringify(over.choix) : null,
+      over.indications ?? null,
+    ],
+  );
+  return { sourceId, receivedAt };
+}
+// Elle répond elle-même dans le fil : il a bougé.
+const reply = (sourceId: string) =>
+  adminPool.query(
+    `insert into turns (tenant_id, source_id, external_id, role, text, ts, capture_mode, author_side, acl)
+     select tenant_id, id, 'message:43#0123456789ab', 'participant', 'Bonjour Léa.', now(), 'connector',
+            'team', acl
+     from sources where id = $1`,
+    [sourceId],
+  );
+
+describe('readFicheScreen : « Ma fiche » ne lit plus ses brouillons de réponse', () => {
+  it('un brouillon prêt, une demande de Leon : rien n’en part vers l’écran des réglages, tout part vers l’accueil', async () => {
+    const [julie] = await people();
+    await answered(julie);
+    await seedBrouillon(julie, 'Brouillon prêt', 1);
+    await seedBrouillon(julie, 'Demande', 2, { texte: null, questions: ['Mardi ?'] });
+
+    const screen = await readFicheScreen(julie);
+
+    expect(Object.keys(screen).sort()).toEqual(['etat', 'lines', 'sources']);
+    // Ni le texte d'un brouillon, ni une question, ni leur fil parmi les sources des tâches.
+    expect(JSON.stringify(screen)).not.toMatch(/Brouillon pour|Mardi|mail\.google\.test/);
+    expect(screen.sources).toEqual({});
+    const home = await readHomeBrouillons(julie);
+    expect(home.prets.map((one) => one.source.title)).toEqual(['Brouillon prêt']);
+    expect(home.demandes.map((one) => one.source.title)).toEqual(['Demande']);
+  });
+});
+
+describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a pour elle, pour l’accueil', () => {
+  const QUESTIONS = ['Acceptez-vous le rendez-vous de mardi ?', 'Quel prix lui annoncer ?'];
+  const CHOIX = [
+    ['Oui', 'Non, proposer jeudi'],
+    ['1 200 €', '1 500 €', 'Le tarif habituel'],
+  ];
+  const asked = (ctx: TenantContext, title: string, hoursAgo: number, over = {}) =>
+    seedBrouillon(ctx, title, hoursAgo, {
+      texte: null,
+      questions: QUESTIONS,
+      choix: CHOIX,
+      ...over,
+    });
+  // Les objets des fils montrés, de chaque sorte.
+  const titles = async (ctx: TenantContext) => {
+    const { demandes, prets } = await readHomeBrouillons(ctx);
+    return {
+      demandes: demandes.map((one) => one.source.title),
+      prets: prets.map((one) => one.source.title),
+    };
+  };
+  const NOTHING = { demandes: [], prets: [] };
+  // Des heures, de `from` à `to`.
+  const hours = (from: number, to: number) =>
+    Array.from({ length: to - from + 1 }, (_, index) => from + index);
+
+  it('l’accueil reçoit, pour chaque demande, le correspondant, le fil lié à son outil, la date du mail reçu, les questions avec leurs choix, et si elle y a répondu : rien d’autre', async () => {
+    const [julie, paul] = await people();
+    await answered(julie);
+    await answered(paul);
+    const older = await asked(julie, 'Contrat', 5);
+    const recent = await asked(julie, 'Devis 2027', 2, {
+      questions: ['Mardi ?'],
+      choix: [['Oui', 'Non']],
+    });
+    // Elle a répondu : la demande reste, le temps que Leon écrive. Ses réponses ne partent pas vers l'accueil.
+    const replied = await asked(julie, 'Répondue', 1, { reponses: ['Jeudi à 10 h.', ''] });
+    // Ce qui ne se montre pas : écartée, ou un mail sans réponse à donner.
+    await asked(julie, 'Écartée', 1, { ecarte: true });
+    await seedBrouillon(julie, 'Sans réponse', 1, { texte: null });
+    await asked(paul, 'Fil de Paul', 1);
+
+    const home = await readHomeBrouillons(julie);
+
+    // La plus récente d'abord. Ni l'identifiant du fil, ni celui du message, ni une adresse, ni ses réponses.
+    expect(home).toEqual({
+      demandes: [
+        {
+          id: expect.any(String),
+          from: 'Léa Roy',
+          receivedAt: replied.receivedAt,
+          questions: QUESTIONS,
+          choix: CHOIX,
+          repondue: true,
+          relance: false,
+          source: {
+            title: 'Répondue',
+            url: 'https://mail.google.test/1',
+            kind: 'gmail',
+            mailText: expect.any(String),
+          },
+        },
+        {
+          id: expect.any(String),
+          from: 'Léa Roy',
+          receivedAt: recent.receivedAt,
+          questions: ['Mardi ?'],
+          choix: [['Oui', 'Non']],
+          repondue: false,
+          relance: false,
+          source: {
+            title: 'Devis 2027',
+            url: 'https://mail.google.test/2',
+            kind: 'gmail',
+            mailText: expect.any(String),
+          },
+        },
+        {
+          id: expect.any(String),
+          from: 'Léa Roy',
+          receivedAt: older.receivedAt,
+          questions: QUESTIONS,
+          choix: CHOIX,
+          repondue: false,
+          relance: false,
+          source: {
+            title: 'Contrat',
+            url: 'https://mail.google.test/5',
+            kind: 'gmail',
+            mailText: expect.any(String),
+          },
+        },
+      ],
+      prets: [],
+    });
+    expect(JSON.stringify(home)).not.toMatch(/message:|lea@client\.test|Jeudi à 10 h/);
+    expect(JSON.stringify(home)).not.toContain(recent.sourceId);
+    expect(await titles(paul)).toEqual({ demandes: ['Fil de Paul'], prets: [] });
+  });
+
+  it('une demande posée avant les choix garde ses questions, sans choix à proposer', async () => {
+    const [julie] = await people();
+    await answered(julie);
+    await asked(julie, 'Ancienne demande', 1, { choix: undefined });
+
+    expect((await readHomeBrouillons(julie)).demandes).toMatchObject([
+      { questions: QUESTIONS, choix: [[], []], repondue: false },
+    ]);
+  });
+
+  it('l’accueil reçoit, pour chaque brouillon prêt, le correspondant, le fil lié à son outil, la date du mail reçu, le texte, et s’il est déposé dans Gmail : rien d’autre', async () => {
+    const [julie, paul] = await people();
+    await answered(julie);
+    await answered(paul);
+    const older = await seedBrouillon(julie, 'Contrat', 5, { depot: 'r-contrat-1789' });
+    const recent = await seedBrouillon(julie, 'Devis 2027', 2);
+    // Écrit avec ses réponses : un brouillon prêt comme un autre, plus une demande.
+    await asked(julie, 'Écrit au second appel', 6, {
+      texte: 'Bonjour Léa,\n\nJeudi me convient.',
+      reponses: ['Jeudi.', ''],
+    });
+    await seedBrouillon(julie, 'Écarté', 1, { ecarte: true });
+    await seedBrouillon(julie, 'Sans réponse', 1, { texte: null });
+    await seedBrouillon(paul, 'Fil de Paul', 1);
+
+    const home = await readHomeBrouillons(julie);
+
+    // Le mail le plus récent d'abord. Ni l'identifiant du fil, ni celui du message, ni une adresse ; un oui ou un non
+    // pour le dépôt, jamais l'identifiant du brouillon Gmail.
+    expect(home).toEqual({
+      demandes: [],
+      prets: [
+        {
+          id: expect.any(String),
+          from: 'Léa Roy',
+          receivedAt: recent.receivedAt,
+          texte: 'Brouillon pour Devis 2027.',
+          depose: false,
+          others: 0,
+          relance: false,
+          source: {
+            title: 'Devis 2027',
+            url: 'https://mail.google.test/2',
+            kind: 'gmail',
+            mailText: expect.any(String),
+          },
+        },
+        {
+          id: expect.any(String),
+          from: 'Léa Roy',
+          receivedAt: older.receivedAt,
+          texte: 'Brouillon pour Contrat.',
+          depose: true,
+          others: 0,
+          relance: false,
+          source: {
+            title: 'Contrat',
+            url: 'https://mail.google.test/5',
+            kind: 'gmail',
+            mailText: expect.any(String),
+          },
+        },
+        {
+          id: expect.any(String),
+          from: 'Léa Roy',
+          receivedAt: expect.any(Date),
+          texte: 'Bonjour Léa,\n\nJeudi me convient.',
+          depose: false,
+          others: 0,
+          relance: false,
+          source: {
+            title: 'Écrit au second appel',
+            url: 'https://mail.google.test/6',
+            kind: 'gmail',
+            mailText: expect.any(String),
+          },
+        },
+      ],
+    });
+    expect(JSON.stringify(home)).not.toMatch(/message:|lea@client\.test|r-contrat-1789/);
+    expect(JSON.stringify(home)).not.toContain(recent.sourceId);
+    expect(await titles(paul)).toEqual({ demandes: [], prets: ['Fil de Paul'] });
+  });
+
+  it('vingt au plus de chaque sorte, les plus récents d’abord : un brouillon au-delà du troisième se montre ; sans rien pour elle, rien', async () => {
+    const [julie, paul] = await people();
+    await answered(julie);
+    await answered(paul);
+    expect(HOME_MAX).toBe(20);
+    // Écrits du plus ancien au plus récent : l'ordre rendu ne vient pas de l'ordre d'écriture.
+    for (const hour of hours(1, HOME_MAX + 1).reverse())
+      await asked(julie, `Demande ${hour}`, hour);
+    for (const hour of hours(101, 101 + HOME_MAX).reverse())
+      await seedBrouillon(julie, `Prêt ${hour}`, hour);
+
+    expect(await titles(julie)).toEqual({
+      demandes: hours(1, HOME_MAX).map((hour) => `Demande ${hour}`),
+      prets: hours(101, 100 + HOME_MAX).map((hour) => `Prêt ${hour}`),
+    });
+    expect(await readHomeBrouillons(paul)).toEqual(NOTHING);
+  });
+
+  it('parmi les vingt demandes, celles qui attendent sa réponse passent avant celles où Leon écrit, même sur des mails plus récents', async () => {
+    const [julie] = await people();
+    await answered(julie);
+    for (const hour of hours(1, HOME_MAX))
+      await asked(julie, `Répondue ${hour}`, hour, { reponses: ['Oui.', ''] });
+    for (const hour of [HOME_MAX + 2, HOME_MAX + 1]) await asked(julie, `Demande ${hour}`, hour);
+
+    // Les deux qui attendent un geste d'elle, puis les plus récentes de celles où Leon écrit ; rendues par date du mail.
+    expect((await titles(julie)).demandes).toEqual([
+      ...hours(1, HOME_MAX - 2).map((hour) => `Répondue ${hour}`),
+      `Demande ${HOME_MAX + 1}`,
+      `Demande ${HOME_MAX + 2}`,
+    ]);
+  });
+
+  it('son oui au mail d’une inconnue : la ligne dit que Leon écrit, sans question, le temps du premier appel ; son non ne se montre pas', async () => {
+    const [julie] = await people();
+    await answered(julie);
+    const oui = await seedBrouillon(julie, 'Partenariat', 2, {
+      texte: null,
+      indications: 'Dites-lui que je suis intéressée.',
+    });
+    await seedBrouillon(julie, 'Sans indication', 3, { texte: null, indications: '' });
+    await seedBrouillon(julie, 'Non', 1, { texte: null, indications: null });
+    await seedBrouillon(julie, 'Oui écarté', 1, { texte: null, indications: '', ecarte: true });
+    await seedBrouillon(julie, 'Oui trop ancien', 31 * 24, { texte: null, indications: '' });
+
+    const home = await readHomeBrouillons(julie);
+
+    // Ni ses indications, ni l'identifiant du fil ou du message, ni une adresse.
+    expect(home.demandes).toEqual([
+      {
+        id: expect.any(String),
+        from: 'Léa Roy',
+        receivedAt: oui.receivedAt,
+        questions: [],
+        choix: [],
+        repondue: true,
+        relance: false,
+        source: {
+          title: 'Partenariat',
+          url: 'https://mail.google.test/2',
+          kind: 'gmail',
+          mailText: expect.any(String),
+        },
+      },
+      expect.objectContaining({ repondue: true, questions: [] }),
+    ]);
+    expect(home.demandes.map((one) => one.source.title)).toEqual([
+      'Partenariat',
+      'Sans indication',
+    ]);
+    expect(JSON.stringify(home)).not.toMatch(/intéressée|message:|lea@client\.test/);
+    expect(JSON.stringify(home)).not.toContain(oui.sourceId);
+  });
+
+  it('parmi les vingt demandes, son oui à une inconnue compte avec celles où Leon écrit, après celles qui attendent sa réponse', async () => {
+    const [julie] = await people();
+    await answered(julie);
+    for (const hour of hours(1, HOME_MAX - 1))
+      await seedBrouillon(julie, `Oui ${hour}`, hour, { texte: null, indications: '' });
+    await asked(julie, `Répondue ${HOME_MAX}`, HOME_MAX, { reponses: ['Oui.', ''] });
+    for (const hour of [HOME_MAX + 2, HOME_MAX + 1]) await asked(julie, `Demande ${hour}`, hour);
+
+    expect((await titles(julie)).demandes).toEqual([
+      ...hours(1, HOME_MAX - 2).map((hour) => `Oui ${hour}`),
+      `Demande ${HOME_MAX + 1}`,
+      `Demande ${HOME_MAX + 2}`,
+    ]);
+  });
+
+  // Un mail d'une inconnue dans un fil de la personne, marqué « pas automatique » à la relève, et son adresse à elle,
+  // d'où part un mail envoyé à Léa il y a dix jours.
+  const stranger = async (ctx: TenantContext, title: string, hoursAgo: number) => {
+    const at = new Date(Date.now() - hoursAgo * 3_600_000);
+    const mail = received(at, 'Bonjour, pourrions-nous travailler ensemble ?', {
+      author: { name: 'Inès Garnier', email: 'ines@inconnue.test' },
+      automated: false,
+    });
+    const url = `https://mail.google.test/inconnu-${hoursAgo}`;
+    return {
+      sourceId: await mailThread(ctx, title, [mail], { url }),
+      message: mail.externalId,
+      at,
+    };
+  };
+  const wroteToLea = (ctx: TenantContext) =>
+    mailThread(ctx, 'Premier contact', [
+      sent(new Date(Date.now() - 240 * 3_600_000), 'Bonjour Léa.'),
+    ]);
+
+  it('l’accueil reçoit, pour chaque mail d’une inconnue, son auteur, le fil lié à son outil, la date du mail, de quoi lui répondre, et son texte pour « Voir le mail » : rien de son adresse', async () => {
+    const [julie] = await people();
+    await answered(julie);
+    await wroteToLea(julie);
+    const ines = await stranger(julie, 'Partenariat', 2);
+
+    const home = await readHomeBrouillons(julie);
+
+    expect(home).toEqual({
+      demandes: [
+        {
+          from: 'Inès Garnier',
+          receivedAt: ines.at,
+          mail: { sourceId: ines.sourceId, message: ines.message },
+          source: {
+            title: 'Partenariat',
+            url: 'https://mail.google.test/inconnu-2',
+            kind: 'gmail',
+            mailText: expect.any(String),
+          },
+        },
+      ],
+      prets: [],
+    });
+    expect(JSON.stringify(home)).not.toMatch(/ines@inconnue\.test/);
+  });
+
+  it('les mails d’inconnues partagent les vingt places des demandes : celles qui attendent un geste d’elle d’abord, les plus récentes d’abord, rendues par date', async () => {
+    const [julie] = await people();
+    await answered(julie);
+    await wroteToLea(julie);
+    await asked(julie, 'Répondue 1', 1, { reponses: ['Oui.', ''] });
+    for (const hour of hours(2, HOME_MAX)) await stranger(julie, `Inconnue ${hour}`, hour);
+    await asked(julie, `Demande ${HOME_MAX + 1}`, HOME_MAX + 1);
+    await seedBrouillon(julie, 'Prêt', HOME_MAX + 2);
+    const strangers = hours(2, HOME_MAX).map((hour) => `Inconnue ${hour}`);
+
+    // Vingt places : les vingt qui attendent un geste d'elle, même sur des mails plus anciens que celle où Leon écrit.
+    expect(await titles(julie)).toEqual({
+      demandes: [...strangers, `Demande ${HOME_MAX + 1}`],
+      prets: ['Prêt'],
+    });
+
+    // Une place libérée (elle a écarté sa demande) revient à la plus récente de celles où Leon écrit.
+    await adminPool.query(
+      `update brouillons set ecarte_le = now() where user_id = $1 and questions is not null and reponses is null`,
+      [julie.userId],
+    );
+    expect((await titles(julie)).demandes).toEqual(['Répondue 1', ...strangers]);
+  });
+
+  it('la lecture des mails d’inconnues en panne : ses demandes et ses brouillons prêts se montrent, et la panne est journalisée', async () => {
+    const [julie] = await people();
+    await answered(julie);
+    await wroteToLea(julie);
+    await stranger(julie, 'Partenariat', 2);
+    await asked(julie, 'Devis', 3);
+    await seedBrouillon(julie, 'Prêt', 4);
+    const failure = new Error('base injoignable');
+    vi.mocked(logError).mockClear();
+    vi.mocked(readUnknownMails).mockRejectedValueOnce(failure);
+
+    expect(await titles(julie)).toEqual({ demandes: ['Devis'], prets: ['Prêt'] });
+    expect(logError).toHaveBeenCalledExactlyOnceWith('accueil.inconnus', failure, {
+      userId: julie.userId,
+    });
+    // La lecture suivante les retrouve.
+    expect((await titles(julie)).demandes).toEqual(['Partenariat', 'Devis']);
+  });
+
+  it('sans son oui à l’agent, aucun mail d’inconnue ne part vers l’accueil ; ni vers celui d’un collègue ou d’une autre organisation', async () => {
+    const [julie, paul, zoe] = await people();
+    await answered(julie, false);
+    await answered(paul);
+    await answered(zoe);
+    await wroteToLea(julie);
+    await stranger(julie, 'Partenariat', 2);
+
+    expect(await readHomeBrouillons(julie)).toEqual(NOTHING);
+    for (const ctx of [paul, { ...paul, equipe: true }, zoe])
+      expect(await readHomeBrouillons(ctx)).toEqual(NOTHING);
+
+    await adminPool.query('update reponses_agent set oui = true where user_id = $1', [
+      julie.userId,
+    ]);
+    expect((await titles(julie)).demandes).toEqual(['Partenariat']);
+  });
+
+  it('sans son oui à l’agent, ou quand il ne lui est plus proposé, rien ne part vers l’accueil ; un nouveau oui remontre tout', async () => {
+    const [julie, paul] = await people();
+    await answered(julie, false);
+    await asked(julie, 'Devis', 1);
+    await asked(julie, 'Répondue', 2, { reponses: ['Oui.', ''] });
+    await seedBrouillon(julie, 'Prêt', 3);
+    // Paul n'a jamais répondu à l'agent, qui ne lui est pas proposé.
+    await asked(paul, 'Jamais répondu', 1);
+    await seedBrouillon(paul, 'Jamais répondu non plus', 2);
+
+    expect(await readHomeBrouillons(julie)).toEqual(NOTHING);
+    expect(await readHomeBrouillons(paul)).toEqual(NOTHING);
+
+    await adminPool.query('update reponses_agent set oui = true where user_id = $1', [
+      julie.userId,
+    ]);
+    expect(await titles(julie)).toEqual({ demandes: ['Devis', 'Répondue'], prets: ['Prêt'] });
+
+    // Sa boîte débranchée : son oui ne suffit plus.
+    await adminPool.query('delete from connections where created_by = $1', [julie.userId]);
+    expect(await readHomeBrouillons(julie)).toEqual(NOTHING);
+  });
+
+  it('son oui à « Relances » seul : rien de « Brouillons de réponse » ne part vers l’accueil', async () => {
+    const [julie] = await people();
+    await answered(julie, false);
+    await seedLine(julie, RYTHME);
+    await adminPool.query(
+      `insert into reponses_agent (tenant_id, user_id, agent, oui, acl)
+       values ($1, $2, 'relance', true, array[$2::uuid])`,
+      [julie.tenantId, julie.userId],
+    );
+    await wroteToLea(julie);
+    await stranger(julie, 'Partenariat', 2);
+    await asked(julie, 'Devis', 1);
+    await seedBrouillon(julie, 'Prêt', 3);
+
+    expect(await readHomeBrouillons(julie)).toEqual(NOTHING);
+  });
+
+  it('une ligne dont le fil a bougé ou a disparu ne se montre plus, ni la demande d’un mail de plus de trente jours, répondue ou non', async () => {
+    const [julie] = await people();
+    await answered(julie);
+    const moved = await asked(julie, 'Elle a répondu dans le fil', 3);
+    const gone = await asked(julie, 'Fil supprimé', 2);
+    await asked(julie, 'Intacte', 1);
+    // Trop ancien pour le second appel : ses réponses ne feraient plus rien écrire, et Leon n'écrit plus.
+    await asked(julie, 'Trop ancien', 31 * 24);
+    await asked(julie, 'Trop ancien, répondue', 31 * 24, { reponses: ['Oui.', ''] });
+    await asked(julie, 'Encore à temps', 29 * 24, { reponses: ['Oui.', ''] });
+    const movedDraft = await seedBrouillon(julie, 'Brouillon, fil qui a bougé', 3);
+    const goneDraft = await seedBrouillon(julie, 'Brouillon, fil supprimé', 2);
+    await seedBrouillon(julie, 'Brouillon intact', 1);
+    for (const one of [moved, movedDraft]) await reply(one.sourceId);
+    await adminPool.query('delete from sources where id = any($1)', [
+      [gone.sourceId, goneDraft.sourceId],
+    ]);
+
+    expect(await titles(julie)).toEqual({
+      demandes: ['Intacte', 'Encore à temps'],
+      prets: ['Brouillon intact'],
+    });
+  });
+
+  it('rien de ce que l’agent a pour une personne ne part vers l’accueil d’un collègue, de son manager avec la vue de l’équipe, ni d’une autre organisation', async () => {
+    const [julie, paul, zoe] = await people();
+    for (const ctx of [julie, paul, zoe]) await answered(ctx);
+    await asked(julie, 'Devis', 1);
+    await asked(julie, 'Répondue', 2, { reponses: ['Oui.', ''] });
+    await seedBrouillon(julie, 'Prêt', 3);
+
+    for (const ctx of [paul, { ...paul, equipe: true }, zoe])
+      expect(await readHomeBrouillons(ctx)).toEqual(NOTHING);
+  });
+
+  describe('ce que l’agent « Relances » a pour elle', () => {
+    const DAY = 24 * 3_600_000;
+    // Sa boîte Gmail branchée par elle et une fiche qui dit qu'elle envoie des mails : « Relances » lui est proposé, et
+    // elle lui a répondu.
+    const followsUp = async (ctx: TenantContext, oui = true) => {
+      await seedConnection(ctx, { provider: 'gmail' });
+      await seedLine(ctx, RYTHME);
+      await adminPool.query(
+        `insert into reponses_agent (tenant_id, user_id, agent, oui, acl)
+       values ($1, $2, 'relance', $3, array[$2::uuid])`,
+        [ctx.tenantId, ctx.userId, oui],
+      );
+    };
+    // Son mail à Léa, et à `cc`, resté sans réponse depuis `days` jours, dans le fil nommé, après un mail de Léa.
+    const unanswered = async (
+      ctx: TenantContext,
+      title: string,
+      days: number,
+      cc: string[] = [],
+    ) => {
+      const at = new Date(Date.now() - days * DAY);
+      const mine = sent(
+        at,
+        'Bonjour Léa,\nAvez-vous pu relire le devis ?',
+        [LEA, 'marc@client.test'],
+        cc,
+      );
+      const url = `https://mail.google.test/relance-${days}`;
+      const before = received(new Date(at.getTime() - DAY), 'Bonjour Julie, un devis ?');
+      return {
+        sourceId: await mailThread(ctx, title, [before, mine], { url }),
+        message: mine.externalId,
+        at,
+      };
+    };
+
+    it('l’accueil reçoit, pour chaque mail sans réponse, son destinataire, les autres, la date de son mail, le fil lié à son outil, de quoi répondre, et son texte pour « Voir le mail » : aucune adresse', async () => {
+      const [julie, paul] = await people();
+      await followsUp(julie);
+      await followsUp(paul);
+      const older = await unanswered(julie, 'Devis', 8);
+      const recent = await unanswered(julie, 'Contrat', 6);
+
+      const home = await readHomeBrouillons(julie);
+
+      expect(home).toEqual({
+        demandes: [
+          {
+            relance: true,
+            from: 'Léa Roy',
+            others: 1,
+            receivedAt: recent.at,
+            mail: { sourceId: recent.sourceId, message: recent.message },
+            source: {
+              title: 'Contrat',
+              url: 'https://mail.google.test/relance-6',
+              kind: 'gmail',
+              mailText: expect.any(String),
+            },
+          },
+          expect.objectContaining({ from: 'Léa Roy', receivedAt: older.at }),
+        ],
+        prets: [],
+      });
+      expect(JSON.stringify(home)).not.toMatch(/lea@client\.test|marc@client\.test/);
+      expect(await readHomeBrouillons(paul)).toEqual(NOTHING);
+    });
+
+    it('son oui : Leon écrit sous le nom de son destinataire, puis la relance prête de même, avec le nombre de ses autres destinataires ; son non ne se montre pas', async () => {
+      const [julie] = await people();
+      await followsUp(julie);
+      const oui = await unanswered(julie, 'Oui', 6);
+      const id = await answerRelance(julie, oui, 'Rappelez-lui l’échéance.');
+      await answerRelance(julie, await unanswered(julie, 'Non', 7), null);
+      // Sa relance prête part à Léa et Marc, et en copie à Zoé : à elle-même, non.
+      const ready = await unanswered(julie, 'Prête', 8, ['zoe@client.test', JULIE]);
+      await adminPool.query(
+        `insert into brouillons (tenant_id, user_id, source_id, message, texte, indications, sorte, acl)
+       values ($1, $2, $3, $4, 'Bonjour Léa,', '', 'relance', array[$2::uuid])`,
+        [julie.tenantId, julie.userId, ready.sourceId, ready.message],
+      );
+
+      const home = await readHomeBrouillons(julie);
+
+      expect(home).toEqual({
+        demandes: [
+          {
+            id,
+            from: 'Léa Roy',
+            receivedAt: oui.at,
+            questions: [],
+            choix: [],
+            repondue: true,
+            relance: true,
+            source: {
+              title: 'Oui',
+              url: 'https://mail.google.test/relance-6',
+              kind: 'gmail',
+              mailText: expect.any(String),
+            },
+          },
+        ],
+        prets: [
+          {
+            id: expect.any(String),
+            from: 'Léa Roy',
+            receivedAt: ready.at,
+            texte: 'Bonjour Léa,',
+            depose: false,
+            others: 2,
+            relance: true,
+            source: {
+              title: 'Prête',
+              url: 'https://mail.google.test/relance-8',
+              kind: 'gmail',
+              mailText: expect.any(String),
+            },
+          },
+        ],
+      });
+      expect(JSON.stringify(home)).not.toMatch(/échéance|Julie Martin/);
+    });
+
+    it('rien de « Relances » sans son oui à lui : son non, ou son seul oui à « Brouillons de réponse » ; un oui remontre tout', async () => {
+      const [julie] = await people();
+      await answered(julie);
+      await followsUp(julie, false);
+      await unanswered(julie, 'Sans réponse', 6);
+      const ready = await unanswered(julie, 'Prête', 8);
+      await adminPool.query(
+        `insert into brouillons (tenant_id, user_id, source_id, message, texte, indications, sorte, acl)
+       values ($1, $2, $3, $4, 'Bonjour Léa,', '', 'relance', array[$2::uuid])`,
+        [julie.tenantId, julie.userId, ready.sourceId, ready.message],
+      );
+      vi.mocked(readUnansweredMails).mockClear();
+
+      expect(await readHomeBrouillons(julie)).toEqual(NOTHING);
+      // Sans son oui, ses mails sans réponse ne sont même pas lus.
+      expect(readUnansweredMails).not.toHaveBeenCalled();
+
+      await adminPool.query(
+        `update reponses_agent set oui = true where user_id = $1 and agent = 'relance'`,
+        [julie.userId],
+      );
+      expect(await titles(julie)).toEqual({ demandes: ['Sans réponse'], prets: ['Prête'] });
+    });
+
+    it('les vingt places de chaque agent : ses brouillons de réponse, après son non, ne cachent pas sa relance ; avec ses deux oui, les vingt plus récents', async () => {
+      const [julie] = await people();
+      await answered(julie, false);
+      await followsUp(julie);
+      for (const hour of hours(1, HOME_MAX)) await seedBrouillon(julie, `Prêt ${hour}`, hour);
+      const ready = await unanswered(julie, 'Relance prête', 8);
+      await adminPool.query(
+        `insert into brouillons (tenant_id, user_id, source_id, message, texte, indications, sorte, acl)
+       values ($1, $2, $3, $4, 'Bonjour Léa,', '', 'relance', array[$2::uuid])`,
+        [julie.tenantId, julie.userId, ready.sourceId, ready.message],
+      );
+
+      expect(await titles(julie)).toEqual({ demandes: [], prets: ['Relance prête'] });
+
+      await adminPool.query('update reponses_agent set oui = true where user_id = $1', [
+        julie.userId,
+      ]);
+      expect((await titles(julie)).prets).toEqual(hours(1, HOME_MAX).map((hour) => `Prêt ${hour}`));
+    });
+
+    it('la lecture de ses mails sans réponse en panne : le reste se montre, et la panne est journalisée', async () => {
+      const [julie] = await people();
+      await answered(julie);
+      await followsUp(julie);
+      await unanswered(julie, 'Sans réponse', 6);
+      await asked(julie, 'Devis', 3);
+      const failure = new Error('base injoignable');
+      vi.mocked(logError).mockClear();
+      vi.mocked(readUnansweredMails).mockRejectedValueOnce(failure);
+
+      expect(await titles(julie)).toEqual({ demandes: ['Devis'], prets: [] });
+      expect(logError).toHaveBeenCalledExactlyOnceWith('accueil.relances', failure, {
+        userId: julie.userId,
+      });
+      expect((await titles(julie)).demandes).toEqual(['Devis', 'Sans réponse']);
+    });
+  });
+});
+
+describe('readFicheScreen : les sources d’une tâche, sous ses droits', () => {
+  it('ne rend que les sources qu’elle voit encore : ni supprimée, ni devenue invisible, ni d’une autre organisation', async () => {
+    const [julie, paul, zoe] = await people();
+    const mine = await seedRun(julie, {
+      kind: 'hubspot',
+      title: 'Demande de devis',
+      metadata: { url: 'https://app.hubspot.test/deal/1' },
+    });
+    const shared = await seedRun(paul, {
+      kind: 'notion',
+      title: 'Modèle de devis',
+      acl: [paul.tenantId],
+    });
+    const deleted = await seedRun(julie, { kind: 'hubspot', title: 'Fiche supprimée' });
+    const hidden = await seedRun(julie, { kind: 'gmail', title: 'Fil repris par Paul' });
+    const foreign = await seedRun(zoe, { kind: 'notion', title: 'Page de Zoé' });
+    await seedLine(julie, {
+      genre: 'tache',
+      cle: '1',
+      valeur: {
+        titre: 'Envoyer les devis',
+        detail: 'Un client demande un prix.',
+        sources: [mine, shared, deleted, hidden, foreign].map((run) => run.sourceId),
+      },
+    });
+    await adminDb.delete(sources).where(eq(sources.id, deleted.sourceId));
+    await adminDb
+      .update(sources)
+      .set({ acl: [paul.userId] })
+      .where(eq(sources.id, hidden.sourceId));
+
+    const screen = await readFicheScreen(julie);
+
+    expect(screen.sources).toEqual({
+      [mine.sourceId]: {
+        title: 'Demande de devis',
+        url: 'https://app.hubspot.test/deal/1',
+        kind: 'hubspot',
+      },
+      [shared.sourceId]: { title: 'Modèle de devis', url: null, kind: 'notion' },
+    });
+    // La ligne garde ses cinq sources : c'est l'écran qui ne compte que celles-là.
+    expect(linesOf(screen.lines, 'tache')[0]?.valeur.sources).toHaveLength(5);
+  });
+});

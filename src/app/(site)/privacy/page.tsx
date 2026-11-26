@@ -79,9 +79,10 @@ const SECTIONS: LegalSection[] = [
           <li>
             <strong>Gmail:</strong> read, compose, send and permanently delete email, and change
             basic settings such as filters, signature and vacation reply. Leon does not ask to
-            manage forwarding or who can access your mailbox. Today, Leon only reads your email
-            messages and their details, such as sender, recipients, subject and date, and skips your
-            drafts.
+            manage forwarding or who can access your mailbox. Today, Leon reads your email messages
+            and their details, such as sender, recipients, subject and date, and skips your drafts.
+            If you turn on a Leon agent, it also writes reply drafts in your mailbox, sends one only
+            when you click Send, and deletes only drafts it wrote.
           </li>
           <li>
             <strong>Google Drive:</strong> see, create, edit, share and delete your files. Today,

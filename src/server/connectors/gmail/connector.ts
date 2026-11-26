@@ -7,7 +7,7 @@ import { threadsOf } from './map';
 
 // Gmail par l'appli Google de Leon (google.ts) : tout le courrier (mail.google.com, envoi et suppression
 // définitive compris) et les réglages de base (gmail.settings.basic : filtres, signature, absence), jamais les
-// transferts ni la délégation (gmail.settings.sharing). Aujourd'hui, Leon ne fait que lire. Sans cette appli,
+// transferts ni la délégation (gmail.settings.sharing). Leon lit, et n'écrit que par ses agents (portrait/brouillon-depot.ts). Sans cette appli,
 // par Pipedream Connect (pipedream.ts) : l'appli Google de Pipedream, chaque requête par son proxy pour 1 crédit.
 // Doc lue le 25/10/2026 :
 //   https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/list (q, du plus

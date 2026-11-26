@@ -104,6 +104,7 @@
   "navigation": {
     "home": "Accueil",
     "discussions": "Discussions",
+    "agents": "Agents",
     "documents": "Documents",
     "team": "Équipe",
     "connections": "Connexions",
@@ -349,6 +350,98 @@
     "basedOn": "Tiré de",
     "basedOnNote": "Seulement vos propres sources : rien que vous ne pourriez ouvrir vous-même.",
     "whereNext": "Vous pourrez le modifier à tout moment dans <link>Réglages › Profil</link>."
+  },
+  "draftQuestions": {
+    "line": {
+      "questions": "{name}, j’ai quelques questions à vous poser.",
+      "ready": "{name}, {count, plural, one {votre brouillon est prêt} other {vos # brouillons sont prêts}}.",
+      "writing": "{name}, {count, plural, one {j’écris votre brouillon} other {j’écris vos # brouillons}}."
+    },
+    "lineAnon": {
+      "questions": "J’ai quelques questions à vous poser.",
+      "ready": "{count, plural, one {Votre brouillon est prêt} other {Vos # brouillons sont prêts}}.",
+      "writing": "{count, plural, one {J’écris votre brouillon} other {J’écris vos # brouillons}}."
+    },
+    "count": {
+      "toComplete": "{count, plural, one {# mail à compléter} other {# mails à compléter}}",
+      "toConfirm": "{count, plural, one {# préférence à valider} other {# préférences à valider}}",
+      "toFollowUp": "{count, plural, one {# relance à décider} other {# relances à décider}}",
+      "ready": "{count, plural, one {# brouillon prêt} other {# brouillons prêts}}",
+      "writing": "{count, plural, one {# brouillon en cours} other {# brouillons en cours}}"
+    },
+    "titleBoth": "Brouillons et relances",
+    "mail": "Mail {n} sur {total}",
+    "previousMail": "Mail précédent",
+    "nextMail": "Mail suivant",
+    "allDone": "C’est tout pour l’instant.",
+    "someone": "Votre correspondant",
+    "strangerAsk": "Voulez-vous une réponse ?",
+    "unanswered": "Votre mail à {name} est resté sans réponse.",
+    "unansweredMany": "Votre mail à {name} et {count, plural, one {# autre personne} other {# autres personnes}} est resté sans réponse.",
+    "relanceAsk": "Voulez-vous une relance ?",
+    "noticed": "J’ai remarqué une retouche sur ma réponse à {name}.",
+    "noticedAnon": "J’ai remarqué une retouche sur l’une de mes réponses.",
+    "keepInMind": "Dois-je en tenir compte pour vos prochains brouillons ?",
+    "instructions": "Vos indications",
+    "instructionsHelp": "Ce que vous voulez répondre, en quelques mots. Vous pouvez laisser vide.",
+    "relanceInstructionsHelp": "Ce que vous voulez ajouter, en quelques mots. Vous pouvez laisser vide.",
+    "prepare": "Préparer la réponse",
+    "relancePrepare": "Préparer la relance",
+    "yes": "Oui",
+    "no": "Non",
+    "position": "Question {n} sur {total}",
+    "other": "Autre",
+    "otherAnswer": "Votre réponse",
+    "recap": "Vos réponses",
+    "noAnswer": "Sans réponse",
+    "change": "Modifier",
+    "send": "Envoyer mes réponses",
+    "writing": "J’écris votre réponse.",
+    "relanceWriting": "J’écris votre relance.",
+    "discard": "Écarter",
+    "gone": "Cette demande n’est plus ouverte.",
+    "received": "Reçu le {date}",
+    "sent": "Envoyé le {date}",
+    "ready": "Brouillon prêt",
+    "relanceReady": "Relance prête",
+    "deposited": "Déposé dans vos brouillons Gmail.",
+    "confirmDiscard": "Écarter ce brouillon ?",
+    "confirmDiscardText": "Il sera aussi supprimé de vos brouillons Gmail.",
+    "keep": "Garder",
+    "discarded": "Brouillon écarté.",
+    "discardedKeptInGmail": "Brouillon écarté. Leon n’a pas pu le retirer de Gmail : supprimez-le dans vos brouillons Gmail.",
+    "draftGone": "Ce brouillon n’existe plus.",
+    "list": "Ce qui vous attend",
+    "kind": {
+      "questions": "À compléter",
+      "inconnu": "À décider",
+      "relance": "Relance à décider",
+      "preference": "Préférence à valider",
+      "pret": "Brouillon prêt",
+      "ecrit": "En cours d’écriture"
+    },
+    "sendDraft": {
+      "button": "Envoyer",
+      "confirm": "Envoyer cette réponse à {name} ?",
+      "confirmAnon": "Envoyer cette réponse ?",
+      "confirmRelance": "Envoyer cette relance à {name} ?",
+      "confirmRelanceMany": "Envoyer cette relance à {name} et {count, plural, one {# autre personne} other {# autres personnes}} ?",
+      "confirmText": "Elle part de votre boîte Gmail, telle qu’elle est dans vos brouillons. Un mail envoyé ne se rattrape pas.",
+      "notYet": "Pas encore",
+      "done": "Réponse envoyée.",
+      "doneRelance": "Relance envoyée.",
+      "dontAsk": "Ne plus me demander",
+      "moved": "Rien n’est parti : quelqu’un a écrit dans ce fil depuis. Relisez-le dans Gmail, où ce brouillon vous attend."
+    },
+    "pile": {
+      "title": "À vous",
+      "all": "Tout traiter",
+      "empty": "Rien ne vous attend pour l’instant.",
+      "emptyText": "Quand un mail demandera une réponse, Leon vous posera ici ses questions, puis vous montrera son brouillon."
+    },
+    "read": "Voir le mail",
+    "readHide": "Masquer le mail",
+    "openIn": "Ouvrir dans {tool}"
   },
   "search": {
     "memoryLabel": "Recherche dans la mémoire de l’équipe",
@@ -630,6 +723,118 @@
     "firstPage": "Revenir à la première page",
     "sources": "Sources",
     "untitled": "Sans titre"
+  },
+  "agents": {
+    "title": "Agents",
+    "ready": "Prêts à l’emploi",
+    "soon": "Bientôt",
+    "active": "Actif",
+    "activate": "Activer",
+    "asked": "Demandé",
+    "own": "Vos propres agents",
+    "ownCaption": "Vous les construirez vous-même.",
+    "example": "Exemple fictif",
+    "state": {
+      "on": "Actif",
+      "off": "Désactivé",
+      "soon": "Pas encore en service"
+    },
+    "switchOn": "Activer « {name} »",
+    "switchSoon": "Le recevoir dès sa sortie",
+    "facts": {
+      "does": "Ce qu’il fait",
+      "where": "Où le retrouver",
+      "needs": "Ce qu’il lui faut",
+      "who": "Qui voit son travail"
+    },
+    "whereHome": "Sur l’accueil, dans « À vous ».",
+    "whoYou": "Vous seulement.",
+    "needs": {
+      "boite": "Gmail ou Outlook, branché par vous, et votre fiche.",
+      "reunions": "Un enregistreur de réunion branché par vous (tl;dv, Fireflies, Fathom…), et votre fiche.",
+      "outlook": "Outlook, branché par vous, et votre fiche."
+    },
+    "missing": {
+      "boite": "Il lui faut votre boîte mail.",
+      "reunions": "Il lui faut un enregistreur de réunion.",
+      "outlook": "Il lui faut Outlook, le seul agenda que Leon lit aujourd’hui.",
+      "fiche": "Il lui faut votre fiche.",
+      "usage": "Votre fiche ne montre pas encore assez de mails pour lui."
+    },
+    "fix": {
+      "boite": "Brancher ma boîte mail",
+      "reunions": "Brancher un enregistreur",
+      "outlook": "Brancher Outlook",
+      "fiche": "Construire ma fiche"
+    },
+    "saved": {
+      "on": "{name} est actif.",
+      "off": "{name} est désactivé.",
+      "wanted": "C’est noté : il travaillera pour vous dès sa sortie.",
+      "unwanted": "C’est noté."
+    },
+    "gone": "Cet agent ne vous est plus proposé. La page est rechargée.",
+    "failed": "Votre réponse n’a pas pu s’enregistrer. Réessayez.",
+    "loadFailed": "Les agents n’ont pas pu se lire. Rechargez la page.",
+    "notice": {
+      "building": "Leon construit votre fiche. Vos agents vous seront proposés ensuite.",
+      "noMailbox": "Vos agents partent de votre boîte mail. Branchez Gmail ou Outlook pour les activer.",
+      "noFiche": "Vos agents partent de votre fiche. Construisez-la pour les activer.",
+      "refresh": "Recharger"
+    },
+    "list": {
+      "suite-reunion": {
+        "name": "Suite de réunion",
+        "text": "Après une réunion enregistrée, un résumé et un brouillon de mail de suivi.",
+        "when": "Après une réunion enregistrée",
+        "sheet": {
+          "meta": "Réunion chantier · jeudi",
+          "a": "<hl>Valider les plans avant vendredi</hl>",
+          "b": "Envoyer le devis révisé à Paul",
+          "foot": "Brouillon de suivi"
+        }
+      },
+      "brouillon-reponse": {
+        "name": "Brouillons de réponse",
+        "text": "Quand un mail attend une réponse, un brouillon écrit comme vous, sur l’accueil. Avec Gmail, un brouillon complet est aussi déposé dans vos brouillons. Rien ne part sans votre clic sur « Envoyer ».",
+        "when": "Quand un mail attend votre réponse",
+        "sheet": {
+          "meta": "Réponse à Sophie",
+          "a": "Bonjour Sophie, <hl>je vous confirme jeudi à 10 h</hl> pour la visite du chantier.",
+          "foot": "Envoyer"
+        }
+      },
+      "brief-rendez-vous": {
+        "name": "Brief avant rendez-vous",
+        "text": "Avant un rendez-vous, qui est en face, où en est le dossier, ce qui a été promis.",
+        "when": "Avant un rendez-vous",
+        "sheet": {
+          "meta": "14 h 30 · Rendez-vous avec Julie",
+          "a": "Le dossier : devis signé, chantier en mars.",
+          "b": "Promis : <hl>le planning cette semaine</hl>."
+        }
+      },
+      "relance": {
+        "name": "Relances",
+        "text": "Quand un mail que vous avez envoyé reste cinq jours sans réponse, Leon vous demande s’il faut relancer, et écrit la relance après votre oui.",
+        "when": "Après cinq jours sans réponse",
+        "sheet": {
+          "meta": "Sans réponse depuis cinq jours",
+          "a": "Bonjour Marc, <hl>je reviens vers vous</hl> au sujet du devis envoyé lundi.",
+          "foot": "Envoyer"
+        }
+      },
+      "point-du-jour": {
+        "name": "Point du jour",
+        "text": "Chaque matin, votre agenda, les mails qui attendent, vos tâches.",
+        "when": "Chaque matin",
+        "sheet": {
+          "meta": "Ce matin",
+          "a": "9 h 00 · Point équipe",
+          "b": "<hl>Deux mails attendent votre réponse</hl>"
+        }
+      }
+    }
   },
   "answer": {
     "unavailable": "Réponse indisponible pour le moment. Les résultats ci-dessous restent complets.",
@@ -917,6 +1122,7 @@
     "tabSecurity": "Sécurité",
     "tabIntegrations": "Intégrations",
     "tabMemory": "Mémoire",
+    "tabFiche": "Ma fiche",
     "depotsTitle": "Dépôts d’équipe",
     "depotsDescription": "Leon ne relève sur GitHub que les dépôts cochés, et seuls ceux-là sont visibles de toute l’équipe. La liste reprend les dépôts déjà cochés et ceux que voient vos propres connexions GitHub, lus ou non.",
     "depotsNone": "Aucun dépôt d’équipe : GitHub n’est plus relevé, et ce qui l’a été ne peut plus être lu que par qui l’a branché et, sur le site de Leon, par ses managers en remontant.",
@@ -1061,6 +1267,43 @@
     "errorInvalid": "Ce n’est pas valide. Écrivez entre 1 et {max} caractères.",
     "errorFailed": "Une erreur est survenue. Réessayez.",
     "loadFailed": "Impossible de charger votre mémoire. Rechargez la page."
+  },
+  "fiche": {
+    "title": "Ma fiche",
+    "description": "Ce que Leon a compris de votre travail, d’après vos mails envoyés et vos outils. Vous seul voyez cette fiche : ni votre manager, ni un administrateur, ni un agent d’équipe ne la lisent. Vous pouvez corriger ou retirer chaque ligne. Leon garde aussi, sans les afficher, des mesures sur vos mails envoyés : à qui vous écrivez, vos formules, votre rythme, votre signature.",
+    "loadFailed": "Impossible de charger votre fiche. Rechargez la page.",
+    "noFiche": "Vous n’avez pas encore de fiche.",
+    "noMailbox": "Leon la construit d’après vos mails envoyés. Branchez d’abord votre boîte Gmail ou Outlook.",
+    "openConnections": "Ouvrir les connexions",
+    "buildHint": "Leon lit une fois vos mails envoyés des trois derniers mois et vos outils, puis vous montre ce qu’il en retient. Comptez quelques minutes. Si vous venez de brancher votre boîte, laissez d’abord à Leon le temps de la lire, car la fiche ne se construit qu’une fois.",
+    "noMail": "Leon n’a trouvé aucun mail que vous avez envoyé ces trois derniers mois, et n’a donc rien écrit. Si vous venez de brancher votre boîte, laissez-lui le temps de la lire, puis relancez la construction.",
+    "build": "Construire ma fiche",
+    "building": "Leon construit votre fiche. Cela prend quelques minutes : vous pouvez quitter cette page, la construction continue.",
+    "refresh": "Actualiser",
+    "completeHint": "Leon n’a pas encore écrit votre rôle ni vos tâches répétées. Relancez la construction pour compléter votre fiche.",
+    "complete": "Compléter ma fiche",
+    "buildFailed": "La construction n’a pas pu être lancée. Réessayez.",
+    "roleTitle": "Rôle",
+    "tasksTitle": "Tâches répétées",
+    "preferencesTitle": "Vos préférences d’écriture",
+    "seenIn": "Vue dans {count, plural, one {# élément} other {# éléments}}",
+    "untitled": "Sans titre",
+    "fromLeon": "Écrite par Leon d’après vos outils",
+    "fromYou": "Corrigée par vous le {date}",
+    "edit": "Corriger",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "remove": "Retirer",
+    "removeTitle": "Retirer cette ligne ?",
+    "removeDescription": "Elle sort de votre fiche et n’y reviendra pas.",
+    "saved": "Ligne corrigée.",
+    "removed": "Ligne retirée.",
+    "fieldRole": "Rôle",
+    "fieldTitle": "Titre de la tâche",
+    "fieldDetail": "Détail",
+    "errorNotFound": "Cette ligne n’existe plus. La fiche est rechargée.",
+    "errorInvalid": "Ce n’est pas valide. Vérifiez le texte et sa longueur.",
+    "errorFailed": "Une erreur est survenue. Réessayez."
   },
   "security": {
     "name": "Nom",

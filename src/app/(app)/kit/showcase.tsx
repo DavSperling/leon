@@ -53,7 +53,12 @@ import {
 import { useTheme } from '@/lib/verre/theme';
 
 // Données d'exemple fictives (Kestrel Studio), en anglais comme la maquette : cette page n'est pas traduite.
-type Panel = 'facts' | 'person' | 'form' | 'confirm' | 'work' | 'doc' | 'secret' | null;
+type Panel = 'facts' | 'person' | 'form' | 'confirm' | 'work' | 'doc' | 'secret' | 'wide' | null;
+const QUEUE = [
+  { who: 'Karim Benali', what: 'Quote for the spring catalogue' },
+  { who: 'Julie Martin', what: 'Team offsite, March' },
+  { who: 'Noor Haddad', what: 'Invoice 2026-041' },
+];
 const FAMILIES = ['All', 'Tools', 'Documents', 'People'];
 
 export function KitShowcase() {
@@ -248,6 +253,7 @@ export function KitShowcase() {
             <Button onClick={() => open('work')}>Working, then done</Button>
             <Button onClick={() => open('doc')}>A document</Button>
             <Button onClick={() => open('secret')}>A secret, shown once (locked)</Button>
+            <Button onClick={() => open('wide')}>Several things, one after another (wide)</Button>
           </>,
         )}
       </Section>
@@ -595,6 +601,45 @@ export function KitShowcase() {
         <Facts>
           <Fact label="Visible to">Team</Fact>
         </Facts>
+      </SidePanel>
+
+      <SidePanel
+        open={panel === 'wide'}
+        onOpenChange={close}
+        wide
+        title="Reply drafts"
+        sub="Email 1 of 3"
+        aside={
+          <ol className="grid gap-1">
+            {QUEUE.map((item, index) => (
+              <li key={item.who}>
+                <button
+                  type="button"
+                  aria-current={index === 0 || undefined}
+                  className="grid w-full gap-0.5 rounded-item px-3 py-2.5 text-left hover:bg-hover aria-[current]:bg-sheet aria-[current]:shadow-sheet"
+                >
+                  <span className="truncate text-body font-medium text-fg">{item.who}</span>
+                  <span className="truncate text-label text-muted">{item.what}</span>
+                </button>
+              </li>
+            ))}
+          </ol>
+        }
+        foot={
+          <>
+            <Button variant="quiet" className="-ml-4">
+              Discard
+            </Button>
+            <Button variant="primary" className="ml-auto">
+              Next email
+            </Button>
+          </>
+        }
+      >
+        <p className="text-label text-muted">Karim Benali · Received today</p>
+        <p className="mt-3 max-w-[640px] text-head font-semibold tracking-[-0.015em] text-balance text-fg">
+          Karim asks whether the quote can include delivery. What should Leon answer?
+        </p>
       </SidePanel>
 
       <SidePanel

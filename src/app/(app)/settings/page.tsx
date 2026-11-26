@@ -5,6 +5,7 @@ import {
   DeleteAccountSection,
   DeleteOrganizationSection,
 } from '@/components/verre/reglages/delete-account';
+import { FicheSection } from '@/components/verre/reglages/fiche';
 import { IntegrationsSettings } from '@/components/verre/reglages/integrations';
 import { MemorySection } from '@/components/verre/reglages/memoire';
 import { ProfileSettings } from '@/components/verre/reglages/profile';
@@ -35,6 +36,7 @@ import {
   listMemoryThreads,
 } from '@/server/memory/memory-section';
 import { RESOURCE } from '@/server/oauth/metadata';
+import { readFicheScreen } from '@/server/portrait/screen';
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: await (await getTranslations('settings'))('title') };
@@ -71,6 +73,7 @@ export default async function SettingsPage({
     seeAll,
     recent,
     memory,
+    fiche,
   ] = await Promise.all([
     listApiTokens(ctx),
     listMembers(ctx),
@@ -103,6 +106,11 @@ export default async function SettingsPage({
         return null;
       },
     ),
+    // Sa fiche, lue sous ses droits. Comme la mémoire : une lecture qui échoue donne une erreur dans l'onglet.
+    readFicheScreen(ctx).catch((error) => {
+      logError('settings.fiche', error);
+      return null;
+    }),
   ]);
   const twoFactor = Boolean(session?.user.twoFactorEnabled);
   const password = await hasPassword(ctx.userId);
@@ -180,6 +188,8 @@ export default async function SettingsPage({
           ),
           // la section Mémoire du lot 13 (leçons, notes, fils, dépôts), cinquième groupe
           memoire: <MemorySection recent={recent} max={LESSON_MAX} data={memory} />,
+          // la fiche de la personne (portrait/), visible d'elle seule, sixième groupe
+          fiche: <FicheSection data={fiche} />,
         }}
       />
     </div>

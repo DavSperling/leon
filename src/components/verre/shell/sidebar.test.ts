@@ -57,7 +57,7 @@ describe('NAV', () => {
 });
 
 describe('Sidebar', () => {
-  it('garde ses repères (#barre-laterale, data-rail, le bouton de repli) et rend les six sections, la courante marquée', () => {
+  it('garde ses repères (#barre-laterale, data-rail, le bouton de repli) et rend les sept sections, la courante marquée', () => {
     const out = html();
     expect(out).toMatch(/<aside id="barre-laterale" aria-label="Sidebar" data-rail="deplie"/);
     expect(out).toContain('aria-controls="barre-laterale"');

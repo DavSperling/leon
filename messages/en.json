@@ -104,6 +104,7 @@
   "navigation": {
     "home": "Home",
     "discussions": "Chat",
+    "agents": "Agents",
     "documents": "Documents",
     "team": "Team",
     "connections": "Connections",
@@ -349,6 +350,98 @@
     "basedOn": "Based on",
     "basedOnNote": "Only from your own sources: nothing you couldn’t open yourself.",
     "whereNext": "You can change it anytime in <link>Settings › Profile</link>."
+  },
+  "draftQuestions": {
+    "line": {
+      "questions": "{name}, I have a few questions for you.",
+      "ready": "{name}, {count, plural, one {your draft is ready} other {your # drafts are ready}}.",
+      "writing": "{name}, {count, plural, one {I’m writing your draft} other {I’m writing your # drafts}}."
+    },
+    "lineAnon": {
+      "questions": "I have a few questions for you.",
+      "ready": "{count, plural, one {Your draft is ready} other {Your # drafts are ready}}.",
+      "writing": "{count, plural, one {I’m writing your draft} other {I’m writing your # drafts}}."
+    },
+    "count": {
+      "toComplete": "{count, plural, one {# email to complete} other {# emails to complete}}",
+      "toConfirm": "{count, plural, one {# preference to confirm} other {# preferences to confirm}}",
+      "toFollowUp": "{count, plural, one {# follow-up to decide} other {# follow-ups to decide}}",
+      "ready": "{count, plural, one {# draft ready} other {# drafts ready}}",
+      "writing": "{count, plural, one {# draft in progress} other {# drafts in progress}}"
+    },
+    "titleBoth": "Drafts and follow-ups",
+    "mail": "Email {n} of {total}",
+    "previousMail": "Previous email",
+    "nextMail": "Next email",
+    "allDone": "That’s all for now.",
+    "someone": "Your correspondent",
+    "strangerAsk": "Do you want a reply?",
+    "unanswered": "Your email to {name} has had no reply.",
+    "unansweredMany": "Your email to {name} and {count, plural, one {# other person} other {# other people}} has had no reply.",
+    "relanceAsk": "Do you want a follow-up?",
+    "noticed": "I noticed you edited my reply to {name}.",
+    "noticedAnon": "I noticed you edited one of my replies.",
+    "keepInMind": "Should I keep this in mind for your next drafts?",
+    "instructions": "Your instructions",
+    "instructionsHelp": "What you want to reply, in a few words. You can leave it empty.",
+    "relanceInstructionsHelp": "What you want to add, in a few words. You can leave it empty.",
+    "prepare": "Prepare the reply",
+    "relancePrepare": "Prepare the follow-up",
+    "yes": "Yes",
+    "no": "No",
+    "position": "Question {n} of {total}",
+    "other": "Other",
+    "otherAnswer": "Your answer",
+    "recap": "Your answers",
+    "noAnswer": "No answer",
+    "change": "Change",
+    "send": "Send my answers",
+    "writing": "I’m writing your reply.",
+    "relanceWriting": "I’m writing your follow-up.",
+    "discard": "Dismiss",
+    "gone": "This request is no longer open.",
+    "received": "Received on {date}",
+    "sent": "Sent on {date}",
+    "ready": "Draft ready",
+    "relanceReady": "Follow-up ready",
+    "deposited": "Saved to your Gmail drafts.",
+    "confirmDiscard": "Dismiss this draft?",
+    "confirmDiscardText": "It will also be deleted from your Gmail drafts.",
+    "keep": "Keep",
+    "discarded": "Draft dismissed.",
+    "discardedKeptInGmail": "Draft dismissed. Leon couldn’t remove it from Gmail: delete it from your Gmail drafts.",
+    "draftGone": "This draft no longer exists.",
+    "list": "What is waiting for you",
+    "kind": {
+      "questions": "To complete",
+      "inconnu": "To decide",
+      "relance": "Follow-up to decide",
+      "preference": "Preference to confirm",
+      "pret": "Draft ready",
+      "ecrit": "Being written"
+    },
+    "sendDraft": {
+      "button": "Send",
+      "confirm": "Send this reply to {name}?",
+      "confirmAnon": "Send this reply?",
+      "confirmRelance": "Send this follow-up to {name}?",
+      "confirmRelanceMany": "Send this follow-up to {name} and {count, plural, one {# other person} other {# other people}}?",
+      "confirmText": "It is sent from your Gmail account, as it is in your drafts. A sent email cannot be taken back.",
+      "notYet": "Not yet",
+      "done": "Reply sent.",
+      "doneRelance": "Follow-up sent.",
+      "dontAsk": "Don’t ask me again",
+      "moved": "Nothing was sent: someone has written in this thread since. Check it in Gmail, where this draft is waiting."
+    },
+    "pile": {
+      "title": "For you",
+      "all": "Go through them all",
+      "empty": "Nothing is waiting for you right now.",
+      "emptyText": "When an email needs a reply, Leon will ask its questions here, then show you its draft."
+    },
+    "read": "Show the email",
+    "readHide": "Hide the email",
+    "openIn": "Open in {tool}"
   },
   "search": {
     "memoryLabel": "Search the team’s memory",
@@ -630,6 +723,118 @@
     "firstPage": "Back to the first page",
     "sources": "Sources",
     "untitled": "Untitled"
+  },
+  "agents": {
+    "title": "Agents",
+    "ready": "Ready to use",
+    "soon": "Coming soon",
+    "active": "Active",
+    "activate": "Turn on",
+    "asked": "Requested",
+    "own": "Your own agents",
+    "ownCaption": "You’ll build them yourself.",
+    "example": "Fictional example",
+    "state": {
+      "on": "Active",
+      "off": "Off",
+      "soon": "Not running yet"
+    },
+    "switchOn": "Turn on {name}",
+    "switchSoon": "Get it as soon as it’s out",
+    "facts": {
+      "does": "What it does",
+      "where": "Where to find it",
+      "needs": "What it needs",
+      "who": "Who sees its work"
+    },
+    "whereHome": "On the home page, under “For you”.",
+    "whoYou": "Only you.",
+    "needs": {
+      "boite": "Gmail or Outlook, connected by you, and your work profile.",
+      "reunions": "A meeting recorder connected by you (tl;dv, Fireflies, Fathom…), and your work profile.",
+      "outlook": "Outlook, connected by you, and your work profile."
+    },
+    "missing": {
+      "boite": "It needs your mailbox.",
+      "reunions": "It needs a meeting recorder.",
+      "outlook": "It needs Outlook, the only calendar Leon reads today.",
+      "fiche": "It needs your work profile.",
+      "usage": "Your work profile doesn’t show enough email for it yet."
+    },
+    "fix": {
+      "boite": "Connect my mailbox",
+      "reunions": "Connect a recorder",
+      "outlook": "Connect Outlook",
+      "fiche": "Build my profile"
+    },
+    "saved": {
+      "on": "{name} is on.",
+      "off": "{name} is off.",
+      "wanted": "Noted: it will work for you as soon as it’s out.",
+      "unwanted": "Noted."
+    },
+    "gone": "This agent is no longer available to you. The page was reloaded.",
+    "failed": "Your answer couldn’t be saved. Try again.",
+    "loadFailed": "Your agents couldn’t be loaded. Reload the page.",
+    "notice": {
+      "building": "Leon is building your work profile. Your agents will be offered next.",
+      "noMailbox": "Your agents start from your mailbox. Connect Gmail or Outlook to turn them on.",
+      "noFiche": "Your agents start from your work profile. Build it to turn them on.",
+      "refresh": "Reload"
+    },
+    "list": {
+      "suite-reunion": {
+        "name": "Meeting follow-up",
+        "text": "After a recorded meeting, a summary and a draft follow-up email.",
+        "when": "After a recorded meeting",
+        "sheet": {
+          "meta": "Site meeting · Thursday",
+          "a": "<hl>Approve the plans by Friday</hl>",
+          "b": "Send Paul the revised quote",
+          "foot": "Follow-up draft"
+        }
+      },
+      "brouillon-reponse": {
+        "name": "Reply drafts",
+        "text": "When an email is waiting for a reply, a draft written the way you write, on the home page. With Gmail, a complete draft is also saved to your drafts. Nothing is sent until you click Send.",
+        "when": "When an email awaits your reply",
+        "sheet": {
+          "meta": "Reply to Sophie",
+          "a": "Hi Sophie, <hl>Thursday at 10 works for me</hl> for the site visit.",
+          "foot": "Send"
+        }
+      },
+      "brief-rendez-vous": {
+        "name": "Pre-meeting brief",
+        "text": "Before a meeting, who you’re meeting, where things stand, what was promised.",
+        "when": "Before a meeting",
+        "sheet": {
+          "meta": "2:30 pm · Meeting with Julie",
+          "a": "Status: quote signed, work starts in March.",
+          "b": "Promised: <hl>the schedule this week</hl>."
+        }
+      },
+      "relance": {
+        "name": "Follow-ups",
+        "text": "When an email you sent has had no reply for five days, Leon asks whether to follow up, and writes the follow-up after your yes.",
+        "when": "After five days without a reply",
+        "sheet": {
+          "meta": "No reply for five days",
+          "a": "Hi Marc, <hl>just following up</hl> on the quote I sent on Monday.",
+          "foot": "Send"
+        }
+      },
+      "point-du-jour": {
+        "name": "Daily brief",
+        "text": "Every morning, your calendar, the emails waiting for a reply, your tasks.",
+        "when": "Every morning",
+        "sheet": {
+          "meta": "This morning",
+          "a": "9:00 · Team check-in",
+          "b": "<hl>Two emails are waiting for your reply</hl>"
+        }
+      }
+    }
   },
   "answer": {
     "unavailable": "The answer is unavailable right now. The results below are complete.",
@@ -917,6 +1122,7 @@
     "tabSecurity": "Security",
     "tabIntegrations": "Integrations",
     "tabMemory": "Memory",
+    "tabFiche": "Work profile",
     "depotsTitle": "Team repositories",
     "depotsDescription": "Leon only syncs the checked repositories from GitHub, and only those are visible to the whole team. The list shows the repositories already checked and those your own GitHub connections can see, synced or not.",
     "depotsNone": "No team repository: GitHub is no longer synced, and what was synced can be read only by whoever connected it and, on the Leon website, by the managers above them.",
@@ -1061,6 +1267,43 @@
     "errorInvalid": "This isn’t valid. Write between 1 and {max} characters.",
     "errorFailed": "Something went wrong. Try again.",
     "loadFailed": "Couldn’t load your memory. Reload the page."
+  },
+  "fiche": {
+    "title": "Work profile",
+    "description": "What Leon has understood about your work, from your sent email and your tools. Only you can see this profile: not your manager, not an administrator, not a team agent. You can correct or remove every line. Leon also keeps measurements from your sent email without showing them: who you write to, your greetings and sign-offs, your rhythm, your signature.",
+    "loadFailed": "Couldn’t load your work profile. Reload the page.",
+    "noFiche": "You don’t have a work profile yet.",
+    "noMailbox": "Leon builds it from your sent email. Connect your Gmail or Outlook mailbox first.",
+    "openConnections": "Open connections",
+    "buildHint": "Leon reads your sent email from the last three months and your tools once, then shows you what it kept. It takes a few minutes. If you have just connected your mailbox, give Leon time to read it first, because your work profile is built only once.",
+    "noMail": "Leon found no email you sent in the last three months, so it wrote nothing. If you have just connected your mailbox, give it time to read it, then start the build again.",
+    "build": "Build my work profile",
+    "building": "Leon is building your work profile. It takes a few minutes: you can leave this page, the build keeps going.",
+    "refresh": "Refresh",
+    "completeHint": "Leon hasn’t written your role or your recurring tasks yet. Start the build again to complete your work profile.",
+    "complete": "Complete my work profile",
+    "buildFailed": "The build couldn’t be started. Try again.",
+    "roleTitle": "Role",
+    "tasksTitle": "Recurring tasks",
+    "preferencesTitle": "Your writing preferences",
+    "seenIn": "Seen in {count, plural, one {# item} other {# items}}",
+    "untitled": "Untitled",
+    "fromLeon": "Written by Leon from your tools",
+    "fromYou": "Corrected by you on {date}",
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "remove": "Remove",
+    "removeTitle": "Remove this line?",
+    "removeDescription": "It leaves your work profile and won’t come back.",
+    "saved": "Line corrected.",
+    "removed": "Line removed.",
+    "fieldRole": "Role",
+    "fieldTitle": "Task title",
+    "fieldDetail": "Detail",
+    "errorNotFound": "This line no longer exists. The profile was reloaded.",
+    "errorInvalid": "This isn’t valid. Check the text and its length.",
+    "errorFailed": "Something went wrong. Try again."
   },
   "security": {
     "name": "Name",

@@ -430,7 +430,8 @@
       "notYet": "Pas encore",
       "done": "Réponse envoyée.",
       "doneRelance": "Relance envoyée.",
-      "dontAsk": "Ne plus me demander"
+      "dontAsk": "Ne plus me demander",
+      "moved": "Rien n’est parti : quelqu’un a écrit dans ce fil depuis. Relisez-le dans Gmail, où ce brouillon vous attend."
     },
     "pile": {
       "title": "À vous",

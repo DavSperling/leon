@@ -51,6 +51,7 @@ import {
   type PanelMail,
   panelMails,
   panelReducer,
+  sendAlwaysAsks,
   sendQuestion,
   shownIndex,
 } from '@/lib/reply-drafts';
@@ -451,7 +452,7 @@ export function MailView({
   place?: string;
   hidden?: boolean;
   max: number;
-  failed?: boolean;
+  failed?: boolean | 'bouge';
   sending?: boolean;
   discarding?: boolean;
   onAnswers: (reponses: string[]) => void;
@@ -475,7 +476,7 @@ export function MailView({
     <div hidden={hidden}>
       {failed && (
         <Notice tone="error" live="alert" className="mb-4">
-          {nb(f('errorFailed'))}
+          {nb(failed === 'bouge' ? t('sendDraft.moved') : f('errorFailed'))}
         </Notice>
       )}
       <div
@@ -751,7 +752,7 @@ export function ReplyDrafts({
   const [skipSend, setSkipSend] = useState(false);
   useEffect(() => setSkipSend(readSkip()), []);
   const dontAskId = useId();
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState<boolean | 'bouge'>(false);
   // « Voir le mail » sur l'accueil : la clé du mail dont le texte est à droite.
   const [reading, setReading] = useState<string | null>(null);
   // Un geste a été fait sur l'accueil : le mail suivant prend le focus, comme dans le panneau. Jamais au chargement.
@@ -808,7 +809,10 @@ export function ReplyDrafts({
     start(async () => {
       setFailed(false);
       const result = await call().catch((): Result => ({ error: 'echec' }));
-      if ('error' in result && result.error !== 'introuvable') return setFailed(true);
+      // Le fil a bougé depuis : rien n'est parti, la question se referme et le mail dit pourquoi.
+      if ('error' in result && result.error === 'bouge') setAsking(false);
+      if ('error' in result && result.error !== 'introuvable')
+        return setFailed(result.error === 'bouge' ? 'bouge' : true);
       if ('error' in result) toast.error(goneWord);
       setAsking(false);
       setActed(true);
@@ -907,7 +911,7 @@ export function ReplyDrafts({
       setAsking('discard');
     },
     onSendDraft: () => {
-      if (skipSend) return send(mail);
+      if (skipSend && !sendAlwaysAsks(mail)) return send(mail);
       setDontAsk(false);
       if (!open) openPanel(mail);
       setAsking('send');
@@ -1126,20 +1130,23 @@ export function ReplyDrafts({
                   text: (
                     <>
                       {t('sendDraft.confirmText')}
-                      <label
-                        htmlFor={dontAskId}
-                        className="mt-2 flex cursor-pointer items-center gap-2 text-ui text-fg"
-                      >
-                        <input
-                          id={dontAskId}
-                          type="checkbox"
-                          className="size-4 cursor-pointer accent-[var(--ink)]"
-                          checked={dontAsk}
-                          disabled={sending}
-                          onChange={(event) => setDontAsk(event.target.checked)}
-                        />
-                        {t('sendDraft.dontAsk')}
-                      </label>
+                      {/* Une relance à plusieurs demande toujours : la case n'y aurait aucun effet. */}
+                      {!sendAlwaysAsks(shown) && (
+                        <label
+                          htmlFor={dontAskId}
+                          className="mt-2 flex cursor-pointer items-center gap-2 text-ui text-fg"
+                        >
+                          <input
+                            id={dontAskId}
+                            type="checkbox"
+                            className="size-4 cursor-pointer accent-[var(--ink)]"
+                            checked={dontAsk}
+                            disabled={sending}
+                            onChange={(event) => setDontAsk(event.target.checked)}
+                          />
+                          {t('sendDraft.dontAsk')}
+                        </label>
+                      )}
                     </>
                   ),
                   yes: t('sendDraft.button'),

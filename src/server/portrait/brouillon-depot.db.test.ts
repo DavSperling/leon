@@ -927,27 +927,33 @@ describe('withdrawRelances : une relance devenue inutile quitte ses brouillons G
 });
 
 // « Envoyer », depuis l'accueil, après sa confirmation : une relance déposée part de sa boîte comme une réponse.
+// Le fil est relu chez Gmail juste avant : Leon ne connaît la boîte que telle qu'à la dernière relève.
+const RELANCED = inThread('m-relance', 0, ['SENT']);
+const sendRoute: FakeRoute = {
+  method: 'POST',
+  url: proxied(`${GMAIL}/drafts/send`),
+  json: { id: 'm-envoye', threadId: 't', labelIds: ['SENT'] },
+};
+const deposited = (id: string, draft: string) =>
+  adminPool.query('update brouillons set brouillon_gmail = $2 where id = $1', [id, draft]);
+
 describe('sendBrouillon : une relance déposée part de sa boîte Gmail', () => {
   it('envoie le brouillon Gmail de la relance, tel qu’il y est, par sa boîte à elle, puis Leon l’oublie', async () => {
     const [julie] = await team();
     const id = await relanced(julie, RELANCE, EVERYONE, { connectionId: await gmailOf(julie) });
-    await adminPool.query(`update brouillons set brouillon_gmail = 'r-relance' where id = $1`, [
-      id,
-    ]);
+    await deposited(id, 'r-relance');
     const fetchImpl = fakeFetch([
       TOKEN,
-      {
-        method: 'POST',
-        url: proxied(`${GMAIL}/drafts/send`),
-        json: { id: 'm-envoye', threadId: 't', labelIds: ['SENT'] },
-      },
+      readRoute({ json: { id: 't', messages: [inThread('m-lea', -60, ['INBOX']), RELANCED] } }),
+      sendRoute,
     ]);
     const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     expect(await sendBrouillon(julie, id, { fetchImpl })).toBe('envoye');
 
-    const [, send] = fetchImpl.calls;
-    expect(fetchImpl.calls).toHaveLength(2);
+    const [, read, send] = fetchImpl.calls;
+    expect(fetchImpl.calls).toHaveLength(3);
+    expect(read?.method).toBe('GET');
     expect(send?.method).toBe('POST');
     expect(target(send)).toBe(`${GMAIL}/drafts/send`);
     expect(new URL(send?.url ?? CONNECT).searchParams.get('account_id')).toBe('apn_gm1');
@@ -962,5 +968,50 @@ describe('sendBrouillon : une relance déposée part de sa boîte Gmail', () => 
     expect(await sendBrouillon(julie, id, { fetchImpl: again })).toBe('introuvable');
     expect(again.calls).toHaveLength(0);
     expect(errors).not.toHaveBeenCalled();
+  });
+});
+
+describe('sendBrouillon : chez Gmail, le fil a bougé depuis la relève', () => {
+  it('on a répondu à son mail relancé : la relance ne part pas, et reste telle quelle', async () => {
+    const [julie] = await team();
+    const id = await relanced(julie, RELANCE, EVERYONE, { connectionId: await gmailOf(julie) });
+    await deposited(id, 'r-relance');
+    const answered = [RELANCED, inThread('m-reponse-lea', 30, ['INBOX', 'UNREAD'])];
+    const fetchImpl = fakeFetch([TOKEN, readRoute({ json: { id: 't', messages: answered } })]);
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    expect(await sendBrouillon(julie, id, { fetchImpl })).toBe('bouge');
+
+    expect(fetchImpl.calls.slice(1).map((call) => call.method)).toEqual(['GET']);
+    expect(await stored(id)).toMatchObject({ brouillonGmail: 'r-relance', envoyeLe: null });
+    expect(errors).not.toHaveBeenCalled();
+  });
+
+  it('elle a déjà répondu depuis Gmail : son brouillon de réponse ne part pas', async () => {
+    const [julie] = await team();
+    const { id } = await drafted(julie, COMPLET, { connectionId: await gmailOf(julie) });
+    await deposited(id, 'r-1');
+    const answered = [RECEIVED, inThread('m-reponse', 30, ['SENT'])];
+    const fetchImpl = fakeFetch([TOKEN, readRoute({ json: { id: 't', messages: answered } })]);
+
+    expect(await sendBrouillon(julie, id, { fetchImpl })).toBe('bouge');
+
+    expect(fetchImpl.calls.slice(1).map((call) => call.method)).toEqual(['GET']);
+    expect(await stored(id)).toMatchObject({ brouillonGmail: 'r-1', envoyeLe: null });
+  });
+
+  it('le fil attend toujours, son propre brouillon à la suite : la réponse part', async () => {
+    const [julie] = await team();
+    const { id } = await drafted(julie, COMPLET, { connectionId: await gmailOf(julie) });
+    await deposited(id, 'r-1');
+    const waiting = [RECEIVED, inThread('m-brouillon', 5, ['DRAFT'])];
+    const fetchImpl = fakeFetch([
+      TOKEN,
+      readRoute({ json: { id: 't', messages: waiting } }),
+      sendRoute,
+    ]);
+
+    expect(await sendBrouillon(julie, id, { fetchImpl })).toBe('envoye');
+    expect(await stored(id)).toMatchObject({ brouillonGmail: null, envoyeLe: expect.any(Date) });
   });
 });

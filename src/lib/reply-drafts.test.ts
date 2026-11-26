@@ -19,6 +19,7 @@ import {
   type PanelMail,
   panelMails,
   panelReducer,
+  sendAlwaysAsks,
   sendQuestion,
   shownIndex,
 } from './reply-drafts';
@@ -303,6 +304,13 @@ describe('sendQuestion : la question avant « Envoyer »', () => {
     if (!mail) throw new Error('aucun mail');
     return mail;
   };
+
+  it('« Ne plus me demander » ne vaut pas pour une relance à plusieurs : elle demande toujours', () => {
+    expect(sendAlwaysAsks(relance(3))).toBe(true);
+    expect(sendAlwaysAsks(relance(1))).toBe(true);
+    expect(sendAlwaysAsks(relance(0))).toBe(false);
+    expect(ready && sendAlwaysAsks(ready)).toBe(false);
+  });
 
   it('une relance nomme son premier destinataire, puis compte les autres, en « à » et en copie', () => {
     expect(asked(relance(0), 'fr')).toBe('Envoyer cette relance à Léa Roy ?');

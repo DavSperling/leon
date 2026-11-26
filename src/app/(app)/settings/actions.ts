@@ -828,10 +828,11 @@ export async function discardBrouillonAction(
 
 // « Envoyer » un brouillon prêt et déposé dans Gmail, depuis le panneau de l'accueil, après sa confirmation : il part
 // de sa boîte (portrait/brouillon-depot.ts, sendBrouillon). « introuvable » : rien à envoyer d'ici (écarté, jamais
-// déposé, déjà envoyé) ; « echec » : Gmail n'a rien envoyé, le brouillon reste dans ses brouillons Gmail.
+// déposé, déjà envoyé) ; « bouge » : quelqu'un a écrit dans le fil depuis, rien n'est parti ; « echec » : Gmail n'a
+// rien envoyé. Dans ces deux cas, le brouillon reste dans ses brouillons Gmail.
 export async function sendBrouillonAction(
   id: string,
-): Promise<{ ok: true } | { error: FicheError | 'echec' }> {
+): Promise<{ ok: true } | { error: FicheError | 'bouge' | 'echec' }> {
   const ctx = await requireUserContext();
   const parsed = z.uuid().safeParse(id);
   if (!parsed.success) return { error: 'invalide' };

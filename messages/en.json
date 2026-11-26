@@ -430,7 +430,8 @@
       "notYet": "Not yet",
       "done": "Reply sent.",
       "doneRelance": "Follow-up sent.",
-      "dontAsk": "Don’t ask me again"
+      "dontAsk": "Don’t ask me again",
+      "moved": "Nothing was sent: someone has written in this thread since. Check it in Gmail, where this draft is waiting."
     },
     "pile": {
       "title": "For you",

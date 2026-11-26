@@ -157,12 +157,16 @@ export async function depositBrouillon(
 // un second clic ne trouve plus rien à envoyer. Rend 'envoye', 'introuvable' (rien à envoyer d'ici : pas à elle,
 // écarté, jamais déposé, déjà envoyé) ou 'echec' (sa boîte débranchée ou en pause, Gmail qui refuse, ou le brouillon
 // qui n'y est plus), journalisé sans rien de capté.
+// Juste avant l'envoi, le fil est relu chez Gmail, comme au dépôt (replyHeaders, un crédit) : Leon ne connaît sa boîte
+// que telle qu'à la dernière relève, et l'accueil a pu être chargé avant. Quelqu'un a écrit dans le fil après le
+// message auquel le brouillon répond (on lui a répondu, elle a répondu depuis Gmail) : 'bouge', rien ne part et rien
+// n'est touché, ni dans Leon ni dans Gmail ; c'est à elle de relire le fil.
 // L'envoi posé (envoye_le, 0088), la ligne quitte l'accueil aussitôt.
 export async function sendBrouillon(
   ctx: TenantContext,
   id: string,
   deps: Deps = {},
-): Promise<'envoye' | 'introuvable' | 'echec'> {
+): Promise<'envoye' | 'introuvable' | 'bouge' | 'echec'> {
   const mine = and(
     eq(brouillons.tenantId, ctx.tenantId),
     eq(brouillons.userId, ctx.userId),
@@ -175,6 +179,8 @@ export async function sendBrouillon(
           brouillonGmail: brouillons.brouillonGmail,
           ecarteLe: brouillons.ecarteLe,
           envoyeLe: brouillons.envoyeLe,
+          message: brouillons.message,
+          thread: sources.externalId,
           connectionId: sources.connectionId,
         })
         .from(brouillons)
@@ -186,7 +192,10 @@ export async function sendBrouillon(
     );
     if (!row || row.ecarteLe || row.envoyeLe || row.brouillonGmail === null) return 'introuvable';
     const client = await gmailOf(ctx, row.connectionId, deps);
-    if (!client) return 'echec';
+    const messageId = /^message:(.+)$/.exec(row.message)?.[1];
+    const threadId = /^thread:(.+)$/.exec(row.thread)?.[1];
+    if (!client || !messageId || !threadId) return 'echec';
+    if (!(await client.replyHeaders(threadId, messageId))) return 'bouge';
     await client.sendDraft(row.brouillonGmail);
     await withTenant(ctx, (tx) =>
       tx.update(brouillons).set({ brouillonGmail: null, envoyeLe: sql`now()` }).where(mine),

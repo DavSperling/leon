@@ -133,6 +133,10 @@ export function sendQuestion(mail: PanelMail): {
     : { key: 'confirmRelance', values: { name: from } };
 }
 
+// « Ne plus me demander » ne vaut pas pour une relance qui part à plusieurs : la question est le seul endroit qui dit
+// à combien de personnes elle part, et un mail envoyé ne se rattrape pas.
+export const sendAlwaysAsks = (mail: PanelMail) => sendQuestion(mail).key === 'confirmRelanceMany';
+
 export type Panel = { done: Done; order: string[]; at: string | null };
 export const CLOSED: Panel = { done: {}, order: [], at: null };
 export type PanelAction =

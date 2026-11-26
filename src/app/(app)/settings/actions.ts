@@ -64,6 +64,7 @@ import { requestBrouillons } from '@/server/portrait/brouillons-queue';
 import { correctFields, retireLine } from '@/server/portrait/fiche';
 import { answerPreference } from '@/server/portrait/preferences';
 import { answerProposal } from '@/server/portrait/propositions';
+import { prepareReply } from '@/server/portrait/sans-reponse';
 import { requestFicheBuild } from '@/server/portrait/screen';
 import { clean } from '@/server/portrait/synthese-prompt';
 
@@ -734,8 +735,9 @@ export async function readMemoryVersionAction(input: {
 
 // L'onglet « Ma fiche » (portrait/) : la personne connectée construit sa fiche, en corrige et en retire les lignes, et
 // répond aux agents qui lui sont proposés, sous la session du navigateur. Et, depuis l'accueil, elle répond aux
-// questions de Leon, écarte sa demande, écarte un brouillon de réponse, dit oui ou non à une relance ou répond à une
-// préférence d'écriture proposée. Les siens seulement : chaque fonction
+// questions de Leon, écarte sa demande, écarte un brouillon de réponse, dit oui ou non à une relance, répond à une
+// préférence d'écriture proposée, ou demande une réponse à un mail que Leon avait jugé sans réponse à donner. Les siens
+// seulement : chaque fonction
 // appelée filtre sur elle, sous ses droits, et la ligne d'un autre est « introuvable ». Aucune erreur ne recopie une
 // valeur reçue.
 type FicheError = 'introuvable' | 'invalide';
@@ -751,12 +753,15 @@ const QuestionAnswersSchema = z.object({
     .min(1)
     .max(QUESTIONS_MAX),
 });
+// Ses indications : ce qu'elle veut répondre, ou ajouter à une relance.
+const IndicationsSchema = z.string().transform(clean).pipe(z.string().max(REPONSE_MAX_CHARS));
+const PrepareReplySchema = z.object({ id: z.uuid(), indications: IndicationsSchema });
 // Sa réponse à une relance.
 const RelanceAnswerSchema = z.object({
   sourceId: z.uuid(),
   message: z.string().min(1).max(200),
   oui: z.boolean(),
-  indications: z.string().transform(clean).pipe(z.string().max(REPONSE_MAX_CHARS)),
+  indications: IndicationsSchema,
 });
 
 // « Construire ma fiche » : la construction part en file si l'écran la propose à la personne (screen.ts), et rien
@@ -915,6 +920,33 @@ export async function answerRelanceAction(input: {
   if (oui) await requestBrouillons(ctx);
   // Pas de revalidatePath : le panneau tient le mail (Leon écrit, avec `id`), qu'un accueil relu remplacerait par un
   // autre, sous une autre clé, rangé à la fin du panneau.
+  return { ok: true, id };
+}
+
+// « Préparer une réponse » à un mail que Leon avait jugé sans réponse à donner, depuis l'accueil, avec ses indications
+// (REPONSE_MAX_CHARS caractères au plus, vides quand elle n'en donne pas) : sa ligne devient son oui
+// (portrait/sans-reponse.ts), et un passage est demandé à la file, qui fera le premier appel, sous le plafond du jour.
+// `id` : la ligne de son oui, qui remplace l'autre. Hors de ces bornes : « invalide ». Un mail qui n'est plus sans
+// réponse (à une autre, déjà demandé, écarté, d'un fil qui a bougé) : « introuvable ». Rien n'est écrit dans les deux
+// cas, et rien n'est envoyé. Une panne de la base est « echec » : son erreur citerait ses indications.
+export async function prepareReplyAction(input: {
+  id: string;
+  indications: string;
+}): Promise<{ ok: true; id: string } | { error: FicheError | 'echec' }> {
+  const ctx = await requireUserContext();
+  const parsed = PrepareReplySchema.safeParse(input);
+  if (!parsed.success) return { error: 'invalide' };
+  let id: string | null;
+  try {
+    id = await prepareReply(ctx, parsed.data.id, parsed.data.indications);
+  } catch (error) {
+    logError('brouillons.preparer', error, { userId: ctx.userId });
+    return { error: 'echec' };
+  }
+  if (!id) return { error: 'introuvable' };
+  await requestBrouillons(ctx);
+  // L'accueil relu la range dans « À vous », où Leon écrit.
+  revalidatePath('/');
   return { ok: true, id };
 }
 

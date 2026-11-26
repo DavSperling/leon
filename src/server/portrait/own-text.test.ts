@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ownText } from './own-text';
+import { EXCERPT_CHARS, excerptOf, ownText } from './own-text';
 
 // Mails inventés pour ces tests : aucune personne ni adresse réelle (domaines en .test).
 
@@ -222,5 +222,84 @@ describe('ownText', () => {
     const start = performance.now();
     expect(ownText(line).text).toBe(line.trim());
     expect(performance.now() - start).toBeLessThan(1000);
+  });
+});
+
+describe('excerptOf : le début lisible d’un mail', () => {
+  it('ce que son auteur a écrit, sur une ligne : ni citation, ni signature, ni saut de ligne', () => {
+    const text = mail(
+      'Bonjour Claire,',
+      '',
+      'Merci pour la visite,   tout est clair.',
+      '',
+      '-- ',
+      'Sophie Garnier',
+      '',
+      'Le 12 nov. 2026 à 10:02, Claire Lebrun <claire@atelier.test> a écrit :',
+      '> Pouvez-vous confirmer ?',
+    );
+
+    expect(excerptOf(text)).toBe('Bonjour Claire, Merci pour la visite, tout est clair.');
+  });
+
+  it('un long mail se coupe à un mot, avec des points de suspension', () => {
+    const excerpt = excerptOf(`Bonjour, ${'les plans arrivent mardi '.repeat(40)}`);
+
+    expect(excerpt.length).toBeLessThanOrEqual(EXCERPT_CHARS + 1);
+    expect(excerpt).toMatch(/^Bonjour, les plans arrivent mardi .*(?:les|plans|arrivent|mardi)…$/);
+  });
+
+  it('un texte sans espace se coupe net, sans demi-emoji', () => {
+    const excerpt = excerptOf(`${'a'.repeat(EXCERPT_CHARS - 1)}😀${'b'.repeat(50)}`);
+
+    expect(excerpt).toBe(`${'a'.repeat(EXCERPT_CHARS - 1)}…`);
+    expect(excerpt.isWellFormed()).toBe(true);
+  });
+
+  it('un transfert sans un mot de son auteur : le début du texte tel qu’il est', () => {
+    const text = mail(
+      '---------- Forwarded message ---------',
+      'De : Luc Morel <luc@fournisseur.test>',
+      'Les plans de travail arrivent mardi.',
+    );
+
+    expect(excerptOf(text)).toBe(
+      '---------- Forwarded message --------- De : Luc Morel <luc@fournisseur.test> Les plans de travail arrivent mardi.',
+    );
+  });
+
+  it('un mail qui mêle l’hébreu et le français : une ligne par changement de sens de lecture, les lignes d’un même sens réunies', () => {
+    const text = mail(
+      'Bonjour Claire,',
+      '',
+      'Merci pour les plans. Voici leur réponse :',
+      '',
+      'הפגישה ביום חמישי בשעה 10:00 מתאימה לנו.',
+      'נביא את הדוגמאות.',
+      '',
+      'Pouvez-vous confirmer l’adresse ?',
+      '12/12',
+      'Dana',
+    );
+
+    expect(excerptOf(text)).toBe(
+      [
+        'Bonjour Claire, Merci pour les plans. Voici leur réponse :',
+        'הפגישה ביום חמישי בשעה 10:00 מתאימה לנו. נביא את הדוגמאות.',
+        // Une ligne sans lettre garde le sens de celle qui la précède.
+        'Pouvez-vous confirmer l’adresse ? 12/12 Dana',
+      ].join('\n'),
+    );
+    // Un mot d'hébreu dans une phrase en français ne change pas son sens : elle commence en français.
+    expect(excerptOf('Bonjour,\nLe mot שלום veut dire bonjour.')).toBe(
+      'Bonjour, Le mot שלום veut dire bonjour.',
+    );
+  });
+
+  it('l’hébreu, seul ou mêlé au français, reste tel qu’il est écrit ; un mail vide ne rend rien', () => {
+    expect(excerptOf('שלום דוד,\n\nקיבלת את ההצעה? Merci de confirmer.')).toBe(
+      'שלום דוד, קיבלת את ההצעה? Merci de confirmer.',
+    );
+    expect(excerptOf('  \n ')).toBe('');
   });
 });

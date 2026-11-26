@@ -7,7 +7,9 @@ import {
   type HomeBrouillon,
   type HomeDemande,
   type HomeRelance,
+  type HomeSansReponse,
   readHomeBrouillons,
+  readHomeSansReponse,
 } from '@/server/portrait/screen';
 import HomePage from './page';
 
@@ -41,7 +43,10 @@ vi.mock('@/components/search/run-search', () => ({ runSearch: vi.fn() }));
 vi.mock('@/server/env', () => ({ env: {} }));
 vi.mock('@/server/llm/get-llm', () => ({ getLlm: vi.fn(() => null) }));
 vi.mock('@/server/log', () => ({ logError: vi.fn() }));
-vi.mock('@/server/portrait/screen', () => ({ readHomeBrouillons: vi.fn() }));
+vi.mock('@/server/portrait/screen', () => ({
+  readHomeBrouillons: vi.fn(),
+  readHomeSansReponse: vi.fn(async () => []),
+}));
 
 const DEMANDE: HomeDemande = {
   id: '00000001-1111-4111-8111-111111111111',
@@ -148,6 +153,33 @@ describe('l’Accueil : la ligne de l’agent « Brouillons de réponse »', () 
 
     expect(received(elements)).toMatchObject({ demandes: [], prets: [] });
     expect(types).toContain(HomeAsk);
+  });
+
+  it('ses mails jugés sans réponse à donner lui arrivent à part, tels que lus ; leur lecture en panne n’emporte pas la pile', async () => {
+    const merci: HomeSansReponse = {
+      id: '00000901-1111-4111-8111-111111111111',
+      from: 'Sophie Garnier',
+      receivedAt: new Date('2026-11-21T09:00:00Z'),
+      relance: false,
+      source: { title: 'Merci pour la visite', url: null, kind: 'gmail' },
+    };
+    vi.mocked(readHomeBrouillons).mockResolvedValue({ demandes: [DEMANDE], prets: [] });
+    vi.mocked(readHomeSansReponse).mockResolvedValueOnce([merci]);
+    const sansReponse = (elements: ReactElement<Record<string, unknown>>[]) =>
+      elements.find((element) => element.type === ReplyDrafts)?.props.sansReponse;
+
+    expect(sansReponse((await home()).elements)).toEqual([merci]);
+    expect(readHomeSansReponse).toHaveBeenCalledWith({
+      userId: 'u1',
+      tenantId: 't1',
+      principals: ['u1'],
+    });
+
+    vi.mocked(readHomeSansReponse).mockRejectedValueOnce(new Error('base injoignable'));
+    const { elements } = await home();
+    expect(sansReponse(elements)).toEqual([]);
+    expect(received(elements)).toMatchObject({ demandes: [DEMANDE] });
+    expect(vi.mocked(logError).mock.calls.map((call) => call[0])).toEqual(['accueil.sans-reponse']);
   });
 
   it('la lecture échoue : l’Accueil tient, la ligne n’a rien à montrer, et la panne est notée', async () => {

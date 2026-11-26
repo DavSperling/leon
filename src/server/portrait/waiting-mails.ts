@@ -37,7 +37,7 @@ import {
 // shortcut: les mails d'inconnus n'attendent qu'avec Gmail, la relève d'Outlook ne disant pas s'ils sont automatiques ;
 // à lire dans Outlook (ses en-têtes) si une boîte Outlook en a besoin.
 
-const WAITING_DAYS = 7;
+export const WAITING_DAYS = 7;
 // Passé cet âge du mail, Leon n'attend plus ses réponses : ni question posée à l'accueil, ni second appel.
 export const ANSWERED_DAYS = 30;
 // Les plus récents d'abord, par passage (un appel au modèle chacun).

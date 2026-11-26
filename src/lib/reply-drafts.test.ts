@@ -5,6 +5,7 @@ import type {
   HomeDemande,
   HomePreference,
   HomeRelance,
+  HomeSansReponse,
 } from '@/server/portrait/screen';
 import en from '../../messages/en.json';
 import fr from '../../messages/fr.json';
@@ -20,6 +21,7 @@ import {
   type PanelMail,
   panelMails,
   panelReducer,
+  quietMails,
   sendAlwaysAsks,
   sendQuestion,
   shownIndex,
@@ -479,5 +481,65 @@ describe('canTrash : « Supprimer » ne se propose que pour un mail reçu, relev
     );
 
     expect(mails.map(canTrash)).toEqual([false, false, false, false, false]);
+  });
+});
+
+describe('quietMails : ses mails que Leon a jugés sans réponse à donner', () => {
+  const sans = (n: number, day: number, kind = 'gmail'): HomeSansReponse => ({
+    id: id(n),
+    from: `Sans réponse ${n}`,
+    receivedAt: at(day),
+    relance: false,
+    source: { ...source, kind },
+  });
+
+  it('chacun sous sa clé, dans l’ordre où l’Accueil les a lus ; ni une relance, ni un mail de la pile', () => {
+    const mails = quietMails([sans(2, 12), sans(3, 11), sans(1, 10)], {});
+
+    expect(seen(mails)).toEqual([
+      'Sans réponse 2 sansReponse',
+      'Sans réponse 3 sansReponse',
+      'Sans réponse 1 sansReponse',
+    ]);
+    expect(mails.map((one) => [one.key, one.id])).toEqual([
+      [`sans-reponse-${id(2)}`, id(2)],
+      [`sans-reponse-${id(3)}`, id(3)],
+      [`sans-reponse-${id(1)}`, id(1)],
+    ]);
+    expect(mails.some(isRelance)).toBe(false);
+    // La pile « À vous » ne les compte pas : ils n'attendent rien d'elle.
+    expect(countsOf(mails)).toEqual({
+      toComplete: 0,
+      toConfirm: 0,
+      toFollowUp: 0,
+      ready: 0,
+      writing: 0,
+    });
+  });
+
+  it('un geste le fait partir : supprimé, ou sa réponse demandée (Leon l’écrit dans la pile)', () => {
+    const all = [sans(2, 12), sans(3, 11), sans(1, 10)];
+    const mails = quietMails(all, {});
+    // « Supprimer » sur le premier montré : il s'en va, le suivant prend sa place.
+    const after = panelReducer(
+      { ...CLOSED, at: id(2) },
+      { type: 'close', mails, key: `sans-reponse-${id(2)}`, id: null },
+    );
+
+    expect(after.at).toBe(id(3));
+    expect(seen(quietMails(all, after.done))).toEqual([
+      'Sans réponse 3 sansReponse',
+      'Sans réponse 1 sansReponse',
+    ]);
+    // Une clé de la pile ne les ferme pas.
+    expect(quietMails(all, { [`demande-${id(1)}`]: null })).toHaveLength(3);
+  });
+
+  it('« Supprimer le mail » : pour un mail relevé par Gmail seulement', () => {
+    const [gmail] = quietMails([sans(1, 10)], {});
+    const [outlook] = quietMails([sans(2, 10, 'outlook')], {});
+
+    expect(gmail && canTrash(gmail)).toBe(true);
+    expect(outlook && canTrash(outlook)).toBe(false);
   });
 });

@@ -4,12 +4,13 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import type { SidePanelProps } from '@/components/verre';
 import { type Flow, OTHER, startFlow } from '@/lib/draft-questions';
-import { type Done, panelMails } from '@/lib/reply-drafts';
+import { type Done, panelMails, quietMails } from '@/lib/reply-drafts';
 import type {
   HomeBrouillon,
   HomeDemande,
   HomePreference,
   HomeRelance,
+  HomeSansReponse,
 } from '@/server/portrait/screen';
 import en from '../../../../messages/en.json';
 import fr from '../../../../messages/fr.json';
@@ -24,6 +25,7 @@ vi.mock('@/app/(app)/settings/actions', () => ({
   answerQuestionsAction: vi.fn(),
   answerRelanceAction: vi.fn(),
   discardBrouillonAction: vi.fn(),
+  prepareReplyAction: vi.fn(),
   sendBrouillonAction: vi.fn(),
   trashMailAction: vi.fn(),
 }));
@@ -133,6 +135,60 @@ const RELANCE_PRETE: HomeBrouillon = {
   relance: true,
 };
 
+// Un mail en hébreu mêlé de français, comme l'accueil le reçoit : le début de son texte, ses questions dans sa langue.
+const HEBREU: HomeDemande = {
+  id: id(4),
+  from: 'יעל כהן',
+  receivedAt: new Date('2026-11-12T09:00:00Z'),
+  questions: ['האם המחיר כולל את החשמל?'],
+  choix: [['כן', 'לא']],
+  repondue: false,
+  relance: false,
+  source: {
+    title: 'הצעת מחיר – devis bureau',
+    url: 'https://mail.google.test/4',
+    kind: 'gmail',
+    mailText: 'שלום דוד,\n\nקיבלת את ההצעה?\n\nMerci de confirmer.',
+    extrait: 'שלום דוד, קיבלת את ההצעה? Merci de confirmer.',
+  },
+};
+const HEBREU_PRET: HomeBrouillon = {
+  ...PRET,
+  id: id(705),
+  from: HEBREU.from,
+  texte: 'שלום יעל,\n\nכן, המחיר כולל הכול.\n\nBien à vous',
+  source: HEBREU.source,
+};
+
+// Des mails que Leon a jugés sans réponse à donner : un remerciement, un mail en hébreu, un fil Outlook sans texte lu.
+const MERCI: HomeSansReponse = {
+  id: id(901),
+  from: 'Sophie Garnier',
+  receivedAt: new Date('2026-11-21T09:00:00Z'),
+  relance: false,
+  source: {
+    title: 'Merci pour la visite',
+    url: 'https://mail.google.test/21',
+    kind: 'gmail',
+    mailText: 'Bonjour Julie,\n\nMerci pour la visite.',
+    extrait: 'Bonjour Julie, Merci pour la visite.',
+  },
+};
+const TODA: HomeSansReponse = {
+  ...MERCI,
+  id: id(902),
+  from: 'אבי מזרחי',
+  receivedAt: new Date('2026-11-20T09:00:00Z'),
+  source: { ...HEBREU.source, title: 'תודה על הפגישה' },
+};
+const INFO: HomeSansReponse = {
+  ...MERCI,
+  id: id(903),
+  from: null,
+  receivedAt: new Date('2026-11-19T09:00:00Z'),
+  source: { title: null, url: null, kind: 'outlook' },
+};
+
 const within = (children: ReactNode, locale: 'en' | 'fr') =>
   renderToStaticMarkup(
     createElement(NextIntlClientProvider, {
@@ -146,7 +202,28 @@ const render = (
   prets: HomeBrouillon[] = [],
   locale: 'en' | 'fr' = 'fr',
   name: string | null = 'Julie',
-) => within(createElement(ReplyDrafts, { name, demandes, prets, max: 1000 }), locale);
+  sansReponse: HomeSansReponse[] = [],
+) => within(createElement(ReplyDrafts, { name, demandes, prets, sansReponse, max: 1000 }), locale);
+// Un mail jugé sans réponse à donner, tel que son panneau le montre.
+const quietView = (one: HomeSansReponse, locale: 'en' | 'fr' = 'fr', trash = true) => {
+  const [mail] = quietMails([one], {});
+  if (!mail) throw new Error('aucun mail');
+  return within(
+    createElement(MailView, {
+      mail,
+      place: 'place',
+      max: 1000,
+      onAnswers: () => {},
+      onRelance: () => {},
+      onPreference: () => {},
+      onDiscard: () => {},
+      onRefresh: () => {},
+      onPrepare: () => {},
+      onTrash: trash ? () => {} : undefined,
+    }),
+    locale,
+  ).replace(/^<link [^>]*>/, '');
+};
 // Un mail du panneau, tel qu'il s'y montre (sans le préchargement du logo de son outil, que React pose devant).
 const mailView = (
   one: HomeDemande | HomePreference | HomeRelance | HomeBrouillon,
@@ -443,7 +520,7 @@ describe('MailView : un mail du panneau', () => {
 
     expect(html).toMatch(
       new RegExp(
-        `^<div><div id="demande-${DEVIS.id}" tabindex="-1" data-autofocus="" aria-describedby="place"[^>]*><h3[^>]*>Léa Roy</h3>`,
+        `^<div><div id="demande-${DEVIS.id}" tabindex="-1" data-autofocus="" aria-describedby="place"[^>]*><h3[^>]*><bdi>Léa Roy</bdi></h3>`,
       ),
     );
     expect(text(html)).toContain('Léa Roy Reçu le 10 nov. 2026');
@@ -485,7 +562,7 @@ describe('MailView : un mail du panneau', () => {
     const html = mailView(PRET);
 
     expect(text(html)).toContain('Brouillon prêt Bonjour Léa');
-    expect(html).toMatch(/<p class="[^"]*whitespace-pre-wrap[^"]*">Bonjour Léa,/);
+    expect(html).toMatch(/<p dir="auto" class="[^"]*whitespace-pre-wrap[^"]*">Bonjour Léa,/);
     expect(html).toContain(
       'Bonjour Léa,\n\nVoici le devis [à compléter : le montant] &lt;b&gt;.\n\nBien à vous',
     );
@@ -599,6 +676,213 @@ describe('MailView : un mail du panneau', () => {
   });
 });
 
+describe('MailView : ce qui vient d’un mail se lit dans son sens, l’hébreu de droite à gauche', () => {
+  it('le début du mail suit son objet, avant les questions de Leon, et prend son sens d’après ses lettres', () => {
+    const html = mailView(HEBREU);
+
+    expect(html).toMatch(
+      /<p dir="auto" class="[^"]*line-clamp-3[^"]*">שלום דוד, קיבלת את ההצעה\? Merci de confirmer\.<\/p>/,
+    );
+    const at = (needle: string) => html.indexOf(needle);
+    expect(at('הצעת מחיר')).toBeGreaterThan(-1);
+    expect(at('שלום דוד, קיבלת')).toBeGreaterThan(at('הצעת מחיר'));
+    expect(at('האם המחיר')).toBeGreaterThan(at('שלום דוד, קיבלת'));
+    // Le texte entier reste derrière « Voir le mail ».
+    expect(buttons(html)).toContain('Voir le mail');
+    expect(html).not.toContain('Merci de confirmer.\n');
+  });
+
+  it('un mail dont le texte n’a pas pu se lire se montre sans extrait', () => {
+    expect(mailView(DEVIS)).not.toContain('line-clamp');
+    expect(
+      mailView({ ...HEBREU, source: { ...HEBREU.source, mailText: null, extrait: null } }),
+    ).not.toContain('line-clamp');
+  });
+
+  it('le nom de l’expéditeur est isolé de ce qui l’entoure, et l’objet du fil prend son sens d’après ses lettres', () => {
+    const html = mailView(HEBREU);
+
+    expect(html).toMatch(/<h3[^>]*><bdi>יעל כהן<\/bdi><\/h3>/);
+    expect(html).toMatch(
+      /<span class="tl__name" dir="auto"[^>]*><span class="mark">הצעת מחיר – devis bureau<\/span>/,
+    );
+  });
+
+  it('la question, ses choix et le texte libre prennent leur sens d’après leurs lettres', () => {
+    const html = mailView(HEBREU);
+
+    expect(html).toMatch(
+      /<span dir="auto" class="[^"]*text-head[^"]*">האם המחיר כולל את החשמל\?<\/span>/,
+    );
+    // Un choix en hébreu : toute sa tuile se lit de droite à gauche, son bouton radio à droite.
+    expect(html).toMatch(/<label dir="auto" class="[^"]*"><input type="radio"[^>]*\/>כן<\/label>/);
+    expect(html).toMatch(/<label dir="auto" class="[^"]*"><input type="radio"[^>]*\/>לא<\/label>/);
+    const other = questions({ step: 0, picks: [{ choice: OTHER, text: 'אולי' }] }, HEBREU);
+    expect(other).toMatch(/<textarea [^>]*dir="auto"[^>]*>אולי<\/textarea>/);
+  });
+
+  it('au récapitulatif, la question et sa réponse aussi ; une réponse de plusieurs lignes, ligne par ligne', () => {
+    const html = questions({ step: 1, picks: [{ choice: OTHER, text: 'כן.\nOui.' }] }, HEBREU);
+
+    expect(html).toMatch(/<p id="[^"]*-question-0" class="[^"]*" dir="auto">האם המחיר/);
+    expect(html).toMatch(
+      /<p dir="auto" class="[^"]*whitespace-pre-wrap[^"]*\[unicode-bidi:plaintext\][^"]*">כן\.\nOui\.<\/p>/,
+    );
+  });
+
+  it('un brouillon de plusieurs paragraphes : chacun dans son sens ; une préférence aussi', () => {
+    expect(mailView(HEBREU_PRET)).toMatch(
+      /<p dir="auto" class="[^"]*whitespace-pre-wrap[^"]*\[unicode-bidi:plaintext\][^"]*">שלום יעל,\n\nכן, המחיר כולל הכול\.\n\nBien à vous<\/p>/,
+    );
+    expect(mailView(RETOUCHE)).toMatch(
+      /<p id="[^"]*-preference" class="whitespace-pre-wrap[^"]*\[unicode-bidi:plaintext\][^"]*" dir="auto">/,
+    );
+  });
+
+  it('ses indications pour une relance s’écrivent dans leur sens', () => {
+    expect(mailView(SANS_REPONSE)).toMatch(/<textarea [^>]*dir="auto"/);
+  });
+});
+
+describe('ReplyDrafts : les listes de mails se lisent dans leur sens', () => {
+  it('sur l’accueil, le nom est isolé et l’objet prend son sens d’après ses lettres, coupé du bon côté', () => {
+    // Le plus ancien des deux : il se range sous la carte du premier.
+    const html = render([DEVIS, { ...HEBREU, receivedAt: new Date('2026-11-01T09:00:00Z') }]);
+
+    expect(html).toMatch(/<bdi class="[^"]*">יעל כהן<\/bdi>/);
+    expect(html).toMatch(
+      /<span dir="auto" class="[^"]*truncate[^"]*">הצעת מחיר – devis bureau<\/span>/,
+    );
+  });
+
+  it('dans la colonne du panneau aussi', () => {
+    view.open = true;
+    try {
+      const html = render([HEBREU, DEVIS]);
+      // Le panneau du test ne dessine pas sa colonne : la liste de l'accueil, panneau ouvert, a les mêmes marques.
+      expect(html).toMatch(/<bdi class="[^"]*">Léa Roy<\/bdi>/);
+      expect(html).toMatch(/<span dir="auto" class="[^"]*truncate[^"]*">Devis 2027<\/span>/);
+    } finally {
+      view.open = false;
+    }
+  });
+});
+
+describe('ReplyDrafts : ses mails que Leon a jugés sans réponse à donner', () => {
+  // Leur panneau, tel qu'il s'ouvre par « Les voir » : monté sous la pile, avant le panneau de celle-ci.
+  const openQuiet = (sansReponse: HomeSansReponse[], locale: 'en' | 'fr' = 'fr') => {
+    view.open = true;
+    try {
+      const html = render([DEVIS], [], locale, 'Julie', sansReponse);
+      return html.slice(html.indexOf('<div data-panneau'), html.lastIndexOf('<div data-panneau'));
+    } finally {
+      view.open = false;
+    }
+  };
+
+  it('sous la pile, une phrase les compte, et « Les voir » ouvre leur panneau ; la pile ne les montre ni ne les compte', () => {
+    const html = render([DEVIS], [], 'fr', 'Julie', [MERCI, TODA]);
+
+    expect(text(html)).toMatch(/Tout traiter 2 mails n’attendent pas votre réponse\. Les voir$/);
+    // « Les voir » rappelle la phrase qui dit quoi.
+    const said = /<span id="([^"]+)">2 mails n’attendent pas votre réponse\.<\/span>/.exec(
+      html,
+    )?.[1];
+    expect(said).toBeTruthy();
+    expect(html).toMatch(
+      new RegExp(
+        `<button [^>]*aria-haspopup="dialog"[^>]*aria-describedby="${said}"[^>]*>Les voir</button>`,
+      ),
+    );
+    expect(line(html)).toBe('Julie, j’ai quelques questions à vous poser. 1 mail à compléter');
+    expect(text(html)).not.toMatch(/Sophie Garnier|אבי מזרחי|Merci pour la visite/);
+  });
+
+  it('au singulier ; sans aucun, rien ; quand rien ne l’attend, la phrase suit « Rien ne vous attend »', () => {
+    expect(text(render([DEVIS], [], 'fr', 'Julie', [MERCI]))).toMatch(
+      /1 mail n’attend pas votre réponse\. Le voir$/,
+    );
+    expect(text(render([DEVIS]))).not.toMatch(/n’attend/);
+    expect(text(render([], [], 'fr', 'Julie', [MERCI, TODA]))).toMatch(
+      /puis vous montrera son brouillon\. 2 mails n’attendent pas votre réponse\. Les voir$/,
+    );
+  });
+
+  it('en anglais, les mêmes mots', () => {
+    expect(text(render([DEVIS], [], 'en', 'Julie', [MERCI, TODA]))).toMatch(
+      /2 emails need no reply from you\. See them$/,
+    );
+    expect(text(render([], [], 'en', null, [MERCI]))).toMatch(
+      /1 email needs no reply from you\. See it$/,
+    );
+  });
+
+  it('leur panneau : son titre, la place du mail montré, un seul mail à la fois, « Mail suivant »', () => {
+    const html = openQuiet([MERCI, TODA]);
+
+    expect(html).toContain('<h2>Sans réponse attendue</h2>');
+    expect(text(html)).toMatch(
+      /^Sans réponse attendue Mail 1 sur 2 Sophie Garnier Reçu le 21 nov\. 2026 · Gmail Merci pour la visite Gmail/,
+    );
+    expect(count(html, '<div hidden="">')).toBe(1);
+    expect(html.indexOf('<div hidden="">')).toBeLessThan(html.indexOf('אבי מזרחי'));
+    expect(count(html, 'data-autofocus')).toBe(1);
+    expect(buttons(html.split('<footer>')[1] ?? '')).toEqual(['Mail suivant']);
+    // Le panneau de la pile, lui, ne les reçoit pas.
+    expect(openQuiet([MERCI], 'en')).toContain('<h2>No reply needed</h2>');
+    expect(buttons(openQuiet([MERCI]).split('<footer>')[1] ?? '')).toEqual(['Terminé']);
+  });
+});
+
+describe('MailView : un mail jugé sans réponse à donner', () => {
+  it('qui écrit, quand, le fil, le début du mail, puis ses indications, « Préparer une réponse » et « Supprimer le mail »', () => {
+    const html = quietView(MERCI);
+    const words = `sans-reponse-${MERCI.id}`;
+
+    expect(html).toMatch(
+      new RegExp(
+        `^<div><div id="${words}" tabindex="-1" data-autofocus="" aria-describedby="place"[^>]*><h3[^>]*><bdi>Sophie Garnier</bdi></h3>`,
+      ),
+    );
+    expect(text(html)).toBe(
+      'Sophie Garnier Reçu le 21 nov. 2026 · Gmail Merci pour la visite Gmail Voir le mail Bonjour Julie, Merci pour la visite. Vos indications Ce que vous voulez répondre, en quelques mots. Vous pouvez laisser vide. Préparer une réponse Supprimer le mail',
+    );
+    expect(buttons(html)).toEqual(['Voir le mail', 'Préparer une réponse', 'Supprimer le mail']);
+    // « Supprimer le mail » n'y est qu'une fois, à côté de « Préparer une réponse » ; « Garder » lui rendra le focus.
+    expect(count(html, 'Supprimer le mail')).toBe(1);
+    expect(html).toContain(`id="${words}-supprimer"`);
+    expect(count(html, `aria-describedby="${words}"`)).toBe(2);
+    const field = /<label for="([^"]+)"[^>]*>Vos indications<\/label>/.exec(html)?.[1];
+    expect(html).toMatch(
+      new RegExp(`<textarea rows="2"[^>]*id="${field}"[^>]*dir="auto"[^>]*maxLength="1000"`),
+    );
+    expect(html).not.toMatch(/Écarter|Voulez-vous|<form|message:/);
+  });
+
+  it('un fil Outlook, ou un écran sans ce geste : pas de « Supprimer le mail » ; sans texte lu, ni extrait ni « Voir le mail »', () => {
+    const html = quietView(INFO);
+
+    expect(text(html)).toBe(
+      'Votre correspondant Reçu le 19 nov. 2026 · Outlook Sans titre Outlook Vos indications Ce que vous voulez répondre, en quelques mots. Vous pouvez laisser vide. Préparer une réponse',
+    );
+    expect(buttons(quietView(MERCI, 'fr', false))).toEqual([
+      'Voir le mail',
+      'Préparer une réponse',
+    ]);
+  });
+
+  it('un mail en hébreu se lit dans son sens ; en anglais, les mêmes mots', () => {
+    const html = quietView(TODA);
+
+    expect(html).toMatch(/<h3[^>]*><bdi>אבי מזרחי<\/bdi><\/h3>/);
+    expect(html).toMatch(/<p dir="auto" class="[^"]*line-clamp-3[^"]*">שלום דוד/);
+    const english = text(quietView(MERCI, 'en'));
+    expect(english).toContain(
+      'Your instructions What you want to reply, in a few words. You can leave it empty. Prepare a reply Delete email',
+    );
+  });
+});
+
 describe('MailView : son mail resté sans réponse, et la relance', () => {
   it('la question : son mail à son destinataire, resté sans réponse, la date de son envoi, le fil, puis, sur le même écran, « Voulez-vous une relance ? », ses indications, « Préparer la relance » et « Non »', () => {
     const html = mailView(SANS_REPONSE);
@@ -653,7 +937,7 @@ describe('MailView : son mail resté sans réponse, et la relance', () => {
     const done = { [`relance-${SANS_REPONSE.mail.sourceId}`]: id(98) };
     const html = mailView(SANS_REPONSE, 'fr', { done });
 
-    expect(html).toMatch(/<h3[^>]*>Léa Roy<\/h3>/);
+    expect(html).toMatch(/<h3[^>]*><bdi>Léa Roy<\/bdi><\/h3>/);
     expect(text(html)).toContain('Envoyé le 14 nov. 2026');
     expect(text(html)).toContain('J’écris votre relance. Actualiser Écarter');
     expect(text(html)).not.toMatch(/Voulez-vous une relance|J’écris votre réponse/);

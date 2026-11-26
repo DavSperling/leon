@@ -10,9 +10,11 @@ import type { AgentId } from './agents';
 import { type Demande, HOME_MAX, type ReadyBrouillon, readShown } from './brouillons';
 import { type FicheLine, readFiche } from './fiche';
 import { readLastMessages } from './mail-text';
+import { excerptOf } from './own-text';
 import { type ProposedPreference, readProposedPreferences } from './preferences';
 import { type AgentState, readAgentStates, readProposals } from './propositions';
 import { enqueueFicheBuild, ficheBuildCompleted, ficheBuildPending } from './queue';
+import { readSansReponse, type SansReponse } from './sans-reponse';
 import { MAIL_KINDS } from './sent-mails';
 import { synthesisDone } from './synthese';
 import { readUnansweredMails, type UnansweredMail } from './unanswered-mails';
@@ -40,8 +42,9 @@ export type FicheEtat =
   | 'a-construire';
 export type FicheSource = { title: string | null; url: string | null; kind: string };
 // Une source telle que l'accueil la montre : avec le texte du dernier message du fil, pour « Voir le mail »
-// (mail-text.ts). Nul quand il n'a pas pu se lire.
-export type HomeSource = FicheSource & { mailText?: string | null };
+// (mail-text.ts), et son début, que la carte montre sous l'objet (own-text.ts, excerptOf). Nuls quand il n'a pas pu se
+// lire.
+export type HomeSource = FicheSource & { mailText?: string | null; extrait?: string | null };
 export type FicheScreen = {
   etat: FicheEtat;
   // Son rôle, ses tâches et ses préférences d'écriture acceptées seulement.
@@ -140,6 +143,22 @@ export type HomeBrouillons = {
   demandes: Array<HomeDemande | HomePreference | HomeRelance>;
   prets: HomeBrouillon[];
 };
+// Un mail que Leon a jugé sans réponse à donner, tel que l'accueil le montre à qui veut les voir (sans-reponse.ts) : le
+// correspondant, la date du mail reçu, le fil (son objet, lié à son outil) et le début de son texte. `id` sert à ses
+// gestes : « Préparer une réponse », « Supprimer le mail ». Jamais une relance.
+export type HomeSansReponse = Omit<SansReponse, 'sourceId'> & {
+  relance: false;
+  source: HomeSource;
+};
+
+// Un fil relu sous ses droits, avec le texte de son dernier message : ce que l'accueil en montre.
+const homeSource = (source: FicheSource, mailText: string | null): HomeSource => ({
+  title: source.title,
+  url: source.url,
+  kind: source.kind,
+  mailText,
+  extrait: mailText === null ? null : excerptOf(mailText),
+});
 
 // Elle a dit oui à cet agent : sa réponse enregistrée, une ligne. Sans ce oui, ses mails sans réponse (« Relances ») ne
 // se lisent pas : une lecture de sa boîte à chaque chargement de l'accueil, pour rien, chez toutes les personnes qui
@@ -212,19 +231,7 @@ export async function readHomeBrouillons(ctx: TenantContext): Promise<HomeBrouil
   const withSource = <T extends { sourceId: string }>(rows: T[]) =>
     rows.flatMap(({ sourceId, ...one }) => {
       const source = seen.find((found) => found.sourceId === sourceId);
-      return source
-        ? [
-            {
-              ...one,
-              source: {
-                title: source.title,
-                url: source.url,
-                kind: source.kind,
-                mailText: texts.get(sourceId) ?? null,
-              },
-            },
-          ]
-        : [];
+      return source ? [{ ...one, source: homeSource(source, texts.get(sourceId) ?? null) }] : [];
     });
   // Les préférences proposées et ses mails sans réponse partagent les places des demandes : celles qui attendent un
   // geste d'elle se comptent d'abord, les plus récentes d'abord, puis tout se rend par date du mail.
@@ -240,6 +247,37 @@ export async function readHomeBrouillons(ctx: TenantContext): Promise<HomeBrouil
     .slice(0, HOME_MAX)
     .sort(recent);
   return { demandes, prets: withSource(mine(shown.prets)).slice(0, HOME_MAX) };
+}
+
+// Ses mails que Leon a jugés sans réponse à donner, pour l'accueil : les HOME_MAX plus récents (sans-reponse.ts), à part
+// de la pile « À vous », qu'une panne ici ne doit pas emporter. Comme elle : seulement tant qu'elle dit oui à
+// « Brouillons de réponse » et qu'il lui est proposé, le fil relu sous ses droits, avec le texte de son dernier message
+// (sans lui en panne). Sans ligne, rien d'autre ne se lit.
+export async function readHomeSansReponse(ctx: TenantContext): Promise<HomeSansReponse[]> {
+  const quiet = await readSansReponse(ctx, HOME_MAX);
+  if (quiet.length === 0) return [];
+  const sourceIds = quiet.map((one) => one.sourceId);
+  const [agents, seen, texts] = await Promise.all([
+    readProposals(ctx, await readFiche(ctx)),
+    briefingSources(ctx, sourceIds),
+    readLastMessages(ctx, sourceIds).catch((error) => {
+      logError('accueil.textes', error, { userId: ctx.userId });
+      return new Map<string, string>();
+    }),
+  ]);
+  if (!agents.some((one) => one.agent === 'brouillon-reponse' && one.oui)) return [];
+  return quiet.flatMap(({ sourceId, ...one }) => {
+    const source = seen.find((found) => found.sourceId === sourceId);
+    return source
+      ? [
+          {
+            ...one,
+            relance: false as const,
+            source: homeSource(source, texts.get(sourceId) ?? null),
+          },
+        ]
+      : [];
+  });
 }
 
 // La demande du bouton « Construire ma fiche » : la construction part en file si l'écran la propose à la personne.

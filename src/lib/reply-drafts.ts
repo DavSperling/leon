@@ -3,6 +3,7 @@ import type {
   HomeDemande,
   HomePreference,
   HomeRelance,
+  HomeSansReponse,
 } from '@/server/portrait/screen';
 
 // Le panneau des agents « Brouillons de réponse » et « Relances » sur l'Accueil (recherche/reply-drafts.tsx) : ce qui
@@ -11,8 +12,9 @@ import type {
 
 // Ce qu'un mail attend : ses réponses aux questions de Leon, son oui ou son non à une relance de son mail resté sans
 // réponse, ou à une préférence d'écriture tirée de sa retouche (un geste d'elle) ; un brouillon prêt ; ou rien qu'un
-// peu de temps : Leon écrit.
-export type Sorte = 'questions' | 'relance' | 'preference' | 'pret' | 'ecrit';
+// peu de temps : Leon écrit. À part de la pile, un mail que Leon a jugé sans réponse à donner (sansReponse) : il
+// n'attend rien d'elle, et ne se montre que par l'entrée du bas de « À vous » (quietMails).
+export type Sorte = 'questions' | 'relance' | 'preference' | 'pret' | 'ecrit' | 'sansReponse';
 // `key` : le mail et sa sorte (une demande et le brouillon qui la suit partagent la ligne, pas la clé). `id` : la
 // ligne, que les gestes visent et que le panneau suit ; pour une relance avant son oui, son fil.
 export type PanelMail = { key: string; id: string } & (
@@ -21,6 +23,7 @@ export type PanelMail = { key: string; id: string } & (
   | { sorte: 'preference'; mail: HomePreference }
   | { sorte: 'pret'; mail: HomeBrouillon }
   | { sorte: 'ecrit'; mail: HomeDemande | HomeRelance }
+  | { sorte: 'sansReponse'; mail: HomeSansReponse }
 );
 // Ses gestes, par clé : le mail est parti (null : écarté, son non, ou plus ouvert), ou Leon l'écrit sur la ligne `id`
 // (ses réponses envoyées, son oui à une relance).
@@ -32,6 +35,7 @@ const RANK: Record<Sorte, number> = {
   preference: 0,
   pret: 1,
   ecrit: 2,
+  sansReponse: 3,
 };
 
 function toMail(
@@ -85,6 +89,21 @@ export function panelMails(
     .sort((a, b) => place(a.key) - place(b.key));
 }
 
+// Ses mails que Leon a jugés sans réponse à donner (portrait/sans-reponse.ts), que l'entrée du bas de « À vous » compte
+// et que son panneau montre, dans l'ordre où l'Accueil les a lus (les plus récents d'abord). Sans ceux qu'un geste a
+// fait partir ici : supprimé, ou sa réponse demandée, que Leon écrit alors dans la pile.
+export const quietMails = (sansReponse: HomeSansReponse[], done: Done): PanelMail[] =>
+  sansReponse
+    .map(
+      (mail): PanelMail => ({
+        key: `sans-reponse-${mail.id}`,
+        id: mail.id,
+        sorte: 'sansReponse',
+        mail,
+      }),
+    )
+    .filter((one) => done[one.key] !== null);
+
 // Ce que la ligne de l'Accueil compte : les mails à compléter, les préférences à valider et les relances à décider (un
 // geste d'elle), les brouillons prêts, et ceux que Leon écrit.
 export function countsOf(mails: PanelMail[]) {
@@ -114,10 +133,11 @@ export const shownIndex = (mails: PanelMail[], at: string | null) =>
 export const confirmsDiscard = (mail: PanelMail) => mail.sorte === 'pret' && mail.mail.depose;
 
 // « Supprimer » met le mail reçu à la corbeille de sa boîte Gmail (portrait/brouillon-depot.ts, trashMail) : seulement
-// un mail reçu qui a sa ligne (ses questions, son brouillon prêt, la réponse que Leon écrit), relevé par Gmail. Jamais
-// son propre mail (une relance, à chaque étape), ni une préférence.
+// un mail reçu qui a sa ligne (ses questions, son brouillon prêt, la réponse que Leon écrit, ou un mail jugé sans
+// réponse à donner), relevé par Gmail. Jamais son propre mail (une relance, à chaque étape), ni une préférence.
 export const canTrash = (mail: PanelMail) =>
-  (mail.sorte === 'questions' || mail.sorte === 'pret' || mail.sorte === 'ecrit') &&
+  mail.sorte !== 'relance' &&
+  mail.sorte !== 'preference' &&
   !isRelance(mail) &&
   mail.mail.source.kind === 'gmail';
 

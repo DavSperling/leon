@@ -1121,6 +1121,8 @@
     "disabledTitle": "L’authentification à deux facteurs est désactivée"
   },
   "deleteAccount": {
+    "noPassword": "Vous vous connectez sans mot de passe (Google, Microsoft ou le SSO de votre entreprise) : pour confirmer, votre dernière connexion doit dater de moins d’une heure.",
+    "reconnect": "Votre dernière connexion date de plus d’une heure. Déconnectez-vous, reconnectez-vous, puis relancez la suppression.",
     "deleting": "Suppression…",
     "word": "SUPPRIMER",
     "wrongWord": "Saisissez exactement le mot « {word} » pour confirmer.",

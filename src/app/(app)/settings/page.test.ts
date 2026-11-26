@@ -25,6 +25,7 @@ vi.mock('@/server/auth/api-tokens', async (importOriginal) => ({
   listApiTokens: vi.fn(),
 }));
 vi.mock('@/server/auth/session', () => ({
+  hasPassword: vi.fn(async () => true),
   requireUserContext: vi.fn(async () => ({
     userId: 'u1',
     tenantId: 't1',

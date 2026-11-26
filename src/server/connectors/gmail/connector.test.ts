@@ -100,7 +100,7 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers());
 
 describe('gmailConnector : configuration', () => {
-  it('se branche par notre appli Google en lecture seule, ou encore par Pipedream', () => {
+  it('se branche par notre appli Google (tout le courrier et ses réglages de base), ou encore par Pipedream', () => {
     const accepts = (value: unknown) => gmailConnector.configSchema.safeParse(value).success;
     expect(accepts(config)).toBe(true);
     expect(accepts({ authMode: 'oauth', accessToken: 'jeton' })).toBe(true);
@@ -110,7 +110,7 @@ describe('gmailConnector : configuration', () => {
     expect(gmailConnector.hosts(config)).toEqual(['gmail.googleapis.com']);
     expect(gmailConnector.oauth).toMatchObject({
       appKey: 'GOOGLE',
-      scopes: ['https://www.googleapis.com/auth/gmail.readonly'],
+      scopes: ['https://mail.google.com/', 'https://www.googleapis.com/auth/gmail.settings.basic'],
     });
     expect(gmailConnector.pipedream).toEqual({ app: 'gmail' });
     expect(gmailConnector.privateRaw).toBe(true);

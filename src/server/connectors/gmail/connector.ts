@@ -5,8 +5,10 @@ import type { Connector, SyncPage } from '../types';
 import { BATCH_SIZE, gmailClient } from './client';
 import { threadsOf } from './map';
 
-// Gmail, en lecture seule (gmail.readonly), par l'appli Google de Leon (google.ts). Sans elle, par Pipedream
-// Connect (pipedream.ts) : l'appli Google de Pipedream, et chaque requête passe par son proxy pour 1 crédit.
+// Gmail par l'appli Google de Leon (google.ts) : tout le courrier (mail.google.com, envoi et suppression
+// définitive compris) et les réglages de base (gmail.settings.basic : filtres, signature, absence), jamais les
+// transferts ni la délégation (gmail.settings.sharing). Aujourd'hui, Leon ne fait que lire. Sans cette appli,
+// par Pipedream Connect (pipedream.ts) : l'appli Google de Pipedream, chaque requête par son proxy pour 1 crédit.
 // Doc lue le 25/10/2026 :
 //   https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/list (q, du plus
 //     récent au plus ancien, 500 au plus par page, nextPageToken ; spam et corbeille exclus par défaut)
@@ -59,7 +61,10 @@ export const gmailConnector: Connector<GoogleConfig> = {
   configSchema: GoogleConfigSchema,
   secretFields: [],
   hosts: () => ['gmail.googleapis.com'],
-  oauth: googleOAuth('https://www.googleapis.com/auth/gmail.readonly'),
+  oauth: googleOAuth(
+    'https://mail.google.com/',
+    'https://www.googleapis.com/auth/gmail.settings.basic',
+  ),
   pipedream: { app: 'gmail' },
   privateRaw: true, // une boîte mail est personnelle
 

@@ -20,7 +20,9 @@ const CLIENT = {
 const ACCESS = `ya29.${randomBytes(12).toString('hex')}`;
 const REFRESH = `1//${randomBytes(12).toString('hex')}`;
 const NEXT_ACCESS = `ya29.${randomBytes(12).toString('hex')}`;
-const GMAIL_SCOPE = 'https://www.googleapis.com/auth/gmail.readonly';
+// Séparés par des espaces, comme Google les attend et les rend.
+const GMAIL_SCOPES =
+  'https://mail.google.com/ https://www.googleapis.com/auth/gmail.settings.basic';
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 
 const pending: OAuthPending = {
@@ -49,7 +51,7 @@ function tokenHttp(routes: Parameters<typeof fakeFetch>[0]) {
 }
 
 describe('appli Google de Leon', () => {
-  it('demande un seul droit en lecture par outil, hors connexion, avec un nouvel accord et le choix du compte', () => {
+  it('demande tous les droits d’avance, sans transferts ni délégation Gmail, hors connexion, avec un nouvel accord et le choix du compte', () => {
     const url = new URL(authorizeUrl(spec, CLIENT, pending));
 
     expect(`${url.origin}${url.pathname}`).toBe('https://accounts.google.com/o/oauth2/v2/auth');
@@ -58,7 +60,7 @@ describe('appli Google de Leon', () => {
       redirect_uri: redirectUri(spec),
       response_type: 'code',
       state: 'etat-1',
-      scope: GMAIL_SCOPE,
+      scope: GMAIL_SCOPES,
       code_challenge: createHash('sha256')
         .update(pending.verifier ?? '')
         .digest('base64url'),
@@ -70,7 +72,7 @@ describe('appli Google de Leon', () => {
     expect(redirectUri(spec)).toMatch(/\/api\/v1\/connexions\/oauth\/google\/retour$/);
     expect(driveConnector.oauth).toMatchObject({
       appKey: 'GOOGLE',
-      scopes: ['https://www.googleapis.com/auth/drive.readonly'],
+      scopes: ['https://www.googleapis.com/auth/drive'],
     });
   });
 
@@ -83,7 +85,7 @@ describe('appli Google de Leon', () => {
           access_token: ACCESS,
           expires_in: 3599,
           refresh_token: REFRESH,
-          scope: GMAIL_SCOPE,
+          scope: GMAIL_SCOPES,
           token_type: 'Bearer',
         },
       },
@@ -100,7 +102,7 @@ describe('appli Google de Leon', () => {
     expect(tokens).toMatchObject({
       accessToken: ACCESS,
       refreshToken: REFRESH,
-      scope: GMAIL_SCOPE,
+      scope: GMAIL_SCOPES,
     });
 
     // Google ne rend pas de nouveau jeton de rafraîchissement au renouvellement.
@@ -111,7 +113,7 @@ describe('appli Google de Leon', () => {
         json: {
           access_token: NEXT_ACCESS,
           expires_in: 3599,
-          scope: GMAIL_SCOPE,
+          scope: GMAIL_SCOPES,
           token_type: 'Bearer',
         },
       },

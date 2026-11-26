@@ -5,9 +5,10 @@ import type { Connector, ConnectorItem, SyncPage } from '../types';
 import { driveClient } from './client';
 import type { DriveFile } from './schemas';
 
-// Google Drive, en lecture seule (drive.readonly), par l'appli Google de Leon (google.ts). Sans elle, par
-// Pipedream Connect (pipedream.ts) : l'appli Google de Pipedream (droit `drive` complet), et chaque requête
-// passe par son proxy pour 1 crédit. Doc : voir client.ts.
+// Google Drive par l'appli Google de Leon (google.ts), droit `drive` complet (voir, créer, modifier, partager,
+// supprimer) ; aujourd'hui, Leon ne fait que lire. Sans cette appli, par Pipedream Connect (pipedream.ts) :
+// l'appli Google de Pipedream (droit `drive` complet aussi), et chaque requête passe par son proxy pour
+// 1 crédit. Doc : voir client.ts.
 //
 // Un fichier est une page, avec un seul tour `document` : son texte à sa dernière modification. Leon lit
 // les documents, présentations et feuilles de calcul Google, les fichiers texte ou Markdown, et les PDF,
@@ -61,7 +62,7 @@ export const driveConnector: Connector<GoogleConfig> = {
   configSchema: GoogleConfigSchema,
   secretFields: [],
   hosts: () => ['www.googleapis.com'],
-  oauth: googleOAuth('https://www.googleapis.com/auth/drive.readonly'),
+  oauth: googleOAuth('https://www.googleapis.com/auth/drive'),
   pipedream: { app: 'google_drive' },
   privateRaw: true, // Mon Drive mêle travail et documents personnels
 

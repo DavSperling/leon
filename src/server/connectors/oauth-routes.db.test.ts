@@ -1299,7 +1299,8 @@ describe('Pipedream : Gmail par le bouton', () => {
   });
 
   describe('par notre appli Google, quand elle est configurée', () => {
-    const GMAIL_SCOPE = 'https://www.googleapis.com/auth/gmail.readonly';
+    const GMAIL_SCOPES =
+      'https://mail.google.com/ https://www.googleapis.com/auth/gmail.settings.basic';
     const googleTokens = (): FakeRoute => ({
       method: 'POST',
       url: 'https://oauth2.googleapis.com/token',
@@ -1307,7 +1308,7 @@ describe('Pipedream : Gmail par le bouton', () => {
         access_token: ACCESS,
         refresh_token: REFRESH,
         expires_in: 3599,
-        scope: GMAIL_SCOPE,
+        scope: GMAIL_SCOPES,
         token_type: 'Bearer',
       },
     });
@@ -1333,7 +1334,7 @@ describe('Pipedream : Gmail par le bouton', () => {
       return { ...made, go, response };
     }
 
-    it('va chez Google, sans rien demander à Pipedream, pour la seule lecture de Gmail', async () => {
+    it('va chez Google, sans rien demander à Pipedream, pour tout Gmail et ses réglages de base', async () => {
       const paul = await signUp();
       const { app, fetchImpl } = makeApp({ connector: gmailConnector });
 
@@ -1344,7 +1345,7 @@ describe('Pipedream : Gmail par le bouton', () => {
       expect(`${target.origin}${target.pathname}`).toBe(
         'https://accounts.google.com/o/oauth2/v2/auth',
       );
-      expect(target.searchParams.get('scope')).toBe(GMAIL_SCOPE);
+      expect(target.searchParams.get('scope')).toBe(GMAIL_SCOPES);
       expect(target.searchParams.get('redirect_uri')).toBe(`${ORIGIN}${BASE}/google/retour`);
       expect(fetchImpl.calls).toEqual([]);
     });

@@ -382,6 +382,7 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
             url: 'https://mail.google.test/1',
             kind: 'gmail',
             mailText: expect.any(String),
+            extrait: expect.any(String),
           },
         },
         {
@@ -397,6 +398,7 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
             url: 'https://mail.google.test/2',
             kind: 'gmail',
             mailText: expect.any(String),
+            extrait: expect.any(String),
           },
         },
         {
@@ -412,6 +414,7 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
             url: 'https://mail.google.test/5',
             kind: 'gmail',
             mailText: expect.any(String),
+            extrait: expect.any(String),
           },
         },
       ],
@@ -420,6 +423,21 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
     expect(JSON.stringify(home)).not.toMatch(/message:|lea@client\.test|Jeudi à 10 h/);
     expect(JSON.stringify(home)).not.toContain(recent.sourceId);
     expect(await titles(paul)).toEqual({ demandes: ['Fil de Paul'], prets: [] });
+  });
+
+  it('avec chaque fil, le début de son dernier message : sur une ligne, sans le texte cité, que « Voir le mail » garde', async () => {
+    const [julie] = await people();
+    await answered(julie);
+    const { sourceId } = await asked(julie, 'Devis 2027', 2);
+    await adminPool.query('update turns set text = $2 where source_id = $1', [
+      sourceId,
+      'Bonjour Julie,\n\nEt le devis ?\n\nLe 12 nov. 2026 à 10:02, Julie Martin <julie@agence.test> a écrit :\n> Je vous l’envoie.',
+    ]);
+
+    const [demande] = (await readHomeBrouillons(julie)).demandes;
+
+    expect(demande?.source.extrait).toBe('Bonjour Julie, Et le devis ?');
+    expect(demande?.source.mailText).toContain('> Je vous l’envoie.');
   });
 
   it('une demande posée avant les choix garde ses questions, sans choix à proposer', async () => {
@@ -467,6 +485,7 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
             url: 'https://mail.google.test/2',
             kind: 'gmail',
             mailText: expect.any(String),
+            extrait: expect.any(String),
           },
         },
         {
@@ -482,6 +501,7 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
             url: 'https://mail.google.test/5',
             kind: 'gmail',
             mailText: expect.any(String),
+            extrait: expect.any(String),
           },
         },
         {
@@ -497,6 +517,7 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
             url: 'https://mail.google.test/6',
             kind: 'gmail',
             mailText: expect.any(String),
+            extrait: expect.any(String),
           },
         },
       ],
@@ -568,6 +589,7 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
           url: 'https://mail.google.test/2',
           kind: 'gmail',
           mailText: expect.any(String),
+          extrait: expect.any(String),
         },
       },
       expect.objectContaining({ repondue: true, questions: [] }),
@@ -726,6 +748,7 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
               url: 'https://mail.google.test/relance-6',
               kind: 'gmail',
               mailText: expect.any(String),
+              extrait: expect.any(String),
             },
           },
           expect.objectContaining({ from: 'Léa Roy', receivedAt: older.at }),
@@ -767,6 +790,7 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
               url: 'https://mail.google.test/relance-6',
               kind: 'gmail',
               mailText: expect.any(String),
+              extrait: expect.any(String),
             },
           },
         ],
@@ -784,6 +808,7 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
               url: 'https://mail.google.test/relance-8',
               kind: 'gmail',
               mailText: expect.any(String),
+              extrait: expect.any(String),
             },
           },
         ],

@@ -68,6 +68,10 @@ import type {
   HomeRelance,
 } from '@/server/portrait/screen';
 
+// Ce qui vient d'un mail (son nom, son objet, son texte, un brouillon, une question de Leon dans la langue du mail)
+// prend son sens de lecture d'après ses lettres, l'hébreu de droite à gauche : `dir="auto"`, ou <bdi> pour un nom posé
+// dans une ligne. PARAGRAPHS : un texte de plusieurs paragraphes, chacun dans le sien.
+const PARAGRAPHS = '[unicode-bidi:plaintext]';
 const RADIO = 'mt-0.5 size-[18px] shrink-0 cursor-pointer accent-[var(--ink)]';
 // Un choix : une tuile qu'on clique en entier ; la choisie prend le trait d'encre.
 const CHOICE =
@@ -125,10 +129,10 @@ export function Questions({
             {questions.map((question, index) => (
               // biome-ignore lint/suspicious/noArrayIndexKey: les questions d'une demande ne changent pas, dans l'ordre
               <li key={index} className="grid justify-items-start gap-1 [overflow-wrap:anywhere]">
-                <p id={`${id}-question-${index}`} className="text-label text-muted">
+                <p id={`${id}-question-${index}`} className="text-label text-muted" dir="auto">
                   {question}
                 </p>
-                <p className="whitespace-pre-wrap text-body text-fg">
+                <p dir="auto" className={cn('whitespace-pre-wrap text-body text-fg', PARAGRAPHS)}>
                   {answers[index] || <span className="text-muted">{t('noAnswer')}</span>}
                 </p>
                 <Button
@@ -153,17 +157,20 @@ export function Questions({
           tabIndex={-1}
           className="m-0 grid min-w-0 gap-2.5 border-0 p-0 outline-none"
         >
-          <legend className="mb-3 grid gap-1.5 p-0">
+          <legend className="mb-3 grid w-full gap-1.5 p-0">
             <span className="text-label text-muted">
               {t('position', { n: flow.step + 1, total: questions.length })}
             </span>
-            <span className="text-head font-semibold tracking-[-0.015em] text-balance [overflow-wrap:anywhere] text-fg">
+            <span
+              dir="auto"
+              className="text-head font-semibold tracking-[-0.015em] text-balance [overflow-wrap:anywhere] text-fg"
+            >
               {questions[flow.step]}
             </span>
           </legend>
           {choices.map((choice, index) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: les choix d'une question ne changent pas, dans l'ordre
-            <label key={index} className={CHOICE}>
+            <label key={index} dir="auto" className={CHOICE}>
               <input
                 type="radio"
                 name={shown}
@@ -191,6 +198,7 @@ export function Questions({
               {pick.choice === OTHER && (
                 <Textarea
                   aria-label={t('otherAnswer')}
+                  dir="auto"
                   className="basis-full"
                   value={pick.text}
                   onChange={(event) => dispatch({ type: 'write', text: event.target.value })}
@@ -204,6 +212,7 @@ export function Questions({
           ) : (
             <Textarea
               aria-label={t('otherAnswer')}
+              dir="auto"
               value={pick.text}
               onChange={(event) => dispatch({ type: 'write', text: event.target.value })}
               maxLength={max}
@@ -340,6 +349,7 @@ function Relance({
       </p>
       <Field label={t('instructions')} help={t('relanceInstructionsHelp')}>
         <Textarea
+          dir="auto"
           value={indications}
           onChange={(event) => setIndications(event.target.value)}
           maxLength={max}
@@ -455,14 +465,16 @@ export function MailView({
         className="grid gap-1 [overflow-wrap:anywhere] text-fg outline-none"
       >
         <h3 className="text-lead font-semibold">
-          {mail.sorte === 'preference'
-            ? noticed
-            : mail.sorte === 'relance'
-              ? t(mail.mail.others > 0 ? 'unansweredMany' : 'unanswered', {
-                  name: mail.mail.from,
-                  count: mail.mail.others,
-                })
-              : (from ?? t('someone'))}
+          {mail.sorte === 'preference' ? (
+            noticed
+          ) : mail.sorte === 'relance' ? (
+            t(mail.mail.others > 0 ? 'unansweredMany' : 'unanswered', {
+              name: mail.mail.from,
+              count: mail.mail.others,
+            })
+          ) : (
+            <bdi>{from ?? t('someone')}</bdi>
+          )}
         </h3>
         <p className="text-label text-muted">
           <time dateTime={receivedAt.toISOString()}>
@@ -500,8 +512,23 @@ export function MailView({
           </Button>
         )}
       </div>
+      {/* Le début du mail, sous son objet : de quoi savoir à quoi l'on répond. Déplié dessous, le texte entier le remplace. */}
+      {source.extrait && mail.sorte !== 'preference' && !(ownRead && !onRead) && (
+        <p
+          dir="auto"
+          className="mt-3 line-clamp-3 max-w-[680px] text-body [overflow-wrap:anywhere] text-fg-2"
+        >
+          {source.extrait}
+        </p>
+      )}
       {!onRead && ownRead && text && (
-        <p className="mt-3 max-h-[320px] max-w-[680px] overflow-y-auto whitespace-pre-wrap rounded-item border border-line bg-glass-3 px-4 py-3 text-body [overflow-wrap:anywhere] text-fg">
+        <p
+          dir="auto"
+          className={cn(
+            'mt-3 max-h-[320px] max-w-[680px] overflow-y-auto whitespace-pre-wrap rounded-item border border-line bg-glass-3 px-4 py-3 text-body [overflow-wrap:anywhere] text-fg',
+            PARAGRAPHS,
+          )}
+        >
           {text}
         </p>
       )}
@@ -530,7 +557,11 @@ export function MailView({
           <div className="grid gap-3">
             <p
               id={`${words}-preference`}
-              className="whitespace-pre-wrap rounded-item border border-line bg-glass-3 px-4 py-3 text-body [overflow-wrap:anywhere] text-fg"
+              className={cn(
+                'whitespace-pre-wrap rounded-item border border-line bg-glass-3 px-4 py-3 text-body [overflow-wrap:anywhere] text-fg',
+                PARAGRAPHS,
+              )}
+              dir="auto"
             >
               {mail.mail.preference}
             </p>
@@ -556,7 +587,13 @@ export function MailView({
         ) : mail.sorte === 'pret' ? (
           <div className="grid gap-3">
             <p className="text-label text-muted">{t(relance ? 'relanceReady' : 'ready')}</p>
-            <p className="whitespace-pre-wrap rounded-item border border-line bg-glass-3 px-4 py-3 text-body [overflow-wrap:anywhere] text-fg">
+            <p
+              dir="auto"
+              className={cn(
+                'whitespace-pre-wrap rounded-item border border-line bg-glass-3 px-4 py-3 text-body [overflow-wrap:anywhere] text-fg',
+                PARAGRAPHS,
+              )}
+            >
               {mail.mail.texte}
             </p>
             {mail.mail.depose && <p className="text-label text-muted">{nb(t('deposited'))}</p>}
@@ -635,16 +672,25 @@ function MailPane({ mail, onClose }: { mail: PanelMail; onClose: () => void }) {
     >
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1 [overflow-wrap:anywhere]">
-          <h2 className="text-lead font-semibold text-fg">{source.title ?? f('untitled')}</h2>
+          {/* un objet en hébreu se lit dans son sens, et garde sa place à gauche, au-dessus de sa ligne */}
+          <h2 dir="auto" className="text-left text-lead font-semibold text-fg">
+            {source.title ?? f('untitled')}
+          </h2>
           <p className="mt-1 text-ui text-muted">
-            {from ?? t('someone')} · {formatDate(receivedAt, locale)} · {tool}
+            <bdi>{from ?? t('someone')}</bdi> · {formatDate(receivedAt, locale)} · {tool}
           </p>
         </div>
         <Button size="sm" variant="quiet" onClick={onClose}>
           {c('close')}
         </Button>
       </div>
-      <p className="mt-4 max-h-[60vh] overflow-y-auto whitespace-pre-wrap text-body leading-[1.6] [overflow-wrap:anywhere] text-fg">
+      <p
+        dir="auto"
+        className={cn(
+          'mt-4 max-h-[60vh] overflow-y-auto whitespace-pre-wrap text-body leading-[1.6] [overflow-wrap:anywhere] text-fg',
+          PARAGRAPHS,
+        )}
+      >
         {source.mailText}
       </p>
       {source.url && (
@@ -954,9 +1000,9 @@ export function ReplyDrafts({
             className="grid w-full gap-1 rounded-item px-3 py-2.5 text-left transition-colors duration-150 hover:bg-hover disabled:cursor-default aria-[current]:bg-sheet aria-[current]:shadow-sheet"
           >
             <span className="flex items-baseline justify-between gap-2">
-              <span className="truncate text-body font-medium text-fg">
+              <bdi className="truncate text-body font-medium text-fg">
                 {mail.mail.from ?? t('someone')}
-              </span>
+              </bdi>
               <time
                 dateTime={mail.mail.receivedAt.toISOString()}
                 className="shrink-0 text-label text-muted"
@@ -964,7 +1010,7 @@ export function ReplyDrafts({
                 {formatDate(mail.mail.receivedAt, locale)}
               </time>
             </span>
-            <span className="truncate text-label text-fg-2">
+            <span dir="auto" className="truncate text-label text-fg-2">
               {mail.mail.source.title ?? f('untitled')}
             </span>
             <span>
@@ -1033,10 +1079,10 @@ export function ReplyDrafts({
                         : 'bg-f4',
                   )}
                 />
-                <span className="shrink-0 text-body font-medium text-fg">
+                <bdi className="shrink-0 text-body font-medium text-fg">
                   {mail.mail.from ?? t('someone')}
-                </span>
-                <span className="min-w-0 flex-1 truncate text-ui text-muted">
+                </bdi>
+                <span dir="auto" className="min-w-0 flex-1 truncate text-ui text-muted">
                   {mail.mail.source.title ?? f('untitled')}
                 </span>
                 <span className="shrink-0 text-label text-muted max-sm:hidden">

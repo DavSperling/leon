@@ -114,6 +114,8 @@
     letter-spacing: -0.003em;
     text-overflow: ellipsis;
     white-space: nowrap;
+    /* dir="auto" : un nom en hébreu garde sa place à gauche, comme les autres */
+    text-align: left;
   }
   .card .tl__name {
     font-size: 15px;

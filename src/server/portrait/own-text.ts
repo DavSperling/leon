@@ -63,3 +63,15 @@ export function ownText(mail: string): { text: string; signature: string | null 
     signature: signature.join('\n').trim() || null,
   };
 }
+
+// Le début d'un mail, pour l'accueil : ce que son auteur a écrit, sur une ligne, coupé à un mot. Un mail sans un mot de
+// son auteur (un transfert nu) donne le début de son texte tel qu'il est.
+export const EXCERPT_CHARS = 280;
+export function excerptOf(mail: string): string {
+  const flat = (ownText(mail).text || mail).replace(/\s+/g, ' ').trim();
+  if (flat.length <= EXCERPT_CHARS) return flat;
+  // Jamais un demi-emoji en fin de coupe.
+  const cut = flat.slice(0, EXCERPT_CHARS).replace(/[\uD800-\uDBFF]$/, '');
+  const word = cut.lastIndexOf(' ');
+  return `${word > EXCERPT_CHARS / 2 ? cut.slice(0, word) : cut}…`;
+}

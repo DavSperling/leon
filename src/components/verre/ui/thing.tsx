@@ -81,7 +81,12 @@ export function Thing({
         </span>
       )}
       <span className="tl__id">
-        <span className="tl__name" title={typeof name === 'string' && !wrap ? name : undefined}>
+        {/* Un nom écrit de droite à gauche (un objet de mail en hébreu) se lit et se coupe dans son sens. */}
+        <span
+          className="tl__name"
+          dir="auto"
+          title={typeof name === 'string' && !wrap ? name : undefined}
+        >
           <span className="mark">{name}</span>
         </span>
         {caption != null && caption !== false && (

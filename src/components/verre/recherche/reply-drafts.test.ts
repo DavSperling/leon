@@ -133,6 +133,31 @@ const RELANCE_PRETE: HomeBrouillon = {
   relance: true,
 };
 
+// Un mail en hébreu mêlé de français, comme l'accueil le reçoit : le début de son texte, ses questions dans sa langue.
+const HEBREU: HomeDemande = {
+  id: id(4),
+  from: 'יעל כהן',
+  receivedAt: new Date('2026-11-12T09:00:00Z'),
+  questions: ['האם המחיר כולל את החשמל?'],
+  choix: [['כן', 'לא']],
+  repondue: false,
+  relance: false,
+  source: {
+    title: 'הצעת מחיר – devis bureau',
+    url: 'https://mail.google.test/4',
+    kind: 'gmail',
+    mailText: 'שלום דוד,\n\nקיבלת את ההצעה?\n\nMerci de confirmer.',
+    extrait: 'שלום דוד, קיבלת את ההצעה? Merci de confirmer.',
+  },
+};
+const HEBREU_PRET: HomeBrouillon = {
+  ...PRET,
+  id: id(705),
+  from: HEBREU.from,
+  texte: 'שלום יעל,\n\nכן, המחיר כולל הכול.\n\nBien à vous',
+  source: HEBREU.source,
+};
+
 const within = (children: ReactNode, locale: 'en' | 'fr') =>
   renderToStaticMarkup(
     createElement(NextIntlClientProvider, {
@@ -443,7 +468,7 @@ describe('MailView : un mail du panneau', () => {
 
     expect(html).toMatch(
       new RegExp(
-        `^<div><div id="demande-${DEVIS.id}" tabindex="-1" data-autofocus="" aria-describedby="place"[^>]*><h3[^>]*>Léa Roy</h3>`,
+        `^<div><div id="demande-${DEVIS.id}" tabindex="-1" data-autofocus="" aria-describedby="place"[^>]*><h3[^>]*><bdi>Léa Roy</bdi></h3>`,
       ),
     );
     expect(text(html)).toContain('Léa Roy Reçu le 10 nov. 2026');
@@ -485,7 +510,7 @@ describe('MailView : un mail du panneau', () => {
     const html = mailView(PRET);
 
     expect(text(html)).toContain('Brouillon prêt Bonjour Léa');
-    expect(html).toMatch(/<p class="[^"]*whitespace-pre-wrap[^"]*">Bonjour Léa,/);
+    expect(html).toMatch(/<p dir="auto" class="[^"]*whitespace-pre-wrap[^"]*">Bonjour Léa,/);
     expect(html).toContain(
       'Bonjour Léa,\n\nVoici le devis [à compléter : le montant] &lt;b&gt;.\n\nBien à vous',
     );
@@ -599,6 +624,98 @@ describe('MailView : un mail du panneau', () => {
   });
 });
 
+describe('MailView : ce qui vient d’un mail se lit dans son sens, l’hébreu de droite à gauche', () => {
+  it('le début du mail suit son objet, avant les questions de Leon, et prend son sens d’après ses lettres', () => {
+    const html = mailView(HEBREU);
+
+    expect(html).toMatch(
+      /<p dir="auto" class="[^"]*line-clamp-3[^"]*">שלום דוד, קיבלת את ההצעה\? Merci de confirmer\.<\/p>/,
+    );
+    const at = (needle: string) => html.indexOf(needle);
+    expect(at('הצעת מחיר')).toBeGreaterThan(-1);
+    expect(at('שלום דוד, קיבלת')).toBeGreaterThan(at('הצעת מחיר'));
+    expect(at('האם המחיר')).toBeGreaterThan(at('שלום דוד, קיבלת'));
+    // Le texte entier reste derrière « Voir le mail ».
+    expect(buttons(html)).toContain('Voir le mail');
+    expect(html).not.toContain('Merci de confirmer.\n');
+  });
+
+  it('un mail dont le texte n’a pas pu se lire se montre sans extrait', () => {
+    expect(mailView(DEVIS)).not.toContain('line-clamp');
+    expect(
+      mailView({ ...HEBREU, source: { ...HEBREU.source, mailText: null, extrait: null } }),
+    ).not.toContain('line-clamp');
+  });
+
+  it('le nom de l’expéditeur est isolé de ce qui l’entoure, et l’objet du fil prend son sens d’après ses lettres', () => {
+    const html = mailView(HEBREU);
+
+    expect(html).toMatch(/<h3[^>]*><bdi>יעל כהן<\/bdi><\/h3>/);
+    expect(html).toMatch(
+      /<span class="tl__name" dir="auto"[^>]*><span class="mark">הצעת מחיר – devis bureau<\/span>/,
+    );
+  });
+
+  it('la question, ses choix et le texte libre prennent leur sens d’après leurs lettres', () => {
+    const html = mailView(HEBREU);
+
+    expect(html).toMatch(
+      /<span dir="auto" class="[^"]*text-head[^"]*">האם המחיר כולל את החשמל\?<\/span>/,
+    );
+    // Un choix en hébreu : toute sa tuile se lit de droite à gauche, son bouton radio à droite.
+    expect(html).toMatch(/<label dir="auto" class="[^"]*"><input type="radio"[^>]*\/>כן<\/label>/);
+    expect(html).toMatch(/<label dir="auto" class="[^"]*"><input type="radio"[^>]*\/>לא<\/label>/);
+    const other = questions({ step: 0, picks: [{ choice: OTHER, text: 'אולי' }] }, HEBREU);
+    expect(other).toMatch(/<textarea [^>]*dir="auto"[^>]*>אולי<\/textarea>/);
+  });
+
+  it('au récapitulatif, la question et sa réponse aussi ; une réponse de plusieurs lignes, ligne par ligne', () => {
+    const html = questions({ step: 1, picks: [{ choice: OTHER, text: 'כן.\nOui.' }] }, HEBREU);
+
+    expect(html).toMatch(/<p id="[^"]*-question-0" class="[^"]*" dir="auto">האם המחיר/);
+    expect(html).toMatch(
+      /<p dir="auto" class="[^"]*whitespace-pre-wrap[^"]*\[unicode-bidi:plaintext\][^"]*">כן\.\nOui\.<\/p>/,
+    );
+  });
+
+  it('un brouillon de plusieurs paragraphes : chacun dans son sens ; une préférence aussi', () => {
+    expect(mailView(HEBREU_PRET)).toMatch(
+      /<p dir="auto" class="[^"]*whitespace-pre-wrap[^"]*\[unicode-bidi:plaintext\][^"]*">שלום יעל,\n\nכן, המחיר כולל הכול\.\n\nBien à vous<\/p>/,
+    );
+    expect(mailView(RETOUCHE)).toMatch(
+      /<p id="[^"]*-preference" class="whitespace-pre-wrap[^"]*\[unicode-bidi:plaintext\][^"]*" dir="auto">/,
+    );
+  });
+
+  it('ses indications pour une relance s’écrivent dans leur sens', () => {
+    expect(mailView(SANS_REPONSE)).toMatch(/<textarea [^>]*dir="auto"/);
+  });
+});
+
+describe('ReplyDrafts : les listes de mails se lisent dans leur sens', () => {
+  it('sur l’accueil, le nom est isolé et l’objet prend son sens d’après ses lettres, coupé du bon côté', () => {
+    // Le plus ancien des deux : il se range sous la carte du premier.
+    const html = render([DEVIS, { ...HEBREU, receivedAt: new Date('2026-11-01T09:00:00Z') }]);
+
+    expect(html).toMatch(/<bdi class="[^"]*">יעל כהן<\/bdi>/);
+    expect(html).toMatch(
+      /<span dir="auto" class="[^"]*truncate[^"]*">הצעת מחיר – devis bureau<\/span>/,
+    );
+  });
+
+  it('dans la colonne du panneau aussi', () => {
+    view.open = true;
+    try {
+      const html = render([HEBREU, DEVIS]);
+      // Le panneau du test ne dessine pas sa colonne : la liste de l'accueil, panneau ouvert, a les mêmes marques.
+      expect(html).toMatch(/<bdi class="[^"]*">Léa Roy<\/bdi>/);
+      expect(html).toMatch(/<span dir="auto" class="[^"]*truncate[^"]*">Devis 2027<\/span>/);
+    } finally {
+      view.open = false;
+    }
+  });
+});
+
 describe('MailView : son mail resté sans réponse, et la relance', () => {
   it('la question : son mail à son destinataire, resté sans réponse, la date de son envoi, le fil, puis, sur le même écran, « Voulez-vous une relance ? », ses indications, « Préparer la relance » et « Non »', () => {
     const html = mailView(SANS_REPONSE);
@@ -653,7 +770,7 @@ describe('MailView : son mail resté sans réponse, et la relance', () => {
     const done = { [`relance-${SANS_REPONSE.mail.sourceId}`]: id(98) };
     const html = mailView(SANS_REPONSE, 'fr', { done });
 
-    expect(html).toMatch(/<h3[^>]*>Léa Roy<\/h3>/);
+    expect(html).toMatch(/<h3[^>]*><bdi>Léa Roy<\/bdi><\/h3>/);
     expect(text(html)).toContain('Envoyé le 14 nov. 2026');
     expect(text(html)).toContain('J’écris votre relance. Actualiser Écarter');
     expect(text(html)).not.toMatch(/Voulez-vous une relance|J’écris votre réponse/);

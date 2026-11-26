@@ -10,6 +10,7 @@ import type { AgentId } from './agents';
 import { type Demande, HOME_MAX, type ReadyBrouillon, readShown } from './brouillons';
 import { type FicheLine, readFiche } from './fiche';
 import { readLastMessages } from './mail-text';
+import { excerptOf } from './own-text';
 import { type ProposedPreference, readProposedPreferences } from './preferences';
 import { type AgentState, readAgentStates, readProposals } from './propositions';
 import { enqueueFicheBuild, ficheBuildCompleted, ficheBuildPending } from './queue';
@@ -40,8 +41,9 @@ export type FicheEtat =
   | 'a-construire';
 export type FicheSource = { title: string | null; url: string | null; kind: string };
 // Une source telle que l'accueil la montre : avec le texte du dernier message du fil, pour « Voir le mail »
-// (mail-text.ts). Nul quand il n'a pas pu se lire.
-export type HomeSource = FicheSource & { mailText?: string | null };
+// (mail-text.ts), et son début, que la carte montre sous l'objet (own-text.ts, excerptOf). Nuls quand il n'a pas pu se
+// lire.
+export type HomeSource = FicheSource & { mailText?: string | null; extrait?: string | null };
 export type FicheScreen = {
   etat: FicheEtat;
   // Son rôle, ses tâches et ses préférences d'écriture acceptées seulement.
@@ -212,6 +214,7 @@ export async function readHomeBrouillons(ctx: TenantContext): Promise<HomeBrouil
   const withSource = <T extends { sourceId: string }>(rows: T[]) =>
     rows.flatMap(({ sourceId, ...one }) => {
       const source = seen.find((found) => found.sourceId === sourceId);
+      const mailText = texts.get(sourceId) ?? null;
       return source
         ? [
             {
@@ -220,7 +223,8 @@ export async function readHomeBrouillons(ctx: TenantContext): Promise<HomeBrouil
                 title: source.title,
                 url: source.url,
                 kind: source.kind,
-                mailText: texts.get(sourceId) ?? null,
+                mailText,
+                extrait: mailText === null ? null : excerptOf(mailText),
               },
             },
           ]

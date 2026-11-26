@@ -414,7 +414,8 @@
       "relance": "Follow-up to decide",
       "preference": "Preference to confirm",
       "pret": "Draft ready",
-      "ecrit": "Being written"
+      "ecrit": "Being written",
+      "sansReponse": "No reply needed"
     },
     "trash": {
       "button": "Delete email",
@@ -441,6 +442,14 @@
       "all": "Go through them all",
       "empty": "Nothing is waiting for you right now.",
       "emptyText": "When an email needs a reply, Leon will ask its questions here, then show you its draft."
+    },
+    "quiet": {
+      "line": "{count, plural, one {# email needs no reply from you.} other {# emails need no reply from you.}}",
+      "see": "{count, plural, one {See it} other {See them}}",
+      "list": "Emails that need no reply from you",
+      "prepare": "Prepare a reply",
+      "instructionsHelp": "What you want to reply, in a few words. You can leave it empty.",
+      "gone": "This email is no longer in this list."
     },
     "read": "Show the email",
     "readHide": "Hide the email",

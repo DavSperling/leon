@@ -4,12 +4,13 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import type { SidePanelProps } from '@/components/verre';
 import { type Flow, OTHER, startFlow } from '@/lib/draft-questions';
-import { type Done, panelMails } from '@/lib/reply-drafts';
+import { type Done, panelMails, quietMails } from '@/lib/reply-drafts';
 import type {
   HomeBrouillon,
   HomeDemande,
   HomePreference,
   HomeRelance,
+  HomeSansReponse,
 } from '@/server/portrait/screen';
 import en from '../../../../messages/en.json';
 import fr from '../../../../messages/fr.json';
@@ -24,6 +25,7 @@ vi.mock('@/app/(app)/settings/actions', () => ({
   answerQuestionsAction: vi.fn(),
   answerRelanceAction: vi.fn(),
   discardBrouillonAction: vi.fn(),
+  prepareReplyAction: vi.fn(),
   sendBrouillonAction: vi.fn(),
   trashMailAction: vi.fn(),
 }));
@@ -158,6 +160,35 @@ const HEBREU_PRET: HomeBrouillon = {
   source: HEBREU.source,
 };
 
+// Des mails que Leon a jugés sans réponse à donner : un remerciement, un mail en hébreu, un fil Outlook sans texte lu.
+const MERCI: HomeSansReponse = {
+  id: id(901),
+  from: 'Sophie Garnier',
+  receivedAt: new Date('2026-11-21T09:00:00Z'),
+  relance: false,
+  source: {
+    title: 'Merci pour la visite',
+    url: 'https://mail.google.test/21',
+    kind: 'gmail',
+    mailText: 'Bonjour Julie,\n\nMerci pour la visite.',
+    extrait: 'Bonjour Julie, Merci pour la visite.',
+  },
+};
+const TODA: HomeSansReponse = {
+  ...MERCI,
+  id: id(902),
+  from: 'אבי מזרחי',
+  receivedAt: new Date('2026-11-20T09:00:00Z'),
+  source: { ...HEBREU.source, title: 'תודה על הפגישה' },
+};
+const INFO: HomeSansReponse = {
+  ...MERCI,
+  id: id(903),
+  from: null,
+  receivedAt: new Date('2026-11-19T09:00:00Z'),
+  source: { title: null, url: null, kind: 'outlook' },
+};
+
 const within = (children: ReactNode, locale: 'en' | 'fr') =>
   renderToStaticMarkup(
     createElement(NextIntlClientProvider, {
@@ -171,7 +202,28 @@ const render = (
   prets: HomeBrouillon[] = [],
   locale: 'en' | 'fr' = 'fr',
   name: string | null = 'Julie',
-) => within(createElement(ReplyDrafts, { name, demandes, prets, max: 1000 }), locale);
+  sansReponse: HomeSansReponse[] = [],
+) => within(createElement(ReplyDrafts, { name, demandes, prets, sansReponse, max: 1000 }), locale);
+// Un mail jugé sans réponse à donner, tel que son panneau le montre.
+const quietView = (one: HomeSansReponse, locale: 'en' | 'fr' = 'fr', trash = true) => {
+  const [mail] = quietMails([one], {});
+  if (!mail) throw new Error('aucun mail');
+  return within(
+    createElement(MailView, {
+      mail,
+      place: 'place',
+      max: 1000,
+      onAnswers: () => {},
+      onRelance: () => {},
+      onPreference: () => {},
+      onDiscard: () => {},
+      onRefresh: () => {},
+      onPrepare: () => {},
+      onTrash: trash ? () => {} : undefined,
+    }),
+    locale,
+  ).replace(/^<link [^>]*>/, '');
+};
 // Un mail du panneau, tel qu'il s'y montre (sans le préchargement du logo de son outil, que React pose devant).
 const mailView = (
   one: HomeDemande | HomePreference | HomeRelance | HomeBrouillon,
@@ -713,6 +765,121 @@ describe('ReplyDrafts : les listes de mails se lisent dans leur sens', () => {
     } finally {
       view.open = false;
     }
+  });
+});
+
+describe('ReplyDrafts : ses mails que Leon a jugés sans réponse à donner', () => {
+  // Leur panneau, tel qu'il s'ouvre par « Les voir » : monté sous la pile, avant le panneau de celle-ci.
+  const openQuiet = (sansReponse: HomeSansReponse[], locale: 'en' | 'fr' = 'fr') => {
+    view.open = true;
+    try {
+      const html = render([DEVIS], [], locale, 'Julie', sansReponse);
+      return html.slice(html.indexOf('<div data-panneau'), html.lastIndexOf('<div data-panneau'));
+    } finally {
+      view.open = false;
+    }
+  };
+
+  it('sous la pile, une phrase les compte, et « Les voir » ouvre leur panneau ; la pile ne les montre ni ne les compte', () => {
+    const html = render([DEVIS], [], 'fr', 'Julie', [MERCI, TODA]);
+
+    expect(text(html)).toMatch(/Tout traiter 2 mails n’attendent pas votre réponse\. Les voir$/);
+    // « Les voir » rappelle la phrase qui dit quoi.
+    const said = /<span id="([^"]+)">2 mails n’attendent pas votre réponse\.<\/span>/.exec(
+      html,
+    )?.[1];
+    expect(said).toBeTruthy();
+    expect(html).toMatch(
+      new RegExp(
+        `<button [^>]*aria-haspopup="dialog"[^>]*aria-describedby="${said}"[^>]*>Les voir</button>`,
+      ),
+    );
+    expect(line(html)).toBe('Julie, j’ai quelques questions à vous poser. 1 mail à compléter');
+    expect(text(html)).not.toMatch(/Sophie Garnier|אבי מזרחי|Merci pour la visite/);
+  });
+
+  it('au singulier ; sans aucun, rien ; quand rien ne l’attend, la phrase suit « Rien ne vous attend »', () => {
+    expect(text(render([DEVIS], [], 'fr', 'Julie', [MERCI]))).toMatch(
+      /1 mail n’attend pas votre réponse\. Le voir$/,
+    );
+    expect(text(render([DEVIS]))).not.toMatch(/n’attend/);
+    expect(text(render([], [], 'fr', 'Julie', [MERCI, TODA]))).toMatch(
+      /puis vous montrera son brouillon\. 2 mails n’attendent pas votre réponse\. Les voir$/,
+    );
+  });
+
+  it('en anglais, les mêmes mots', () => {
+    expect(text(render([DEVIS], [], 'en', 'Julie', [MERCI, TODA]))).toMatch(
+      /2 emails need no reply from you\. See them$/,
+    );
+    expect(text(render([], [], 'en', null, [MERCI]))).toMatch(
+      /1 email needs no reply from you\. See it$/,
+    );
+  });
+
+  it('leur panneau : son titre, la place du mail montré, un seul mail à la fois, « Mail suivant »', () => {
+    const html = openQuiet([MERCI, TODA]);
+
+    expect(html).toContain('<h2>Sans réponse attendue</h2>');
+    expect(text(html)).toMatch(
+      /^Sans réponse attendue Mail 1 sur 2 Sophie Garnier Reçu le 21 nov\. 2026 · Gmail Merci pour la visite Gmail/,
+    );
+    expect(count(html, '<div hidden="">')).toBe(1);
+    expect(html.indexOf('<div hidden="">')).toBeLessThan(html.indexOf('אבי מזרחי'));
+    expect(count(html, 'data-autofocus')).toBe(1);
+    expect(buttons(html.split('<footer>')[1] ?? '')).toEqual(['Mail suivant']);
+    // Le panneau de la pile, lui, ne les reçoit pas.
+    expect(openQuiet([MERCI], 'en')).toContain('<h2>No reply needed</h2>');
+    expect(buttons(openQuiet([MERCI]).split('<footer>')[1] ?? '')).toEqual(['Terminé']);
+  });
+});
+
+describe('MailView : un mail jugé sans réponse à donner', () => {
+  it('qui écrit, quand, le fil, le début du mail, puis ses indications, « Préparer une réponse » et « Supprimer le mail »', () => {
+    const html = quietView(MERCI);
+    const words = `sans-reponse-${MERCI.id}`;
+
+    expect(html).toMatch(
+      new RegExp(
+        `^<div><div id="${words}" tabindex="-1" data-autofocus="" aria-describedby="place"[^>]*><h3[^>]*><bdi>Sophie Garnier</bdi></h3>`,
+      ),
+    );
+    expect(text(html)).toBe(
+      'Sophie Garnier Reçu le 21 nov. 2026 · Gmail Merci pour la visite Gmail Voir le mail Bonjour Julie, Merci pour la visite. Vos indications Ce que vous voulez répondre, en quelques mots. Vous pouvez laisser vide. Préparer une réponse Supprimer le mail',
+    );
+    expect(buttons(html)).toEqual(['Voir le mail', 'Préparer une réponse', 'Supprimer le mail']);
+    // « Supprimer le mail » n'y est qu'une fois, à côté de « Préparer une réponse » ; « Garder » lui rendra le focus.
+    expect(count(html, 'Supprimer le mail')).toBe(1);
+    expect(html).toContain(`id="${words}-supprimer"`);
+    expect(count(html, `aria-describedby="${words}"`)).toBe(2);
+    const field = /<label for="([^"]+)"[^>]*>Vos indications<\/label>/.exec(html)?.[1];
+    expect(html).toMatch(
+      new RegExp(`<textarea rows="2"[^>]*id="${field}"[^>]*dir="auto"[^>]*maxLength="1000"`),
+    );
+    expect(html).not.toMatch(/Écarter|Voulez-vous|<form|message:/);
+  });
+
+  it('un fil Outlook, ou un écran sans ce geste : pas de « Supprimer le mail » ; sans texte lu, ni extrait ni « Voir le mail »', () => {
+    const html = quietView(INFO);
+
+    expect(text(html)).toBe(
+      'Votre correspondant Reçu le 19 nov. 2026 · Outlook Sans titre Outlook Vos indications Ce que vous voulez répondre, en quelques mots. Vous pouvez laisser vide. Préparer une réponse',
+    );
+    expect(buttons(quietView(MERCI, 'fr', false))).toEqual([
+      'Voir le mail',
+      'Préparer une réponse',
+    ]);
+  });
+
+  it('un mail en hébreu se lit dans son sens ; en anglais, les mêmes mots', () => {
+    const html = quietView(TODA);
+
+    expect(html).toMatch(/<h3[^>]*><bdi>אבי מזרחי<\/bdi><\/h3>/);
+    expect(html).toMatch(/<p dir="auto" class="[^"]*line-clamp-3[^"]*">שלום דוד/);
+    const english = text(quietView(MERCI, 'en'));
+    expect(english).toContain(
+      'Your instructions What you want to reply, in a few words. You can leave it empty. Prepare a reply Delete email',
+    );
   });
 });
 

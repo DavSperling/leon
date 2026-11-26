@@ -414,7 +414,8 @@
       "relance": "Relance à décider",
       "preference": "Préférence à valider",
       "pret": "Brouillon prêt",
-      "ecrit": "En cours d’écriture"
+      "ecrit": "En cours d’écriture",
+      "sansReponse": "Sans réponse attendue"
     },
     "trash": {
       "button": "Supprimer le mail",
@@ -441,6 +442,14 @@
       "all": "Tout traiter",
       "empty": "Rien ne vous attend pour l’instant.",
       "emptyText": "Quand un mail demandera une réponse, Leon vous posera ici ses questions, puis vous montrera son brouillon."
+    },
+    "quiet": {
+      "line": "{count, plural, one {# mail n’attend pas votre réponse.} other {# mails n’attendent pas votre réponse.}}",
+      "see": "{count, plural, one {Le voir} other {Les voir}}",
+      "list": "Les mails qui n’attendent pas votre réponse",
+      "prepare": "Préparer une réponse",
+      "instructionsHelp": "Ce que vous voulez répondre, en quelques mots. Vous pouvez laisser vide.",
+      "gone": "Ce mail n’est plus dans cette liste."
     },
     "read": "Voir le mail",
     "readHide": "Masquer le mail",

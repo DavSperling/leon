@@ -39,7 +39,7 @@ import { env } from '@/server/env';
 import { getLlm } from '@/server/llm/get-llm';
 import { logError } from '@/server/log';
 import { REPONSE_MAX_CHARS } from '@/server/portrait/brouillon-prompt';
-import { readHomeBrouillons } from '@/server/portrait/screen';
+import { readHomeBrouillons, readHomeSansReponse } from '@/server/portrait/screen';
 import { parseQuery } from '@/server/search/parse-query';
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
@@ -127,13 +127,15 @@ async function Home({ ctx }: { ctx: TenantContext }) {
   const t = await getTranslations('welcome');
   const locale = await getLocale();
   const modelAvailable = getLlm(env) !== null;
-  const [profile, member, suggestion, points, week, brouillons] = await Promise.all([
+  const [profile, member, suggestion, points, week, brouillons, sansReponse] = await Promise.all([
     optional('accueil.profil', getViewerProfile(ctx)),
     readOnboardingMember(ctx),
     optional('apropos.lecture', readAboutSuggestion(ctx)),
     optional('accueil.point', homeBriefings(ctx)),
     optional('accueil.semaine', readWeek(ctx)),
     optional('accueil.brouillons', readHomeBrouillons(ctx)),
+    // ses mails jugés sans réponse à donner, à part : leur lecture en panne n'emporte pas la pile
+    optional('accueil.sans-reponse', readHomeSansReponse(ctx)),
   ]);
   const { demandes, prets } = brouillons ?? { demandes: [], prets: [] };
   const [questions] = await Promise.all([
@@ -169,6 +171,7 @@ async function Home({ ctx }: { ctx: TenantContext }) {
         name={name}
         demandes={demandes}
         prets={prets}
+        sansReponse={sansReponse ?? []}
         max={REPONSE_MAX_CHARS}
         lead={
           <>

@@ -49,8 +49,11 @@ import { relanceRecipients } from './unanswered-mails';
 // - une relance va aux destinataires de son mail relancé (unanswered-mails.ts, relanceRecipients) : en « à », ceux
 //   qu'il avait en « à », sans ses adresses à elle ; en copie, ceux qu'il avait en copie, sans elle ni ceux déjà en
 //   « à ». Sans copie cachée, que Leon ne connaît pas. Personne en « à » : rien n'est déposé, et ce n'est pas un échec.
-// shortcut: Reply-To est ignoré, et une réponse ne met personne en copie ; à revoir si de vraies boîtes montrent des
-// réponses qui partent à la mauvaise adresse.
+//   Quand le mail reçu demande qu'on lui réponde à une autre adresse que celle de son expéditeur (Reply-To : le
+//   formulaire de contact d'un site, une assistante), rien n'est déposé, et ce n'est pas un échec : la réponse écrite à
+//   l'expéditeur n'arriverait pas à la bonne personne. Le brouillon reste à copier dans Leon.
+// shortcut: Leon ne répond pas à l'adresse de Reply-To (une adresse d'expéditeur imitée y enverrait la réponse à un
+// autre) et une réponse ne met personne en copie ; à revoir si ces brouillons restés dans Leon gênent.
 //
 // Un dépôt qui échoue (Pipedream non configuré ou injoignable, accès refusé, fil supprimé entre-temps, réponse
 // inattendue) ne lève pas : le brouillon reste dans Leon, non déposé, l'échec est journalisé sans rien de capté, et
@@ -93,10 +96,12 @@ export async function depositBrouillon(
         kind: string;
         thread: string;
         connectionId: string | null;
+        relance: boolean;
         to: string[];
         cc: string[];
       }>(sql`
         select b.message, b.texte, s.kind, s.external_id as thread, s.connection_id as "connectionId",
+               b.sorte = 'relance' as relance,
                case when b.sorte = 'relance' then ${relance.to}
                     else array[lower(m.author_email)] end as "to",
                case when b.sorte = 'relance' then ${relance.cc} else '{}'::text[] end as cc
@@ -127,8 +132,8 @@ export async function depositBrouillon(
     if (!client) return false;
     const headers = await client.replyHeaders(threadId, messageId);
     // Depuis la relève, le fil a bougé (une réponse, un autre mail) ou le message n'y est plus : rien à déposer, et ce
-    // n'est pas un échec.
-    if (!headers) return false;
+    // n'est pas un échec. De même quand le mail reçu demande une réponse ailleurs qu'à son expéditeur.
+    if (!headers || (!row.relance && headers.elsewhere)) return false;
     const raw = replyRaw({ ...headers, to: row.to, cc: row.cc, text: row.texte });
     // Un message sans identifiant, ou une adresse qui n'en est pas une : pas de réponse dans le fil.
     if (raw === null) throw new ConnectorHttpError(null, 'Unexpected response');

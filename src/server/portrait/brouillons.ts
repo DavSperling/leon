@@ -6,7 +6,7 @@ import { db } from '@/server/db/client';
 import { users } from '@/server/db/schema/auth';
 import { brouillons } from '@/server/db/schema/portrait';
 import { withTenant } from '@/server/db/with-tenant';
-import { type Llm, LlmError } from '@/server/llm/llm';
+import { isUnreachable, type Llm, LlmError } from '@/server/llm/llm';
 import { logError } from '@/server/log';
 import { epochToDate, textArray } from '@/server/search/filters-sql';
 import type { AgentId } from './agents';
@@ -75,10 +75,11 @@ const BROUILLON_TIMEOUT_MS = 90_000;
 // La préférence tirée d'une retouche, une phrase : la réponse entière, réflexion comprise, est bornée ici.
 const PREFERENCE_MAX_TOKENS = 4000;
 
-// Un appel raté (réponse illisible, refus, coupure, panne) se retente au passage suivant, une fois. Après deux ratés de
+// Un appel raté (réponse illisible, refus, coupure) se retente au passage suivant, une fois. Après deux ratés de
 // suite, le mail (ou la retouche) attend RETRY_MS avant chaque nouvel essai : un passage suit chaque relève de sa
 // boîte, et sans cela un seul mail que le modèle ne sait pas traiter prenait les vingt appels du jour, donc les
-// brouillons de tous ses autres mails. Un appel réussi l'oublie.
+// brouillons de tous ses autres mails. Un appel réussi l'oublie. Un fournisseur injoignable n'est pas un raté du
+// mail : l'appel est rendu (giveBack) et le passage s'arrête, la relève suivante le reprend.
 // shortcut: gardé dans ce processus (un redéploiement l'oublie, et le mail se retente deux fois) ; une colonne en base
 // si les passages se font un jour dans plusieurs processus.
 const RETRY_MS = DAY_MS;
@@ -188,9 +189,13 @@ export async function writeBrouillons(
         answer += delta;
       }
     } catch (error) {
-      // Un refus, une réponse coupée ou une panne : ce mail n'arrête pas les suivants.
+      // Un refus ou une réponse coupée : ce mail n'arrête pas les suivants.
       if (!(error instanceof LlmError)) throw error;
       logError('brouillons.call_failed', error, { userId: ctx.userId, sourceId: mail.sourceId });
+      if (isUnreachable(error)) {
+        await giveBack(ctx);
+        return written;
+      }
       miss(mailKey(ctx, mail), now);
       continue;
     }
@@ -265,6 +270,12 @@ async function reserve(ctx: TenantContext): Promise<boolean> {
   return false;
 }
 
+// L'appel réservé n'a pas eu lieu, le fournisseur du modèle étant injoignable (réseau, clé refusée, limite, 5xx) : rien
+// n'est payé, il est rendu au plafond du jour (rendre_brouillon, 0092), comme pour le point et l'agenda.
+async function giveBack(ctx: TenantContext): Promise<void> {
+  await db.execute(sql`select rendre_brouillon(${ctx.userId})`);
+}
+
 // Les leçons de ses retouches (preferences.ts), après ses mails, dans les `calls` appels qui restent au passage : un
 // appel par brouillon retouché, sous le même plafond du jour, qui lit le brouillon, ce qu'elle a envoyé (own-text.ts,
 // coupé comme un brouillon) et toutes ses préférences déjà tirées (preference-prompt.ts). La préférence qu'il rend est
@@ -313,6 +324,7 @@ async function learnFrom(
           userId: ctx.userId,
           brouillonId: reply.id,
         });
+        if (isUnreachable(error)) return giveBack(ctx);
         miss(key, now);
         continue;
       }

@@ -29,7 +29,8 @@ const A_TROU = 'Bonjour Léa,\n\nVoici le devis [à compléter : le montant].\n\
 const CONNECT = 'https://api.pipedream.com/v1/connect/proj_essai';
 const GMAIL = 'https://gmail.googleapis.com/gmail/v1/users/me';
 const READ =
-  '?format=metadata&metadataHeaders=Message-ID&metadataHeaders=References&metadataHeaders=Subject';
+  '?format=metadata&metadataHeaders=Message-ID&metadataHeaders=References&metadataHeaders=Subject' +
+  '&metadataHeaders=From&metadataHeaders=Reply-To';
 
 const tenantIds: string[] = [];
 afterAll(async () => {
@@ -552,6 +553,53 @@ describe('depositBrouillon : chez Gmail, le fil n’attend plus sa réponse', ()
     expect(fetchImpl.calls.slice(1).map((call) => call.method)).toEqual(['GET']);
     expect(await stored(id)).toMatchObject({ brouillonGmail: null, ecarteLe: null });
     expect(errors).not.toHaveBeenCalled();
+  });
+});
+
+// Une réponse part à l'expéditeur du mail reçu. Quand ce mail demande qu'on lui réponde ailleurs (le formulaire de
+// contact d'un site, une assistante), elle n'arriverait pas à la bonne personne : le brouillon reste dans Leon.
+describe('depositBrouillon : le mail demande de répondre à une autre adresse que son expéditeur', () => {
+  const FORM = [
+    ...HEADERS,
+    { name: 'From', value: 'Jean Dupont <wordpress@site.test>' },
+    { name: 'Reply-To', value: 'jean@prospect.test' },
+  ];
+
+  it('une réponse n’est pas déposée : une lecture, aucune création, aucune erreur', async () => {
+    const [julie] = await team();
+    const { id } = await drafted(julie, COMPLET, { connectionId: await gmailOf(julie) });
+    const messages = [inThread('m-devis', 0, ['INBOX'], FORM)];
+    const fetchImpl = fakeFetch([TOKEN, readRoute({ json: { id: 't', messages } })]);
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    expect(await depositBrouillon(julie, id, { fetchImpl })).toBe(false);
+
+    expect(fetchImpl.calls.slice(1).map((call) => call.method)).toEqual(['GET']);
+    expect(await stored(id)).toMatchObject({ brouillonGmail: null, ecarteLe: null });
+    expect(errors).not.toHaveBeenCalled();
+  });
+
+  it('une relance n’en dépend pas : ses destinataires sont ceux de son mail', async () => {
+    const [julie] = await team();
+    const id = await relanced(
+      julie,
+      RELANCE,
+      { to: [LEA], cc: [] },
+      { connectionId: await gmailOf(julie) },
+    );
+    const mine = inThread(
+      'm-relance',
+      0,
+      ['SENT'],
+      [...MINE, { name: 'Reply-To', value: 'contact@acme.test' }],
+    );
+    const fetchImpl = fakeFetch([
+      TOKEN,
+      readRoute({ json: { id: 't', messages: [mine] } }),
+      createRoute(),
+    ]);
+
+    expect(await depositBrouillon(julie, id, { fetchImpl })).toBe(true);
   });
 });
 

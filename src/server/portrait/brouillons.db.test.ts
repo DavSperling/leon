@@ -9,7 +9,7 @@ import { members, users } from '@/server/db/schema/auth';
 import { brouillons, lignesFiche, reponsesAgent } from '@/server/db/schema/portrait';
 import { withTenant } from '@/server/db/with-tenant';
 import { createFakeLlm } from '@/server/llm/fake-llm';
-import { type Llm, LlmError } from '@/server/llm/llm';
+import { LLM_UNREACHABLE, type Llm, LlmError } from '@/server/llm/llm';
 import { DATA_GUARD_LINE } from '@/server/llm/prompt-guard';
 import { textArray } from '@/server/search/filters-sql';
 import { adminDb, adminPool } from '@/test/db';
@@ -374,6 +374,32 @@ describe('writeBrouillons', () => {
       ['Devis 2027', DRAFT],
       ['Refusé', DRAFT],
     ]);
+  });
+
+  it('le fournisseur est injoignable : l’appel du jour est rendu, le passage s’arrête, et le mail ne compte pas un raté', async () => {
+    const julie = await julieWaiting('Devis 2027', 'Contrat');
+    const fake = answering(draft());
+    const down: Llm = {
+      ...fake.llm,
+      // biome-ignore lint/correctness/useYield: le fournisseur ne rend rien
+      async *streamText(request) {
+        // L'appel est gardé, puis le fournisseur ne répond pas.
+        await fake.llm.streamText(request)[Symbol.asyncIterator]().next();
+        throw new LlmError(LLM_UNREACHABLE);
+      },
+    };
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    const now = new Date();
+
+    // Trois relèves pendant la panne : un seul appel tenté par passage, aucun compté sous le plafond du jour.
+    for (let pass = 0; pass < 3; pass += 1)
+      expect(await writeBrouillons(julie, { llm: down, now })).toBe(0);
+
+    expect(fake.calls).toHaveLength(3);
+    expect(await counted(julie)).toBe(0);
+    // Le fournisseur revenu : ses deux mails au passage suivant, sans attendre un jour.
+    expect(await writeBrouillons(julie, { llm: answering(draft()).llm, now })).toBe(2);
   });
 
   it('laisse remonter une erreur qui n’est pas du modèle', async () => {

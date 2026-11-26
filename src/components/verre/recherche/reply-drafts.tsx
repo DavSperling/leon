@@ -44,6 +44,8 @@ import {
 } from '@/lib/draft-questions';
 import { SOURCE_KIND_LABELS } from '@/lib/labels';
 import {
+  type Asking,
+  askingFor,
   CLOSED,
   confirmsDiscard,
   countsOf,
@@ -746,7 +748,7 @@ export function ReplyDrafts({
   const doneId = useId();
   const [open, setOpen] = useState(false);
   // La confirmation sur place : écarter un brouillon déposé, ou l'envoyer.
-  const [asking, setAsking] = useState<false | 'discard' | 'send'>(false);
+  const [asked, setAsking] = useState<Asking>(null);
   // « Ne plus me demander » : coché dans la confirmation, puis retenu (lu après le premier rendu, comme le thème).
   const [dontAsk, setDontAsk] = useState(false);
   const [skipSend, setSkipSend] = useState(false);
@@ -768,6 +770,7 @@ export function ReplyDrafts({
   const mails = panelMails(demandes, prets, panel.done, panel.order);
   const index = shownIndex(mails, panel.at);
   const shown = mails[index];
+  const asking = askingFor(asked, shown);
   const counts = countsOf(mails);
   const question = shown && sendQuestion(shown);
 
@@ -787,6 +790,13 @@ export function ReplyDrafts({
     return () => clearInterval(timer);
   }, [pending, working, router]);
 
+  // La carte reste sur le mail qu'elle montre : l'Accueil relu peut ranger devant lui un mail qui arrive, qui ne doit
+  // pas prendre sa place sous le clic.
+  const shownId = shown?.id;
+  useEffect(() => {
+    if (shownId && shownId !== panel.at) dispatch({ type: 'show', id: shownId });
+  }, [shownId, panel.at]);
+
   const target = shown?.key ?? doneId;
   useEffect(() => {
     if (!working && (open || acted)) document.getElementById(target)?.focus();
@@ -794,6 +804,7 @@ export function ReplyDrafts({
 
   const show = (at: number) => {
     setFailed(false);
+    setAsking(null);
     dispatch({ type: 'show', id: mails[at]?.id ?? '' });
   };
   // Un geste qui clôt le mail montré. Réussi, `after` dit ce qui en reste (la ligne où Leon écrit) ou rien, et le
@@ -810,11 +821,11 @@ export function ReplyDrafts({
       setFailed(false);
       const result = await call().catch((): Result => ({ error: 'echec' }));
       // Le fil a bougé depuis : rien n'est parti, la question se referme et le mail dit pourquoi.
-      if ('error' in result && result.error === 'bouge') setAsking(false);
+      if ('error' in result && result.error === 'bouge') setAsking(null);
       if ('error' in result && result.error !== 'introuvable')
         return setFailed(result.error === 'bouge' ? 'bouge' : true);
       if ('error' in result) toast.error(goneWord);
-      setAsking(false);
+      setAsking(null);
       setActed(true);
       setReading(null);
       dispatch({ type: 'close', mails, key: mail.key, id: 'ok' in result ? after(result) : null });
@@ -908,13 +919,13 @@ export function ReplyDrafts({
     onDiscard: () => {
       if (!confirmsDiscard(mail)) return discard(mail);
       if (!open) openPanel(mail);
-      setAsking('discard');
+      setAsking({ type: 'discard', key: mail.key });
     },
     onSendDraft: () => {
       if (skipSend && !sendAlwaysAsks(mail)) return send(mail);
       setDontAsk(false);
       if (!open) openPanel(mail);
-      setAsking('send');
+      setAsking({ type: 'send', key: mail.key });
     },
     onRefresh: () => router.refresh(),
   });
@@ -1002,6 +1013,8 @@ export function ReplyDrafts({
       {shown && !open && (
         <article className="relative z-10 mt-4 rounded-card border border-line bg-sheet p-7 shadow-lift max-sm:p-5">
           <MailView
+            // un autre mail : ses indications en cours et l'étape de ses questions repartent de zéro
+            key={shown.key}
             mail={shown}
             max={max}
             failed={failed}
@@ -1095,7 +1108,7 @@ export function ReplyDrafts({
         open={open}
         onOpenChange={(next) => {
           if (working) return;
-          setAsking(false);
+          setAsking(null);
           setOpen(next);
         }}
         wide
@@ -1119,7 +1132,7 @@ export function ReplyDrafts({
                 busy: discarding,
                 onYes: () => discard(shown),
                 onNo: () => {
-                  setAsking(false);
+                  setAsking(null);
                   // « Garder » : le focus revient à « Écarter », qui avait demandé
                   document.getElementById(`${shown.key}-ecarter`)?.focus();
                 },
@@ -1161,7 +1174,7 @@ export function ReplyDrafts({
                     send(shown);
                   },
                   onNo: () => {
-                    setAsking(false);
+                    setAsking(null);
                     document.getElementById(`${shown.key}-envoyer`)?.focus();
                   },
                 }

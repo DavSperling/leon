@@ -487,7 +487,8 @@
     "requestReply": "Request the answer",
     "privacyHint": "Leon only reads what you have permission to see.",
     "messages": "Discussion messages",
-    "tooMany": "Leon is already answering two of your questions. Wait for one answer to finish, then try again."
+    "tooMany": "Leon is already answering two of your questions. Wait for one answer to finish, then try again.",
+    "dailyCap": "You have reached today’s number of questions: the question was not sent. You can ask it again tomorrow; search still works."
   },
   "discussionView": {
     "sourceLabel": "Source {number}: {title}",

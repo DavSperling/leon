@@ -8,6 +8,7 @@ import { createInvitationLink, setMemberPlacement, setNotesRefused } from '@/ser
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
 import {
   getSession,
+  hasPassword,
   requireUserContext,
   signedInRecently,
   signOutCurrentUser,
@@ -48,6 +49,7 @@ vi.mock('@/server/auth/session', () => ({
   requireUserContext: vi.fn(),
   getSession: vi.fn(),
   signedInRecently: vi.fn(),
+  hasPassword: vi.fn(),
   requestHeaders: vi.fn(async () => new Headers()),
   signOutCurrentUser: vi.fn(),
 }));
@@ -120,6 +122,7 @@ beforeEach(() => {
     user: { email: 'amos@example.com', twoFactorEnabled: false },
   } as never);
   vi.mocked(authAttemptAllowed).mockResolvedValue(true);
+  vi.mocked(hasPassword).mockResolvedValue(true);
   // clearAllMocks garde les refus programmés par un test précédent.
   vi.mocked(auth.api.verifyPassword).mockResolvedValue({ status: true });
   vi.mocked(auth.api.verifyTOTP).mockResolvedValue(undefined as never);
@@ -588,6 +591,16 @@ describe.each([
       user: { email: 'amos@example.com', twoFactorEnabled: true },
     } as never);
 
+  it('supprime un compte sans mot de passe connecté depuis moins d’une heure, sans demander de mot de passe', async () => {
+    vi.mocked(hasPassword).mockResolvedValue(false);
+    vi.mocked(signedInRecently).mockResolvedValue(true);
+
+    await expect(run({ password: '' })).rejects.toThrow(`NEXT_REDIRECT ${redirectTo}`);
+
+    expect(auth.api.verifyPassword).not.toHaveBeenCalled();
+    expect(deletion()).toHaveBeenCalledWith(...callArgs);
+  });
+
   it.each([
     [
       'un mot mal tapé',
@@ -618,6 +631,16 @@ describe.each([
         return run();
       },
       fr.security.tooManyAttempts,
+    ],
+    // Audit du 26/11, n° 6 : un compte Google, Microsoft ou SSO n'a pas de mot de passe à donner.
+    [
+      'un compte sans mot de passe connecté depuis plus d’une heure',
+      () => {
+        vi.mocked(hasPassword).mockResolvedValue(false);
+        vi.mocked(signedInRecently).mockResolvedValue(false);
+        return run({ password: '' });
+      },
+      fr.deleteAccount.reconnect,
     ],
   ])('refuse %s, sans rien supprimer', async (_label, attempt, error) => {
     await expect(attempt()).resolves.toEqual({ error });

@@ -1121,6 +1121,8 @@
     "disabledTitle": "Two-factor authentication is off"
   },
   "deleteAccount": {
+    "noPassword": "You sign in without a password (Google, Microsoft or your company’s SSO): to confirm, your last sign-in must be less than an hour old.",
+    "reconnect": "Your last sign-in was more than an hour ago. Sign out, sign in again, then start the deletion again.",
     "deleting": "Deleting…",
     "word": "DELETE",
     "wrongWord": "Type the word “{word}” exactly to confirm.",

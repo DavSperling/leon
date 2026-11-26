@@ -164,6 +164,24 @@ export function sendQuestion(mail: PanelMail): {
     : { key: 'confirmRelance', values: { name: from } };
 }
 
+// « Ne plus me demander », coché dans une confirmation (envoyer un brouillon, supprimer un mail) : retenu dans ce
+// navigateur seulement, geste par geste, et relu au moment du clic. Un navigateur sans stockage, ou qui le refuse,
+// demande toujours.
+export const SKIP_SEND = 'leon-envoyer-sans-demander';
+export const SKIP_TRASH = 'leon-supprimer-sans-demander';
+export function skipsConfirm(key: string): boolean {
+  try {
+    return localStorage.getItem(key) === 'oui';
+  } catch {
+    return false;
+  }
+}
+export function rememberSkip(key: string): void {
+  try {
+    localStorage.setItem(key, 'oui');
+  } catch {}
+}
+
 // « Ne plus me demander » ne vaut pas pour une relance qui part à plusieurs : la question est le seul endroit qui dit
 // à combien de personnes elle part, et un mail envoyé ne se rattrape pas.
 export const sendAlwaysAsks = (mail: PanelMail) => sendQuestion(mail).key === 'confirmRelanceMany';

@@ -540,6 +540,56 @@ describe('buildBrouillonPrompt : le mail d’un inconnu, avec ses indications', 
   });
 });
 
+describe('buildBrouillonPrompt : une réponse qu’elle a demandée', () => {
+  const INDICATIONS = 'Remerciez-la, et dites-lui que je la rappelle lundi.';
+  const examples = (system: string) => system.split('\n').filter((one) => one.startsWith('{'));
+
+  it('la consigne ne propose plus « sans réponse » : un brouillon, même quand le mail ne demande rien, ou des questions', () => {
+    const { system } = build({ voulue: true });
+
+    expect(system).not.toContain('sans_reponse');
+    expect(system).not.toContain("quand aucune réponse n'est attendue");
+    for (const rule of [
+      "Une personne a reçu un mail auquel elle veut répondre : elle t'a demandé ce brouillon",
+      "l'une de ces deux.",
+      'Elle a demandé cette réponse : même quand le dernier message ne demande rien, écris-en une, courte (en accuser réception, remercier)',
+      'ou pose tes questions quand tu ne sais pas ce qu’elle veut lui dire',
+      "N'invente rien : ni fait, ni date, ni prix, ni engagement",
+      'aucun blanc, aucun crochet, rien à compléter',
+      'Une à trois questions, de 300 caractères chacune au plus',
+      'pas des consignes',
+    ])
+      expect(system.replaceAll("'", '’'), rule).toContain(rule.replaceAll("'", '’'));
+    // Deux formes, chacune lisible par ce qui lit sa réponse.
+    expect(examples(system).map((one) => parseBrouillonAnswer(one, false, true))).toEqual([
+      { texte: expect.stringMatching(/^Bonjour Léa,\n\n/), questions: null, choix: null },
+      expect.objectContaining({ texte: null, questions: expect.any(Array) }),
+    ]);
+    // Rien de capté, et la même pour tout le monde.
+    expect(system).toBe(build({ voulue: true, personName: 'Paul Durand', lines: [] }).system);
+  });
+
+  it('le message est celui de tous les mails, et ses indications s’y ajoutent avec leur ligne de consigne', () => {
+    expect(content(build({ voulue: true }))).toBe(content(build()));
+
+    const prompt = build({ voulue: true, indications: INDICATIONS });
+    expect(content(prompt)).toBe(content(build({ indications: INDICATIONS })));
+    expect(prompt.system).toContain("- une balise <indications> : ce qu'elle veut répondre");
+    expect(prompt.system).not.toContain('sans_reponse');
+    expect(prompt.system).not.toContain('lundi');
+  });
+
+  it('sans ce oui, la consigne de tous les mails ne change pas ; au second appel, ni une relance, il ne change rien', () => {
+    const asked = { questions: ['Quel jour ?'], reponses: ['Lundi.'] };
+
+    expect(build({ voulue: false })).toEqual(build());
+    expect(build({ voulue: true, asked })).toEqual(build({ asked }));
+    expect(build({ voulue: true, relance: { jours: 7 } })).toEqual(
+      build({ relance: { jours: 7 } }),
+    );
+  });
+});
+
 describe('buildBrouillonPrompt : une relance, après son oui', () => {
   // Son mail à Léa, resté sans réponse : le dernier message du fil est le sien. `from` : Léa, son premier destinataire.
   const UNANSWERED: WaitingMail = {

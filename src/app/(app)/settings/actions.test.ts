@@ -26,6 +26,7 @@ import { requestBrouillons } from '@/server/portrait/brouillons-queue';
 import { correctFields, retireLine } from '@/server/portrait/fiche';
 import { answerPreference } from '@/server/portrait/preferences';
 import { answerProposal } from '@/server/portrait/propositions';
+import { prepareReply } from '@/server/portrait/sans-reponse';
 import { requestFicheBuild } from '@/server/portrait/screen';
 import fr from '../../../../messages/fr.json';
 import {
@@ -44,6 +45,7 @@ import {
   disableTotpAction,
   discardBrouillonAction,
   enableTotpAction,
+  prepareReplyAction,
   readMemoryVersionAction,
   regenerateBackupCodesAction,
   restoreMemoryVersionAction,
@@ -125,6 +127,7 @@ vi.mock('@/server/portrait/brouillons-queue', () => ({ requestBrouillons: vi.fn(
 vi.mock('@/server/portrait/fiche', () => ({ correctFields: vi.fn(), retireLine: vi.fn() }));
 vi.mock('@/server/portrait/preferences', () => ({ answerPreference: vi.fn() }));
 vi.mock('@/server/portrait/propositions', () => ({ answerProposal: vi.fn() }));
+vi.mock('@/server/portrait/sans-reponse', () => ({ prepareReply: vi.fn() }));
 vi.mock('@/server/portrait/screen', () => ({ requestFicheBuild: vi.fn() }));
 vi.mock('@/server/connectors/pipedream', () => ({ forgetPipedreamUser: vi.fn() }));
 vi.mock('@/server/email/account-deleted', () => ({
@@ -1385,6 +1388,9 @@ describe('les actions de l’onglet « Ma fiche »', () => {
     await expect(
       answerRelanceAction({ sourceId: LIGNE, message: 'message:1', oui: true, indications: '' }),
     ).rejects.toThrow('NEXT_REDIRECT /sign-in');
+    await expect(prepareReplyAction({ id: LIGNE, indications: '' })).rejects.toThrow(
+      'NEXT_REDIRECT /sign-in',
+    );
 
     expect(requestFicheBuild).not.toHaveBeenCalled();
     expect(correctFields).not.toHaveBeenCalled();
@@ -1395,6 +1401,7 @@ describe('les actions de l’onglet « Ma fiche »', () => {
     expect(trashMail).not.toHaveBeenCalled();
     expect(answerPreference).not.toHaveBeenCalled();
     expect(answerRelance).not.toHaveBeenCalled();
+    expect(prepareReply).not.toHaveBeenCalled();
     expect(requestBrouillons).not.toHaveBeenCalled();
   });
 
@@ -1509,6 +1516,60 @@ describe('les actions de l’onglet « Ma fiche »', () => {
   ])('sa réponse à une relance %j : invalide, sans rien lire ni écrire', async (input) => {
     await expect(answerRelanceAction(input as never)).resolves.toEqual({ error: 'invalide' });
     expect(answerRelance).not.toHaveBeenCalled();
+    expect(requestBrouillons).not.toHaveBeenCalled();
+  });
+
+  const OUI = '0b9f2c7e-2d4c-4f6a-9a51-6a1e2f3b4c62';
+
+  it('« Préparer une réponse » à un mail jugé sans réponse : son oui gardé pour la personne connectée, avec ses indications nettoyées, un passage demandé, et l’accueil relu', async () => {
+    vi.mocked(prepareReply).mockResolvedValue(OUI);
+
+    await expect(
+      prepareReplyAction({ id: LIGNE, indications: '  Remerciez-la,\u0000 à lundi.\n' }),
+    ).resolves.toEqual({ ok: true, id: OUI });
+    await expect(prepareReplyAction({ id: LIGNE, indications: '' })).resolves.toEqual({
+      ok: true,
+      id: OUI,
+    });
+
+    expect(vi.mocked(prepareReply).mock.calls).toEqual([
+      [ctx, LIGNE, 'Remerciez-la, à lundi.'],
+      [ctx, LIGNE, ''],
+    ]);
+    expect(vi.mocked(requestBrouillons).mock.calls).toEqual([[ctx], [ctx]]);
+    expect(vi.mocked(revalidatePath).mock.calls).toEqual([['/'], ['/']]);
+  });
+
+  it('un mail qui n’est plus sans réponse est introuvable ; une panne est un échec, journalisé sans ses indications', async () => {
+    // Chacune de ces gardes est tenue par prepareReply, sous ses droits (sans-reponse.db.test.ts) : elle rend null.
+    vi.mocked(prepareReply).mockResolvedValue(null);
+    await expect(prepareReplyAction({ id: LIGNE, indications: '' })).resolves.toEqual({
+      error: 'introuvable',
+    });
+    const failure = new Error('Failed query: insert into "brouillons" … params: Remerciez-la.');
+    vi.mocked(prepareReply).mockRejectedValue(failure);
+    await expect(prepareReplyAction({ id: LIGNE, indications: 'Remerciez-la.' })).resolves.toEqual({
+      error: 'echec',
+    });
+
+    expect(logError).toHaveBeenCalledExactlyOnceWith('brouillons.preparer', failure, {
+      userId: ctx.userId,
+    });
+    expect(requestBrouillons).not.toHaveBeenCalled();
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [{ id: 'pas-un-id', indications: '' }],
+    [{ id: LIGNE, indications: 'x'.repeat(1001) }],
+    [{ id: LIGNE, indications: null }],
+    [{ id: LIGNE }],
+    [{ indications: '' }],
+    [LIGNE],
+    [null],
+  ])('« Préparer une réponse » %j : invalide, sans rien lire ni écrire', async (input) => {
+    await expect(prepareReplyAction(input as never)).resolves.toEqual({ error: 'invalide' });
+    expect(prepareReply).not.toHaveBeenCalled();
     expect(requestBrouillons).not.toHaveBeenCalled();
   });
 });

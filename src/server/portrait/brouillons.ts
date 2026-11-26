@@ -49,7 +49,9 @@ import {
 // entier, sur cette ligne.
 // Le mail d'un inconnu se lit comme celui d'un correspondant, dès que la relève le dit « pas automatique »
 // (waiting-mails.ts) : c'est le modèle qui juge si une réponse est attendue. Une ligne d'avant, son « oui » au mail d'un
-// inconnu avec ses indications (0084), se traite toujours, par le chemin d'une relance.
+// inconnu avec ses indications (0084), se traite toujours, par le chemin d'une relance. Un mail jugé sans réponse à
+// donner y revient quand elle demande quand même une réponse (sans-reponse.ts) : sa ligne porte alors ses indications,
+// et « sans réponse » ne se lit plus.
 // Avant ce premier appel, un tri (sortMail, tri-prompt.ts) : un petit modèle lit le fil seul et dit si le mail attend
 // une réponse. Sinon, le mail garde la même ligne qu'un « sans réponse » du premier appel, qui n'a pas lieu. Le tri ne
 // passe que sur un mail reçu que rien n'a encore lu, jamais sur ce qu'elle a demandé (ses réponses, son oui).
@@ -179,6 +181,9 @@ export async function writeBrouillons(
       owed?.questions && owed.reponses
         ? { questions: owed.questions, reponses: owed.reponses }
         : undefined;
+    // Son oui à ce mail (« Préparer une réponse », sans-reponse.ts ; avant, au mail d'un inconnu) : elle a demandé la
+    // réponse, la consigne ne propose plus « sans réponse », qui ne se lit plus.
+    const voulue = owed?.sorte === 'reponse' && owed.indications !== null;
     if (!(await reserve(ctx))) return written;
     // Un mail reçu que rien n'a encore lu passe d'abord par le tri ; ce qu'elle a demandé s'écrit sans lui.
     const expected = owed ? true : await sortMail(ctx, deps.llm, person?.name ?? '', mail);
@@ -201,6 +206,7 @@ export async function writeBrouillons(
         asked,
         indications: owed?.indications ?? undefined,
         relance,
+        voulue,
       });
       let answer = '';
       try {
@@ -224,7 +230,7 @@ export async function writeBrouillons(
         miss(mailKey(ctx, mail), now);
         continue;
       }
-      read = parseBrouillonAnswer(answer, asked !== undefined, relance !== undefined);
+      read = parseBrouillonAnswer(answer, asked !== undefined, relance !== undefined || voulue);
       // Des identifiants et des nombres seulement, jamais de texte. `brouillon` : écrit (true), pas de brouillon
       // (false : des questions à lui poser, ou aucune réponse à donner), ou réponse illisible (null). `questions` : leur
       // nombre.

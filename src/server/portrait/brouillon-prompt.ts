@@ -21,8 +21,9 @@ import type { WaitingMail } from './waiting-mails';
 // donner, que Leon lui pose une par une (brouillons.ts).
 // Le second appel, quand elle a répondu : la même matière, plus les questions et ses réponses, et il ne rend qu'un
 // brouillon, écrit en entier.
-// Pour le mail d'un inconnu, après son « oui », les deux appels reçoivent aussi ses indications quand elle en a donné,
-// et la consigne une ligne de plus qui les dit (INDICATIONS).
+// Pour une réponse qu'elle a demandée (« Préparer une réponse » à un mail jugé sans réponse à donner, sans-reponse.ts ;
+// avant, son « oui » au mail d'un inconnu), les deux appels reçoivent aussi ses indications quand elle en a donné, et
+// la consigne une ligne de plus qui les dit (INDICATIONS) ; le premier ne propose plus « sans réponse » (VOULUE).
 // Une relance (agent « Relances », après son « oui » à l'accueil) a ses deux consignes, à côté de celles-ci et faites des
 // mêmes morceaux : son dernier message est resté sans réponse depuis tant de jours, et elle a demandé une relance, qui
 // rappelle ce qu'elle attendait. Le premier appel n'y rend jamais « sans réponse » : elle l'a demandée. De même ses préférences d'écriture, tirées de ses
@@ -101,23 +102,30 @@ const questions = (mail: { de: string; le: string }) => `Les règles des questio
 - Adresse-toi directement à elle, dans la langue ${mail.de}.
 - Vouvoie-la toujours, dans les questions comme dans les choix, même quand ${mail.le} ou sa façon d'écrire tutoie : son registre ne vaut que pour le brouillon.`;
 
+// Ce que la consigne ne dit pas d'une réponse qu'elle a demandée, et ce qu'elle dit à la place : écrire quand même.
+const SANS_REPONSE = `
+Ou, quand aucune réponse n'est attendue (un simple remerciement, une information sans question, un message automatique) :
+{"sans_reponse": true}`;
+const VOULUE = `
+- Elle a demandé cette réponse : même quand le dernier message ne demande rien, écris-en une, courte (en accuser réception, remercier), ou pose tes questions quand tu ne sais pas ce qu'elle veut lui dire.`;
+
+// `voulue` : elle a demandé cette réponse. Sans cela, la consigne de tous les mails, inchangée.
 const system = (
   matiere: string,
-) => `Tu es Leon, la mémoire de l'entreprise. Une personne a reçu un mail qui attend sa réponse. Tu écris le brouillon de cette réponse, comme elle l'écrirait, ou tu lui poses d'abord les questions sans lesquelles tu ne peux pas l'écrire. Elle relira le brouillon, le corrigera et l'enverra elle-même : rien ne part sans elle.
+  voulue = false,
+) => `Tu es Leon, la mémoire de l'entreprise. Une personne a reçu un mail ${voulue ? "auquel elle veut répondre : elle t'a demandé ce brouillon" : 'qui attend sa réponse'}. Tu écris le brouillon de cette réponse, comme elle l'écrirait, ou tu lui poses d'abord les questions sans lesquelles tu ne peux pas l'écrire. Elle relira le brouillon, le corrigera et l'enverra elle-même : rien ne part sans elle.
 
 Le message contient, derrière une ligne de garde :
 ${matiere}.
 
-Réponds uniquement par une ligne JSON, sans aucun autre texte : l'une de ces trois.
+Réponds uniquement par une ligne JSON, sans aucun autre texte : l'une de ces ${voulue ? 'deux' : 'trois'}.
 Le brouillon, quand tu as tout ce qu'il faut pour l'écrire en entier :
 ${EXEMPLE}
 Ou tes questions à la personne, chacune avec ses choix de réponse, quand la réponse dépend d'une information ou d'une décision que tu n'as pas, ou quand le mail lui demande de s'engager (faire, accepter, promettre, fixer une date) :
-${QUESTIONS_EXEMPLE}
-Ou, quand aucune réponse n'est attendue (un simple remerciement, une information sans question, un message automatique) :
-{"sans_reponse": true}
+${QUESTIONS_EXEMPLE}${voulue ? '' : SANS_REPONSE}
 
 Les règles du brouillon :
-${COMME_ELLE}
+${COMME_ELLE}${voulue ? VOULUE : ''}
 - N'invente rien : ni fait, ni date, ni prix, ni engagement. Tu ne t'engages jamais à sa place : quand il faudrait le faire, ou qu'une information ou une décision te manque, n'écris pas de brouillon, pose tes questions.
 - Un brouillon est complet : aucun blanc, aucun crochet, rien à compléter.
 ${FORME}
@@ -263,7 +271,8 @@ export const threadLines = (mail: WaitingMail): string[] => [
 // `asked` : les questions de Leon et ses réponses, une par question, pour le second appel. `indications` : ce qu'elle
 // veut répondre au mail d'un inconnu, ou ajouter à une relance ; vides ou absentes, la consigne et le message sont
 // ceux de tous les mails. `relance` : une relance, et depuis combien de jours son dernier message attend une réponse ;
-// `mail.from` est alors le premier destinataire de son message, qui n'est pas elle.
+// `mail.from` est alors le premier destinataire de son message, qui n'est pas elle. `voulue` : elle a demandé cette
+// réponse ; ne change que la consigne du premier appel d'une réponse.
 export function buildBrouillonPrompt(input: {
   personName: string;
   mail: WaitingMail;
@@ -272,6 +281,7 @@ export function buildBrouillonPrompt(input: {
   asked?: { questions: string[]; reponses: string[] };
   indications?: string;
   relance?: { jours: number };
+  voulue?: boolean;
 }): { system: string; messages: ChatMessage[] } {
   const { mail, asked, indications, relance } = input;
   const style = dataAttributes(styleOf(input.lines, mail.from));
@@ -311,7 +321,7 @@ export function buildBrouillonPrompt(input: {
       ? (asked ? systemRelanceSuite : systemRelance)(matiere, relance.jours)
       : asked
         ? systemSuite(matiere)
-        : system(matiere),
+        : system(matiere, input.voulue),
     messages: [{ role: 'user', content }],
   };
 }
@@ -356,12 +366,12 @@ export type BrouillonAnswer = {
 // QUESTION_MAX_CHARS caractères, une question sans ses choix (l'ancienne forme, une liste de textes), moins de
 // CHOIX_MIN choix ou plus de CHOIX_MAX, un choix vide, de plus de CHOIX_MAX_CHARS caractères, donné deux fois, ou
 // interdit (CHOIX_INTERDITS). Rien ne s'écrira alors, et ce mail pourra être retenté. `asked` : le second appel, qui
-// ne rend qu'un brouillon ; de nouvelles questions ou « sans réponse » ne se lisent pas. `relance` : elle a demandé
-// cette relance, « sans réponse » ne se lit pas.
+// ne rend qu'un brouillon ; de nouvelles questions ou « sans réponse » ne se lisent pas. `demandee` : elle a demandé
+// cette relance, ou cette réponse : « sans réponse » ne se lit pas.
 export function parseBrouillonAnswer(
   answer: string,
   asked = false,
-  relance = false,
+  demandee = false,
 ): BrouillonAnswer | null {
   for (const json of jsonObjects(answer)) {
     if (FORMS.filter((form) => form in (json as object)).length !== 1) continue;
@@ -369,7 +379,7 @@ export function parseBrouillonAnswer(
     if (!line.success) continue;
     const texte = 'brouillon' in line.data ? line.data.brouillon : null;
     if (asked && texte === null) return null;
-    if (relance && 'sans_reponse' in line.data) return null;
+    if (demandee && 'sans_reponse' in line.data) return null;
     const questions = 'questions' in line.data ? line.data.questions : null;
     return {
       texte,

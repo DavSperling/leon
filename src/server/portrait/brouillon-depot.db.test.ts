@@ -1124,6 +1124,17 @@ describe('trashMail : le mail reçu part à la corbeille de Gmail', () => {
     expect(errors).not.toHaveBeenCalled();
   });
 
+  it('un mail jugé sans réponse à donner se supprime de même : sa ligne n’a ni brouillon ni question', async () => {
+    const [julie] = await team();
+    const { id } = await drafted(julie, COMPLET, { connectionId: await gmailOf(julie) });
+    await adminPool.query('update brouillons set texte = null where id = $1', [id]);
+    const fetchImpl = fakeFetch([TOKEN, trashRoute()]);
+
+    expect(await trashMail(julie, id, { fetchImpl })).toBe('supprime');
+
+    expect(target(fetchImpl.calls[1])).toBe(`${GMAIL}/messages/m-devis/trash`);
+  });
+
   it('jamais son propre mail : la ligne d’une relance n’a rien à supprimer', async () => {
     const [julie] = await team();
     const id = await relanced(

@@ -1133,7 +1133,7 @@ describe('writeBrouillons : le mail d’un inconnu, après son oui', () => {
     expect(calls).toHaveLength(1);
   });
 
-  it('son oui sans indication : la consigne et le message de tous les mails', async () => {
+  it('son oui sans indication : le message de tous les mails, et la consigne d’une réponse demandée, qui ne propose plus « sans réponse »', async () => {
     const julie = await julieWaiting('Devis 2027');
     vi.spyOn(console, 'info').mockImplementation(() => {});
     await saidYes(julie, await strangerMail(julie), '');
@@ -1142,7 +1142,10 @@ describe('writeBrouillons : le mail d’un inconnu, après son oui', () => {
     expect(await writeBrouillons(julie, { llm })).toBe(2);
 
     expect(subjectsOf(calls)).toEqual(['Partenariat', 'Devis 2027']);
-    expect(calls[0]?.system).toBe(calls[1]?.system);
+    expect(calls[0]?.system).toContain("elle t'a demandé ce brouillon");
+    expect(calls[0]?.system).not.toContain('sans_reponse');
+    // Le mail qui attend, lui, garde la consigne de tous les mails.
+    expect(calls[1]?.system).toContain('{"sans_reponse": true}');
     expect(calls[0]?.messages[0]?.content).not.toContain('<indications>');
   });
 
@@ -1186,25 +1189,27 @@ describe('writeBrouillons : le mail d’un inconnu, après son oui', () => {
     expect(await counted(julie)).toBe(2);
   });
 
-  it('« sans réponse » : la ligne se ferme, sans ses indications, et plus aucun appel ; « Non » n’en fait aucun', async () => {
+  it('« sans_reponse » se lit comme illisible, elle a demandé cette réponse : rien ne s’écrit, son oui reste, et le passage suivant retente ; « Non » ne fait aucun appel', async () => {
     const julie = await julieWaiting();
     vi.spyOn(console, 'info').mockImplementation(() => {});
     const oui = await saidYes(julie, await strangerMail(julie, 'Merci'), INDICATIONS);
     await saidYes(julie, await strangerMail(julie, 'Prospection'), null);
-    const first = answering(NONE);
+    const { llm, calls } = answering(NONE);
 
-    expect(await writeBrouillons(julie, { llm: first.llm })).toBe(0);
+    expect(await writeBrouillons(julie, { llm })).toBe(0);
+    expect(await writeBrouillons(julie, { llm })).toBe(0);
 
-    expect(subjectsOf(first.calls)).toEqual(['Merci']);
+    expect(subjectsOf(calls)).toEqual(['Merci', 'Merci']);
     expect((await stored(julie)).find((row) => row.id === oui)).toMatchObject({
       texte: null,
       questions: null,
-      indications: null,
+      indications: INDICATIONS,
     });
-    expect(await readShown(julie)).toEqual({ demandes: [], prets: [] });
-    const again = answering(draft());
-    expect(await writeBrouillons(julie, { llm: again.llm })).toBe(0);
-    expect(again.calls).toHaveLength(0);
+    // L'accueil dit toujours que Leon écrit.
+    expect(await readShown(julie)).toMatchObject({
+      demandes: [{ id: oui, repondue: true }],
+      prets: [],
+    });
   });
 
   it('le plafond du jour et la limite de cinq appels par passage valent pour lui, qui passe avant les mails qui attendent', async () => {

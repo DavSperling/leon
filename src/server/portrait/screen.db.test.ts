@@ -13,7 +13,12 @@ import { answerRelance, HOME_MAX } from './brouillons';
 import { type FicheLine, readFiche, retireLine } from './fiche';
 import { answerProposal } from './propositions';
 import { getFicheBoss } from './queue';
-import { readAgentsScreen, readFicheScreen, readHomeBrouillons } from './screen';
+import {
+  readAgentsScreen,
+  readFicheScreen,
+  readHomeBrouillons,
+  readHomeSansReponse,
+} from './screen';
 import { readUnansweredMails } from './unanswered-mails';
 
 // Les fils de courrier de ses mails sans réponse passent par l'ingestion, qui met leur indexation en file : seule cette mise
@@ -899,6 +904,91 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
       });
       expect((await titles(julie)).demandes).toEqual(['Devis', 'Sans réponse']);
     });
+  });
+});
+
+describe('readHomeSansReponse : ses mails que Leon a jugés sans réponse à donner, pour l’accueil', () => {
+  it('l’accueil reçoit, pour chacun, sa ligne, le correspondant, la date du mail, le fil lié à son outil et le début du mail : rien d’autre ; le reste de l’accueil ne change pas', async () => {
+    const [julie, paul] = await people();
+    await answered(julie);
+    await answered(paul);
+    const older = await seedBrouillon(julie, 'Merci', 30, { texte: null });
+    const recent = await seedBrouillon(julie, 'Bon de livraison', 2, { texte: null });
+    // Ce qui n'en est pas : un brouillon prêt, des questions, une ligne écartée, le mail d'un collègue.
+    await seedBrouillon(julie, 'Prêt', 1);
+    await seedBrouillon(julie, 'Demande', 1, { texte: null, questions: ['Mardi ?'] });
+    await seedBrouillon(julie, 'Écartée', 1, { texte: null, ecarte: true });
+    await seedBrouillon(paul, 'Fil de Paul', 1, { texte: null });
+
+    const quiet = await readHomeSansReponse(julie);
+
+    expect(quiet).toEqual([
+      {
+        id: expect.any(String),
+        from: 'Léa Roy',
+        receivedAt: recent.receivedAt,
+        relance: false,
+        source: {
+          title: 'Bon de livraison',
+          url: 'https://mail.google.test/2',
+          kind: 'gmail',
+          mailText: 'Bonjour Julie, et le devis ?',
+          extrait: 'Bonjour Julie, et le devis ?',
+        },
+      },
+      {
+        id: expect.any(String),
+        from: 'Léa Roy',
+        receivedAt: older.receivedAt,
+        relance: false,
+        source: {
+          title: 'Merci',
+          url: 'https://mail.google.test/30',
+          kind: 'gmail',
+          mailText: 'Bonjour Julie, et le devis ?',
+          extrait: 'Bonjour Julie, et le devis ?',
+        },
+      },
+    ]);
+    expect(JSON.stringify(quiet)).not.toMatch(/message:|lea@client\.test/);
+    expect(JSON.stringify(quiet)).not.toContain(recent.sourceId);
+    expect((await readHomeSansReponse(paul)).map((one) => one.source.title)).toEqual([
+      'Fil de Paul',
+    ]);
+    // La pile « À vous » ne les reçoit pas.
+    const home = await readHomeBrouillons(julie);
+    expect(home.prets.map((one) => one.source.title)).toEqual(['Prêt']);
+    expect(home.demandes.map((one) => one.source.title)).toEqual(['Demande']);
+  });
+
+  it('sans rien, rien ; sans son oui à « Brouillons de réponse », ou quand il ne lui est plus proposé, rien non plus ; un nouveau oui les remontre', async () => {
+    const [julie, paul] = await people();
+    await answered(julie, false);
+    await answered(paul);
+    await seedBrouillon(julie, 'Merci', 2, { texte: null });
+
+    expect(await readHomeSansReponse(paul)).toEqual([]);
+    expect(await readHomeSansReponse(julie)).toEqual([]);
+
+    await adminPool.query('update reponses_agent set oui = true where user_id = $1', [
+      julie.userId,
+    ]);
+    expect((await readHomeSansReponse(julie)).map((one) => one.source.title)).toEqual(['Merci']);
+
+    // Sa boîte débranchée : l'agent ne lui est plus proposé.
+    await adminPool.query('delete from connections where created_by = $1', [julie.userId]);
+    expect(await readHomeSansReponse(julie)).toEqual([]);
+  });
+
+  it('un fil qui a bougé ne se montre plus : elle a répondu', async () => {
+    const [julie] = await people();
+    await answered(julie);
+    const { sourceId } = await seedBrouillon(julie, 'Merci', 2, { texte: null });
+    expect(await readHomeSansReponse(julie)).toHaveLength(1);
+
+    await reply(sourceId);
+
+    expect(await readHomeSansReponse(julie)).toEqual([]);
   });
 });
 

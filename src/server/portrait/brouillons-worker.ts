@@ -12,8 +12,8 @@ import { FicheJobSchema } from './queue';
 // aux questions de Leon ou son oui à une relance sont là, ou elle a envoyé sa réponse à un brouillon de Leon
 // (preferences.ts), le plafond du jour n'est pas atteint.
 
-// Chaque passage fait au plus cinq appels au modèle de 90 secondes, l'un après l'autre, chacun suivi au plus d'un dépôt
-// dans Gmail (deux requêtes, brouillon-depot.ts).
+// Chaque passage fait au plus cinq appels au modèle de 90 secondes, l'un après l'autre, chacun précédé au plus d'un tri
+// de 30 secondes (brouillons.ts, sortMail) et suivi au plus d'un dépôt dans Gmail (deux requêtes, brouillon-depot.ts).
 const BROUILLONS_CONCURRENCY = 2;
 
 export async function processBrouillonsJob(

@@ -97,6 +97,9 @@ export function modelSpec(model: string): ModelSpec | undefined {
 //   pas été mesuré au banc. L'appel n'a lieu qu'une fois par personne.
 // - brouillon (le brouillon de réponse à un mail qui attend, portrait/brouillons.ts) : comme la fiche, Sonnet à
 //   l'effort « medium », sans mesure au banc. Un appel par mail, sous un plafond par personne et par jour.
+// - tri (un mail attend-il une réponse, portrait/tri-prompt.ts) : Haiku à l'effort « low », sans mesure au banc. Il
+//   ne rend qu'un oui ou un non avant le brouillon, pour ne pas payer Sonnet sur un mail qui n'attend rien : une
+//   vingtaine de fois moins cher par jeton (table ci-dessus). Dans le doute il dit oui, et Sonnet relit.
 // Opus 5.5 n'a été mesuré que sur la discussion et le point. Le plafond par jour du point (BRIEFING_DAILY_CAP) et de l'agenda borne la dépense.
 // C'est aussi le repli d'une étape réglée sur un modèle d'OpenRouter, quand l'appel échoue ou que la clé manque.
 const ANTHROPIC_MODEL_BY_STEP = {
@@ -108,6 +111,7 @@ const ANTHROPIC_MODEL_BY_STEP = {
   agenda: 'claude-haiku-5-5',
   fiche: 'claude-sonnet-5-5',
   brouillon: 'claude-sonnet-5-5',
+  tri: 'claude-haiku-5-5',
 } as const satisfies Record<LlmStep, AnthropicModel>;
 
 // Le modèle préféré de chaque étape : aujourd'hui Claude partout. Du 18 au 19/11/2026, c'étaient les modèles
@@ -127,6 +131,7 @@ export const SETTING_BY_STEP = {
   agenda: 'LEON_MODEL_AGENDA',
   fiche: 'LEON_MODEL_FICHE',
   brouillon: 'LEON_MODEL_BROUILLON',
+  tri: 'LEON_MODEL_TRI',
 } as const satisfies Record<LlmStep, keyof Env>;
 
 // L'effort est fixé à chaque étape (son défaut varie selon le modèle) : une réponse de 120 mots n'a pas besoin de
@@ -140,6 +145,7 @@ export const EFFORT_BY_STEP = {
   agenda: 'low',
   fiche: 'medium',
   brouillon: 'medium',
+  tri: 'low',
 } as const satisfies Record<LlmStep, 'low' | 'medium' | 'high'>;
 
 // La variable de l'étape d'abord (env.ts refuse au démarrage un modèle d'OpenRouter sans sa clé), puis le modèle

@@ -13,6 +13,7 @@ import type { AgentId } from './agents';
 import { depositBrouillon, withdrawRelances } from './brouillon-depot';
 import {
   BROUILLON_MAX_CHARS,
+  type BrouillonAnswer,
   buildBrouillonPrompt,
   parseBrouillonAnswer,
 } from './brouillon-prompt';
@@ -29,6 +30,7 @@ import {
 } from './preferences';
 import { readProposals } from './propositions';
 import { MESSAGE, ownAddresses, readSentMails, SENT_MAIL_DAYS } from './sent-mails';
+import { buildTriPrompt, parseTriAnswer } from './tri-prompt';
 import { recipientName, relanceRecipients, unansweredMails } from './unanswered-mails';
 import {
   ANSWERED_DAYS,
@@ -48,6 +50,9 @@ import {
 // Le mail d'un inconnu se lit comme celui d'un correspondant, dès que la relève le dit « pas automatique »
 // (waiting-mails.ts) : c'est le modèle qui juge si une réponse est attendue. Une ligne d'avant, son « oui » au mail d'un
 // inconnu avec ses indications (0084), se traite toujours, par le chemin d'une relance.
+// Avant ce premier appel, un tri (sortMail, tri-prompt.ts) : un petit modèle lit le fil seul et dit si le mail attend
+// une réponse. Sinon, le mail garde la même ligne qu'un « sans réponse » du premier appel, qui n'a pas lieu. Le tri ne
+// passe que sur un mail reçu que rien n'a encore lu, jamais sur ce qu'elle a demandé (ses réponses, son oui).
 // L'agent « Relances » demande d'abord, dans le même passage : l'accueil lui demande, pour chacun de ses mails restés
 // sans réponse (unanswered-mails.ts), si elle veut une relance (answerRelance) ; son « oui », avec ses indications, fait
 // faire le premier appel au passage suivant, avec la consigne d'une relance (brouillon-prompt.ts), sur une ligne de
@@ -62,9 +67,11 @@ import {
 // l'appel qui tire une préférence d'une retouche (learnFrom), plus court. Un
 // appel lit environ 4 000 jetons (la consigne, quatre messages et trois exemples coupés) et en écrit un millier :
 // 2 centimes avec Sonnet, donc 40 centimes par personne et par jour au plus (estimé d'après le tarif de models.ts, pas
-// mesuré). Le dépôt dans Gmail suit le même plafond : un brouillon écrit, un dépôt au plus, de deux requêtes, donc
-// 40 crédits Pipedream par personne et par jour au plus ; et une relance déposée en coûte un de plus si son fil bouge
-// avant qu'elle l'envoie (withdrawRelances).
+// mesuré). Le tri qui précède le premier appel lit le fil seul, 2 000 jetons au plus, et écrit une ligne : moins de
+// 0,05 centime avec Haiku (estimé de même). Il ne compte pas sous le plafond, qui reste celui des appels du brouillon :
+// l'appel réservé est rendu quand le tri dit « sans réponse ». Le dépôt dans Gmail suit le même plafond : un brouillon
+// écrit, un dépôt au plus, de deux requêtes, donc 40 crédits Pipedream par personne et par jour au plus ; et une relance
+// déposée en coûte un de plus si son fil bouge avant qu'elle l'envoie (withdrawRelances).
 export const BROUILLONS_DAILY_CAP = 20;
 const DAY_MS = 24 * 60 * 60 * 1000;
 // Borne le texte ET la réflexion du modèle (llm.ts) : un brouillon de 6 000 caractères en prend environ 2 000, le reste
@@ -73,6 +80,12 @@ const BROUILLON_MAX_TOKENS = 8000;
 const BROUILLON_TIMEOUT_MS = 90_000;
 // La préférence tirée d'une retouche, une phrase : la réponse entière, réflexion comprise, est bornée ici.
 const PREFERENCE_MAX_TOKENS = 4000;
+// Le verdict du tri, une ligne de quinze jetons : le reste est la marge de la réflexion du petit modèle, à l'effort
+// « low ».
+const TRI_MAX_TOKENS = 2000;
+const TRI_TIMEOUT_MS = 30_000;
+// Ce que rend le premier appel pour un mail sans réponse à donner : la ligne que le tri écrit à sa place.
+const SANS_REPONSE: BrouillonAnswer = { texte: null, questions: null, choix: null };
 
 // Un appel raté (réponse illisible, refus, coupure) se retente au passage suivant, une fois. Après deux ratés de
 // suite, le mail (ou la retouche) attend RETRY_MS avant chaque nouvel essai : un passage suit chaque relève de sa
@@ -103,8 +116,9 @@ function restingMails(ctx: TenantContext, now: Date): string[] {
 // fait que défaire ce que Leon a écrit, quel que soit l'agent auquel elle dit oui), et ses réponses envoyées aux
 // brouillons de Leon se comparent à eux (preferences.ts) ; puis les brouillons qu'elle attend (elle a répondu aux
 // questions de Leon, le second appel ; ou dit « Oui » à une relance, son premier appel, avec ses indications),
-// puis ses mails qui attendent (le premier appel), puis les leçons de ses retouches (learnFrom), cinq appels au modèle
-// au plus en tout (WAITING_MAX), un par mail ou par retouche. Rend le nombre de brouillons écrits. Ne fait rien pour un
+// puis ses mails qui attendent (le tri, puis le premier appel de ceux qui attendent une réponse), puis les leçons de
+// ses retouches (learnFrom), cinq mails ou retouches au plus en tout (WAITING_MAX), un appel du brouillon chacun au
+// plus, précédé d'un tri pour un mail reçu. Rend le nombre de brouillons écrits. Ne fait rien pour un
 // compte supprimé. Chaque agent en service ne travaille que pour qui lui a dit « oui », à lui, tant qu'il lui est
 // proposé (sa boîte branchée) : ses mails qui attendent et ses retouches pour « Brouillons de réponse », ses relances
 // pour « Relances » ; le même passage, sous le même plafond, pour les deux. Passé le plafond du jour, il s'arrête.
@@ -166,56 +180,71 @@ export async function writeBrouillons(
         ? { questions: owed.questions, reponses: owed.reponses }
         : undefined;
     if (!(await reserve(ctx))) return written;
-    const prompt = buildBrouillonPrompt({
-      personName: person?.name ?? '',
-      mail,
-      lines,
-      // Une relance ne prend pas ses exemples dans son fil : son mail y est déjà, à relancer, pas à imiter.
-      sent: relance ? sent.filter((one) => one.sourceId !== mail.sourceId) : sent,
-      asked,
-      indications: owed?.indications ?? undefined,
-      relance,
-    });
-    let answer = '';
-    try {
-      for await (const delta of deps.llm.streamText({
-        step: 'brouillon',
-        system: prompt.system,
-        messages: prompt.messages,
-        maxTokens: BROUILLON_MAX_TOKENS,
-        signal: AbortSignal.timeout(BROUILLON_TIMEOUT_MS),
-      })) {
-        answer += delta;
-      }
-    } catch (error) {
-      // Un refus ou une réponse coupée : ce mail n'arrête pas les suivants.
-      if (!(error instanceof LlmError)) throw error;
-      logError('brouillons.call_failed', error, { userId: ctx.userId, sourceId: mail.sourceId });
-      if (isUnreachable(error)) {
-        await giveBack(ctx);
-        return written;
-      }
-      miss(mailKey(ctx, mail), now);
-      continue;
+    // Un mail reçu que rien n'a encore lu passe d'abord par le tri ; ce qu'elle a demandé s'écrit sans lui.
+    const expected = owed ? true : await sortMail(ctx, deps.llm, person?.name ?? '', mail);
+    if (expected === 'injoignable') {
+      await giveBack(ctx);
+      return written;
     }
-    const result = parseBrouillonAnswer(answer, asked !== undefined, relance !== undefined);
-    // Des identifiants et des nombres seulement, jamais de texte. `brouillon` : écrit (true), pas de brouillon (false :
-    // des questions à lui poser, ou aucune réponse à donner), ou réponse illisible (null). `questions` : leur nombre.
-    console.info(
-      '[leon]',
-      'brouillons.answered',
-      JSON.stringify({
-        userId: ctx.userId,
-        sourceId: mail.sourceId,
-        brouillon: result && result.texte !== null,
-        questions: result?.questions?.length ?? 0,
-        chars: answer.length,
-      }),
-    );
-    if (!result) {
-      miss(mailKey(ctx, mail), now);
-      continue;
+    let read: BrouillonAnswer | null;
+    if (!expected) {
+      // Aucune réponse attendue : l'appel du brouillon n'a pas lieu, celui qui était réservé est rendu.
+      await giveBack(ctx);
+      read = SANS_REPONSE;
+    } else {
+      const prompt = buildBrouillonPrompt({
+        personName: person?.name ?? '',
+        mail,
+        lines,
+        // Une relance ne prend pas ses exemples dans son fil : son mail y est déjà, à relancer, pas à imiter.
+        sent: relance ? sent.filter((one) => one.sourceId !== mail.sourceId) : sent,
+        asked,
+        indications: owed?.indications ?? undefined,
+        relance,
+      });
+      let answer = '';
+      try {
+        for await (const delta of deps.llm.streamText({
+          step: 'brouillon',
+          system: prompt.system,
+          messages: prompt.messages,
+          maxTokens: BROUILLON_MAX_TOKENS,
+          signal: AbortSignal.timeout(BROUILLON_TIMEOUT_MS),
+        })) {
+          answer += delta;
+        }
+      } catch (error) {
+        // Un refus ou une réponse coupée : ce mail n'arrête pas les suivants.
+        if (!(error instanceof LlmError)) throw error;
+        logError('brouillons.call_failed', error, { userId: ctx.userId, sourceId: mail.sourceId });
+        if (isUnreachable(error)) {
+          await giveBack(ctx);
+          return written;
+        }
+        miss(mailKey(ctx, mail), now);
+        continue;
+      }
+      read = parseBrouillonAnswer(answer, asked !== undefined, relance !== undefined);
+      // Des identifiants et des nombres seulement, jamais de texte. `brouillon` : écrit (true), pas de brouillon
+      // (false : des questions à lui poser, ou aucune réponse à donner), ou réponse illisible (null). `questions` : leur
+      // nombre.
+      console.info(
+        '[leon]',
+        'brouillons.answered',
+        JSON.stringify({
+          userId: ctx.userId,
+          sourceId: mail.sourceId,
+          brouillon: read && read.texte !== null,
+          questions: read?.questions?.length ?? 0,
+          chars: answer.length,
+        }),
+      );
+      if (!read) {
+        miss(mailKey(ctx, mail), now);
+        continue;
+      }
     }
+    const result = read;
     misses.delete(mailKey(ctx, mail));
     // L'appel au modèle dure jusqu'à 90 s : un compte supprimé entre-temps ne reçoit rien (lockAccount), et un
     // résultat déjà écrit pour ce message n'est pas écrasé.
@@ -257,6 +286,49 @@ export async function writeBrouillons(
   }
   await learnFrom(ctx, retouches, WAITING_MAX - mails.length, deps.llm, now);
   return written;
+}
+
+// Le tri d'un mail reçu, avant l'appel de son brouillon (tri-prompt.ts) : une réponse est-elle attendue ? Un tri
+// illisible, refusé ou coupé vaut un oui : le brouillon s'écrit alors comme sans tri, et aucun mail n'est écarté par
+// un raté du tri. 'injoignable' : le fournisseur ne répond pas, et le passage s'arrête comme pour l'appel du brouillon.
+// shortcut: le tri n'a pas de plafond à lui. Il suit l'appel réservé du brouillon (un tri par mail qui attend, cinq
+// par passage, aucun au plafond du jour), et un mail trié « sans réponse » a sa ligne, donc n'est jamais retrié : sa
+// dépense suit le nombre de mails reçus. Un compteur à lui si une boîte reçoit des milliers de mails non automatiques
+// par jour.
+async function sortMail(
+  ctx: TenantContext,
+  llm: Llm,
+  personName: string,
+  mail: WaitingMail,
+): Promise<boolean | 'injoignable'> {
+  const prompt = buildTriPrompt({ personName, mail });
+  let answer = '';
+  try {
+    for await (const delta of llm.streamText({
+      step: 'tri',
+      system: prompt.system,
+      messages: prompt.messages,
+      maxTokens: TRI_MAX_TOKENS,
+      signal: AbortSignal.timeout(TRI_TIMEOUT_MS),
+    })) {
+      answer += delta;
+    }
+  } catch (error) {
+    if (!(error instanceof LlmError)) throw error;
+    logError('brouillons.sort_failed', error, { userId: ctx.userId, sourceId: mail.sourceId });
+    if (isUnreachable(error)) return 'injoignable';
+    // Un verdict arrivé avant le refus ou la coupure ne compte pas.
+    answer = '';
+  }
+  const verdict = parseTriAnswer(answer);
+  // Des identifiants et le verdict seulement, jamais de texte. `reponse` : attendue (true), aucune (false), ou tri
+  // illisible (null).
+  console.info(
+    '[leon]',
+    'brouillons.sorted',
+    JSON.stringify({ userId: ctx.userId, sourceId: mail.sourceId, reponse: verdict }),
+  );
+  return verdict ?? true;
 }
 
 // Un appel au modèle de plus aujourd'hui, s'il en reste sous le plafond du jour (reserver_brouillon, 0080).

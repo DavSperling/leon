@@ -23,11 +23,12 @@ describe('modelForStep', () => {
     'agenda',
     'fiche',
     'brouillon',
+    'tri',
   ];
   const models = (reglee: typeof env) =>
     Object.fromEntries(steps.map((step) => [step, modelForStep(step, reglee)]));
   // Le mieux noté des modèles Claude au banc (docs/etudes/resumes-2026-11) : Sonnet, sauf pour la discussion (Opus)
-  // et l'agenda (Haiku).
+  // et l'agenda (Haiku). Le tri des mails, jamais mesuré au banc, est sur Haiku : il ne rend qu'un oui ou un non.
   const CLAUDE = {
     reponse: 'claude-sonnet-5-5',
     discussion: 'claude-opus-5-5',
@@ -37,9 +38,10 @@ describe('modelForStep', () => {
     agenda: 'claude-haiku-5-5',
     fiche: 'claude-sonnet-5-5',
     brouillon: 'claude-sonnet-5-5',
+    tri: 'claude-haiku-5-5',
   };
 
-  it('prend Sonnet 5.5 pour chaque étape, sauf Opus 5.5 pour la discussion et Haiku 5.5 pour l’agenda', () => {
+  it('prend Sonnet 5.5 pour chaque étape, sauf Opus 5.5 pour la discussion et Haiku 5.5 pour l’agenda et le tri', () => {
     expect(models(env)).toEqual(CLAUDE);
   });
 
@@ -63,6 +65,7 @@ describe('modelForStep', () => {
           LEON_MODEL_AGENDA: 'claude-sonnet-5-5',
           LEON_MODEL_FICHE: 'claude-opus-5-5',
           LEON_MODEL_BROUILLON: 'claude-haiku-5-5',
+          LEON_MODEL_TRI: 'claude-sonnet-5-5',
         }),
       ),
     ).toEqual({
@@ -74,6 +77,7 @@ describe('modelForStep', () => {
       agenda: 'claude-sonnet-5-5',
       fiche: 'claude-opus-5-5',
       brouillon: 'claude-haiku-5-5',
+      tri: 'claude-sonnet-5-5',
     });
   });
 
@@ -94,6 +98,7 @@ describe('pickModel', () => {
     agenda: 'claude-haiku-5-5',
     fiche: 'claude-haiku-5-5',
     brouillon: 'claude-haiku-5-5',
+    tri: 'claude-haiku-5-5',
   } as const satisfies Record<LlmStep, string>;
   const preferred = {
     ...anthropic,
@@ -154,6 +159,7 @@ describe('EFFORT_BY_STEP', () => {
       agenda: 'low',
       fiche: 'medium',
       brouillon: 'medium',
+      tri: 'low',
     });
   });
 });

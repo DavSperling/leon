@@ -9,7 +9,8 @@ export type LlmStep =
   | 'fil'
   | 'agenda'
   | 'fiche'
-  | 'brouillon';
+  | 'brouillon'
+  | 'tri';
 
 export type ChatMessage = { role: 'user' | 'assistant'; content: string };
 

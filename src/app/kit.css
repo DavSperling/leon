@@ -676,12 +676,12 @@
     color: var(--muted);
   }
 
-  /* ---------- L'écran Agents : chaque agent est une chemise de sa couleur, sa feuille glissée dedans ---------- */
-  /* Deux chemises par rangée pour les agents en service, trois pour les autres : des dizaines se rangent encore. */
+  /* ---------- L'écran Agents : chaque agent est un badge, son personnage sur un aplat de sa couleur ---------- */
+  /* Deux badges par rangée pour les agents en service, trois pour les autres : des dizaines se rangent encore. */
   .agents-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(max(280px, (100% - 32px) / 3), 1fr));
-    gap: 20px 16px;
+    gap: 16px;
   }
   .agents-grid--2 {
     grid-template-columns: repeat(auto-fill, minmax(max(320px, (100% - 16px) / 2), 1fr));
@@ -692,267 +692,288 @@
       grid-template-columns: minmax(0, 1fr);
     }
   }
-  /* La pile : la feuille de l'agent, de travers, sur celle d'avant. Pointée, celle du dessus se redresse et celle
-     d'avant s'écarte. */
-  .agent-pile {
-    position: relative;
+
+  /* Le personnage (agents/face.tsx) : des formes à plat, sans trait de contour. Endormi : gris, les yeux fermés, la
+     tête penchée. Éveillé (.is-on sur un parent) : la tête de papier, le corps d'encre, ses accessoires de sa seconde
+     couleur ; il cligne des yeux. À venir (.is-soon) : une silhouette de sa couleur, sans visage. Les couleurs du
+     personnage éveillé ne changent pas de thème : il est toujours sur l'aplat de son drapeau. */
+  .af {
+    --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
     display: block;
+    overflow: visible;
   }
-  .agent-pile::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    background: var(--glass);
-    box-shadow: var(--sh-1);
-    rotate: calc(var(--tilt, 0deg) * -1.6);
-    translate: 5px 3px;
+  .af__sk {
+    fill: color-mix(in oklab, var(--text) 9%, var(--glass));
+    transition: fill 500ms var(--ease-out);
+  }
+  .af__bo,
+  .af__ac {
+    fill: color-mix(in oklab, var(--text) 22%, var(--glass));
+    transition: fill 500ms var(--ease-out);
+  }
+  .af__ln {
+    fill: none;
+    stroke: var(--n-500);
+    stroke-width: 3.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke 500ms var(--ease-out);
+  }
+  .af__eye {
+    fill: var(--n-500);
+    transform-box: fill-box;
+    transform-origin: center;
+    transform: scaleY(0.14);
     transition:
-      rotate 560ms var(--spring, var(--ease-out)),
-      translate 560ms var(--spring, var(--ease-out));
+      fill 500ms var(--ease-out),
+      transform 500ms var(--spring);
   }
-  /* Sombre : le bureau et la feuille sont proches ; un trait plus marqué détache la pile. */
-  [data-theme="dark"] .agent-pile::before {
-    border-color: var(--line-strong);
+  .af__glint {
+    fill: #fff;
+    opacity: 0;
+    transition: opacity 300ms;
   }
-  .agent-sheet {
-    position: relative;
-    display: block;
-    padding: 14px 18px 18px 24px;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    background: var(--glass);
-    box-shadow: var(--sh-2);
-    color: var(--text);
-    rotate: var(--tilt, 0deg);
+  .af__mouth {
+    transform-box: fill-box;
+    transform-origin: center;
+    transform: scale(0.45, 0.1);
     transition:
-      rotate 560ms var(--spring, var(--ease-out)),
-      box-shadow var(--med) var(--ease-out);
+      stroke 500ms var(--ease-out),
+      transform 500ms var(--spring);
   }
-  [data-theme="dark"] .agent-sheet {
-    border-color: var(--line-strong);
+  .af__hd {
+    transform-origin: 80px 104px;
+    transform: rotate(-5deg) translateY(4px);
+    transition: transform 800ms var(--ease-out);
   }
-  /* Son drapeau sort du bord gauche, comme celui de l'original d'une source (.doc). */
-  .agent-sheet > .flag--left {
-    position: absolute;
-    top: 14px;
-    left: -11px;
-    min-width: 0;
-    width: 22px;
-    height: 18px;
-    padding: 0;
+  .af__eyes {
+    transition: transform 250ms var(--ease-out);
   }
-  .agent-sheet__meta {
-    display: block;
-    overflow: hidden;
-    font: 400 13px / 1.45 var(--font);
-    color: var(--muted);
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  .is-on .af__sk {
+    fill: #fff;
   }
-  .agent-sheet__body {
-    display: grid;
-    gap: 3px;
-    font: 400 15px / 1.45 var(--serif);
-    text-wrap: pretty;
+  .is-on .af__bo {
+    fill: var(--flag-ink);
   }
-  .agent-sheet__meta + .agent-sheet__body {
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid var(--line);
+  .is-on .af__ac {
+    fill: var(--af-2);
   }
-  /* Le surligneur passe sous ses mots quand la feuille s'est calée. */
-  .agent-sheet__body.hl-arrive {
-    animation-delay: calc(var(--i, 0) * 80ms + 820ms);
+  .is-on .af__ln {
+    stroke: var(--flag-ink);
   }
-  .agent-sheet__row {
-    display: block;
+  .is-on .af__eye {
+    fill: var(--flag-ink);
+    transform: none;
+    animation: af-blink 5.2s calc(var(--i, 0) * -1.3s) infinite;
   }
-  /* Le pied : le bouton « Envoyer » d'un brouillon prêt, en encre, ou une étiquette. Dessiné, pas un bouton. */
-  .agent-sheet__foot {
-    display: inline-flex;
-    align-items: center;
-    height: 24px;
-    margin-top: 12px;
-    padding: 0 10px;
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    font: 500 13px / 1 var(--font);
-    white-space: nowrap;
+  .is-on .af__glint {
+    opacity: 1;
   }
-  .agent-sheet__foot.is-ink {
-    border-color: var(--ink);
-    background: var(--ink);
-    color: var(--on-ink);
+  .is-on .af__mouth,
+  .is-on .af__hd {
+    transform: none;
+  }
+  @keyframes af-blink {
+    0%,
+    93%,
+    100% {
+      transform: scaleY(1);
+    }
+    96.5% {
+      transform: scaleY(0.1);
+    }
+  }
+  .is-soon .af {
+    --sil: color-mix(in oklab, var(--flag, var(--line-strong)) 42%, var(--glass));
+  }
+  .is-wanted .af {
+    --sil: color-mix(in oklab, var(--flag) 78%, var(--glass));
+  }
+  .is-soon :is(.af__sk, .af__bo, .af__ac) {
+    fill: var(--sil);
+  }
+  .is-soon .af__ln {
+    stroke: var(--sil);
+  }
+  .is-soon .af__face {
+    display: none;
+  }
+  .is-soon .af__hd {
+    transform: none;
   }
 
-  /* La chemise : le dos et son onglet, la feuille glissée dedans, puis le rabat où sont écrits le nom, le
-     déclencheur et l'état. Toute la chemise est le contrôle. Elle penche vers la souris (--rx, --ry, posés par
-     agents/index.tsx) ; à l'arrivée les chemises se posent l'une après l'autre (--i), puis chaque feuille s'y glisse
-     d'en haut, rebondit au fond et se cale. Pointée, la feuille sort de la chemise et se redresse. */
-  .agent,
-  .agent-own {
-    --spring: cubic-bezier(0.3, 1.5, 0.55, 1);
-  }
+  /* Le badge : à gauche la photo à fleur de carte, la fente du cordon percée dedans ; à droite le nom, le déclencheur
+     et l'état. Tout le badge est le contrôle. À l'arrivée les badges se posent l'un après l'autre (--i), puis la
+     couleur gagne la photo des agents actifs et ils se lèvent. Endormi, l'agent ne montre que sa tête au bas du
+     cadre ; pointé, il se hausse un peu. */
   .agent {
-    --folder: color-mix(in oklab, var(--flag) 30%, var(--glass));
-    --folder-front: color-mix(in oklab, var(--flag) 17%, var(--glass));
-    --folder-edge: color-mix(in oklab, var(--flag) 46%, var(--glass));
-    --folder-ink: color-mix(in oklab, var(--text) 62%, var(--flag));
+    --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
     position: relative;
-    display: block;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 16px;
     width: 100%;
-    height: 244px;
-    padding: 0;
-    border: 0;
+    height: 100%;
+    min-height: 116px;
+    padding: 0 16px 0 0;
+    overflow: hidden;
+    border: 1px solid var(--line);
     border-radius: 16px;
-    background: none;
+    background: var(--glass);
+    box-shadow: var(--sh-1);
     color: var(--text);
     text-align: left;
-    isolation: isolate;
-    transform: perspective(1100px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
     transition:
-      transform 520ms var(--ease-out),
+      translate var(--med) var(--ease-out),
+      box-shadow var(--med) var(--ease-out),
       scale var(--fast) var(--ease-out);
-    animation: folder-in 640ms var(--ease-out) backwards;
+    animation: badge-in 640ms var(--ease-out) backwards;
     animation-delay: calc(var(--i, 0) * 80ms);
   }
   .agent--wide {
-    height: 268px;
+    gap: 20px;
+    min-height: 196px;
   }
-  .agent:active {
+  button.agent:active {
     scale: 0.985;
   }
   .agent:focus-visible {
     outline: 2px solid var(--ring);
-    outline-offset: 4px;
+    outline-offset: 3px;
   }
-  @media (prefers-reduced-motion: reduce) {
-    .agent {
-      transform: none;
-    }
-  }
-  @keyframes folder-in {
+  @keyframes badge-in {
     from {
       opacity: 0;
       translate: 0 20px;
     }
   }
-  .agent__tab {
+  /* La fente du cordon, percée dans la photo : on voit le bureau au travers. */
+  .agent::before {
+    content: "";
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 132px;
-    height: 22px;
-    fill: var(--folder);
-  }
-  .agent--wide .agent__tab {
-    width: 168px;
-  }
-  .agent__back {
-    position: absolute;
-    inset: 21px 0 0;
-    border-radius: 0 16px 16px 16px;
-    background: var(--folder);
-    box-shadow: 0 20px 34px -26px rgba(15, 15, 13, 0.42);
-    transition: box-shadow 520ms var(--ease-out);
-  }
-  .agent__paper {
-    position: absolute;
-    top: 44px;
-    right: 24px;
-    left: 30px;
+    top: 50%;
+    left: 11px;
     z-index: 1;
-    transition: translate 560ms var(--spring);
-    animation: paper-in 820ms var(--spring) backwards;
-    animation-delay: calc(var(--i, 0) * 80ms + 260ms);
+    width: 9px;
+    height: 40px;
+    margin-top: -20px;
+    border-radius: 5px;
+    background: var(--bg);
+    box-shadow: inset 0 1px 1.5px rgba(15, 15, 13, 0.2);
   }
-  .agent--wide .agent__paper {
-    top: 46px;
-    right: 36px;
-    left: 44px;
-  }
-  @keyframes paper-in {
-    from {
-      opacity: 0;
-      translate: 0 -46px;
-    }
-    30% {
-      opacity: 1;
-    }
-  }
-  /* Assez haute pour descendre derrière le rabat : on n'en voit jamais le bas. */
-  .agent .agent-sheet {
-    min-height: 176px;
-  }
-  .agent--wide .agent-sheet {
-    min-height: 200px;
-  }
-  .agent--wide .agent-sheet__body {
-    font-size: 17px;
-  }
-  /* Le rabat, devant la feuille : son bord d'un ton plus appuyé, et l'ombre qu'il jette sur elle. */
-  .agent__front {
-    position: absolute;
-    inset: auto 0 0;
-    z-index: 2;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    height: 86px;
-    padding: 0 18px 0 20px;
-    border-radius: 12px 12px 16px 16px;
-    background: var(--folder-front);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.55),
-      0 -1px 0 var(--folder-edge),
-      0 -16px 26px -20px rgba(15, 15, 13, 0.32);
-  }
-  [data-theme="dark"] .agent__front {
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.06),
-      0 -1px 0 var(--folder-edge),
-      0 -16px 26px -20px rgba(0, 0, 0, 0.6);
-  }
-  .agent--wide .agent__front {
-    height: 94px;
-    padding-inline: 24px 20px;
-  }
-  .agent__id {
+  .agent__photo {
+    position: relative;
     display: grid;
-    flex: 1;
-    gap: 2px;
+    place-items: end center;
+    width: 122px;
+    padding-left: 14px;
+    overflow: hidden;
+    background: color-mix(in oklab, var(--text) 3%, var(--glass));
+  }
+  .agent--wide > .agent__photo {
+    width: 200px;
+  }
+  .is-soon > .agent__photo {
+    background: color-mix(in oklab, var(--flag, var(--glass)) 13%, var(--glass));
+  }
+  /* L'aplat de sa couleur, et derrière sa tête un disque plus clair, à bord net : il gagne la photo depuis le bas. */
+  .agent__photo::before,
+  .agent-well::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(
+        circle at 50% 58%,
+        color-mix(in oklab, var(--flag) 72%, #fff) 0 46%,
+        transparent 46.4%
+      ),
+      var(--flag);
+    clip-path: circle(0% at 50% 100%);
+    transition: clip-path 750ms var(--ease-out);
+  }
+  .is-on > .agent__photo::before,
+  .agent-well.is-on::before {
+    clip-path: circle(125% at 50% 100%);
+  }
+  .is-on > .agent__photo::before {
+    animation: photo-in 750ms var(--ease-out) backwards;
+    animation-delay: calc(var(--i, 0) * 80ms + 300ms);
+  }
+  @keyframes photo-in {
+    from {
+      clip-path: circle(0% at 50% 100%);
+    }
+  }
+  .agent__photo > .af {
+    position: relative;
+    width: 100px;
+    translate: 0 40%;
+    transition: translate 900ms var(--spring);
+  }
+  .agent--wide > .agent__photo > .af {
+    width: 176px;
+  }
+  .is-on > .agent__photo > .af {
+    translate: 0 0;
+    animation: rise-in 900ms var(--spring) backwards;
+    animation-delay: calc(var(--i, 0) * 80ms + 300ms);
+  }
+  .is-soon > .agent__photo > .af {
+    translate: 0 30%;
+  }
+  .is-wanted > .agent__photo > .af {
+    translate: 0 8%;
+  }
+  @keyframes rise-in {
+    from {
+      translate: 0 40%;
+    }
+  }
+  .agent__text {
+    display: flex;
+    flex-direction: column;
     min-width: 0;
+    padding: 14px 0 12px;
+  }
+  .agent--wide > .agent__text {
+    padding: 18px 0 8px;
   }
   .agent__name {
-    margin-inline: -4px;
-    padding-inline: 4px;
-    overflow: hidden;
-    font: 600 15px / 20px var(--font);
-    letter-spacing: -0.005em;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    font: 600 16px / 20px var(--font);
+    letter-spacing: -0.015em;
+    text-wrap: balance;
   }
   .agent--wide .agent__name {
-    font-size: 17px;
-    line-height: 22px;
-    letter-spacing: -0.012em;
+    font-size: 20px;
+    line-height: 24px;
+    letter-spacing: -0.025em;
   }
-  /* Le déclencheur : l'encre teintée de la couleur de la chemise, jamais un gris posé sur elle. */
   .agent__when {
-    overflow: hidden;
+    margin-top: 2px;
     font: 400 13px / 18px var(--font);
-    color: var(--folder-ink);
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    color: var(--muted);
+    text-wrap: balance;
   }
   .agent--wide .agent__when {
+    margin-top: 6px;
     font-size: 14px;
     line-height: 20px;
   }
-  .agent__pill {
-    border-color: var(--folder-edge);
+  /* L'état, au pied du badge ; sur un grand, sous un filet. Vide, il ne prend pas de place. */
+  .agent__state {
+    display: flex;
+    align-items: center;
+    min-height: 24px;
+    margin-top: auto;
+    padding-top: 8px;
+  }
+  .agent__state:empty {
+    display: none;
+  }
+  .agent--wide .agent__state {
+    min-height: 44px;
+    border-top: 1px solid var(--line);
   }
   /* Actif : le point vert d'un état sain, qui lance deux ondes à l'arrivée puis se tait. Demandé (un agent à venir
      qu'elle veut) : le mot, discret. */
@@ -992,118 +1013,30 @@
     }
   }
   .agent__asked {
-    color: var(--folder-ink);
+    color: var(--muted);
   }
-  /* Ce qui ferme la page : les agents qu'on construira soi-même. Une bande en pointillé, une chemise encore vide et
-     sans couleur, sa feuille vierge et réglée, où un curseur clignote quelques fois à l'arrivée. Rien ne s'y ouvre
-     encore : rien n'y bouge au pointeur. */
+  /* Ce qui ferme la page : les agents qu'on construira soi-même. Un badge en pointillé, sans couleur ni ombre. Rien
+     ne s'y ouvre encore : rien n'y bouge au pointeur. */
   .agent-own {
-    --folder: color-mix(in oklab, var(--text) 8%, var(--glass));
-    --folder-front: color-mix(in oklab, var(--text) 4%, var(--glass));
-    --folder-edge: color-mix(in oklab, var(--text) 15%, var(--glass));
-    display: flex;
-    align-items: center;
-    gap: 24px;
-    margin-top: 20px;
-    padding: 18px 24px;
     border: 1px dashed var(--line-strong);
-    border-radius: 16px;
-  }
-  .agent-own__folder {
-    position: relative;
-    flex: none;
-    width: 156px;
-    height: 104px;
-    animation: folder-in 640ms var(--ease-out) backwards;
-    animation-delay: calc(var(--i, 0) * 80ms);
-  }
-  .agent-own .agent__tab {
-    width: 88px;
-    height: 14px;
-  }
-  .agent-own .agent__back {
-    inset: 13px 0 0;
-    border-radius: 0 12px 12px 12px;
+    background: none;
     box-shadow: none;
   }
-  .agent-own .agent__paper {
-    top: 26px;
-    right: 16px;
-    left: 18px;
-  }
-  .agent-own .agent__front {
-    height: 46px;
-    border-radius: 8px 8px 12px 12px;
-    box-shadow:
-      0 -1px 0 var(--folder-edge),
-      0 -10px 18px -14px rgba(15, 15, 13, 0.25);
-  }
-  .agent-own__text {
-    display: grid;
-    gap: 2px;
-    min-width: 0;
+  .agent-own > .agent__photo {
+    background: none;
   }
   .agent-own .agent__name,
   .agent-own .agent__when {
-    white-space: normal;
-    text-wrap: balance;
-  }
-  .agent-own .agent__when {
     color: var(--muted);
-  }
-  /* La feuille vierge : réglée, en pointillé, et le curseur posé sur sa première ligne. */
-  .agent-sheet--blank {
-    display: grid;
-    gap: 12px;
-    min-height: 70px;
-    padding: 16px 14px 0;
-    border: 1px dashed var(--line-strong);
-    box-shadow: none;
-    rotate: -2deg;
-  }
-  .agent-sheet--blank > i {
-    display: block;
-    height: 1px;
-    background: var(--line-strong);
-    opacity: 0.6;
-  }
-  .agent-caret {
-    position: absolute;
-    top: 3px;
-    left: 14px;
-    width: 1.5px;
-    height: 13px;
-    background: var(--text);
-    opacity: 0;
-    animation: caret 1000ms steps(1) 4;
-    animation-delay: calc(var(--i, 0) * 80ms + 1200ms);
-  }
-  @keyframes caret {
-    0% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0;
-    }
   }
 
   @media (hover: hover) {
-    .agent:hover .agent__paper {
-      translate: 0 -16px;
+    button.agent:hover {
+      translate: 0 -2px;
+      box-shadow: var(--sh-2);
     }
-    .agent:hover .agent-sheet {
-      rotate: 0deg;
-      box-shadow: var(--sh-3);
-    }
-    .agent:hover .agent-pile::before {
-      rotate: calc(var(--tilt, 0deg) * -3.2);
-      translate: 10px 2px;
-    }
-    .agent:hover .agent__back {
-      box-shadow: 0 28px 44px -28px rgba(15, 15, 13, 0.5);
-    }
-    .agent:hover .agent-sheet .hl {
-      background-image: linear-gradient(var(--hl-deep), var(--hl-deep));
+    button.agent:hover:not(.is-on, .is-wanted) > .agent__photo > .af {
+      translate: 0 24%;
     }
     .agent:hover .mark::before {
       transform: scaleX(1);
@@ -1112,16 +1045,6 @@
       border-color: var(--text);
     }
   }
-  .agent:focus-visible .agent__paper {
-    translate: 0 -16px;
-  }
-  .agent:focus-visible .agent-sheet {
-    rotate: 0deg;
-    box-shadow: var(--sh-3);
-  }
-  .agent:focus-visible .agent-sheet .hl {
-    background-image: linear-gradient(var(--hl-deep), var(--hl-deep));
-  }
   .agent:focus-visible .mark::before {
     transform: scaleX(1);
   }
@@ -1129,13 +1052,84 @@
     border-color: var(--text);
   }
 
-  /* Dans le panneau : l'exemple en grand, droit et entier, sur une bande de bureau qui touche les bords (.well). */
+  /* La feuille qu'un agent laisse : son exemple, montré dans son panneau. */
+  .agent-sheet {
+    position: relative;
+    display: block;
+    padding: 14px 18px 18px 24px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--glass);
+    box-shadow: var(--sh-2);
+    color: var(--text);
+  }
+  [data-theme="dark"] .agent-sheet {
+    border-color: var(--line-strong);
+  }
+  /* Son drapeau sort du bord gauche, comme celui de l'original d'une source (.doc). */
+  .agent-sheet > .flag--left {
+    position: absolute;
+    top: 14px;
+    left: -11px;
+    min-width: 0;
+    width: 22px;
+    height: 18px;
+    padding: 0;
+  }
+  .agent-sheet__meta {
+    display: block;
+    overflow: hidden;
+    font: 400 13px / 1.45 var(--font);
+    color: var(--muted);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .agent-sheet__body {
+    display: grid;
+    gap: 3px;
+    font: 400 15px / 1.45 var(--serif);
+    text-wrap: pretty;
+  }
+  .agent-sheet__meta + .agent-sheet__body {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+  }
+  .agent-sheet__row {
+    display: block;
+  }
+  /* Le pied : le bouton « Envoyer » d'un brouillon prêt, en encre, ou une étiquette. Dessiné, pas un bouton. */
+  .agent-sheet__foot {
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    margin-top: 12px;
+    padding: 0 10px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font: 500 13px / 1 var(--font);
+    white-space: nowrap;
+  }
+  .agent-sheet__foot.is-ink {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: var(--on-ink);
+  }
+
+  /* Dans le panneau : l'agent, et devant lui son exemple en grand, sur une bande de bureau qui prend sa couleur quand
+     il est actif. Les deux sont posés au-dessus de l'aplat (.agent-well::before, avec la photo du badge). */
   .agent-well {
     position: relative;
+    overflow: hidden;
     margin: -20px -24px 20px;
     padding: 40px 32px 32px 44px;
     border-bottom: 1px solid var(--line);
     background: var(--bg);
+  }
+  .agent-well__face {
+    position: relative;
+    width: min(240px, 60%);
+    margin: 0 auto -44px;
   }
   .agent-sheet--lg {
     max-width: 400px;
@@ -1166,6 +1160,9 @@
     font: 400 13px / 1 var(--font);
     color: var(--muted);
   }
+  .agent-well.is-on > .agent-well__label {
+    color: var(--flag-ink);
+  }
 
   /* La grande fenêtre d'un agent (SidePanel wide) : à gauche l'exemple sur sa bande de bureau, de toute la hauteur ; à
      droite son état, son geste et ce qu'il est. Sous 1024 px, l'un sous l'autre. */
@@ -1186,7 +1183,7 @@
   .agent-open > .agent-well {
     display: grid;
     align-self: stretch;
-    place-items: center;
+    align-content: center;
     min-height: 360px;
     margin: 0;
     padding: 48px 32px 40px 44px;

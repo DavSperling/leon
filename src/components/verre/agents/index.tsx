@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { type CSSProperties, type PointerEvent, useEffect, useState, useTransition } from 'react';
+import { type CSSProperties, useEffect, useState, useTransition } from 'react';
 import { answerAgentAction } from '@/app/(app)/settings/actions';
 import {
   Badge,
@@ -24,14 +24,16 @@ import { cn } from '@/lib/verre/cn';
 import type { AgentId, Missing } from '@/server/portrait/agents';
 import type { AgentState } from '@/server/portrait/propositions';
 import type { AgentsScreen, FicheEtat } from '@/server/portrait/screen';
-import { AgentPile, AgentSheet, TONE } from './sheet';
+import { AgentFace, followPointer } from './face';
+import { AgentSheet, TONE } from './sheet';
 
-// L'écran Agents (/agents) : chaque agent est une chemise de sa couleur, la feuille qu'il laisse glissée dedans. Deux
-// sections en grille : « Prêts à l'emploi » (en service, deux par rangée, l'état de chacun sur son rabat, Actif ou
-// Activer) et « Bientôt » (trois par rangée), que ferme la bande « Vos propres agents ». Une chemise ne porte que la
-// feuille, le nom, le déclencheur et l'état, chacun une fois ; tout le reste vit dans son panneau : l'exemple en grand,
-// l'interrupteur, ce que fait l'agent, où le retrouver, ce qu'il lui faut et qui voit son travail. `?agent=<id>` ouvre
-// ce panneau. Rien ne se calcule ici : l'état vient de la page (portrait/screen.ts, readAgentsScreen).
+// L'écran Agents (/agents) : chaque agent est un badge, son personnage sur un aplat de sa couleur. Deux sections en
+// grille : « Prêts à l'emploi » (en service, deux par rangée) et « Bientôt » (trois par rangée), que ferme le badge en
+// pointillé « Vos propres agents ». Le personnage dit l'état : éveillé et levé (actif), endormi au bas du cadre (à
+// activer), une silhouette (pas encore en service). Un badge ne porte que le personnage, le nom, le déclencheur et
+// l'état, chacun une fois ; tout le reste vit dans son panneau : l'exemple en grand, l'interrupteur, ce que fait
+// l'agent, où le retrouver, ce qu'il lui faut et qui voit son travail. `?agent=<id>` ouvre ce panneau. Rien ne se
+// calcule ici : l'état vient de la page (portrait/screen.ts, readAgentsScreen).
 
 // Ce qu'il faut à chaque agent, dans les mots du panneau : un enregistreur, Outlook, ou une boîte.
 const NEEDS: Record<AgentId, 'boite' | 'reunions' | 'outlook'> = {
@@ -74,6 +76,7 @@ export function Agents({ data, openAgent = null }: AgentsProps) {
     setOpen(true);
     window.history.replaceState(null, '', '/agents');
   }, [openAgent]);
+  useEffect(followPointer, []);
 
   if (!data)
     return (
@@ -89,7 +92,7 @@ export function Agents({ data, openAgent = null }: AgentsProps) {
   const ready = data.agents.filter((one) => one.enService);
   const soon = data.agents.filter((one) => !one.enService);
   const current = data.agents.find((one) => one.agent === shown) ?? null;
-  // L'ordre d'arrivée des chemises, d'une section à l'autre.
+  // L'ordre d'arrivée des badges, d'une section à l'autre.
   let order = 0;
   const card = (one: AgentState, wide?: boolean) => (
     <li key={one.agent}>
@@ -107,8 +110,12 @@ export function Agents({ data, openAgent = null }: AgentsProps) {
         </Section>
       )}
       <Section id="bientot" title={t('soon')}>
-        {soon.length > 0 && <ul className="agents-grid">{soon.map((one) => card(one))}</ul>}
-        <OwnAgents order={order} />
+        <ul className="agents-grid">
+          {soon.map((one) => card(one))}
+          <li>
+            <OwnAgents order={order} />
+          </li>
+        </ul>
       </Section>
       <AgentPanel state={current} open={open} onOpenChange={setOpen} />
     </>
@@ -148,41 +155,10 @@ function Setup({ etat }: { etat: FicheEtat }) {
   );
 }
 
-// La chemise penche vers la souris, de quelques degrés : pas au doigt, et pas en mouvement réduit (kit.css).
-function lean(event: PointerEvent<HTMLButtonElement>) {
-  if (event.pointerType !== 'mouse') return;
-  const box = event.currentTarget.getBoundingClientRect();
-  const x = (event.clientX - box.left) / box.width - 0.5;
-  const y = (event.clientY - box.top) / box.height - 0.5;
-  event.currentTarget.style.setProperty('--ry', `${(x * 7).toFixed(2)}deg`);
-  event.currentTarget.style.setProperty('--rx', `${(y * -5).toFixed(2)}deg`);
-}
-
-function straighten(event: PointerEvent<HTMLButtonElement>) {
-  event.currentTarget.style.removeProperty('--rx');
-  event.currentTarget.style.removeProperty('--ry');
-}
-
-// Le dos de la chemise : son onglet (un coin arrondi, puis une épaule douce qui rejoint le dos) et le dos lui-même.
-function FolderBack() {
-  return (
-    <>
-      <svg
-        aria-hidden="true"
-        className="agent__tab"
-        viewBox="0 0 132 22"
-        preserveAspectRatio="none"
-      >
-        <path d="M0 22V9a9 9 0 0 1 9-9h85c18 0 20 22 38 22z" />
-      </svg>
-      <span aria-hidden="true" className="agent__back" />
-    </>
-  );
-}
-
-// Un agent : sa chemise, la feuille qu'il laisse glissée dedans, puis sur le rabat son nom, son déclencheur et son
-// état. Toute la chemise ouvre son panneau ; la pastille « Activer » n'est pas un second bouton. `order` règle quand
-// elle arrive : les chemises se posent l'une après l'autre, puis chaque feuille s'y glisse (kit.css).
+// Un agent : son badge. À gauche son personnage sur l'aplat de sa couleur, la fente du cordon percée dedans ; à
+// droite son nom, son déclencheur et son état. Tout le badge ouvre son panneau ; la pastille « Activer » n'est pas un
+// second bouton. `order` règle quand il arrive : les badges se posent l'un après l'autre, puis les agents actifs se
+// lèvent (kit.css).
 function AgentCard({
   state,
   wide,
@@ -200,54 +176,47 @@ function AgentCard({
     <button
       type="button"
       data-agent={agent}
-      className={cn('agent', wide && 'agent--wide', `hl-${TONE[agent]}`)}
+      className={cn('agent', wide && 'agent--wide', `hl-${TONE[agent]}`, pose(state))}
       style={{ '--i': order } as CSSProperties}
       onClick={() => onOpen(agent)}
-      onPointerMove={lean}
-      onPointerLeave={straighten}
     >
-      <FolderBack />
-      <span aria-hidden="true" className="agent__paper">
-        <AgentPile agent={agent} />
+      <span className="agent__photo">
+        <AgentFace agent={agent} />
       </span>
-      <span className="agent__front">
-        <span className="agent__id">
-          <span className="agent__name">
-            <span className="mark">{t(`list.${agent}.name`)}</span>
-          </span>
-          <span className="agent__when">{t(`list.${agent}.when`)}</span>
+      <span className="agent__text">
+        <span className="agent__name">
+          <span className="mark">{t(`list.${agent}.name`)}</span>
         </span>
-        {isOn(state) ? (
-          <span className="agent__on">{t('active')}</span>
-        ) : state.enService && !missing ? (
-          <span className="tl__pill agent__pill">{t('activate')}</span>
-        ) : (
-          !state.enService && state.oui && <span className="agent__asked">{t('asked')}</span>
-        )}
+        <span className="agent__when">{t(`list.${agent}.when`)}</span>
+        <span className="agent__state">
+          {isOn(state) ? (
+            <span className="agent__on">{t('active')}</span>
+          ) : state.enService && !missing ? (
+            <span className="tl__pill agent__pill">{t('activate')}</span>
+          ) : (
+            !state.enService && state.oui && <span className="agent__asked">{t('asked')}</span>
+          )}
+        </span>
       </span>
     </button>
   );
 }
 
-// Ce qui ferme la page : les agents qu'on construira soi-même, une chemise encore vide, sa feuille vierge et réglée.
-// Rien ne s'y ouvre encore : rien n'y bouge au pointeur, seul un curseur y clignote quelques fois à l'arrivée.
+// La pose du personnage : levé et éveillé, endormi (rien), ou la silhouette d'un agent à venir, qui se hausse quand
+// elle l'a demandé.
+const pose = (state: AgentState, oui = state.oui === true) =>
+  state.enService ? oui && 'is-on' : cn('is-soon', oui && 'is-wanted');
+
+// Ce qui ferme la page : les agents qu'on construira soi-même, un badge en pointillé et une silhouette sans couleur.
+// Rien ne s'y ouvre encore : rien n'y bouge au pointeur.
 function OwnAgents({ order }: { order: number }) {
   const t = useTranslations('agents');
   return (
-    <div className="agent-own" style={{ '--i': order } as CSSProperties}>
-      <span aria-hidden="true" className="agent-own__folder">
-        <FolderBack />
-        <span className="agent__paper">
-          <span className="agent-sheet agent-sheet--blank">
-            <b className="agent-caret" />
-            <i />
-            <i />
-            <i />
-          </span>
-        </span>
-        <span className="agent__front" />
+    <div className="agent agent-own is-soon" style={{ '--i': order } as CSSProperties}>
+      <span className="agent__photo">
+        <AgentFace />
       </span>
-      <span className="agent-own__text">
+      <span className="agent__text">
         <span className="agent__name">{t('own')}</span>
         <span className="agent__when">{t('ownCaption')}</span>
       </span>
@@ -314,10 +283,12 @@ function PanelBody({ state }: { state: AgentState }) {
 
   const status = enService ? (oui ? 'on' : 'off') : 'soon';
   const fix = missing && FIX[missing];
-  // À gauche l'exemple sur sa bande de bureau, à droite l'état, le geste et ce qu'est l'agent (kit.css, .agent-open).
+  // À gauche l'agent derrière son exemple, sur sa bande de bureau qui prend sa couleur quand il est actif ; à droite
+  // l'état, le geste et ce qu'est l'agent (kit.css, .agent-open). L'interrupteur le réveille sous ses yeux.
   return (
     <div className="agent-open">
-      <div aria-hidden="true" className="agent-well">
+      <div aria-hidden="true" className={cn('agent-well', `hl-${TONE[agent]}`, pose(state, oui))}>
+        <AgentFace agent={agent} className="agent-well__face" />
         <AgentSheet agent={agent} large />
         <span className="agent-well__label">{t('example')}</span>
       </div>

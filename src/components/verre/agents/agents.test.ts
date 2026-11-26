@@ -8,6 +8,7 @@ import type { AgentsScreen } from '@/server/portrait/screen';
 import en from '../../../../messages/en.json';
 import fr from '../../../../messages/fr.json';
 import { Agents } from '.';
+import { AgentSheet } from './sheet';
 
 // L'action importe Better Auth : seul le dessin de l'écran se teste ici, pas le panneau (ouvert par un clic).
 vi.mock('@/app/(app)/settings/actions', () => ({ answerAgentAction: vi.fn() }));
@@ -78,14 +79,37 @@ describe('Agents', () => {
     }
   });
 
-  it('montre ce que fait chaque agent par sa feuille : surligneur, heure entière, espaces du français', () => {
-    const sheet = card(render(), 'brouillon-reponse');
+  it('dit l’état par la pose du personnage : éveillé, endormi, silhouette, silhouette demandée', () => {
+    const html = render();
+    const classes = (agent: AgentId) => card(html, agent).match(/class="([^"]*)"/)?.[1] ?? '';
 
-    expect(sheet).toContain('<span class="hl">je vous confirme jeudi à 10 h</span>');
-    // Sans sa première ligne (« Réponse à Sophie ») : le nom et le déclencheur du rabat la disent déjà.
-    expect(sheet).not.toContain('agent-sheet__meta');
-    expect(card(render(), 'point-du-jour')).toContain('9 h 00');
-    expect(card(render(), 'brief-rendez-vous')).toContain('Le dossier : devis');
+    expect(classes('brouillon-reponse')).toContain('is-on');
+    expect(classes('relance')).not.toMatch(/is-on|is-soon/);
+    expect(classes('suite-reunion')).toContain('is-soon is-wanted');
+    expect(classes('point-du-jour')).toMatch(/is-soon$/);
+    // Le personnage est un décor : le nom et l'état sont écrits à côté.
+    expect(card(html, 'relance')).toMatch(/<svg aria-hidden="true" class="af"/);
+  });
+
+  it('montre ce que fait chaque agent par sa feuille : surligneur, heure entière, espaces du français', () => {
+    const sheet = (agent: AgentId, large = false) =>
+      renderToStaticMarkup(
+        createElement(NextIntlClientProvider, {
+          locale: 'fr',
+          messages: fr,
+          // biome-ignore lint/correctness/noChildrenProp: createElement(Fournisseur, props, enfant) ne type pas ses enfants
+          children: createElement(AgentSheet, { agent, large }),
+        }),
+      );
+
+    expect(sheet('brouillon-reponse')).toContain(
+      '<span class="hl">je vous confirme jeudi à 10 h</span>',
+    );
+    // Sa première ligne (« Réponse à Sophie ») n'est écrite qu'en grand, dans le panneau.
+    expect(sheet('brouillon-reponse')).not.toContain('agent-sheet__meta');
+    expect(sheet('brouillon-reponse', true)).toContain('agent-sheet__meta');
+    expect(sheet('point-du-jour')).toContain('9 h 00');
+    expect(sheet('brief-rendez-vous')).toContain('Le dossier : devis');
   });
 
   it('sans boîte mail, mène à Connexions ; sans lecture, le dit', () => {

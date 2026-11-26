@@ -1,14 +1,12 @@
 import { useTranslations } from 'next-intl';
-import type { CSSProperties } from 'react';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
 import type { AgentId } from '@/server/portrait/agents';
 import type { FlagTone } from '../ui/marks';
 
 // La feuille qu'un agent laisse sur le bureau : ce qu'il produit, en petit (le brouillon, la relance, le compte rendu,
-// le brief, le point du matin). Un exemple fictif, dans les mots de l'écran (messages, agents.list.<id>.sheet) : sur une
-// carte, elle dit ce que fait l'agent sans phrase d'explication ; dans le panneau, l'exemple en grand. Le sérif est
-// celui des mots écrits par l'agent, comme dans l'original d'une source (kit.css, .doc__body). Formes dans kit.css.
+// le brief, le point du matin). Un exemple fictif, dans les mots de l'écran (messages, agents.list.<id>.sheet), montré
+// en grand dans le panneau de l'agent, devant son personnage (face.tsx). Le sérif est celui des mots écrits par l'agent, comme dans l'original d'une source (kit.css, .doc__body). Formes dans kit.css.
 
 /** La couleur de chaque agent : son drapeau et le trait de surligneur sur sa feuille. */
 export const TONE: Record<AgentId, FlagTone> = {
@@ -17,15 +15,6 @@ export const TONE: Record<AgentId, FlagTone> = {
   'brief-rendez-vous': 1,
   relance: 4,
   'point-du-jour': 3,
-};
-
-// Posées à la main sur le bureau : chaque feuille a sa pente, redressée quand on pointe la carte.
-const TILT: Record<AgentId, string> = {
-  'suite-reunion': '-1.6deg',
-  'brouillon-reponse': '-1deg',
-  'brief-rendez-vous': '1.2deg',
-  relance: '0.8deg',
-  'point-du-jour': '-0.8deg',
 };
 
 // Ce que porte chaque feuille en plus de sa première ligne : une seconde ligne, et le pied (le bouton « Envoyer » d'un
@@ -56,9 +45,8 @@ const marked = (text: string) =>
     );
 
 /**
- * La feuille d'exemple d'un agent. `large` : dans le panneau, droite et entière ; sinon dans la chemise d'une carte
- * (AgentPile), sans sa première ligne, que le nom et le déclencheur de la carte disent déjà. Décorative : l'appelant la
- * cache aux lecteurs d'écran.
+ * La feuille d'exemple d'un agent. `large` : dans le panneau, entière ; sinon en petit, sans sa première ligne.
+ * Décorative : l'appelant la cache aux lecteurs d'écran.
  */
 export function AgentSheet({ agent, large }: { agent: AgentId; large?: boolean }) {
   const t = useTranslations('agents.list');
@@ -80,15 +68,6 @@ export function AgentSheet({ agent, large }: { agent: AgentId; large?: boolean }
           {t(`${agent}.sheet.foot` as `suite-reunion.sheet.foot`)}
         </span>
       )}
-    </span>
-  );
-}
-
-/** La feuille d'un agent glissée dans sa chemise, sur celle d'avant (la pile : un agent en laisse une à chaque passage). */
-export function AgentPile({ agent }: { agent: AgentId }) {
-  return (
-    <span className="agent-pile" style={{ '--tilt': TILT[agent] } as CSSProperties}>
-      <AgentSheet agent={agent} />
     </span>
   );
 }

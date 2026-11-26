@@ -148,10 +148,11 @@ export type HomeBrouillons = {
   prets: HomeBrouillon[];
 };
 
-// Elle a dit oui à « Relances » : sa réponse enregistrée, une ligne. Sans ce oui, ses mails sans réponse ne se lisent
-// pas (une lecture du coût de celle des mails d'inconnus, pour rien) ; avec lui, readProposals redit ensuite que
-// l'agent lui est toujours proposé.
-async function saidYesToRelances(ctx: TenantContext): Promise<boolean> {
+// Elle a dit oui à cet agent : sa réponse enregistrée, une ligne. Sans ce oui, ses mails sans réponse (« Relances ») ou
+// d'inconnus (« Brouillons de réponse ») ne se lisent pas : une lecture de sa boîte à chaque chargement de l'accueil,
+// pour rien, chez toutes les personnes qui n'ont pas d'agent. Avec lui, readProposals redit ensuite que l'agent lui est
+// toujours proposé.
+async function saidYes(ctx: TenantContext, agent: AgentId): Promise<boolean> {
   const [answer] = await withTenant(ctx, (tx) =>
     tx
       .select({ oui: reponsesAgent.oui })
@@ -160,7 +161,7 @@ async function saidYesToRelances(ctx: TenantContext): Promise<boolean> {
         and(
           eq(reponsesAgent.tenantId, ctx.tenantId),
           eq(reponsesAgent.userId, ctx.userId),
-          eq(reponsesAgent.agent, 'relance'),
+          eq(reponsesAgent.agent, agent),
         ),
       ),
   );
@@ -179,13 +180,15 @@ export async function readHomeBrouillons(ctx: TenantContext): Promise<HomeBrouil
   const [shown, unknown, preferences, unanswered] = await Promise.all([
     readShown(ctx),
     // En panne, les mails d'inconnus manquent, sans emporter ses demandes ni ses brouillons prêts.
-    readUnknownMails(ctx, HOME_MAX).catch((error) => {
-      logError('accueil.inconnus', error, { userId: ctx.userId });
-      return [];
-    }),
+    saidYes(ctx, 'brouillon-reponse')
+      .then((oui) => (oui ? readUnknownMails(ctx, HOME_MAX) : []))
+      .catch((error) => {
+        logError('accueil.inconnus', error, { userId: ctx.userId });
+        return [];
+      }),
     readProposedPreferences(ctx, HOME_MAX),
     // De même ses mails sans réponse, lus seulement après son oui à « Relances ».
-    saidYesToRelances(ctx)
+    saidYes(ctx, 'relance')
       .then((oui) => (oui ? readUnansweredMails(ctx, HOME_MAX) : []))
       .catch((error) => {
         logError('accueil.relances', error, { userId: ctx.userId });

@@ -16,9 +16,9 @@ import {
   answerPreferenceAction,
   answerQuestionsAction,
   answerRelanceAction,
-  answerUnknownAction,
   discardBrouillonAction,
   sendBrouillonAction,
+  trashMailAction,
 } from '@/app/(app)/settings/actions';
 import type { SourceKind } from '@/capture/turn';
 import {
@@ -47,6 +47,7 @@ import {
   type Asking,
   askingFor,
   CLOSED,
+  canTrash,
   confirmsDiscard,
   countsOf,
   isRelance,
@@ -63,7 +64,6 @@ import { nb } from '@/lib/verre/nb';
 import type {
   HomeBrouillon,
   HomeDemande,
-  HomeInconnu,
   HomePreference,
   HomeRelance,
 } from '@/server/portrait/screen';
@@ -314,105 +314,69 @@ function Asked({
   );
 }
 
-// Le mail d'un inconnu (quelqu'un à qui elle n'a pas écrit depuis 90 jours), que Leon n'a pas lu : « Voulez-vous une
-// réponse ? », « Oui » et « Non ». « Non » le ferme pour de bon. « Oui » ouvre ses indications, facultatives, puis
-// « Préparer la réponse » : Leon ne lit le mail qu'alors, au passage suivant. « Écarter » y vaut « Non ». Rien du mail
-// ne se montre ici. Son mail resté sans réponse (`relance`) : les mêmes gestes, « Voulez-vous une relance ? », puis
-// « Préparer la relance ».
-function Unknown({
+// Son mail resté sans réponse, que Leon n'a pas lu : « Voulez-vous une relance ? », ses indications, facultatives, puis
+// « Préparer la relance » ou « Non », sur le même écran. Leon ne lit le mail qu'après « Préparer », au passage suivant ;
+// « Non » le ferme pour de bon. Rien du mail ne se montre ici.
+function Relance({
   words,
   max,
-  relance,
   sending,
   discarding,
-  onUnknown,
+  onRelance,
 }: {
   words: string;
   max: number;
-  relance?: boolean;
   sending?: boolean;
   discarding?: boolean;
-  onUnknown: (oui: boolean, indications: string) => void;
+  onRelance: (oui: boolean, indications: string) => void;
 }) {
   const t = useTranslations('draftQuestions');
-  const [open, setOpen] = useState(false);
   const [indications, setIndications] = useState('');
   const ask = `${words}-voir`;
-  const panel = `${words}-indications`;
-  const field = `${panel}-champ`;
-  // « Oui » : la question laisse la place à ses indications, qui prennent le focus.
-  useEffect(() => {
-    if (open) document.getElementById(field)?.focus();
-  }, [open, field]);
   return (
-    <>
-      <p id={ask} hidden={open} className="mb-3 text-lead font-medium text-fg">
-        {nb(t(relance ? 'relanceAsk' : 'strangerAsk'))}
+    <div className="grid gap-3">
+      <p id={ask} className="text-lead font-medium text-fg">
+        {nb(t('relanceAsk'))}
       </p>
-      <div hidden={open} className="flex flex-wrap items-center gap-2">
+      <Field label={t('instructions')} help={t('relanceInstructionsHelp')}>
+        <Textarea
+          value={indications}
+          onChange={(event) => setIndications(event.target.value)}
+          maxLength={max}
+          rows={2}
+          autoGrow
+        />
+      </Field>
+      <div className="flex flex-wrap items-center gap-2">
         <Button
           size="sm"
           variant="primary"
           aria-describedby={`${ask} ${words}`}
           disabled={discarding}
-          onClick={() => setOpen(true)}
+          loading={sending}
+          onClick={() => onRelance(true, indications)}
         >
-          {t('yes')}
+          {t('relancePrepare')}
         </Button>
         <Button
           size="sm"
           aria-describedby={`${ask} ${words}`}
+          disabled={sending}
           loading={discarding}
-          onClick={() => onUnknown(false, '')}
+          onClick={() => onRelance(false, '')}
         >
           {t('no')}
         </Button>
       </div>
-      <div id={panel} hidden={!open} className="grid gap-3">
-        <Field
-          id={field}
-          label={t('instructions')}
-          help={t(relance ? 'relanceInstructionsHelp' : 'instructionsHelp')}
-        >
-          <Textarea
-            value={indications}
-            onChange={(event) => setIndications(event.target.value)}
-            maxLength={max}
-            rows={2}
-            autoGrow
-          />
-        </Field>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            size="sm"
-            variant="primary"
-            disabled={discarding}
-            loading={sending}
-            onClick={() => onUnknown(true, indications)}
-          >
-            {t(relance ? 'relancePrepare' : 'prepare')}
-          </Button>
-          <Button
-            size="sm"
-            variant="quiet"
-            className="ml-auto"
-            aria-describedby={words}
-            disabled={sending}
-            loading={discarding}
-            onClick={() => onUnknown(false, '')}
-          >
-            {t('discard')}
-          </Button>
-        </div>
-      </div>
-    </>
+    </div>
   );
 }
 
 /**
  * Un mail du panneau : son en-tête (le correspondant, la date du mail reçu, le fil lié à son outil), puis ce qu'il
- * attend. Des questions : une à la fois, puis le récapitulatif et « Envoyer mes réponses ». Le mail d'un inconnu :
- * « Voulez-vous une réponse ? ». Son mail resté sans réponse : l'en-tête le dit (« Votre mail à Léa est resté sans
+ * attend. Des questions : une à la fois, puis le récapitulatif et « Envoyer mes réponses ». Un mail reçu relevé par
+ * Gmail se supprime d'ici (« Supprimer le mail » : il part à la corbeille de sa boîte, après confirmation). Son mail
+ * resté sans réponse : l'en-tête le dit (« Votre mail à Léa est resté sans
  * réponse. », « Envoyé le … »), puis « Voulez-vous une relance ? » ; ce qui suit une relance (ses questions, Leon qui
  * l'écrit, la relance prête) nomme son destinataire, avec « Envoyé le ». Une préférence d'écriture tirée de sa
  * retouche : l'en-tête dit la retouche remarquée, puis la préférence, telle quelle, et « Dois-je en tenir compte pour
@@ -433,12 +397,12 @@ export function MailView({
   kept,
   onKeep,
   onAnswers,
-  onUnknown,
   onRelance,
   onPreference,
   onDiscard,
   onRefresh,
   onSendDraft,
+  onTrash,
   reading,
   onRead,
 }: {
@@ -448,6 +412,8 @@ export function MailView({
   onRead?: () => void;
   // « Envoyer » un brouillon déposé : le panneau demande d'abord.
   onSendDraft?: () => void;
+  // « Supprimer le mail » reçu (la corbeille de Gmail) : le panneau demande d'abord.
+  onTrash?: () => void;
   kept?: Flow;
   onKeep?: Dispatch<FlowAction>;
   // L'identifiant de sa place (« Mail 2 sur 4 », sous le titre du panneau), que l'en-tête rappelle.
@@ -458,7 +424,6 @@ export function MailView({
   sending?: boolean;
   discarding?: boolean;
   onAnswers: (reponses: string[]) => void;
-  onUnknown: (oui: boolean, indications: string) => void;
   onRelance: (oui: boolean, indications: string) => void;
   onPreference: (oui: boolean) => void;
   onDiscard: () => void;
@@ -522,6 +487,18 @@ export function MailView({
             {t(read ? 'readHide' : 'read')}
           </Button>
         )}
+        {onTrash && canTrash(mail) && (
+          <Button
+            id={`${words}-supprimer`}
+            size="sm"
+            variant="quiet"
+            aria-describedby={words}
+            disabled={sending || discarding}
+            onClick={onTrash}
+          >
+            {t('trash.button')}
+          </Button>
+        )}
       </div>
       {!onRead && ownRead && text && (
         <p className="mt-3 max-h-[320px] max-w-[680px] overflow-y-auto whitespace-pre-wrap rounded-item border border-line bg-glass-3 px-4 py-3 text-body [overflow-wrap:anywhere] text-fg">
@@ -541,14 +518,13 @@ export function MailView({
             onAnswers={onAnswers}
             onDiscard={onDiscard}
           />
-        ) : mail.sorte === 'inconnu' || mail.sorte === 'relance' ? (
-          <Unknown
+        ) : mail.sorte === 'relance' ? (
+          <Relance
             words={words}
             max={max}
-            relance={relance}
             sending={sending}
             discarding={discarding}
-            onUnknown={mail.sorte === 'relance' ? onRelance : onUnknown}
+            onRelance={onRelance}
           />
         ) : mail.sorte === 'preference' ? (
           <div className="grid gap-3">
@@ -687,8 +663,8 @@ function MailPane({ mail, onClose }: { mail: PanelMail; onClose: () => void }) {
   );
 }
 
-// Un geste réussi : `id`, la ligne écrite par son oui au mail d'un inconnu ou à une relance ; `resteDansGmail`, un brouillon écarté que
-// Leon n'a pas pu retirer de Gmail.
+// Un geste réussi : `id`, la ligne écrite par son oui à une relance ; `resteDansGmail`, un brouillon écarté que Leon n'a
+// pas pu retirer de Gmail.
 type Done = { ok: true; resteDansGmail?: boolean; id?: string };
 
 // Pendant que Leon écrit : relire l'Accueil toutes les 5 s, pendant 3 min au plus.
@@ -735,7 +711,7 @@ export function ReplyDrafts({
   side?: ReactNode;
   // Son prénom, celui du bonjour.
   name: string | null;
-  demandes: Array<HomeDemande | HomeInconnu | HomePreference | HomeRelance>;
+  demandes: Array<HomeDemande | HomePreference | HomeRelance>;
   prets: HomeBrouillon[];
   max: number;
 }) {
@@ -861,6 +837,19 @@ export function ReplyDrafts({
       },
       mail.sorte === 'pret' ? t('draftGone') : t('gone'),
     );
+  // « Supprimer le mail », confirmé : le mail reçu part à la corbeille de sa boîte Gmail, et sa ligne s'en va avec le
+  // brouillon que Leon avait déposé. Gmail qui refuse : rien n'est supprimé, le mail reste et le panneau le dit.
+  const trash = (mail: PanelMail) =>
+    close(
+      mail,
+      startDiscarding,
+      () => trashMailAction(mail.id),
+      (result) => {
+        if (result.resteDansGmail) toast.error(t('discardedKeptInGmail'));
+        else toast.success(t('trash.done'));
+        return null;
+      },
+    );
   // Le panneau s'ouvre sur `at` (le mail montré par défaut) : « Tout traiter », un mail de la pile, ou une confirmation
   // demandée depuis l'accueil (elle vit dans le pied du panneau).
   const openPanel = (at?: PanelMail) => {
@@ -886,15 +875,6 @@ export function ReplyDrafts({
         () => answerQuestionsAction({ id: mail.id, reponses }),
         () => writes(mail, mail.id),
       ),
-    onUnknown: (oui: boolean, indications: string) => {
-      if (mail.sorte !== 'inconnu') return;
-      close(
-        mail,
-        oui ? startSending : startDiscarding,
-        () => answerUnknownAction({ ...mail.mail.mail, oui, indications: oui ? indications : '' }),
-        (result) => (oui && result.id ? writes(mail, result.id) : null),
-      );
-    },
     onRelance: (oui: boolean, indications: string) => {
       if (mail.sorte !== 'relance') return;
       close(
@@ -926,6 +906,11 @@ export function ReplyDrafts({
       setDontAsk(false);
       if (!open) openPanel(mail);
       setAsking({ type: 'send', key: mail.key });
+    },
+    // Le mail reçu part à la corbeille de Gmail : le panneau demande d'abord.
+    onTrash: () => {
+      if (!open) openPanel(mail);
+      setAsking({ type: 'trash', key: mail.key });
     },
     onRefresh: () => router.refresh(),
   });
@@ -1137,48 +1122,61 @@ export function ReplyDrafts({
                   document.getElementById(`${shown.key}-ecarter`)?.focus();
                 },
               }
-            : asking === 'send' && shown && question
+            : asking === 'trash' && shown
               ? {
-                  title: t(`sendDraft.${question.key}`, question.values),
-                  text: (
-                    <>
-                      {t('sendDraft.confirmText')}
-                      {/* Une relance à plusieurs demande toujours : la case n'y aurait aucun effet. */}
-                      {!sendAlwaysAsks(shown) && (
-                        <label
-                          htmlFor={dontAskId}
-                          className="mt-2 flex cursor-pointer items-center gap-2 text-ui text-fg"
-                        >
-                          <input
-                            id={dontAskId}
-                            type="checkbox"
-                            className="size-4 cursor-pointer accent-[var(--ink)]"
-                            checked={dontAsk}
-                            disabled={sending}
-                            onChange={(event) => setDontAsk(event.target.checked)}
-                          />
-                          {t('sendDraft.dontAsk')}
-                        </label>
-                      )}
-                    </>
-                  ),
-                  yes: t('sendDraft.button'),
-                  yesVariant: 'primary',
-                  no: t('sendDraft.notYet'),
-                  busy: sending,
-                  onYes: () => {
-                    if (dontAsk) {
-                      saveSkip();
-                      setSkipSend(true);
-                    }
-                    send(shown);
-                  },
+                  title: t('trash.confirm'),
+                  text: t('trash.confirmText'),
+                  yes: t('trash.yes'),
+                  no: t('keep'),
+                  busy: discarding,
+                  onYes: () => trash(shown),
                   onNo: () => {
                     setAsking(null);
-                    document.getElementById(`${shown.key}-envoyer`)?.focus();
+                    document.getElementById(`${shown.key}-supprimer`)?.focus();
                   },
                 }
-              : null
+              : asking === 'send' && shown && question
+                ? {
+                    title: t(`sendDraft.${question.key}`, question.values),
+                    text: (
+                      <>
+                        {t('sendDraft.confirmText')}
+                        {/* Une relance à plusieurs demande toujours : la case n'y aurait aucun effet. */}
+                        {!sendAlwaysAsks(shown) && (
+                          <label
+                            htmlFor={dontAskId}
+                            className="mt-2 flex cursor-pointer items-center gap-2 text-ui text-fg"
+                          >
+                            <input
+                              id={dontAskId}
+                              type="checkbox"
+                              className="size-4 cursor-pointer accent-[var(--ink)]"
+                              checked={dontAsk}
+                              disabled={sending}
+                              onChange={(event) => setDontAsk(event.target.checked)}
+                            />
+                            {t('sendDraft.dontAsk')}
+                          </label>
+                        )}
+                      </>
+                    ),
+                    yes: t('sendDraft.button'),
+                    yesVariant: 'primary',
+                    no: t('sendDraft.notYet'),
+                    busy: sending,
+                    onYes: () => {
+                      if (dontAsk) {
+                        saveSkip();
+                        setSkipSend(true);
+                      }
+                      send(shown);
+                    },
+                    onNo: () => {
+                      setAsking(null);
+                      document.getElementById(`${shown.key}-envoyer`)?.focus();
+                    },
+                  }
+                : null
         }
         foot={
           hasPrevious || hasNext ? (

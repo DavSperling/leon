@@ -35,7 +35,6 @@ import {
   type AnsweredMail,
   readAnsweredMails,
   readWaitingMails,
-  unknownMails,
   WAITING_MAX,
   type WaitingMail,
 } from './waiting-mails';
@@ -46,13 +45,13 @@ import {
 // s'engager, il rend à la place une à trois questions, chacune avec ses choix de réponse, gardées sur la même ligne
 // sans texte (0082, 0083) : Leon l'attend. Ses réponses reçues (answerQuestions), un second appel écrit le brouillon en
 // entier, sur cette ligne.
-// Le mail d'un inconnu ne part pas au modèle avant qu'elle l'ait demandé : l'accueil lui demande si elle veut une
-// réponse (answerUnknownMail), et son « oui », avec ses indications, fait faire le premier appel au passage suivant,
-// sur la ligne de son oui (0084). La suite est celle de tous les brouillons.
-// L'agent « Relances » suit le même chemin, dans le même passage : l'accueil lui demande, pour chacun de ses mails
-// restés sans réponse (unanswered-mails.ts), si elle veut une relance (answerRelance) ; son « oui » fait faire le
-// premier appel au passage suivant, avec la consigne d'une relance (brouillon-prompt.ts), sur une ligne de sorte
-// « relance » (0089). Aucun modèle ne lit ce mail avant son oui.
+// Le mail d'un inconnu se lit comme celui d'un correspondant, dès que la relève le dit « pas automatique »
+// (waiting-mails.ts) : c'est le modèle qui juge si une réponse est attendue. Une ligne d'avant, son « oui » au mail d'un
+// inconnu avec ses indications (0084), se traite toujours, par le chemin d'une relance.
+// L'agent « Relances » demande d'abord, dans le même passage : l'accueil lui demande, pour chacun de ses mails restés
+// sans réponse (unanswered-mails.ts), si elle veut une relance (answerRelance) ; son « oui », avec ses indications, fait
+// faire le premier appel au passage suivant, avec la consigne d'une relance (brouillon-prompt.ts), sur une ligne de
+// sorte « relance » (0089). Aucun modèle ne lit ce mail avant son oui.
 // Un brouillon complet, réponse ou relance, est aussi déposé dans ses brouillons Gmail, en réponse dans le fil
 // (brouillon-depot.ts) : c'est tout ce que Leon écrit dans sa boîte. Rien ne part sans son geste : l'agent prépare, elle
 // valide. Tout se lit et s'écrit sous withTenant de la personne ; l'appel au modèle et le dépôt se font hors de toute
@@ -103,7 +102,7 @@ function restingMails(ctx: TenantContext, now: Date): string[] {
 // Un passage : en tête, sans modèle, ses relances déposées dont le fil a bougé quittent Gmail (withdrawRelances : il ne
 // fait que défaire ce que Leon a écrit, quel que soit l'agent auquel elle dit oui), et ses réponses envoyées aux
 // brouillons de Leon se comparent à eux (preferences.ts) ; puis les brouillons qu'elle attend (elle a répondu aux
-// questions de Leon, le second appel ; ou dit « Oui » au mail d'un inconnu, son premier appel, avec ses indications),
+// questions de Leon, le second appel ; ou dit « Oui » à une relance, son premier appel, avec ses indications),
 // puis ses mails qui attendent (le premier appel), puis les leçons de ses retouches (learnFrom), cinq appels au modèle
 // au plus en tout (WAITING_MAX), un par mail ou par retouche. Rend le nombre de brouillons écrits. Ne fait rien pour un
 // compte supprimé. Chaque agent en service ne travaille que pour qui lui a dit « oui », à lui, tant qu'il lui est
@@ -114,8 +113,8 @@ function restingMails(ctx: TenantContext, now: Date): string[] {
 // réponse ») n'est jamais redemandé au modèle, sauf une fois pour écrire le brouillon quand elle a répondu aux
 // questions ; et son brouillon n'est déposé qu'ici, une fois, juste après son écriture. Aucun appel pour une demande
 // qu'elle a écartée, ni pour un fil qui a bougé depuis, ni pour un mail de plus de ANSWERED_DAYS jours
-// (readAnsweredMails). Aucun pour le mail d'un inconnu avant son oui : il n'est jamais parmi ses mails qui attendent ;
-// ni pour son mail resté sans réponse avant son oui à une relance : seule sa ligne le fait lire. Une relance a sa
+// (readAnsweredMails). Aucun pour son mail resté sans réponse avant son oui à une relance : seule sa ligne le fait
+// lire. Une relance a sa
 // consigne, et « sans réponse » y est illisible : elle l'a demandée.
 // Deux passages lancés au même instant appelleraient chacun le modèle pour le même mail, pour une seule ligne écrite :
 // la file n'en lance qu'un par personne à la fois (brouillons-queue.ts).
@@ -153,8 +152,8 @@ export async function writeBrouillons(
     mails.length === 0 ? [] : handWritten((await readSentMails(ctx, SENT_MAIL_DAYS, now)).mails);
   let written = 0;
   for (const mail of mails) {
-    // Ce qu'elle attend : ses réponses aux questions de Leon, le second appel pour ce mail ; ou son oui au mail d'un
-    // inconnu, avec ses indications, le premier.
+    // Ce qu'elle attend : ses réponses aux questions de Leon, le second appel pour ce mail ; ou son oui à une
+    // relance, avec ses indications, le premier.
     const owed = 'id' in mail ? mail : undefined;
     // Une relance : depuis combien de jours son mail, le dernier du fil, attend une réponse.
     const last = mail.messages.at(-1)?.at ?? now;
@@ -356,8 +355,8 @@ async function learnFrom(
   }
 }
 
-// Ce que l'accueil lit au plus pour le panneau de l'agent, de chaque sorte (les demandes de Leon, avec les mails
-// d'inconnus, et les brouillons prêts) : les mails les plus récents.
+// Ce que l'accueil lit au plus pour le panneau de l'agent, de chaque sorte (les demandes de Leon et les brouillons
+// prêts) : les mails les plus récents.
 export const HOME_MAX = 20;
 
 export type ReadyBrouillon = {
@@ -378,8 +377,8 @@ export type ReadyBrouillon = {
 };
 // Une demande de Leon : les questions qu'il lui pose avant d'écrire le brouillon, chacune avec ses choix de réponse,
 // dans le même ordre (aucun pour une demande posée avant les choix, 0083). `repondue` : elle a répondu, et Leon écrit
-// le brouillon. Son oui au mail d'un inconnu, tant que le premier appel n'a rien rendu, en est une sans question, où
-// Leon écrit.
+// le brouillon. Son oui à une relance, tant que le premier appel n'a rien rendu, en est une sans question, où Leon
+// écrit.
 export type Demande = Pick<
   ReadyBrouillon,
   'id' | 'sourceId' | 'from' | 'receivedAt' | 'relance'
@@ -390,14 +389,14 @@ export type Demande = Pick<
 };
 
 // Ce que l'accueil montre de l'agent, d'une seule lecture : les demandes de Leon (ses questions, qu'elle y ait répondu
-// ou non, et son oui au mail d'un inconnu, tant que le brouillon n'est pas écrit) et les brouillons prêts (ceux qui ont leur texte, écrit au premier
-// appel ou avec ses réponses), HOME_MAX de chaque sorte, le mail le plus récent d'abord. Seulement les lignes qu'elle
+// ou non, et son oui à une relance, tant que le brouillon n'est pas écrit) et les brouillons prêts (ceux qui ont leur
+// texte, écrit au premier appel ou avec ses réponses), HOME_MAX de chaque sorte, le mail le plus récent d'abord. Seulement les lignes qu'elle
 // n'a pas écartées, et dont le fil n'a pas bougé depuis : le dernier message du fil se relit à chaque affichage, et dès
 // qu'elle a répondu, ou qu'un nouveau message est arrivé, la ligne ne se montre plus. À date égale, le même départage
 // que readWaitingMails. Et pas la demande d'un mail trop ancien pour un appel (readAnsweredMails) : ses réponses, ou
 // son oui, ne feraient plus rien écrire. Parmi les demandes, celles qui attendent sa réponse passent avant celles où Leon
 // écrit : elles seules attendent un geste d'elle, et des lignes « Leon écrit » ne doivent pas les cacher.
-// Un mail jugé sans réponse à donner, ou son « non » à un inconnu (ni texte, ni question, ni oui), s'écarte sur sa
+// Un mail jugé sans réponse à donner, ou son « non » à une relance (ni texte, ni question, ni oui), s'écarte sur sa
 // ligne seule, avant de chercher le dernier message de son fil : ces lignes ne se montrent jamais, et leur nombre ne
 // fait que grandir.
 // Une relance se lit de même, avec ses lignes de réponse : son mail est le dernier du fil, et elle s'y montre avec le
@@ -506,33 +505,7 @@ export async function answerQuestions(
   return answered.length > 0;
 }
 
-// Sa réponse au mail d'un inconnu (waiting-mails.ts, unknownMails), depuis l'accueil : « Oui », avec ses indications
-// (vides quand elle n'en donne pas), ou « Non » (null). Une ligne s'écrit pour ce mail (0084) : son oui attend le
-// passage suivant, qui fera le premier appel ; son non le ferme pour de bon, sans appel. Rend l'identifiant de la ligne,
-// ou null sans rien écrire si ce n'est pas un mail d'inconnu qui l'attend encore : à elle, pas encore traité, toujours
-// le dernier de son fil, de moins de sept jours ; ou si son compte est supprimé. Deux envois simultanés n'en gardent
-// qu'un : une seule ligne par message (0080). L'appelant a borné les indications (settings/actions.ts) ; la table aussi.
-export async function answerUnknownMail(
-  ctx: TenantContext,
-  mail: { sourceId: string; message: string },
-  indications: string | null,
-): Promise<string | null> {
-  if (!z.uuid().safeParse(mail.sourceId).success) return null;
-  const line = sql`s.tenant_id, ${ctx.userId}::uuid, s.id, l.message, ${indications}::text,
-                   array[${ctx.userId}::uuid]`;
-  return withTenant(ctx, async (tx) => {
-    if (!(await lockAccount(tx, ctx))) return null;
-    const { rows } = await tx.execute<{ id: string }>(sql`
-      insert into brouillons (tenant_id, user_id, source_id, message, indications, acl)
-      ${unknownMails(ctx, new Date(), line, mail)}
-      on conflict do nothing
-      returning id`);
-    return rows[0]?.id ?? null;
-  });
-}
-
-// Sa réponse à son mail resté sans réponse (unanswered-mails.ts), depuis l'accueil, comme au mail d'un inconnu : « Oui »,
-// avec ses indications (vides quand elle n'en donne pas), ou « Non » (null). Une ligne de relance s'écrit pour ce mail
+// Sa réponse à son mail resté sans réponse (unanswered-mails.ts), depuis l'accueil : « Oui », avec ses indications (vides quand elle n'en donne pas), ou « Non » (null). Une ligne de relance s'écrit pour ce mail
 // (0089) : son oui attend le passage suivant, qui fera le premier appel ; son non le ferme pour de bon, sans appel. Rend
 // l'identifiant de la ligne, ou null sans rien écrire si ce n'est plus un mail sans réponse : à elle, toujours le
 // dernier de son fil, dans la fenêtre, pas encore traité (unansweredMails, la même requête que l'accueil, sans le filtre

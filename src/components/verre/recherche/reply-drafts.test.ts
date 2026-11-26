@@ -8,7 +8,6 @@ import { type Done, panelMails } from '@/lib/reply-drafts';
 import type {
   HomeBrouillon,
   HomeDemande,
-  HomeInconnu,
   HomePreference,
   HomeRelance,
 } from '@/server/portrait/screen';
@@ -24,8 +23,9 @@ vi.mock('@/app/(app)/settings/actions', () => ({
   answerPreferenceAction: vi.fn(),
   answerQuestionsAction: vi.fn(),
   answerRelanceAction: vi.fn(),
-  answerUnknownAction: vi.fn(),
   discardBrouillonAction: vi.fn(),
+  sendBrouillonAction: vi.fn(),
+  trashMailAction: vi.fn(),
 }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 // Le panneau du kit se monte dans un portail, que le rendu côté serveur ne dessine pas : ici, quand `view.open` le
@@ -73,12 +73,6 @@ const CONTRAT: HomeDemande = {
   repondue: false,
   relance: false,
   source: { title: null, url: null, kind: 'outlook' },
-};
-const INES: HomeInconnu = {
-  from: 'Inès Garnier',
-  receivedAt: new Date('2026-11-12T09:00:00Z'),
-  mail: { sourceId: id(7), message: 'message:18c2f0a' },
-  source: { title: 'Partenariat', url: 'https://mail.google.test/7', kind: 'gmail' },
 };
 // Une préférence d'écriture que Leon a tirée de sa retouche.
 const RETOUCHE: HomePreference = {
@@ -148,16 +142,16 @@ const within = (children: ReactNode, locale: 'en' | 'fr') =>
     }),
   );
 const render = (
-  demandes: Array<HomeDemande | HomeInconnu | HomePreference | HomeRelance>,
+  demandes: Array<HomeDemande | HomePreference | HomeRelance>,
   prets: HomeBrouillon[] = [],
   locale: 'en' | 'fr' = 'fr',
   name: string | null = 'Julie',
 ) => within(createElement(ReplyDrafts, { name, demandes, prets, max: 1000 }), locale);
 // Un mail du panneau, tel qu'il s'y montre (sans le préchargement du logo de son outil, que React pose devant).
 const mailView = (
-  one: HomeDemande | HomeInconnu | HomePreference | HomeRelance | HomeBrouillon,
+  one: HomeDemande | HomePreference | HomeRelance | HomeBrouillon,
   locale: 'en' | 'fr' = 'fr',
-  over: { done?: Done; hidden?: boolean; failed?: boolean; send?: boolean } = {},
+  over: { done?: Done; hidden?: boolean; failed?: boolean; send?: boolean; trash?: boolean } = {},
 ) => {
   const [mail] = panelMails(
     'texte' in one ? [] : [one],
@@ -173,12 +167,12 @@ const mailView = (
       failed: over.failed,
       max: 1000,
       onAnswers: () => {},
-      onUnknown: () => {},
       onRelance: () => {},
       onPreference: () => {},
       onDiscard: () => {},
       onRefresh: () => {},
       onSendDraft: over.send ? () => {} : undefined,
+      onTrash: over.trash ? () => {} : undefined,
     }),
     locale,
   ).replace(/^<link [^>]*>/, '');
@@ -232,22 +226,16 @@ describe('ReplyDrafts : la pile « À vous » de l’Accueil', () => {
   });
 
   it('la phrase de Leon et le compte, le mail montré ouvert dans la page, les suivants dessous, « Tout traiter »', () => {
-    const html = render([DEVIS, CONTRAT, INES, REPONDUE], [PRET]);
+    const html = render([DEVIS, CONTRAT, SANS_REPONSE, REPONDUE], [PRET]);
 
     expect(line(html)).toBe(
-      'Julie, j’ai quelques questions à vous poser. 3 mails à compléter · 1 brouillon prêt · 1 brouillon en cours',
+      'Julie, j’ai quelques questions à vous poser. 2 mails à compléter · 1 relance à décider · 1 brouillon prêt · 1 brouillon en cours',
     );
     // Le mail montré, ouvert : son en-tête, sans prendre le focus au chargement.
     expect(count(html, '<article')).toBe(1);
     // Les quatre autres, puis « Tout traiter » : chacun ouvre le panneau.
     expect(count(html, 'aria-haspopup="dialog"')).toBe(5);
     expect(html).toContain('>Tout traiter</button>');
-  });
-
-  it('le mail d’un inconnu attend son geste aussi : une question, au singulier', () => {
-    expect(line(render([INES]))).toBe(
-      'Julie, j’ai quelques questions à vous poser. 1 mail à compléter',
-    );
   });
 
   it('sans rien à compléter, ses brouillons prêts : au singulier, au pluriel, sans les sortes absentes', () => {
@@ -297,7 +285,7 @@ describe('ReplyDrafts : la pile « À vous » de l’Accueil', () => {
   });
 
   it('sans prénom, les mêmes phrases sans le nommer', () => {
-    const anon = (demandes: Array<HomeDemande | HomeInconnu>, prets: HomeBrouillon[] = []) =>
+    const anon = (demandes: HomeDemande[], prets: HomeBrouillon[] = []) =>
       line(render(demandes, prets, 'fr', null));
 
     expect(anon([DEVIS])).toBe('J’ai quelques questions à vous poser. 1 mail à compléter');
@@ -308,15 +296,15 @@ describe('ReplyDrafts : la pile « À vous » de l’Accueil', () => {
 
   it('en anglais, les mêmes phrases', () => {
     const english = (
-      demandes: Array<HomeDemande | HomeInconnu>,
+      demandes: HomeDemande[],
       prets: HomeBrouillon[] = [],
       name: string | null = 'Julie',
     ) => line(render(demandes, prets, 'en', name));
 
-    expect(english([DEVIS, INES, REPONDUE], [PRET])).toBe(
+    expect(english([DEVIS, CONTRAT, REPONDUE], [PRET])).toBe(
       'Julie, I have a few questions for you. 2 emails to complete · 1 draft ready · 1 draft in progress',
     );
-    expect(english([INES])).toBe('Julie, I have a few questions for you. 1 email to complete');
+    expect(english([DEVIS])).toBe('Julie, I have a few questions for you. 1 email to complete');
     expect(english([], [PRET])).toBe('Julie, your draft is ready. 1 draft ready');
     expect(english([REPONDUE], [PRET, DEPOSE])).toBe(
       'Julie, your 2 drafts are ready. 2 drafts ready · 1 draft in progress',
@@ -333,7 +321,7 @@ describe('ReplyDrafts : la pile « À vous » de l’Accueil', () => {
 
 describe('ReplyDrafts : le panneau, tel qu’il s’ouvre', () => {
   const open = (
-    demandes: Array<HomeDemande | HomeInconnu | HomeRelance>,
+    demandes: Array<HomeDemande | HomeRelance>,
     prets: HomeBrouillon[] = [],
     locale: 'en' | 'fr' = 'fr',
   ) => {
@@ -345,10 +333,10 @@ describe('ReplyDrafts : le panneau, tel qu’il s’ouvre', () => {
       view.open = false;
     }
   };
-  const ALL = [DEVIS, CONTRAT, INES, REPONDUE];
+  const ALL = [DEVIS, CONTRAT, REPONDUE];
   // Les en-têtes des mails, dans l'ordre du panneau.
   const heads = (html: string) =>
-    [...html.matchAll(/<div id="((?:demande|inconnu|brouillon)-[^"]+)" tabindex="-1"/g)].map(
+    [...html.matchAll(/<div id="((?:demande|brouillon)-[^"]+)" tabindex="-1"/g)].map(
       (match) => match[1],
     );
 
@@ -356,9 +344,8 @@ describe('ReplyDrafts : le panneau, tel qu’il s’ouvre', () => {
     const html = open(ALL, [DEPOSE, PRET]);
 
     expect(html).toContain('<h2>Brouillons de réponse</h2>');
-    expect(text(html)).toMatch(/^Brouillons de réponse Mail 1 sur 6 Inès Garnier/);
+    expect(text(html)).toMatch(/^Brouillons de réponse Mail 1 sur 5 Léa Roy/);
     expect(heads(html)).toEqual([
-      `inconnu-${INES.mail.sourceId}`,
       `demande-${DEVIS.id}`,
       `demande-${CONTRAT.id}`,
       `brouillon-${PRET.id}`,
@@ -369,15 +356,15 @@ describe('ReplyDrafts : le panneau, tel qu’il s’ouvre', () => {
 
   it('un seul mail à la fois : les autres sont cachés ; son en-tête prend le focus à l’ouverture et rappelle sa place', () => {
     const html = open(ALL, [PRET]);
-    const place = /<span id="([^"]+)" class="tabular-nums">Mail 1 sur 5<\/span>/.exec(html)?.[1];
+    const place = /<span id="([^"]+)" class="tabular-nums">Mail 1 sur 4<\/span>/.exec(html)?.[1];
 
     expect(place).toBeTruthy();
     expect(html).toContain(
-      `<div id="inconnu-${INES.mail.sourceId}" tabindex="-1" data-autofocus="" aria-describedby="${place}"`,
+      `<div id="demande-${DEVIS.id}" tabindex="-1" data-autofocus="" aria-describedby="${place}"`,
     );
     expect(count(html, 'data-autofocus')).toBe(1);
-    expect(count(html, '<div hidden="">')).toBe(4);
-    expect(html.indexOf('<div hidden="">')).toBeGreaterThan(html.indexOf('Inès Garnier'));
+    expect(count(html, '<div hidden="">')).toBe(3);
+    expect(html.indexOf('<div hidden="">')).toBeGreaterThan(html.indexOf('Léa Roy'));
   });
 
   it('son titre suit ce qu’il montre : « Relances » pour des relances seules, « Brouillons et relances » pour les deux', () => {
@@ -401,12 +388,12 @@ describe('ReplyDrafts : le panneau, tel qu’il s’ouvre', () => {
   it('en anglais, les mêmes mots', () => {
     const html = open(ALL, [PRET], 'en');
 
-    expect(text(html)).toMatch(/^Reply drafts Email 1 of 5 Inès Garnier/);
+    expect(text(html)).toMatch(/^Reply drafts Email 1 of 4 Léa Roy/);
     expect(buttons(html.split('<footer>')[1] ?? '')).toEqual(['Next email']);
     expect(text(open([], [], 'en'))).toBe('Reply drafts That’s all for now. Done');
   });
 
-  it('« Mail précédent », « Mail suivant », la confirmation d’« Écarter » : les mêmes mots dans les deux langues', () => {
+  it('« Mail précédent », « Mail suivant », les confirmations d’« Écarter » et de « Supprimer le mail » : les mêmes mots dans les deux langues', () => {
     const words = (messages: typeof fr) => {
       const d = messages.draftQuestions;
       return [
@@ -416,6 +403,10 @@ describe('ReplyDrafts : le panneau, tel qu’il s’ouvre', () => {
         d.confirmDiscardText,
         d.discard,
         d.keep,
+        d.trash.confirm,
+        d.trash.confirmText,
+        d.trash.yes,
+        d.trash.done,
       ];
     };
 
@@ -426,6 +417,10 @@ describe('ReplyDrafts : le panneau, tel qu’il s’ouvre', () => {
       'Il sera aussi supprimé de vos brouillons Gmail.',
       'Écarter',
       'Garder',
+      'Supprimer ce mail ?',
+      'Il part à la corbeille de votre boîte Gmail, où il reste trente jours.',
+      'Supprimer',
+      'Mail mis à la corbeille de Gmail.',
     ]);
     expect(words(en)).toEqual([
       'Previous email',
@@ -434,6 +429,10 @@ describe('ReplyDrafts : le panneau, tel qu’il s’ouvre', () => {
       'It will also be deleted from your Gmail drafts.',
       'Dismiss',
       'Keep',
+      'Delete this email?',
+      'It goes to the trash of your Gmail mailbox, where it stays for thirty days.',
+      'Delete',
+      'Email moved to Gmail trash.',
     ]);
   });
 });
@@ -482,28 +481,6 @@ describe('MailView : un mail du panneau', () => {
     expect(html).not.toContain('<form');
   });
 
-  it('le mail d’un inconnu : « Voulez-vous une réponse ? », « Oui » et « Non », puis ses indications, fermées d’abord ; rien du mail', () => {
-    const html = mailView(INES);
-    const words = `inconnu-${INES.mail.sourceId}`;
-    const panel = `${words}-indications`;
-
-    expect(text(html)).toContain('Inès Garnier Reçu le 12 nov. 2026');
-    expect(text(html)).toContain('Voulez-vous une réponse ? Oui Non');
-    expect(count(html, `aria-describedby="${words}-voir ${words}"`)).toBe(2);
-    expect(html).toContain(`<div id="${panel}" hidden=""`);
-    expect(html).toMatch(new RegExp(`<label for="${panel}-champ"[^>]*>Vos indications</label>`));
-    expect(html).toMatch(
-      new RegExp(
-        `<textarea rows="2"[^>]*id="${panel}-champ"[^>]*aria-describedby="${panel}-champ-note"[^>]*maxLength="1000"`,
-      ),
-    );
-    expect(text(html)).toContain(
-      'Ce que vous voulez répondre, en quelques mots. Vous pouvez laisser vide.',
-    );
-    expect(buttons(html)).toEqual(['Oui', 'Non', 'Préparer la réponse', 'Écarter']);
-    expect(html).not.toMatch(/message:|inconnue\.test|<form/);
-  });
-
   it('un brouillon prêt : son texte, déplié, tel quel, « Copier » et « Écarter »', () => {
     const html = mailView(PRET);
 
@@ -543,12 +520,18 @@ describe('MailView : un mail du panneau', () => {
     expect(text(html)).not.toMatch(/Acceptez-vous|Envoyer mes réponses/);
   });
 
-  it('son oui à un inconnu : Leon écrit, et « Écarter » vise la ligne de son oui', () => {
-    const html = mailView(INES, 'fr', { done: { [`inconnu-${INES.mail.sourceId}`]: id(99) } });
-
-    expect(text(html)).toContain('Inès Garnier Reçu le 12 nov. 2026');
-    expect(text(html)).toContain('J’écris votre réponse. Actualiser Écarter');
-    expect(text(html)).not.toContain('Voulez-vous une réponse');
+  it('un mail reçu relevé par Gmail se supprime d’ici : « Supprimer le mail », à chaque étape ; jamais un fil Outlook, son propre mail ni une préférence', () => {
+    for (const one of [DEVIS, REPONDUE, PRET]) {
+      const html = mailView(one, 'fr', { trash: true });
+      expect(buttons(html), one.id).toContain('Supprimer le mail');
+      // « Garder », dans la confirmation, rend le focus à « Supprimer le mail ».
+      expect(html).toMatch(new RegExp(`id="(?:demande|brouillon)-${one.id}-supprimer"`));
+    }
+    expect(buttons(mailView(DEVIS, 'en', { trash: true }))).toContain('Delete email');
+    for (const one of [CONTRAT, SANS_REPONSE, RELANCE_PRETE, RETOUCHE])
+      expect(text(mailView(one, 'fr', { trash: true }))).not.toContain('Supprimer le mail');
+    // Sans le geste (un écran qui ne le porte pas), pas de bouton.
+    expect(text(mailView(DEVIS))).not.toContain('Supprimer le mail');
   });
 
   it('une préférence d’écriture : la retouche remarquée, la date, le fil, la préférence telle quelle, puis « Dois-je en tenir compte… ? », « Oui » et « Non »', () => {
@@ -594,9 +577,7 @@ describe('MailView : un mail du panneau', () => {
   });
 
   it('en anglais, les mêmes mots', () => {
-    const said = [DEVIS, CONTRAT, INES, PRET, REPONDUE]
-      .map((one) => text(mailView(one, 'en')))
-      .join(' ');
+    const said = [DEVIS, CONTRAT, PRET, REPONDUE].map((one) => text(mailView(one, 'en'))).join(' ');
 
     for (const one of [
       'Received on Nov 10, 2026',
@@ -604,10 +585,6 @@ describe('MailView : un mail du panneau', () => {
       'Untitled',
       'Question 1 of 2',
       'Next',
-      'Do you want a reply? Yes No',
-      'Your instructions',
-      'What you want to reply, in a few words. You can leave it empty.',
-      'Prepare the reply',
       'Draft ready',
       'Copy',
       'Dismiss',
@@ -623,10 +600,9 @@ describe('MailView : un mail du panneau', () => {
 });
 
 describe('MailView : son mail resté sans réponse, et la relance', () => {
-  it('la question : son mail à son destinataire, resté sans réponse, la date de son envoi, le fil, puis « Voulez-vous une relance ? », « Oui » et « Non »', () => {
+  it('la question : son mail à son destinataire, resté sans réponse, la date de son envoi, le fil, puis, sur le même écran, « Voulez-vous une relance ? », ses indications, « Préparer la relance » et « Non »', () => {
     const html = mailView(SANS_REPONSE);
     const words = `relance-${SANS_REPONSE.mail.sourceId}`;
-    const panel = `${words}-indications`;
 
     expect(html).toMatch(
       new RegExp(
@@ -636,16 +612,20 @@ describe('MailView : son mail resté sans réponse, et la relance', () => {
     expect(text(html)).toContain('Envoyé le 14 nov. 2026');
     expect(html).toContain('dateTime="2026-11-14T09:00:00.000Z"');
     expect(html).toContain('href="https://mail.google.test/9"');
-    expect(text(html)).toContain('Voulez-vous une relance ? Oui Non');
-    expect(count(html, `aria-describedby="${words}-voir ${words}"`)).toBe(2);
-    // « Oui » ouvre ses indications, fermées d'abord, puis « Préparer la relance » ; « Écarter » y vaut « Non ».
-    expect(html).toContain(`<div id="${panel}" hidden=""`);
-    expect(html).toMatch(new RegExp(`<label for="${panel}-champ"[^>]*>Vos indications</label>`));
-    expect(html).toMatch(new RegExp(`<textarea [^>]*id="${panel}-champ"[^>]*maxLength="1000"`));
+    // Une seule étape : rien n'est caché derrière un « Oui ».
     expect(text(html)).toContain(
-      'Ce que vous voulez ajouter, en quelques mots. Vous pouvez laisser vide.',
+      'Voulez-vous une relance ? Vos indications Ce que vous voulez ajouter, en quelques mots. Vous pouvez laisser vide. Préparer la relance Non',
     );
-    expect(buttons(html)).toEqual(['Oui', 'Non', 'Préparer la relance', 'Écarter']);
+    expect(html).not.toContain('hidden=""');
+    expect(count(html, `aria-describedby="${words}-voir ${words}"`)).toBe(2);
+    const field = /<label for="([^"]+)"[^>]*>Vos indications<\/label>/.exec(html)?.[1];
+    expect(field).toBeTruthy();
+    expect(html).toMatch(
+      new RegExp(
+        `<textarea rows="2"[^>]*id="${field}"[^>]*aria-describedby="${field}-note"[^>]*maxLength="1000"`,
+      ),
+    );
+    expect(buttons(html)).toEqual(['Préparer la relance', 'Non']);
     expect(html).not.toMatch(/message:|Reçu le|Voulez-vous une réponse|<form/);
   });
 
@@ -658,9 +638,9 @@ describe('MailView : son mail resté sans réponse, et la relance', () => {
     );
     const english = text(mailView(SANS_REPONSE, 'en'));
     expect(english).toContain('Your email to Léa Roy has had no reply. Sent on');
-    expect(english).toContain('Do you want a follow-up? Yes No');
+    expect(english).toContain('Do you want a follow-up? Your instructions');
     expect(english).toContain('What you want to add, in a few words. You can leave it empty.');
-    expect(english).toContain('Prepare the follow-up');
+    expect(english).toContain('Prepare the follow-up No');
     expect(text(mailView(A_PLUSIEURS, 'en'))).toContain(
       'Your email to Léa Roy and 2 other people has had no reply.',
     );

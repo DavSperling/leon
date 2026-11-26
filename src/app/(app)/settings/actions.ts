@@ -57,14 +57,9 @@ import {
   restoreMemoryVersion,
 } from '@/server/memory/memory-section';
 import { AGENTS, type AgentId } from '@/server/portrait/agents';
-import { sendBrouillon, withdrawBrouillon } from '@/server/portrait/brouillon-depot';
+import { sendBrouillon, trashMail, withdrawBrouillon } from '@/server/portrait/brouillon-depot';
 import { QUESTIONS_MAX, REPONSE_MAX_CHARS } from '@/server/portrait/brouillon-prompt';
-import {
-  answerQuestions,
-  answerRelance,
-  answerUnknownMail,
-  discardBrouillon,
-} from '@/server/portrait/brouillons';
+import { answerQuestions, answerRelance, discardBrouillon } from '@/server/portrait/brouillons';
 import { requestBrouillons } from '@/server/portrait/brouillons-queue';
 import { correctFields, retireLine } from '@/server/portrait/fiche';
 import { answerPreference } from '@/server/portrait/preferences';
@@ -756,8 +751,8 @@ const QuestionAnswersSchema = z.object({
     .min(1)
     .max(QUESTIONS_MAX),
 });
-// Sa réponse au mail d'un inconnu, ou à une relance.
-const UnknownAnswerSchema = z.object({
+// Sa réponse à une relance.
+const RelanceAnswerSchema = z.object({
   sourceId: z.uuid(),
   message: z.string().min(1).max(200),
   oui: z.boolean(),
@@ -848,6 +843,25 @@ export async function sendBrouillonAction(
   return { ok: true };
 }
 
+// « Supprimer » le mail reçu, depuis le panneau de l'accueil, après sa confirmation : il part à la corbeille de sa
+// boîte Gmail (portrait/brouillon-depot.ts, trashMail), où il reste trente jours. Puis sa ligne s'écarte, comme par
+// « Écarter » : elle ne se montre plus, et le brouillon que Leon avait déposé quitte ses brouillons Gmail.
+// « introuvable » : rien à supprimer d'ici (la ligne d'une autre, déjà écartée, une relance, un fil Outlook) ;
+// « echec » : Gmail n'a rien mis à la corbeille. Dans ces deux cas rien ne change.
+export async function trashMailAction(
+  id: string,
+): Promise<{ ok: true; resteDansGmail: boolean } | { error: FicheError | 'echec' }> {
+  const ctx = await requireUserContext();
+  const parsed = z.uuid().safeParse(id);
+  if (!parsed.success) return { error: 'invalide' };
+  const trashed = await trashMail(ctx, parsed.data);
+  if (trashed !== 'supprime') return { error: trashed };
+  await discardBrouillon(ctx, parsed.data);
+  const withdrawn = await withdrawBrouillon(ctx, parsed.data);
+  revalidatePath('/');
+  return { ok: true, resteDansGmail: !withdrawn };
+}
+
 // Ses réponses aux questions de Leon, depuis le panneau de l'accueil : une par question, dans le même ordre, de
 // REPONSE_MAX_CHARS caractères au plus, vide quand elle ne sait pas ou ne veut pas en parler. Hors de ces bornes :
 // « invalide ». Une demande qui n'est pas à elle, déjà répondue, écartée, ou un autre nombre de réponses que de
@@ -873,37 +887,7 @@ export async function answerQuestionsAction(input: {
   return { ok: true };
 }
 
-// Sa réponse au mail d'un inconnu, depuis le panneau de l'accueil : « Oui », avec ses indications (REPONSE_MAX_CHARS
-// caractères au plus, vides quand elle n'en donne pas), ou « Non », qui ne garde pas d'indications. Hors de ces bornes :
-// « invalide ». Un mail qui ne l'attend plus (à une autre, d'un correspondant, automatique, déjà traité, d'un fil qui a
-// bougé, trop ancien) : « introuvable » (portrait/brouillons.ts, answerUnknownMail). Rien n'est écrit dans les deux cas.
-// Son oui gardé, un passage est demandé à la file : il fera le premier appel ; `id`, sa ligne, sert à l'écarter ensuite.
-// Son non ne demande rien. Rien n'est envoyé. Une panne de la base est « echec » : son erreur citerait ses indications.
-export async function answerUnknownAction(input: {
-  sourceId: string;
-  message: string;
-  oui: boolean;
-  indications: string;
-}): Promise<{ ok: true; id: string } | { error: FicheError | 'echec' }> {
-  const ctx = await requireUserContext();
-  const parsed = UnknownAnswerSchema.safeParse(input);
-  if (!parsed.success) return { error: 'invalide' };
-  const { sourceId, message, oui, indications } = parsed.data;
-  let id: string | null;
-  try {
-    id = await answerUnknownMail(ctx, { sourceId, message }, oui ? indications : null);
-  } catch (error) {
-    logError('brouillons.inconnu', error, { userId: ctx.userId });
-    return { error: 'echec' };
-  }
-  if (!id) return { error: 'introuvable' };
-  if (oui) await requestBrouillons(ctx);
-  // Pas de revalidatePath : le panneau tient le mail (Leon écrit, avec `id`), qu'un accueil relu remplacerait par un
-  // autre, sous une autre clé, rangé à la fin du panneau.
-  return { ok: true, id };
-}
-
-// Sa réponse à une relance, depuis le panneau de l'accueil, comme au mail d'un inconnu : « Oui », avec ses indications
+// Sa réponse à une relance, depuis le panneau de l'accueil : « Oui », avec ses indications
 // (REPONSE_MAX_CHARS caractères au plus, vides quand elle n'en donne pas), ou « Non », qui ne garde pas d'indications.
 // Hors de ces bornes : « invalide ». Un mail qui n'attend plus de relance (à une autre, déjà traité, d'un fil qui a
 // bougé, hors de la fenêtre) : « introuvable » (portrait/brouillons.ts, answerRelance). Rien n'est écrit dans les deux
@@ -917,7 +901,7 @@ export async function answerRelanceAction(input: {
   indications: string;
 }): Promise<{ ok: true; id: string } | { error: FicheError | 'echec' }> {
   const ctx = await requireUserContext();
-  const parsed = UnknownAnswerSchema.safeParse(input);
+  const parsed = RelanceAnswerSchema.safeParse(input);
   if (!parsed.success) return { error: 'invalide' };
   const { sourceId, message, oui, indications } = parsed.data;
   let id: string | null;
@@ -929,7 +913,8 @@ export async function answerRelanceAction(input: {
   }
   if (!id) return { error: 'introuvable' };
   if (oui) await requestBrouillons(ctx);
-  // Pas de revalidatePath, comme pour un inconnu : le panneau tient le mail, où Leon écrit.
+  // Pas de revalidatePath : le panneau tient le mail (Leon écrit, avec `id`), qu'un accueil relu remplacerait par un
+  // autre, sous une autre clé, rangé à la fin du panneau.
   return { ok: true, id };
 }
 

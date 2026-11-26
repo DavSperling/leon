@@ -6,7 +6,7 @@ import { logError } from '@/server/log';
 import {
   type HomeBrouillon,
   type HomeDemande,
-  type HomeInconnu,
+  type HomeRelance,
   readHomeBrouillons,
 } from '@/server/portrait/screen';
 import HomePage from './page';
@@ -53,8 +53,10 @@ const DEMANDE: HomeDemande = {
   relance: false,
   source: { title: 'Devis 2027', url: null, kind: 'gmail' },
 };
-const INCONNU: HomeInconnu = {
+const RELANCE: HomeRelance = {
+  relance: true,
   from: 'Inès Garnier',
+  others: 0,
   receivedAt: new Date('2026-11-11T09:00:00Z'),
   mail: { sourceId: '00000003-1111-4111-8111-111111111111', message: 'message:18c2f0a' },
   source: { title: 'Partenariat', url: null, kind: 'gmail' },
@@ -122,10 +124,10 @@ describe('l’Accueil : la ligne de l’agent « Brouillons de réponse »', () 
     });
   });
 
-  it('les demandes où Leon écrit, le mail d’un inconnu et les brouillons prêts lui arrivent tous, tels que lus', async () => {
+  it('les demandes où Leon écrit, sa relance à décider et les brouillons prêts lui arrivent tous, tels que lus', async () => {
     const repondue = { ...DEMANDE, repondue: true };
     vi.mocked(readHomeBrouillons).mockResolvedValue({
-      demandes: [INCONNU, repondue],
+      demandes: [RELANCE, repondue],
       prets: [PRET],
     });
 
@@ -133,7 +135,7 @@ describe('l’Accueil : la ligne de l’agent « Brouillons de réponse »', () 
 
     expect(received(elements)).toEqual({
       name: 'Julie',
-      demandes: [INCONNU, repondue],
+      demandes: [RELANCE, repondue],
       prets: [PRET],
       max: 1000,
     });

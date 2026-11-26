@@ -375,7 +375,6 @@
     "nextMail": "Mail suivant",
     "allDone": "C’est tout pour l’instant.",
     "someone": "Votre correspondant",
-    "strangerAsk": "Voulez-vous une réponse ?",
     "unanswered": "Votre mail à {name} est resté sans réponse.",
     "unansweredMany": "Votre mail à {name} et {count, plural, one {# autre personne} other {# autres personnes}} est resté sans réponse.",
     "relanceAsk": "Voulez-vous une relance ?",
@@ -383,9 +382,7 @@
     "noticedAnon": "J’ai remarqué une retouche sur l’une de mes réponses.",
     "keepInMind": "Dois-je en tenir compte pour vos prochains brouillons ?",
     "instructions": "Vos indications",
-    "instructionsHelp": "Ce que vous voulez répondre, en quelques mots. Vous pouvez laisser vide.",
     "relanceInstructionsHelp": "Ce que vous voulez ajouter, en quelques mots. Vous pouvez laisser vide.",
-    "prepare": "Préparer la réponse",
     "relancePrepare": "Préparer la relance",
     "yes": "Oui",
     "no": "Non",
@@ -414,11 +411,17 @@
     "list": "Ce qui vous attend",
     "kind": {
       "questions": "À compléter",
-      "inconnu": "À décider",
       "relance": "Relance à décider",
       "preference": "Préférence à valider",
       "pret": "Brouillon prêt",
       "ecrit": "En cours d’écriture"
+    },
+    "trash": {
+      "button": "Supprimer le mail",
+      "confirm": "Supprimer ce mail ?",
+      "confirmText": "Il part à la corbeille de votre boîte Gmail, où il reste trente jours.",
+      "yes": "Supprimer",
+      "done": "Mail mis à la corbeille de Gmail."
     },
     "sendDraft": {
       "button": "Envoyer",

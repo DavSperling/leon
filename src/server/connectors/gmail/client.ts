@@ -24,8 +24,9 @@ import {
 // la réponse de l'agent « Brouillons de réponse » à l'auteur du mail reçu, ou la relance de l'agent « Relances » aux
 // destinataires de son mail resté sans réponse, en « à » et en copie, sans elle ; ce même brouillon supprimé
 // (deleteDraft) quand elle l'écarte dans Leon, ou, pour une relance, quand son fil a bougé avant qu'elle l'envoie ; et
-// ce brouillon envoyé (sendDraft) quand elle clique « Envoyer » dans Leon et le confirme. Rien d'autre n'est envoyé,
-// supprimé ni modifié.
+// ce brouillon envoyé (sendDraft) quand elle clique « Envoyer » dans Leon et le confirme ; et un mail reçu mis à la
+// corbeille (trashMessage) quand elle clique « Supprimer » dans Leon et le confirme. Rien d'autre n'est envoyé, supprimé
+// ni modifié.
 // Doc relue le 23/11/2026 :
 //   https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.threads/get (format=metadata,
 //     metadataHeaders répété, gmail.modify accepté ; ce format ne rend que « IDs, labels, and email headers »)
@@ -37,6 +38,10 @@ import {
 //   https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.drafts/delete (DELETE …/drafts/<id>,
 //     suppression immédiate et définitive, gmail.modify accepté)
 //   https://pipedream.com/docs/connect/api-proxy (un POST avec un corps JSON passe ; 30 s au plus)
+// Doc relue le 26/11/2026 :
+//   https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/trash (POST …/messages/<id>/trash,
+//     corps vide, rend le message ; mail.google.com ou gmail.modify)
+//   https://support.google.com/mail/answer/7401 (un mail supprimé reste trente jours à la corbeille, d'où il se reprend)
 // Non vérifié : aucun brouillon réel n'a été créé. La documentation ne dit pas si un nom d'en-tête demandé dans une
 // autre casse est rendu (« Message-Id »), ni si un message à la corbeille reste dans la lecture du fil.
 
@@ -228,6 +233,17 @@ export function gmailClient(http: ConnectorHttp) {
         url: `${GMAIL}/gmail/v1/users/me/drafts/send`,
         method: 'POST',
         body: { id: draftId },
+        once: true,
+      });
+    },
+
+    // Met à la corbeille de sa boîte un mail qu'elle a reçu, quand elle clique « Supprimer » dans Leon et le confirme
+    // (brouillon-depot.ts, trashMail) : il y reste trente jours, d'où elle peut le reprendre ; jamais une suppression
+    // définitive. Jamais rejouée, sauf un 401 par le proxy de Pipedream ; la refaire ne change rien, le mail y est déjà.
+    async trashMessage(messageId: string): Promise<void> {
+      await http.text({
+        url: `${GMAIL}/gmail/v1/users/me/messages/${encodeURIComponent(messageId)}/trash`,
+        method: 'POST',
         once: true,
       });
     },

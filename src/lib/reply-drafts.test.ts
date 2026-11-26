@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import type {
   HomeBrouillon,
   HomeDemande,
-  HomeInconnu,
   HomePreference,
   HomeRelance,
 } from '@/server/portrait/screen';
@@ -12,6 +11,7 @@ import fr from '../../messages/fr.json';
 import {
   askingFor,
   CLOSED,
+  canTrash,
   confirmsDiscard,
   countsOf,
   isRelance,
@@ -38,12 +38,6 @@ const demande = (n: number, day: number, repondue = false): HomeDemande => ({
   choix: [['Oui', 'Non']],
   repondue,
   relance: false,
-  source,
-});
-const inconnu = (n: number, day: number): HomeInconnu => ({
-  from: `Inconnu ${n}`,
-  receivedAt: at(day),
-  mail: { sourceId: id(n), message: `message:${n}` },
   source,
 });
 const preference = (n: number, day: number): HomePreference => ({
@@ -79,13 +73,13 @@ const seen = (mails: PanelMail[]) => mails.map((one) => `${one.mail.from} ${one.
 describe('panelMails : l’ordre du panneau', () => {
   it('ce qui attend un geste d’elle d’abord, puis les brouillons prêts, puis ce que Leon écrit ; les plus récents d’abord dans chaque sorte', () => {
     const mails = panelMails(
-      [demande(1, 10, true), demande(2, 12), inconnu(3, 14), demande(4, 9), demande(5, 16, true)],
+      [demande(1, 10, true), demande(2, 12), relance(3, 14), demande(4, 9), demande(5, 16, true)],
       [pret(6, 8), pret(7, 20)],
       {},
     );
 
     expect(seen(mails)).toEqual([
-      'Inconnu 3 inconnu',
+      'Relance 3 relance',
       'Demande 2 questions',
       'Demande 4 questions',
       'Prêt 7 pret',
@@ -95,15 +89,15 @@ describe('panelMails : l’ordre du panneau', () => {
     ]);
   });
 
-  it('un mail fermé ici s’en va ; des réponses envoyées, un oui à un inconnu : Leon l’écrit, sur sa ligne', () => {
-    const mails = panelMails([demande(1, 10), inconnu(2, 12), demande(3, 9)], [pret(4, 8)], {
+  it('un mail fermé ici s’en va ; des réponses envoyées, un oui à une relance : Leon l’écrit, sur sa ligne', () => {
+    const mails = panelMails([demande(1, 10), relance(2, 12), demande(3, 9)], [pret(4, 8)], {
       [`demande-${id(1)}`]: id(1),
-      [`inconnu-${id(2)}`]: id(42),
+      [`relance-${id(2)}`]: id(42),
       [`brouillon-${id(4)}`]: null,
       [`demande-${id(3)}`]: null,
     });
 
-    expect(seen(mails)).toEqual(['Inconnu 2 ecrit', 'Demande 1 ecrit']);
+    expect(seen(mails)).toEqual(['Relance 2 ecrit', 'Demande 1 ecrit']);
     // Écarter son oui vise la ligne écrite par son oui, pas son fil.
     expect(mails.map((one) => one.id)).toEqual([id(42), id(1)]);
   });
@@ -135,9 +129,9 @@ describe('panelMails : l’ordre du panneau', () => {
 });
 
 describe('countsOf : ce que la ligne de l’Accueil compte', () => {
-  it('les mails à compléter (questions et inconnus), les brouillons prêts, et ce que Leon écrit', () => {
+  it('les mails à compléter (ses questions), les brouillons prêts, et ce que Leon écrit', () => {
     const mails = panelMails(
-      [demande(1, 10), inconnu(2, 11), demande(3, 12, true)],
+      [demande(1, 10), demande(2, 11), demande(3, 12, true)],
       [pret(4, 8), pret(5, 9), pret(6, 7)],
       {},
     );
@@ -177,12 +171,12 @@ describe('countsOf : ce que la ligne de l’Accueil compte', () => {
 
 describe('panelMails : une préférence d’écriture proposée', () => {
   it('se range avec ce qui attend un geste d’elle, par date du mail ; « Oui » ou « Non » la ferme', () => {
-    const all = [demande(1, 10), preference(2, 12), inconnu(3, 11), demande(4, 16, true)];
+    const all = [demande(1, 10), preference(2, 12), relance(3, 11), demande(4, 16, true)];
     const mails = panelMails(all, [pret(5, 20)], {});
 
     expect(seen(mails)).toEqual([
       'Préférence 2 preference',
-      'Inconnu 3 inconnu',
+      'Relance 3 relance',
       'Demande 1 questions',
       'Prêt 5 pret',
       'Demande 4 ecrit',
@@ -206,19 +200,18 @@ describe('panelMails : une préférence d’écriture proposée', () => {
 describe('panelMails : son mail resté sans réponse, et la relance qui suit', () => {
   it('la question de relance est un geste d’elle : avec les autres demandes, avant les brouillons prêts, par date du mail', () => {
     const mails = panelMails(
-      [demande(1, 10), relance(2, 12), inconnu(3, 11), demande(4, 16, true)],
+      [demande(1, 10), relance(2, 12), demande(4, 16, true)],
       [pret(5, 20)],
       {},
     );
 
     expect(seen(mails)).toEqual([
       'Relance 2 relance',
-      'Inconnu 3 inconnu',
       'Demande 1 questions',
       'Prêt 5 pret',
       'Demande 4 ecrit',
     ]);
-    // Sa clé et son fil : pas ceux du mail d'un inconnu.
+    // Sa clé, et son fil pour identifiant : elle n'a pas de ligne avant son oui.
     expect(mails[0]).toMatchObject({ key: `relance-${id(2)}`, id: id(2) });
     expect(isRelance(mails[0] as PanelMail)).toBe(true);
     expect(mails.filter(isRelance)).toHaveLength(1);
@@ -269,13 +262,13 @@ describe('panelMails : son mail resté sans réponse, et la relance qui suit', (
 describe('confirmsDiscard : « Écarter » demande d’abord', () => {
   it('pour un brouillon déposé dans Gmail seulement', () => {
     const mails = panelMails(
-      [demande(1, 10), inconnu(2, 11), demande(3, 12, true)],
+      [demande(1, 10), relance(2, 11), demande(3, 12, true)],
       [pret(4, 8, true), pret(5, 9)],
       {},
     );
 
     expect(mails.map((one) => [one.mail.from, confirmsDiscard(one)])).toEqual([
-      ['Inconnu 2', false],
+      ['Relance 2', false],
       ['Demande 1', false],
       ['Prêt 5', false],
       ['Prêt 4', true],
@@ -345,7 +338,7 @@ describe('sendQuestion : la question avant « Envoyer »', () => {
 });
 
 describe('panelReducer : mail par mail', () => {
-  const DEMANDES = [demande(1, 20), inconnu(2, 19), demande(3, 18)];
+  const DEMANDES = [demande(1, 20), relance(2, 19), demande(3, 18)];
   const PRETS = [pret(4, 17, true)];
   // Le panneau ouvert, puis des gestes ; ce qu'il montre ensuite : le mail, sa place et le total.
   const replay = (actions: Array<(mails: PanelMail[]) => PanelAction>) => {
@@ -380,18 +373,18 @@ describe('panelReducer : mail par mail', () => {
 
   it('s’ouvre sur le premier mail ; « Mail suivant » et « Mail précédent » vont et viennent', () => {
     expect(replay([]).shown).toBe('Demande 1 1/4');
-    expect(replay([show(1)]).shown).toBe('Inconnu 2 2/4');
+    expect(replay([show(1)]).shown).toBe('Relance 2 2/4');
     expect(replay([show(3), show(2)]).shown).toBe('Demande 3 3/4');
   });
 
   it('ses réponses envoyées : le mail reste à sa place, Leon l’écrit, et le panneau passe au suivant', () => {
     const { mails, shown } = replay([close(0, id(1))]);
 
-    expect(shown).toBe('Inconnu 2 2/4');
+    expect(shown).toBe('Relance 2 2/4');
     expect(seen(mails)[0]).toBe('Demande 1 ecrit');
   });
 
-  it('son oui à un inconnu, avec la ligne de son oui : pareil, et « Écarter » visera cette ligne', () => {
+  it('son oui à une relance, avec la ligne de son oui : pareil, et « Écarter » visera cette ligne', () => {
     const { mails, shown } = replay([show(1), close(1, id(42))]);
 
     expect(shown).toBe('Demande 3 3/4');
@@ -402,7 +395,7 @@ describe('panelReducer : mail par mail', () => {
     const { mails, shown } = replay([show(1), close(1)]);
 
     expect(shown).toBe('Demande 3 2/3');
-    expect(seen(mails)).not.toContain('Inconnu 2 inconnu');
+    expect(seen(mails)).not.toContain('Relance 2 relance');
   });
 
   it('au dernier mail : parti, le panneau montre celui d’avant ; écrit par Leon, il reste sur lui, qui le dit', () => {
@@ -458,5 +451,33 @@ describe('askingFor : la confirmation ouverte suit son mail', () => {
     expect(askingFor(asking, paul)).toBe(false);
     expect(askingFor(asking, undefined)).toBe(false);
     expect(askingFor(null, lea)).toBe(false);
+  });
+});
+
+describe('canTrash : « Supprimer » ne se propose que pour un mail reçu, relevé par Gmail', () => {
+  it('ses questions, la réponse que Leon écrit, le brouillon prêt : oui', () => {
+    const mails = panelMails([demande(1, 10), demande(2, 9, true)], [pret(3, 8)], {});
+
+    expect(mails.map((one) => [one.sorte, canTrash(one)])).toEqual([
+      ['questions', true],
+      ['pret', true],
+      ['ecrit', true],
+    ]);
+  });
+
+  it('son propre mail (une relance, à chaque étape), une préférence, un fil d’un autre outil : non', () => {
+    const outlook = { ...source, kind: 'outlook' };
+    const mails = panelMails(
+      [
+        relance(1, 12),
+        preference(2, 11),
+        { ...demande(3, 10), relance: true },
+        { ...demande(4, 9), source: outlook },
+      ],
+      [{ ...pret(5, 8), relance: true }],
+      {},
+    );
+
+    expect(mails.map(canTrash)).toEqual([false, false, false, false, false]);
   });
 });

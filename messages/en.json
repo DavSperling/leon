@@ -742,7 +742,7 @@
     "replaceKey": "Replace key",
     "delete": "Delete",
     "deleteTitle": "Delete “{name}”?",
-    "deleteConfirm": "Leon will stop reading {provider} with {credential}. Previously captured sources will remain in memory.",
+    "deleteConfirm": "Leon will stop reading {provider} with {credential}. Previously captured sources will remain in memory, visible to the same people as today (“Visible to”). That choice can no longer be changed once the connection is deleted.",
     "tokens": "these tokens, which will be deleted",
     "key": "this key, which will be deleted",
     "connectionDeleted": "Connection deleted.",

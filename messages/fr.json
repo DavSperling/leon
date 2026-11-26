@@ -742,7 +742,7 @@
     "replaceKey": "Remplacer la clé",
     "delete": "Supprimer",
     "deleteTitle": "Supprimer « {name} » ?",
-    "deleteConfirm": "Leon ne lira plus {provider} avec {credential}. Les sources déjà captées restent dans la mémoire.",
+    "deleteConfirm": "Leon ne lira plus {provider} avec {credential}. Les sources déjà captées restent dans la mémoire, visibles des mêmes personnes qu’aujourd’hui (« Visible par »). Ce choix ne pourra plus être changé une fois la connexion supprimée.",
     "tokens": "ces jetons, qui sont effacés",
     "key": "cette clé, qui est effacée",
     "connectionDeleted": "Connexion supprimée.",

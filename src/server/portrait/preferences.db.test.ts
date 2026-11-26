@@ -720,7 +720,7 @@ describe('readHomeBrouillons : une préférence proposée est une demande de plu
         from: 'Léa Roy',
         receivedAt: expect.any(Date),
         preference: LESSON,
-        source: { title: 'Devis 2027', url: null, kind: 'gmail' },
+        source: { title: 'Devis 2027', url: null, kind: 'gmail', mailText: expect.any(String) },
       },
     ]);
     const [one] = home.demandes;

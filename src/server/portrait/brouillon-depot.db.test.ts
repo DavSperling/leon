@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { createConnection } from '@/server/connectors/connections';
+import { OAUTH_SECRET_FIELDS } from '@/server/connectors/oauth';
 import { forgetPipedreamToken, PIPEDREAM_SECRET_FIELDS } from '@/server/connectors/pipedream';
 import { brouillons } from '@/server/db/schema/portrait';
 import { adminDb, adminPool } from '@/test/db';
@@ -186,6 +187,38 @@ describe('depositBrouillon : un brouillon complet va dans ses brouillons Gmail',
       ecarteLe: null,
     });
     expect(errors).not.toHaveBeenCalled();
+  });
+
+  it('une boîte branchée par l’appli Google de Leon : droit chez Gmail, chaque requête avec son jeton', async () => {
+    const [julie] = await team();
+    const connectionId = await createConnection(julie, {
+      provider: 'gmail',
+      label: 'boite@acme.test',
+      config: {
+        authMode: 'oauth',
+        accessToken: 'jeton-google',
+        refreshToken: 'r',
+        expiresAt: null,
+      },
+      secretFields: OAUTH_SECRET_FIELDS,
+      since: ago(30 * 24 * HOUR),
+    });
+    const { id } = await drafted(julie, COMPLET, { connectionId });
+    const fetchImpl = fakeFetch([
+      {
+        url: /^https:\/\/gmail\.googleapis\.com\/gmail\/v1\/users\/me\/threads\//,
+        json: { id: 't', messages: [RECEIVED] },
+      },
+      { ...createRoute(), url: `${GMAIL}/drafts` },
+    ]);
+
+    expect(await depositBrouillon(julie, id, { fetchImpl })).toBe(true);
+
+    expect(fetchImpl.calls.map((call) => call.headers.authorization)).toEqual([
+      'Bearer jeton-google',
+      'Bearer jeton-google',
+    ]);
+    expect(await stored(id)).toMatchObject({ brouillonGmail: 'r-1' });
   });
 
   it('un brouillon déjà déposé n’est jamais redéposé', async () => {

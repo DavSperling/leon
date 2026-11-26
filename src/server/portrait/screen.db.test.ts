@@ -383,7 +383,12 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
           choix: CHOIX,
           repondue: true,
           relance: false,
-          source: { title: 'Répondue', url: 'https://mail.google.test/1', kind: 'gmail' },
+          source: {
+            title: 'Répondue',
+            url: 'https://mail.google.test/1',
+            kind: 'gmail',
+            mailText: expect.any(String),
+          },
         },
         {
           id: expect.any(String),
@@ -393,7 +398,12 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
           choix: [['Oui', 'Non']],
           repondue: false,
           relance: false,
-          source: { title: 'Devis 2027', url: 'https://mail.google.test/2', kind: 'gmail' },
+          source: {
+            title: 'Devis 2027',
+            url: 'https://mail.google.test/2',
+            kind: 'gmail',
+            mailText: expect.any(String),
+          },
         },
         {
           id: expect.any(String),
@@ -403,7 +413,12 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
           choix: CHOIX,
           repondue: false,
           relance: false,
-          source: { title: 'Contrat', url: 'https://mail.google.test/5', kind: 'gmail' },
+          source: {
+            title: 'Contrat',
+            url: 'https://mail.google.test/5',
+            kind: 'gmail',
+            mailText: expect.any(String),
+          },
         },
       ],
       prets: [],
@@ -453,7 +468,12 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
           depose: false,
           others: 0,
           relance: false,
-          source: { title: 'Devis 2027', url: 'https://mail.google.test/2', kind: 'gmail' },
+          source: {
+            title: 'Devis 2027',
+            url: 'https://mail.google.test/2',
+            kind: 'gmail',
+            mailText: expect.any(String),
+          },
         },
         {
           id: expect.any(String),
@@ -463,7 +483,12 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
           depose: true,
           others: 0,
           relance: false,
-          source: { title: 'Contrat', url: 'https://mail.google.test/5', kind: 'gmail' },
+          source: {
+            title: 'Contrat',
+            url: 'https://mail.google.test/5',
+            kind: 'gmail',
+            mailText: expect.any(String),
+          },
         },
         {
           id: expect.any(String),
@@ -477,6 +502,7 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
             title: 'Écrit au second appel',
             url: 'https://mail.google.test/6',
             kind: 'gmail',
+            mailText: expect.any(String),
           },
         },
       ],
@@ -543,7 +569,12 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
         choix: [],
         repondue: true,
         relance: false,
-        source: { title: 'Partenariat', url: 'https://mail.google.test/2', kind: 'gmail' },
+        source: {
+          title: 'Partenariat',
+          url: 'https://mail.google.test/2',
+          kind: 'gmail',
+          mailText: expect.any(String),
+        },
       },
       expect.objectContaining({ repondue: true, questions: [] }),
     ]);
@@ -590,7 +621,7 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
       sent(new Date(Date.now() - 240 * 3_600_000), 'Bonjour Léa.'),
     ]);
 
-  it('l’accueil reçoit, pour chaque mail d’une inconnue, son auteur, le fil lié à son outil, la date du mail, et de quoi lui répondre : rien de son texte ni de son adresse', async () => {
+  it('l’accueil reçoit, pour chaque mail d’une inconnue, son auteur, le fil lié à son outil, la date du mail, de quoi lui répondre, et son texte pour « Voir le mail » : rien de son adresse', async () => {
     const [julie] = await people();
     await answered(julie);
     await wroteToLea(julie);
@@ -608,12 +639,13 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
             title: 'Partenariat',
             url: 'https://mail.google.test/inconnu-2',
             kind: 'gmail',
+            mailText: expect.any(String),
           },
         },
       ],
       prets: [],
     });
-    expect(JSON.stringify(home)).not.toMatch(/travailler|ines@inconnue\.test/);
+    expect(JSON.stringify(home)).not.toMatch(/ines@inconnue\.test/);
   });
 
   it('les mails d’inconnues partagent les vingt places des demandes : celles qui attendent un geste d’elle d’abord, les plus récentes d’abord, rendues par date', async () => {
@@ -788,7 +820,7 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
       };
     };
 
-    it('l’accueil reçoit, pour chaque mail sans réponse, son destinataire, les autres, la date de son mail, le fil lié à son outil, et de quoi répondre : rien de son texte ni d’une adresse', async () => {
+    it('l’accueil reçoit, pour chaque mail sans réponse, son destinataire, les autres, la date de son mail, le fil lié à son outil, de quoi répondre, et son texte pour « Voir le mail » : aucune adresse', async () => {
       const [julie, paul] = await people();
       await followsUp(julie);
       await followsUp(paul);
@@ -805,13 +837,18 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
             others: 1,
             receivedAt: recent.at,
             mail: { sourceId: recent.sourceId, message: recent.message },
-            source: { title: 'Contrat', url: 'https://mail.google.test/relance-6', kind: 'gmail' },
+            source: {
+              title: 'Contrat',
+              url: 'https://mail.google.test/relance-6',
+              kind: 'gmail',
+              mailText: expect.any(String),
+            },
           },
           expect.objectContaining({ from: 'Léa Roy', receivedAt: older.at }),
         ],
         prets: [],
       });
-      expect(JSON.stringify(home)).not.toMatch(/relire|lea@client\.test|marc@client\.test/);
+      expect(JSON.stringify(home)).not.toMatch(/lea@client\.test|marc@client\.test/);
       expect(await readHomeBrouillons(paul)).toEqual(NOTHING);
     });
 
@@ -841,7 +878,12 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
             choix: [],
             repondue: true,
             relance: true,
-            source: { title: 'Oui', url: 'https://mail.google.test/relance-6', kind: 'gmail' },
+            source: {
+              title: 'Oui',
+              url: 'https://mail.google.test/relance-6',
+              kind: 'gmail',
+              mailText: expect.any(String),
+            },
           },
         ],
         prets: [
@@ -853,7 +895,12 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
             depose: false,
             others: 2,
             relance: true,
-            source: { title: 'Prête', url: 'https://mail.google.test/relance-8', kind: 'gmail' },
+            source: {
+              title: 'Prête',
+              url: 'https://mail.google.test/relance-8',
+              kind: 'gmail',
+              mailText: expect.any(String),
+            },
           },
         ],
       });

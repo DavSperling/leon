@@ -1215,7 +1215,9 @@
       "account": "Account",
       "language": "Language",
       "motionOff": "Stop animations",
-      "motionOn": "Resume animations"
+      "motionOn": "Resume animations",
+      "privacy": "Privacy",
+      "terms": "Terms"
     },
     "demo": {
       "question": "Question:",

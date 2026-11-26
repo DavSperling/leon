@@ -64,6 +64,8 @@ export function SiteFooter() {
       links: [
         { href: '/security', label: common('security') },
         { href: '/security#pas-encore', label: security('notYet') },
+        { href: '/privacy', label: t('privacy') },
+        { href: '/terms', label: t('terms') },
       ],
     },
     {

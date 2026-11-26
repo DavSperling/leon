@@ -5,7 +5,7 @@ import type { OAuthSpec } from './types';
 
 // Gmail et Google Drive par l'appli Google de Leon : projet Google Cloud « Leon connecteurs » (compte d'Amos),
 // publiée sans vérification, donc 100 utilisateurs au plus sur toute la vie du projet et un écran « appli non
-// validée » à passer (Paramètres avancés › Accéder à Leon). Sans LEON_OAUTH_GOOGLE_*, le bouton passe encore par
+// validée » à passer (Paramètres avancés › Accéder à leonmemory.com). Sans LEON_OAUTH_GOOGLE_*, le bouton passe encore par
 // Pipedream ; une connexion branchée par Pipedream y reste jusqu'à son « Reconnecter ».
 //
 // Doc lue le 26/11/2026 : https://developers.google.com/identity/protocols/oauth2/web-server

@@ -6,7 +6,7 @@ import { accountIsGone } from '@/server/briefing/briefings';
 import { db } from '@/server/db/client';
 import { agendas } from '@/server/db/schema/search';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
-import type { Llm } from '@/server/llm/llm';
+import { isUnreachable, type Llm } from '@/server/llm/llm';
 import { epochToDate, textArray } from '@/server/search/filters-sql';
 import { type AgendaMail, buildAgendaPrompt, parseAgendaAnswer } from './agenda-prompt';
 
@@ -258,14 +258,20 @@ export async function refreshAgenda(
   };
   const prompt = buildAgendaPrompt(mails, period);
   let answer = '';
-  for await (const delta of deps.llm.streamText({
-    step: 'agenda',
-    system: prompt.system,
-    messages: prompt.messages,
-    maxTokens: AGENDA_MAX_TOKENS,
-    signal: AbortSignal.timeout(AGENDA_TIMEOUT_MS),
-  })) {
-    answer += delta;
+  try {
+    for await (const delta of deps.llm.streamText({
+      step: 'agenda',
+      system: prompt.system,
+      messages: prompt.messages,
+      maxTokens: AGENDA_MAX_TOKENS,
+      signal: AbortSignal.timeout(AGENDA_TIMEOUT_MS),
+    })) {
+      answer += delta;
+    }
+  } catch (error) {
+    // Fournisseur injoignable : rien n'est payé, le créneau du jour est rendu (0091).
+    if (isUnreachable(error)) await db.execute(sql`select rendre_agenda(${ctx.userId})`);
+    throw error;
   }
   // Toutes les sources fournies au modèle, citées ou non.
   const sourceIds = [...new Set(mails.map((mail) => mail.sourceId))];

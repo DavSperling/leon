@@ -1215,7 +1215,9 @@
       "account": "Compte",
       "language": "Langue",
       "motionOff": "Arrêter les animations",
-      "motionOn": "Relancer les animations"
+      "motionOn": "Relancer les animations",
+      "privacy": "Confidentialité",
+      "terms": "Conditions d’utilisation"
     },
     "demo": {
       "question": "Question :",

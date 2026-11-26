@@ -81,7 +81,7 @@ export function Thing({
         </span>
       )}
       <span className="tl__id">
-        {/* Un nom écrit de droite à gauche (un objet de mail en hébreu) se lit et se coupe dans son sens. */}
+        {/* Un nom écrit de droite à gauche (un objet en hébreu) se lit et se coupe dans son sens, calé à gauche (.tl). */}
         <span
           className="tl__name"
           dir="auto"

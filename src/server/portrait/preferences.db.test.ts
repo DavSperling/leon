@@ -421,7 +421,7 @@ describe('writeBrouillons : une retouche, un appel au modèle, une préférence 
     await pass(julie);
   });
 
-  it('une réponse illisible, un refus du modèle : rien ne s’écrit, et la retouche est retentée au passage suivant', async () => {
+  it('une réponse illisible, un refus du modèle : rien ne s’écrit, et la retouche est retentée au passage suivant, puis un jour plus tard après deux ratés', async () => {
     const [julie] = await team();
     await retouched(julie);
     vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -436,12 +436,17 @@ describe('writeBrouillons : une retouche, un appel au modèle, une préférence 
         throw new LlmError('refus du modèle');
       },
     };
+    // Deux ratés de suite : le passage suivant ne la retente pas, celui du lendemain si.
     await writeBrouillons(julie, { llm: refusing });
+    expect(fake.calls).toHaveLength(0);
+    await writeBrouillons(julie, { llm: refusing, now: new Date(Date.now() + 86_400_000) });
     expect(fake.calls).toHaveLength(1);
     expect(await issues(julie)).toEqual([null]);
     expect(await preferenceLines(julie)).toEqual([]);
 
-    expect(await learn(julie, PREFERENCE)).toHaveLength(1);
+    const good = answering(PREFERENCE);
+    await writeBrouillons(julie, { llm: good.llm, now: new Date(Date.now() + 2 * 86_400_000) });
+    expect(good.calls).toHaveLength(1);
     expect(await issues(julie)).toEqual(['retouche']);
     expect(await preferenceLines(julie)).toMatchObject([{ valeur: { texte: LESSON } }]);
   });

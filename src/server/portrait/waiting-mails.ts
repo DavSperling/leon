@@ -184,14 +184,18 @@ function waiting(ctx: TenantContext, now: Date, columns: SQL): SQL {
 // pour une adresse jamais nulle, la condition est vraie ou fausse, jamais nulle.
 const CORRESPONDENT = sql`(l.address = any(array(select r from sent, unnest(sent.recipients) r where r is not null)))`;
 
+// `resting` : les mails que le passage laisse de côté (brouillons.ts, restingMails), « <fil>|<message> » : écartés ici,
+// avant la limite, pour qu'ils ne prennent pas la place des autres.
 export async function readWaitingMails(
   ctx: TenantContext,
   now = new Date(),
+  resting: string[] = [],
 ): Promise<WaitingMail[]> {
   return withTenant(ctx, async (tx) => {
     const { rows: mails } = await tx.execute<Omit<WaitingMail, 'messages'>>(sql`
       ${waiting(ctx, now, sql`s.id as "sourceId", l.message, l.address as "from", s.title as subject`)}
         and ${CORRESPONDENT}
+        and s.id::text || '|' || l.message <> all(${textArray(resting)}::text[])
       order by l.ts desc, s.id
       limit ${WAITING_MAX}`);
     return withMessages(tx, ctx, mails);
@@ -247,6 +251,7 @@ export async function readUnknownMails(
 export async function readAnsweredMails(
   ctx: TenantContext,
   sortes: Array<AnsweredMail['sorte']>,
+  resting: string[] = [],
 ): Promise<AnsweredMail[]> {
   const own = ownAddresses(ctx, new Date(Date.now() - SENT_MAIL_DAYS * DAY_MS));
   return withTenant(ctx, async (tx) => {
@@ -269,6 +274,7 @@ export async function readAnsweredMails(
         and b.sorte = any(${textArray(sortes)}) and b.texte is null and b.ecarte_le is null
         and (b.reponses is not null or (b.indications is not null and b.questions is null))
         and l.message = b.message and l.ts >= now() - make_interval(days => ${ANSWERED_DAYS})
+        and b.source_id::text || '|' || b.message <> all(${textArray(resting)}::text[])
       order by l.ts desc, b.id
       limit ${WAITING_MAX}`);
     return withMessages(tx, ctx, mails);

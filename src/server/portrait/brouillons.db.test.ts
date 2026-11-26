@@ -330,6 +330,23 @@ describe('writeBrouillons', () => {
     },
   );
 
+  it('après deux ratés de suite, le mail attend un jour : plus aucun appel pour lui d’ici là', async () => {
+    const julie = await julieWaiting('Devis 2027');
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    const bad = answering('Bonjour Léa, voici le devis.');
+    const now = new Date();
+
+    for (let pass = 0; pass < 4; pass += 1)
+      expect(await writeBrouillons(julie, { llm: bad.llm, now })).toBe(0);
+
+    expect(bad.calls).toHaveLength(2);
+    expect(await counted(julie)).toBe(2);
+    const later = answering(draft());
+    const tomorrow = new Date(now.getTime() + DAY);
+    expect(await writeBrouillons(julie, { llm: later.llm, now: tomorrow })).toBe(1);
+    expect(await titlesOf(julie)).toEqual([['Devis 2027', DRAFT]]);
+  });
+
   it('un refus ou une panne du modèle sur un mail n’arrête pas les suivants, et ce mail sera retenté', async () => {
     const julie = await julieWaiting('Refusé', 'Devis 2027');
     const fake = answering(draft());

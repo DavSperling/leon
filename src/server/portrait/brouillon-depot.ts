@@ -197,9 +197,15 @@ export async function sendBrouillon(
     if (!client || !messageId || !threadId) return 'echec';
     if (!(await client.replyHeaders(threadId, messageId))) return 'bouge';
     await client.sendDraft(row.brouillonGmail);
-    await withTenant(ctx, (tx) =>
-      tx.update(brouillons).set({ brouillonGmail: null, envoyeLe: sql`now()` }).where(mine),
-    );
+    // Le mail est parti : la base qui refuse de le noter ne doit pas lui faire lire « échec », elle le renverrait à la
+    // main. La ligne reste à l'accueil jusqu'à la relève, qui voit son mail dans le fil ; un second clic rend 'bouge'.
+    try {
+      await withTenant(ctx, (tx) =>
+        tx.update(brouillons).set({ brouillonGmail: null, envoyeLe: sql`now()` }).where(mine),
+      );
+    } catch (error) {
+      logError('brouillons.sent_not_recorded', error, { userId: ctx.userId, brouillonId: id });
+    }
     return 'envoye';
   } catch (error) {
     logError('brouillons.send_failed', error, { userId: ctx.userId, brouillonId: id });

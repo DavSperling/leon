@@ -75,6 +75,30 @@ const BROUILLON_TIMEOUT_MS = 90_000;
 // La préférence tirée d'une retouche, une phrase : la réponse entière, réflexion comprise, est bornée ici.
 const PREFERENCE_MAX_TOKENS = 4000;
 
+// Un appel raté (réponse illisible, refus, coupure, panne) se retente au passage suivant, une fois. Après deux ratés de
+// suite, le mail (ou la retouche) attend RETRY_MS avant chaque nouvel essai : un passage suit chaque relève de sa
+// boîte, et sans cela un seul mail que le modèle ne sait pas traiter prenait les vingt appels du jour, donc les
+// brouillons de tous ses autres mails. Un appel réussi l'oublie.
+// shortcut: gardé dans ce processus (un redéploiement l'oublie, et le mail se retente deux fois) ; une colonne en base
+// si les passages se font un jour dans plusieurs processus.
+const RETRY_MS = DAY_MS;
+const misses = new Map<string, { n: number; at: number }>();
+const miss = (key: string, now: Date) =>
+  misses.set(key, { n: (misses.get(key)?.n ?? 0) + 1, at: now.getTime() });
+const rests = (key: string, now: Date) => {
+  const one = misses.get(key);
+  return one !== undefined && one.n >= 2 && now.getTime() - one.at < RETRY_MS;
+};
+const mailKey = (ctx: TenantContext, mail: { sourceId: string; message: string }) =>
+  `${ctx.userId}|${mail.sourceId}|${mail.message}`;
+// Ses mails laissés de côté à cet instant, « <fil>|<message> » (waiting-mails.ts).
+function restingMails(ctx: TenantContext, now: Date): string[] {
+  const mine = `${ctx.userId}|`;
+  return [...misses.keys()]
+    .filter((key) => key.startsWith(mine) && rests(key, now))
+    .map((key) => key.slice(mine.length));
+}
+
 // Un passage : en tête, sans modèle, ses relances déposées dont le fil a bougé quittent Gmail (withdrawRelances : il ne
 // fait que défaire ce que Leon a écrit, quel que soit l'agent auquel elle dit oui), et ses réponses envoyées aux
 // brouillons de Leon se comparent à eux (preferences.ts) ; puis les brouillons qu'elle attend (elle a répondu aux
@@ -85,7 +109,7 @@ const PREFERENCE_MAX_TOKENS = 4000;
 // proposé (sa boîte branchée) : ses mails qui attendent et ses retouches pour « Brouillons de réponse », ses relances
 // pour « Relances » ; le même passage, sous le même plafond, pour les deux. Passé le plafond du jour, il s'arrête.
 // Un mail dont la réponse du modèle est illisible, refusée ou coupée n'écrit rien : il attend toujours, et le passage
-// suivant le retente, sous le même plafond. Un mail qui a son résultat (un brouillon, des questions, ou « sans
+// suivant le retente, sous le même plafond ; après deux ratés de suite, un jour plus tard seulement (RETRY_MS). Un mail qui a son résultat (un brouillon, des questions, ou « sans
 // réponse ») n'est jamais redemandé au modèle, sauf une fois pour écrire le brouillon quand elle a répondu aux
 // questions ; et son brouillon n'est déposé qu'ici, une fois, juste après son écriture. Aucun appel pour une demande
 // qu'elle a écartée, ni pour un fil qui a bougé depuis, ni pour un mail de plus de ANSWERED_DAYS jours
@@ -113,9 +137,10 @@ export async function writeBrouillons(
   const sortes = (['reponse', 'relance'] as const).filter((sorte) =>
     sorte === 'reponse' ? reponses : relances,
   );
+  const resting = restingMails(ctx, now);
   const mails: Array<AnsweredMail | WaitingMail> = [
-    ...(await readAnsweredMails(ctx, sortes)),
-    ...(reponses ? await readWaitingMails(ctx, now) : []),
+    ...(await readAnsweredMails(ctx, sortes, resting)),
+    ...(reponses ? await readWaitingMails(ctx, now, resting) : []),
   ].slice(0, WAITING_MAX);
   if (mails.length === 0 && retouches.length === 0) return 0;
   const [person] = await db
@@ -166,6 +191,7 @@ export async function writeBrouillons(
       // Un refus, une réponse coupée ou une panne : ce mail n'arrête pas les suivants.
       if (!(error instanceof LlmError)) throw error;
       logError('brouillons.call_failed', error, { userId: ctx.userId, sourceId: mail.sourceId });
+      miss(mailKey(ctx, mail), now);
       continue;
     }
     const result = parseBrouillonAnswer(answer, asked !== undefined, relance !== undefined);
@@ -182,7 +208,11 @@ export async function writeBrouillons(
         chars: answer.length,
       }),
     );
-    if (!result) continue;
+    if (!result) {
+      miss(mailKey(ctx, mail), now);
+      continue;
+    }
+    misses.delete(mailKey(ctx, mail));
     // L'appel au modèle dure jusqu'à 90 s : un compte supprimé entre-temps ne reçoit rien (lockAccount), et un
     // résultat déjà écrit pour ce message n'est pas écrasé.
     const kept = await withTenant(ctx, async (tx) => {
@@ -221,7 +251,7 @@ export async function writeBrouillons(
     // dépôt qui échoue n'arrête rien.
     await depositBrouillon(ctx, kept, deps);
   }
-  await learnFrom(ctx, retouches, WAITING_MAX - mails.length, deps.llm);
+  await learnFrom(ctx, retouches, WAITING_MAX - mails.length, deps.llm, now);
   return written;
 }
 
@@ -243,14 +273,22 @@ async function reserve(ctx: TenantContext): Promise<boolean> {
 // se retente au passage suivant, tant que son mail a moins de ANSWERED_DAYS jours. Avec PREFERENCES_MAX préférences
 // proposées ou acceptées, plus aucun appel : l'issue se pose seule. Un passage à la fois par personne
 // (brouillons-queue.ts) : deux appels ne se font jamais pour la même retouche.
-async function learnFrom(ctx: TenantContext, retouches: Reply[], calls: number, llm: Llm) {
+async function learnFrom(
+  ctx: TenantContext,
+  retouches: Reply[],
+  calls: number,
+  llm: Llm,
+  now: Date,
+) {
   if (retouches.length === 0) return;
   const known = await readPreferences(ctx);
   const same = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
   let room = PREFERENCES_MAX - known.filter((one) => one.etat !== 'refusee').length;
   for (const reply of retouches) {
     let preference: string | null = null;
+    const key = `${ctx.userId}|retouche|${reply.id}`;
     if (room > 0) {
+      if (rests(key, now)) continue;
       if (calls === 0 || !(await reserve(ctx))) return;
       calls -= 1;
       const prompt = buildPreferencePrompt({
@@ -275,6 +313,7 @@ async function learnFrom(ctx: TenantContext, retouches: Reply[], calls: number, 
           userId: ctx.userId,
           brouillonId: reply.id,
         });
+        miss(key, now);
         continue;
       }
       const result = parsePreferenceAnswer(answer);
@@ -290,7 +329,11 @@ async function learnFrom(ctx: TenantContext, retouches: Reply[], calls: number, 
           chars: answer.length,
         }),
       );
-      if (!result) continue;
+      if (!result) {
+        miss(key, now);
+        continue;
+      }
+      misses.delete(key);
       const found = result.preference;
       preference = found && !known.some((one) => same(one.texte, found)) ? found : null;
     }

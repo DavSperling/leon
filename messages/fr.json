@@ -726,7 +726,7 @@
     "syncNow": "Synchroniser maintenant",
     "resume": "Reprendre",
     "pause": "Mettre en pause",
-    "syncFailed": "Impossible : la connexion n'existe plus ou est en pause.",
+    "syncFailed": "Impossible : la connexion n’existe plus, est en pause, ou vient d’être synchronisée (réessayez dans un quart d’heure).",
     "connectionMissing": "Cette connexion n'existe plus.",
     "notConfigured": "Les connecteurs ne sont pas configurés sur ce serveur (LEON_CONNECTORS_KEY).",
     "badRequest": "Demande illisible : rechargez la page.",

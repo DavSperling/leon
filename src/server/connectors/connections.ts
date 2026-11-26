@@ -293,7 +293,11 @@ export async function setConnectionPaused(
 }
 
 // Une connexion en pause n'a pas d'échéance : « Synchroniser maintenant » ne la réveille pas. Le
-// statut ne bouge pas : une erreur reste affichée jusqu'à ce que le passage dise si elle est réglée.
+// statut ne bouge pas : une erreur reste affichée jusqu'à ce que le passage dise si elle est réglée. Tout membre
+// peut le demander (décision du deuxième jet), mais chaque passage se paie (crédits Pipedream, quotas de l'outil) :
+// pour la connexion d'un autre, pas plus d'un passage par SYNC_NOW_SPACING. Qui peut la mettre en pause (son créateur,
+// un propriétaire, un administrateur) n'attend pas : il vient peut-être de réparer sa clé.
+export const SYNC_NOW_SPACING = '15 minutes';
 export async function requestSyncNow(ctx: TenantContext, id: string): Promise<boolean> {
   const rows = await withTenant(ctx, (tx) =>
     tx
@@ -304,6 +308,8 @@ export async function requestSyncNow(ctx: TenantContext, id: string): Promise<bo
           eq(connections.id, id),
           inArray(connections.status, ['active', 'error']),
           creatorIsMember,
+          sql`(${manageable(ctx)} or ${connections.lastSyncAt} is null
+               or ${connections.lastSyncAt} < now() - ${SYNC_NOW_SPACING}::interval)`,
         ),
       )
       .returning({ id: connections.id }),

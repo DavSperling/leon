@@ -726,7 +726,7 @@
     "syncNow": "Sync now",
     "resume": "Resume",
     "pause": "Pause",
-    "syncFailed": "Could not sync: the connection no longer exists or is paused.",
+    "syncFailed": "Could not sync: the connection no longer exists, is paused, or was just synced (try again in fifteen minutes).",
     "connectionMissing": "This connection no longer exists.",
     "notConfigured": "Connectors aren’t configured on this server (LEON_CONNECTORS_KEY).",
     "badRequest": "Couldn’t read the request: reload the page.",

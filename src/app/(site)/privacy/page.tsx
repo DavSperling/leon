@@ -71,24 +71,32 @@ const SECTIONS: LegalSection[] = [
     body: (
       <>
         <p>
-          If you connect a Google account, Leon asks Google for read-only access, and only to the
-          services you connect:
+          If you connect a Google account, Leon asks Google for full access, and only to the
+          services you connect. It asks for these permissions now so that you will not need to
+          approve again when Leon starts acting for you:
         </p>
         <List>
           <li>
-            <strong>Gmail:</strong> your email messages and their details, such as sender,
-            recipients, subject and date. Leon skips your drafts and cannot send, change or delete
-            email.
+            <strong>Gmail:</strong> read, compose, send and permanently delete email, and change
+            basic settings such as filters, signature and vacation reply. Leon does not ask to
+            manage forwarding or who can access your mailbox. Today, Leon only reads your email
+            messages and their details, such as sender, recipients, subject and date, and skips your
+            drafts.
           </li>
           <li>
-            <strong>Google Drive:</strong> the files you can open, with their content and details,
-            such as name, owner and dates.
+            <strong>Google Drive:</strong> see, create, edit, share and delete your files. Today,
+            Leon only reads the files you can open, with their content and details, such as name,
+            owner and dates.
           </li>
           <li>
-            <strong>Google Calendar:</strong> your events and their details, such as title, time,
-            attendees and description.
+            <strong>Google Calendar:</strong> read-only access to your events and their details,
+            such as title, time, attendees and description.
           </li>
         </List>
+        <p>
+          Today, Leon does not send, change or delete anything in your Google account. We will
+          update this policy before it does.
+        </p>
         <p>
           Leon uses this data only to provide its features to you: make it searchable, answer your
           questions with citations, and write your summaries and morning briefing. It is private to

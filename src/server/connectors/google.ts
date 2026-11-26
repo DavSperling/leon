@@ -6,22 +6,24 @@ import type { OAuthSpec } from './types';
 // Gmail et Google Drive par l'appli Google de Leon : projet Google Cloud « Leon connecteurs » (compte d'Amos),
 // publiée sans vérification, donc 100 utilisateurs au plus sur toute la vie du projet et un écran « appli non
 // validée » à passer (Paramètres avancés › Accéder à leonmemory.com). Sans LEON_OAUTH_GOOGLE_*, le bouton passe encore par
-// Pipedream ; une connexion branchée par Pipedream y reste jusqu'à son « Reconnecter ».
+// Pipedream ; une connexion branchée par Pipedream y reste jusqu'à son « Reconnecter ». Tous les droits sont
+// demandés d'avance (choix de David du 26/11/2026), pour ne pas refaire autoriser le jour où Leon agira ;
+// aujourd'hui il ne fait que lire.
 //
 // Doc lue le 26/11/2026 : https://developers.google.com/identity/protocols/oauth2/web-server
 //   adresse https://accounts.google.com/o/oauth2/v2/auth, droits séparés par des espaces ; access_type=offline
 //   pour un jeton de rafraîchissement, rendu seulement au premier accord, d'où prompt=consent (« to ensure a new
 //   refresh token is issued ») ; select_account pour choisir le compte à chaque fois ; jeton à
 //   https://oauth2.googleapis.com/token, jeton d'accès en « Bearer ». Pas d'include_granted_scopes : chaque
-//   connexion garde un jeton limité à son propre droit. PKCE : absent de cette page, mais Better Auth l'exige pour
-//   son bouton Google (social-providers/google.mjs). Un droit décoché par l'utilisateur fait échouer `verify`
-//   (403), et le retour dit « refusé ».
+//   connexion garde un jeton limité à ses propres droits. PKCE : absent de cette page, mais Better Auth l'exige
+//   pour son bouton Google (social-providers/google.mjs). Le droit de lecture décoché par l'utilisateur fait
+//   échouer `verify` (403), et le retour dit « refusé » ; un autre droit décoché passe, Leon ne s'en sert pas encore.
 
-export const googleOAuth = (scope: string): OAuthSpec => ({
+export const googleOAuth = (...scopes: string[]): OAuthSpec => ({
   appKey: 'GOOGLE',
   authorizeUrl: 'https://accounts.google.com/o/oauth2/v2/auth',
   tokenUrl: 'https://oauth2.googleapis.com/token',
-  scopes: [scope],
+  scopes,
   pkce: true,
   clientAuth: 'body',
   extraAuthorizeParams: { access_type: 'offline', prompt: 'consent select_account' },

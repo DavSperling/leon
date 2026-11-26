@@ -12,6 +12,7 @@ import { extendThread, JULIE, LEA, mailThread, received, sent } from '@/test/mai
 import {
   depositBrouillon,
   sendBrouillon,
+  trashMail,
   withdrawBrouillon,
   withdrawRelances,
 } from './brouillon-depot';
@@ -1094,5 +1095,78 @@ describe('sendBrouillon : chez Gmail, le fil a bougé depuis la relève', () => 
 
     expect(await sendBrouillon(julie, id, { fetchImpl })).toBe('envoye');
     expect(await stored(id)).toMatchObject({ brouillonGmail: null, envoyeLe: expect.any(Date) });
+  });
+});
+
+// « Supprimer » : le mail reçu auquel la ligne répond part à la corbeille de sa boîte Gmail, par sa boîte à elle.
+describe('trashMail : le mail reçu part à la corbeille de Gmail', () => {
+  const trashRoute = (over: Partial<FakeRoute> = {}): FakeRoute => ({
+    method: 'POST',
+    url: proxied(`${GMAIL}/messages/`),
+    json: { id: 'm-devis', threadId: 't', labelIds: ['TRASH'] },
+    ...over,
+  });
+
+  it('met à la corbeille le message auquel la ligne répond, d’une seule requête, sans rien écarter lui-même', async () => {
+    const [julie] = await team();
+    const { id } = await drafted(julie, COMPLET, { connectionId: await gmailOf(julie) });
+    const fetchImpl = fakeFetch([TOKEN, trashRoute()]);
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    expect(await trashMail(julie, id, { fetchImpl })).toBe('supprime');
+
+    const [, trash] = fetchImpl.calls;
+    expect(fetchImpl.calls).toHaveLength(2);
+    expect(trash?.method).toBe('POST');
+    expect(target(trash)).toBe(`${GMAIL}/messages/m-devis/trash`);
+    expect(trash?.body).toBeUndefined();
+    expect(await stored(id)).toMatchObject({ ecarteLe: null });
+    expect(errors).not.toHaveBeenCalled();
+  });
+
+  it('jamais son propre mail : la ligne d’une relance n’a rien à supprimer', async () => {
+    const [julie] = await team();
+    const id = await relanced(
+      julie,
+      RELANCE,
+      { to: [LEA], cc: [] },
+      { connectionId: await gmailOf(julie) },
+    );
+    const fetchImpl = fakeFetch([]);
+
+    expect(await trashMail(julie, id, { fetchImpl })).toBe('introuvable');
+
+    expect(fetchImpl.calls).toHaveLength(0);
+  });
+
+  it('ni la ligne d’une autre, ni une ligne déjà écartée, ni un fil Outlook : aucune requête', async () => {
+    const [julie, paul] = await team();
+    const mine = await drafted(julie, COMPLET, { connectionId: await gmailOf(julie) });
+    await gmailOf(paul);
+    const fetchImpl = fakeFetch([]);
+
+    expect(await trashMail(paul, mine.id, { fetchImpl })).toBe('introuvable');
+    await adminPool.query('update brouillons set ecarte_le = now() where id = $1', [mine.id]);
+    expect(await trashMail(julie, mine.id, { fetchImpl })).toBe('introuvable');
+    const [zoe] = await team();
+    const outlook = await drafted(zoe, COMPLET, { provider: 'outlook' });
+    expect(await trashMail(zoe, outlook.id, { fetchImpl })).toBe('introuvable');
+
+    expect(fetchImpl.calls).toHaveLength(0);
+  });
+
+  it('Gmail refuse, ou sa boîte est en pause : un échec, journalisé sans rien de capté', async () => {
+    const [julie] = await team();
+    const { id } = await drafted(julie, COMPLET, { connectionId: await gmailOf(julie) });
+    const fetchImpl = fakeFetch([TOKEN, trashRoute({ status: 500 })]);
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    expect(await trashMail(julie, id, { fetchImpl })).toBe('echec');
+
+    expect(errors.mock.calls.flat().map(String).join('\n')).toContain('brouillons.trash_failed');
+    await adminPool.query("update connections set status = 'paused' where tenant_id = $1", [
+      julie.tenantId,
+    ]);
+    expect(await trashMail(julie, id, { fetchImpl: fakeFetch([]) })).toBe('echec');
   });
 });

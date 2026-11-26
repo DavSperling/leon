@@ -1,4 +1,4 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { loadMyConnections } from '@/server/connectors/connections';
 import { gmailClient } from '@/server/connectors/gmail/client';
@@ -21,8 +21,9 @@ import { relanceRecipients } from './unanswered-mails';
 // sans réponse (« Relances », 0089). Puis son retrait : quand elle l'écarte dans Leon (withdrawBrouillon) ; pour une
 // relance, aussi au passage qui suit le moment où son fil a bougé, quand elle ne l'a ni envoyée ni écartée
 // (withdrawRelances). Ce sont les seules écritures de Leon dans une boîte : un brouillon de plus, puis ce même
-// brouillon de moins, ou ce brouillon envoyé quand elle clique « Envoyer » et le confirme (sendBrouillon). Rien d'autre
-// n'y est envoyé, supprimé ni modifié.
+// brouillon de moins, ou ce brouillon envoyé quand elle clique « Envoyer » et le confirme (sendBrouillon) ; et le mail
+// reçu mis à la corbeille quand elle clique « Supprimer » et le confirme (trashMail). Rien d'autre n'y est envoyé,
+// supprimé ni modifié.
 //
 // Un brouillon est déposé si, et seulement si :
 // - il est complet : son texte ne porte aucun blanc entre crochets (hasBlank). Un brouillon incomplet reste dans Leon
@@ -221,6 +222,52 @@ export async function sendBrouillon(
     return 'envoye';
   } catch (error) {
     logError('brouillons.send_failed', error, { userId: ctx.userId, brouillonId: id });
+    return 'echec';
+  }
+}
+
+// « Supprimer », depuis l'accueil, après sa confirmation : le mail reçu auquel la ligne répond part à la corbeille de sa
+// boîte Gmail, où il reste trente jours. Seulement un mail reçu, jamais le sien (la ligne d'une relance), d'une ligne à
+// elle qu'elle n'a pas écartée, dans un fil Gmail, par la boîte qui l'a relevé (gmailOf). Rend 'supprime', 'introuvable'
+// (rien à supprimer d'ici) ou 'echec' (sa boîte débranchée ou en pause, Gmail qui refuse), journalisé sans rien de
+// capté. Rien ne change dans Leon ici : sa ligne s'écarte ensuite, comme par « Écarter » (settings/actions.ts), et le
+// mail reste dans la mémoire de Leon, qui ne suit pas les suppressions de sa boîte.
+export async function trashMail(
+  ctx: TenantContext,
+  id: string,
+  deps: Deps = {},
+): Promise<'supprime' | 'introuvable' | 'echec'> {
+  try {
+    const [row] = await withTenant(ctx, (tx) =>
+      tx
+        .select({
+          message: brouillons.message,
+          kind: sources.kind,
+          connectionId: sources.connectionId,
+        })
+        .from(brouillons)
+        .innerJoin(
+          sources,
+          and(eq(sources.tenantId, brouillons.tenantId), eq(sources.id, brouillons.sourceId)),
+        )
+        .where(
+          and(
+            eq(brouillons.tenantId, ctx.tenantId),
+            eq(brouillons.userId, ctx.userId),
+            eq(brouillons.id, id),
+            eq(brouillons.sorte, 'reponse'),
+            isNull(brouillons.ecarteLe),
+          ),
+        ),
+    );
+    const messageId = /^message:(.+)$/.exec(row?.message ?? '')?.[1];
+    if (row?.kind !== 'gmail' || !messageId) return 'introuvable';
+    const client = await gmailOf(ctx, row.connectionId, deps);
+    if (!client) return 'echec';
+    await client.trashMessage(messageId);
+    return 'supprime';
+  } catch (error) {
+    logError('brouillons.trash_failed', error, { userId: ctx.userId, brouillonId: id });
     return 'echec';
   }
 }

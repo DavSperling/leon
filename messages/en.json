@@ -375,7 +375,6 @@
     "nextMail": "Next email",
     "allDone": "That’s all for now.",
     "someone": "Your correspondent",
-    "strangerAsk": "Do you want a reply?",
     "unanswered": "Your email to {name} has had no reply.",
     "unansweredMany": "Your email to {name} and {count, plural, one {# other person} other {# other people}} has had no reply.",
     "relanceAsk": "Do you want a follow-up?",
@@ -383,9 +382,7 @@
     "noticedAnon": "I noticed you edited one of my replies.",
     "keepInMind": "Should I keep this in mind for your next drafts?",
     "instructions": "Your instructions",
-    "instructionsHelp": "What you want to reply, in a few words. You can leave it empty.",
     "relanceInstructionsHelp": "What you want to add, in a few words. You can leave it empty.",
-    "prepare": "Prepare the reply",
     "relancePrepare": "Prepare the follow-up",
     "yes": "Yes",
     "no": "No",
@@ -414,11 +411,17 @@
     "list": "What is waiting for you",
     "kind": {
       "questions": "To complete",
-      "inconnu": "To decide",
       "relance": "Follow-up to decide",
       "preference": "Preference to confirm",
       "pret": "Draft ready",
       "ecrit": "Being written"
+    },
+    "trash": {
+      "button": "Delete email",
+      "confirm": "Delete this email?",
+      "confirmText": "It goes to the trash of your Gmail mailbox, where it stays for thirty days.",
+      "yes": "Delete",
+      "done": "Email moved to Gmail trash."
     },
     "sendDraft": {
       "button": "Send",

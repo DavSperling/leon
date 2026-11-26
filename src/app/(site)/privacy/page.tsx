@@ -82,7 +82,8 @@ const SECTIONS: LegalSection[] = [
             manage forwarding or who can access your mailbox. Today, Leon reads your email messages
             and their details, such as sender, recipients, subject and date, and skips your drafts.
             If you turn on a Leon agent, it also writes reply drafts in your mailbox, sends one only
-            when you click Send, and deletes only drafts it wrote.
+            when you click Send, moves an email to your Gmail trash only when you click Delete, and
+            otherwise deletes only drafts it wrote.
           </li>
           <li>
             <strong>Google Drive:</strong> see, create, edit, share and delete your files. Today,
@@ -95,8 +96,8 @@ const SECTIONS: LegalSection[] = [
           </li>
         </List>
         <p>
-          Today, Leon does not send, change or delete anything in your Google account. We will
-          update this policy before it does.
+          Apart from these agent actions, Leon does not send, change or delete anything in your
+          Google account. We will update this policy before it does.
         </p>
         <p>
           Leon uses this data only to provide its features to you: make it searchable, answer your

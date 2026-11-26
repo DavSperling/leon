@@ -738,6 +738,24 @@ describe('gmailClient : un brouillon de réponse dans un fil', () => {
     expect(calls[0]?.body).toBeUndefined();
   });
 
+  it('met un message à la corbeille par son identifiant, une fois, sans corps ; un refus lève sans être rejoué', async () => {
+    const MESSAGES = `${GMAIL}/gmail/v1/users/me/messages`;
+    const { http, calls } = testHttp(gmailConnector, config, [
+      { method: 'POST', url: `${MESSAGES}/m%2F1/trash`, json: { id: 'm/1', threadId: 't1' } },
+      { method: 'POST', url: `${MESSAGES}/m-refuse/trash`, status: 500 },
+    ]);
+    const client = gmailClient(http);
+
+    await expect(client.trashMessage('m/1')).resolves.toBeUndefined();
+    await expect(client.trashMessage('m-refuse')).rejects.toBeInstanceOf(Error);
+
+    expect(calls.map((call) => [call.method, call.url])).toEqual([
+      ['POST', `${MESSAGES}/m%2F1/trash`],
+      ['POST', `${MESSAGES}/m-refuse/trash`],
+    ]);
+    expect(calls[0]?.body).toBeUndefined();
+  });
+
   it.each([403, 429, 500])(
     'une suppression refusée (%s) lève, sans être rejouée',
     async (status) => {

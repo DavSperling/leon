@@ -494,6 +494,28 @@ describe('requestSyncNow', () => {
     expect(await requestSyncNow(zoe, id)).toBe(false);
     expect((await readRow(id)).next_sync_at).toBeNull();
   });
+
+  // Chaque passage se paie (crédits Pipedream, quotas de l'outil) : un simple membre ne relance pas en boucle la
+  // connexion d'un collègue.
+  it('un simple membre attend 15 minutes après le dernier passage d’un collègue ; son créateur et une administratrice, non', async () => {
+    const id = await seedConnection(paul);
+    const syncedAgo = (minutes: number) =>
+      adminPool.query(
+        `update connections set last_sync_at = now() - $2 * interval '1 minute' where id = $1`,
+        [id, minutes],
+      );
+
+    await syncedAgo(5);
+    expect(await requestSyncNow(bob, id)).toBe(false);
+    expect((await readRow(id)).next_sync_at).toBeNull();
+    expect(await requestSyncNow(paul, id)).toBe(true);
+    expect(await requestSyncNow(marie, id)).toBe(true);
+    await makeNotDue(id);
+
+    await syncedAgo(16);
+    expect(await requestSyncNow(bob, id)).toBe(true);
+    await makeNotDue(id);
+  });
 });
 
 describe('setConnectionPaused', () => {

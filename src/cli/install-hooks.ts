@@ -45,15 +45,19 @@
 // - montre ce qui part et ce qui est donné au modèle de Claude Code, puis écrit l'accord (consent.ts, version 2)
 //   après la confirmation, sans jamais rabaisser un accord plus récent. Des crochets déjà en place sans cet accord
 //   (installés avant lui) ne font demander que l'accord : `settings.json` n'est alors pas touché ;
-// - une fois l'accord de base en place, propose à part, un à un, les usages `lecture`, `rappel`, `noter` puis `resume` (C7 révisé)
+// - une fois l'accord de base en place, propose à part, un à un, les usages `lecture`, `rappel`, `noter`, `passage`
+//   (Claude Code seulement, avec `lecture`), `coulisses` puis `resume` (C7 révisé)
 //   qui ne sont ni acceptés ni refusés, avec leur texte, et seulement dans un terminal sans --oui : une réponse lue d'un tube
 //   peut venir d'un agent, qui ne donne jamais un usage à la place de l'utilisateur (D30 du plan de la mémoire à
 //   disposition). Un refus s'écrit daté (`refus`, A16) : l'usage n'est plus proposé jusqu'au retrait. Les installateurs
 //   des autres outils (install-outil.ts, install-codex.ts) font de même par offerUsages, et un usage tranché dans le
 //   passage (`leon setup`, la page « Autoriser ») n'est pas redemandé. Un « non » du terminal à `noter` coupe aussi
 //   `remember` pour le compte, par la route à jeton du refus (C16, T65) ; un « oui » ne le rouvre pas, et le dit ;
-// - pose le crochet de message (UserPromptSubmit, `leon reminder`, T49) seulement une fois l'usage `rappel` donné, par une
-//   seconde écriture des réglages après les usages (writeReminderHook), même quand les deux autres sont déjà en place ;
+// - pose le crochet de message (UserPromptSubmit, `leon reminder`, T49) seulement une fois l'usage `rappel` donné, et
+//   celui de la lecture obligée (PreToolUse, `leon read-first`, D40, T67) seulement une fois `passage` donné, par une
+//   seconde écriture des réglages après les usages (writeUsageHooks), même quand les deux autres sont déjà en place ;
+// - avec `passage`, propose à part d'ajouter les seules lectures de Leon aux exceptions du bac à sable de Claude Code
+//   (sandboxEntries, D40 amendée le 23/11), écrites par la même seconde écriture ;
 // - ne recopie jamais le contenu des réglages ni les valeurs du `.env.local` dans ses messages.
 //
 // Sessions concernées (doc de Claude Code, https://code.claude.com/docs/en/headless et /hooks, lues le 2026-10-20) :
@@ -90,10 +94,12 @@ import {
   FACTS_VERSION,
   type FactsConsent,
   factsConsent,
+  recordSandboxAnswer,
   writeConsent,
 } from './consent';
 import { resolveServerEnv } from './env';
-import { type HookSubcommand, launcherHookCommand } from './hook-commands';
+import { type HookSubcommand, launcherHookCommand, launcherPath } from './hook-commands';
+import { launcherScript, previousLauncherScripts } from './launcher';
 
 // 7,5 s au pire pour le démarrage (briefing.ts) : 10 s. Pour la fin de session, 30 s sont de la marge sur les 15 s
 // de l'envoi (HOOK_DEADLINE_MS) et restent sous le maximum de 60 s de Claude Code.
@@ -101,15 +107,18 @@ export const SESSION_START_TIMEOUT_S = 10;
 export const SESSION_END_TIMEOUT_S = 30;
 // Le crochet de message : au pire 1 s d'entrée, 1,5 s de réseau et le démarrage de Node (reminder.ts).
 export const USER_PROMPT_TIMEOUT_S = 5;
+// Le crochet avant outil (T67) : 1 s d'entrée au plus et le démarrage de Node, ni réseau ni git (read-first.ts).
+export const READ_FIRST_TIMEOUT_S = 5;
 export const SETTINGS_FILE = 'settings.json';
 export const BACKUP_FILE = 'settings.json.leon-sauvegarde';
 
-type HookEvent = 'SessionStart' | 'SessionEnd' | 'UserPromptSubmit';
+type HookEvent = 'SessionStart' | 'SessionEnd' | 'UserPromptSubmit' | 'PreToolUse';
 type HookSpec = {
   event: HookEvent;
   subcommand: HookSubcommand;
   timeout: number;
   role: string;
+  matcher?: string; // écrit seulement quand applyHook ajoute le groupe : celui d'un groupe existant n'est pas remis
 };
 
 export const HOOKS: readonly HookSpec[] = [
@@ -135,6 +144,18 @@ export const REMINDER_HOOK: HookSpec = {
   timeout: USER_PROMPT_TIMEOUT_S,
   role: 'at each message you send, asks Leon for a line on those of your work threads it touches (usage "rappel"): Claude Code adds it to the context.',
 };
+
+// Le crochet de la lecture obligée (`leon read-first`, D40, T67) : hors de HOOKS, posé seulement avec l'usage `passage`,
+// dans son propre groupe, à côté d'un `PreToolUse` de l'utilisateur. Le matcher ne nomme que les outils qui modifient un
+// fichier ; la commande les revérifie.
+export const READ_FIRST_HOOK: HookSpec = {
+  event: 'PreToolUse',
+  subcommand: 'read-first',
+  timeout: READ_FIRST_TIMEOUT_S,
+  matcher: 'Edit|Write|MultiEdit|NotebookEdit',
+  role: 'before the first change of a file in each session you lead, asks the agent once to read Leon first (usage "passage"); it sends nothing.',
+};
+const ALL_HOOKS = [...HOOKS, REMINDER_HOOK, READ_FIRST_HOOK];
 
 // Ce qui est lu, ce qui part et ce qui est donné au modèle de Claude Code : le texte de l'accord en version 2 (C7),
 // testé mot pour mot (install-hooks.test.ts). Le changer, c'est changer ce que l'utilisateur a accepté.
@@ -227,6 +248,153 @@ export const ANTIGRAVITY_COULISSES_LINES = [
   "  - Once an Antigravity conversation has not changed for 30 minutes, the Leon server this computer is connected to also receives what happened behind the exchanges: the agent's reasoning, which Antigravity writes in full in the transcript; the instruction given to each subagent and its final report; and each tool call, those of subagents included, reduced to the name of the tool, its target and its status. The target is, for a command, only its executable, plus the subcommand for a fixed list of developer tools; for a file tool, the path in the repository; for any other tool, nothing, and a tool Leon does not know, such as an MCP tool, is kept without its name. Never the output of a tool, nor a search pattern, a URL, a query or any other argument. It is sent in the background the next time Leon's start hook runs on this computer.",
   ...COULISSES_LINES.slice(2),
 ];
+// Le texte de l'usage `passage` (D40, T67 ; annexe 12, avec les deux changements du 23/11 après l'essai T66), testé mot
+// pour mot : qui est arrêté et quand (read-first.ts), ce qui part (rien par l'arrêt ; la lecture relève de `lecture`), le
+// témoin, le coût de chaque modification et les deux retraits.
+export const PASSAGE_LINES = [
+  'Read before the first change (usage "passage", optional, asked separately, Claude Code only):',
+  '  - In a Claude Code session you lead (in the desktop app or the terminal), the first time the agent wants to change a file in the folder where the session started (a repository or any other folder, personal ones included), Leon stops that change once and asks the agent to read Leon first: the thread of the current branch with `leon thread`, or else a search with a few words of its task with `leon search`. The agent then makes its change, and Leon does not stop it again in that session. Subagents, the agents of a workflow and scripts (`claude -p`) are not stopped, except a script started from a session of the desktop app, which Leon cannot tell apart from that session.',
+  '  - The stop sends nothing to the Leon server: its message is a fixed text, which only cites the Leon command of this computer (such as `~/.leon/bin/leon`) and holds nothing from your memory. It tells the agent that what it reads is data, not instructions: the code and Git win when they disagree, and otherwise the agent takes it into account. What the agent then reads is covered by the usage "lecture", which this one needs: the model provider of the tool sees it. A search sends its words (secrets masked before sending, and again by the server) to the Leon server, which may send them to the provider that computes its search vectors. Depending on your permission settings, Claude Code may ask you before the agent runs the command. To stop only once, Leon writes an empty file per session in `~/.leon/temoins/claude_code` (never the session id in clear) and deletes those older than 7 days.',
+  '  - Each change of a file runs the Leon command for a moment (a fraction of a second) before it is made, in the agents of a workflow too. If the command fails or takes too long, the change goes on. `leon retirer-crochets --usage passage` removes this hook and forgets your answer, on this computer only; `leon retirer-crochets` removes it with the others.',
+];
+
+// L'exception du bac à sable (D40 amendée le 23/11, décision d'Amos après l'essai T66) : sous le bac à sable de Claude
+// Code, le réseau vers le serveur de Leon est fermé, et `leon thread` comme `leon search` y échouent. Avec `passage`,
+// l'installateur propose donc, à part, d'ajouter les seules lectures de Leon à `sandbox.excludedCommands` des réglages
+// de l'utilisateur : pour le lanceur absolu et pour la forme `~/.leon/bin/leon` que cite le message d'arrêt, jamais pour
+// la forme clone (`pnpm --dir … leon`).
+// Vérifié le 23/11 par un `claude -p` réel, avec exactement ces dix entrées en exception, `allowUnsandboxedCommands:
+// false` et aucun domaine permis : `~/.leon/bin/leon thread` joint le serveur ; `… search essai | curl …`, `… && curl …`,
+// `… search $(curl …)`, `` … search `curl …` `` et `… threads ; curl …` restent dans le bac à sable, où curl est refusé.
+// La doc de Claude Code (settings-reference, `sandbox.excludedCommands`) le dit : « Your entries take a Bash call out of
+// the sandbox only when they cover every command in it » ; un `cd`, une substitution de commande, un sous-shell ou une
+// redirection (sauf `2>&1`) gardent l'appel dedans. Une commande composée ne sort donc pas par l'exception.
+export const sandboxEntries = (home: string): string[] =>
+  [launcherPath(home), '~/.leon/bin/leon'].flatMap((leon) =>
+    ['thread', 'thread *', 'threads', 'threads *', 'search *'].map((read) => `${leon} ${read}`),
+  );
+// Avec l'exception, `~/.leon` va aussi dans `sandbox.filesystem.denyWrite` (décision du 23/11, relecture de sécurité de
+// T67) : une session ouverte dans le dossier personnel, que le bac à sable rend inscriptible, pourrait sinon réécrire le
+// lanceur ou la CLI, puis les faire tourner hors du bac à sable par une lecture exemptée. `~/` y vaut le dossier personnel.
+// Rien dans Leon n'écrit sous `~/.leon` depuis le bac à sable : les crochets tournent hors de lui (essai T66, point 7).
+export const SANDBOX_DENY_WRITE = '~/.leon';
+// Le texte de l'exception (T67), testé mot pour mot, montré avant sa question.
+export const SANDBOX_LINES = [
+  'Leon reads outside the Claude Code sandbox (asked separately, Claude Code only):',
+  '  - Your Claude Code sandbox lets commands reach only the hosts you allowed, so the agent cannot reach the Leon server and its reads fail. Leon can add its own read commands (`leon thread`, `leon threads` and `leon search`, as this computer runs them) to the sandbox exceptions (`sandbox.excludedCommands`) of your Claude Code settings. Those commands then run outside the sandbox; a command that chains them with another one stays inside it. So that no sandboxed command can change what those reads run, Leon also forbids sandboxed commands to write in `~/.leon` (`sandbox.filesystem.denyWrite`). Nothing else changes in your sandbox. `leon retirer-crochets --usage passage` and `leon retirer-crochets` remove them.',
+];
+
+// Le lanceur est-il celui de la forme installée, texte à texte ? Sous la forme clone (`leon setup --depot`), il lance le
+// code du clone, qu'un agent du bac à sable peut modifier : l'exception le ferait tourner hors du bac à sable (relecture
+// de sécurité de T67 ; « rien pour la forme clone », D40 amendée le 23/11). Sans lanceur, rien à exempter non plus.
+async function installedLauncher(home: string): Promise<boolean> {
+  const script = await readFile(launcherPath(home), 'utf8').catch(() => '');
+  const form = { kind: 'installee' } as const;
+  return [launcherScript(home, form), ...previousLauncherScripts(home, form)].includes(script);
+}
+
+// Les deux listes de l'exception dans `sandbox`, vides si elles manquent (elles se créent), ou le nom du premier champ
+// qui n'a pas la forme attendue (`null` compris) : on n'y touche pas, et on le dit.
+type SandboxLists = { excluded: unknown[]; denied: unknown[] };
+function sandboxLists(sandbox: Json): SandboxLists | string {
+  const { excludedCommands: excluded = [], filesystem = {} } = sandbox;
+  if (!Array.isArray(excluded)) return 'sandbox.excludedCommands';
+  if (!isRecord(filesystem)) return 'sandbox.filesystem';
+  const { denyWrite: denied = [] } = filesystem;
+  return Array.isArray(denied) ? { excluded, denied } : 'sandbox.filesystem.denyWrite';
+}
+
+// Ce que l'exception demande à ce passage, sur ces réglages : 'demander' (jamais répondu, dans un terminal sans --oui),
+// 'ajouter' (acceptée, des entrées manquent), `{ forme }` (le champ qui n'a pas la forme attendue), ou null. Seulement
+// avec `passage`, sous la forme installée du lanceur (`installed`), et quand le bac à sable est actif dans ces réglages ;
+// jamais après un non.
+type SandboxStep = 'demander' | 'ajouter' | { forme: string } | null;
+function sandboxStep(
+  settings: Json,
+  consent: FactsConsent | null,
+  options: UsageOptions & { home: string; assumeYes: boolean },
+  installed: boolean,
+): SandboxStep {
+  if (!installed || !consent?.usages.includes('passage') || consent.bac_a_sable === false) {
+    return null;
+  }
+  const sandbox = settings.sandbox;
+  if (!isRecord(sandbox) || sandbox.enabled !== true) return null;
+  if (consent.bac_a_sable === undefined && (options.interactive !== true || options.assumeYes)) {
+    return null;
+  }
+  const lists = sandboxLists(sandbox);
+  if (typeof lists === 'string') return { forme: lists };
+  const complete =
+    lists.denied.includes(SANDBOX_DENY_WRITE) &&
+    sandboxEntries(options.home).every((entry) => lists.excluded.includes(entry));
+  if (complete) return null;
+  return consent.bac_a_sable ? 'ajouter' : 'demander';
+}
+
+const withEntries = (list: unknown[], ours: string[]): unknown[] => [
+  ...list,
+  ...ours.filter((entry) => !list.includes(entry)),
+];
+
+// Les réglages avec les entrées de Leon, sans doublon, après celles de l'utilisateur (sandboxStep a dit 'ajouter').
+function addSandboxEntries(settings: Json, home: string): Json {
+  const next = structuredClone(settings);
+  const sandbox = next.sandbox as Json;
+  const { excluded, denied } = sandboxLists(sandbox) as SandboxLists;
+  sandbox.excludedCommands = withEntries(excluded, sandboxEntries(home));
+  sandbox.filesystem = {
+    ...(sandbox.filesystem as Json | undefined),
+    denyWrite: withEntries(denied, [SANDBOX_DENY_WRITE]),
+  };
+  return next;
+}
+
+export type RemovedEntry = { event: string; command: string };
+
+// Retire de la liste `record[key]` les entrées exactes `ours` (notées sous `event`), et la liste si ce retrait l'a vidée :
+// l'installateur l'a peut-être créée. Rend true si une entrée est partie.
+function dropExact(
+  record: Json,
+  key: string,
+  ours: string[],
+  event: string,
+  removed: RemovedEntry[],
+): boolean {
+  const list = record[key];
+  if (!Array.isArray(list)) return false;
+  const kept = list.filter((entry) => !ours.includes(entry));
+  if (kept.length === list.length) return false;
+  for (const entry of list) if (ours.includes(entry)) removed.push({ event, command: entry });
+  if (kept.length === 0) delete record[key];
+  else record[key] = kept;
+  return true;
+}
+
+// Les réglages sans les entrées de Leon dans le bac à sable (`excludedCommands` et `filesystem.denyWrite`), et seulement
+// elles, sans modifier l'objet reçu : pour le retrait, et pour l'installateur quand le lanceur n'est plus de forme
+// installée (sinon l'exception ferait tourner hors du bac à sable le code d'un clone qu'un agent peut modifier).
+export function removeSandboxEntries(
+  settings: Json,
+  home: string,
+): { settings: Json; removed: RemovedEntry[] } {
+  const next = structuredClone(settings);
+  const removed: RemovedEntry[] = [];
+  const sandbox = next.sandbox;
+  if (!isRecord(sandbox)) return { settings: next, removed };
+  dropExact(sandbox, 'excludedCommands', sandboxEntries(home), 'sandbox.excludedCommands', removed);
+  const { filesystem } = sandbox;
+  const denied = 'sandbox.filesystem.denyWrite';
+  if (
+    isRecord(filesystem) &&
+    dropExact(filesystem, 'denyWrite', [SANDBOX_DENY_WRITE], denied, removed) &&
+    Object.keys(filesystem).length === 0
+  ) {
+    delete sandbox.filesystem;
+  }
+  return { settings: next, removed };
+}
+
 // `coulisses` ne se propose qu'aux outils dont la CLI relève les coulisses (outils.ts), chacun avec son texte et le nom
 // de ce qui en part dans sa question. Cursor n'en a pas : son essai est négatif (annexe 10).
 const COULISSES_TEXTS: Partial<Record<ConsentTool, { lines: readonly string[]; each: string }>> = {
@@ -361,7 +529,7 @@ function applyHook(root: Json, spec: HookSpec, home: string): HookChange {
     if (dropped && handlers.length === 0) continue; // le groupe n'avait que ce doublon
     kept.push({ ...group, hooks: handlers });
   }
-  if (!found) kept.push({ hooks: [wanted] });
+  if (!found) kept.push({ ...(spec.matcher ? { matcher: spec.matcher } : {}), hooks: [wanted] });
 
   hooksRoot[spec.event] = kept;
   root.hooks = hooksRoot;
@@ -369,16 +537,21 @@ function applyHook(root: Json, spec: HookSpec, home: string): HookChange {
   return { event: spec.event, action, command: wanted.command, timeout: spec.timeout };
 }
 
-// Les réglages avec les deux crochets de Leon, et celui de message avec `reminder` (l'usage `rappel`), sans modifier
-// l'objet reçu. Les commandes sont celles du lanceur du dossier personnel `home` (K9). Lance SettingsShapeError si la
-// clé `hooks` ou les évènements de ces crochets n'ont pas la forme de la doc (les autres, eux, ne nous regardent pas).
+// Les réglages avec les deux crochets de Leon, puis ceux des usages donnés : celui de message avec `rappel`, celui de la
+// lecture obligée avec `passage` (T67), sans modifier l'objet reçu. Les commandes sont celles du lanceur du dossier
+// personnel `home` (K9). Lance SettingsShapeError si la clé `hooks` ou les évènements de ces crochets n'ont pas la forme
+// de la doc (les autres, eux, ne nous regardent pas).
 export function addLeonHooks(
   settings: Json,
   home: string,
-  reminder = false,
+  usages: readonly Usage[] = [],
 ): { settings: Json; changes: HookChange[] } {
   const next = structuredClone(settings);
-  const specs = reminder ? [...HOOKS, REMINDER_HOOK] : HOOKS;
+  const specs = [
+    ...HOOKS,
+    ...(usages.includes('rappel') ? [REMINDER_HOOK] : []),
+    ...(usages.includes('passage') ? [READ_FIRST_HOOK] : []),
+  ];
   const changes = specs.map((spec) => applyHook(next, spec, home));
   return { settings: next, changes };
 }
@@ -590,9 +763,9 @@ function preview(
 ): string[] {
   const lines = [`Leon hooks for ${path}:`, ''];
   for (const change of changes) {
-    const spec = [...HOOKS, REMINDER_HOOK].find((hook) => hook.event === change.event);
+    const spec = ALL_HOOKS.find((hook) => hook.event === change.event);
     lines.push(
-      `  ${change.event} · timeout ${change.timeout} s · ${ACTION_LABELS[change.action]}`,
+      `  ${change.event}${spec?.matcher ? ` (${spec.matcher})` : ''} · timeout ${change.timeout} s · ${ACTION_LABELS[change.action]}`,
       `    ${change.command}`,
       `    ${spec?.role ?? ''}`,
       '',
@@ -657,16 +830,20 @@ const leonCommand = (options: InstallOptions): string =>
 // Après un refus, comment revenir dessus (choix du plan) : le retrait de l'outil efface usages et refus. Celui de Claude
 // Code dit lui-même comment redonner l'accord (CONSENT_AGAIN_HINT, le lanceur ayant pu partir avec lui) ; ceux des autres
 // outils passent par le lanceur, qui reste tant qu'un outil l'utilise.
-const refusedLine = (tool: ConsentTool, leon: string): string =>
-  tool === 'claude_code'
-    ? `This answer is kept: you will not be asked again. To change it, run \`${leon} retirer-crochets\` (it also removes the hooks and withdraws your consent), then give your consent again as that command explains.`
-    : `This answer is kept: you will not be asked again. To change it, run \`~/.leon/bin/leon retirer-crochets --outil ${tool}\` (it also removes the hooks of this tool and withdraws its consent), then \`~/.leon/bin/leon setup\` again.`;
+// `passage` s'oublie seul, sur le poste (T67) : `retirer-crochets --usage passage`, puis l'installation le redemande.
+const refusedLine = (tool: ConsentTool, leon: string, usage: Usage): string =>
+  usage === 'passage'
+    ? `This answer is kept: you will not be asked again. To change it, run \`${leon} retirer-crochets --usage passage\` (it only forgets this answer, on this computer), then \`${leon === 'pnpm leon' ? 'pnpm leon installer-crochets' : `${leon} setup`}\` again.`
+    : tool === 'claude_code'
+      ? `This answer is kept: you will not be asked again. To change it, run \`${leon} retirer-crochets\` (it also removes the hooks and withdraws your consent), then give your consent again as that command explains.`
+      : `This answer is kept: you will not be asked again. To change it, run \`~/.leon/bin/leon retirer-crochets --outil ${tool}\` (it also removes the hooks of this tool and withdraws its consent), then \`~/.leon/bin/leon setup\` again.`;
 
 // Les usages proposés à l'installation, dans cet ordre (C7 révisé, A16 ; décisions d'Amos du 11/11 pour le lot 13).
 // `lecture`, `rappel` et `noter` sont cochés par défaut, en [Y/n] : Entrée, y, yes, o et oui les acceptent ; n, no et non les
 // refusent ; une autre réponse ou une entrée fermée ne tranchent rien (décision d'Amos du 11/11 : une faute de frappe ne
 // vaut pas un refus gardé jusqu'au retrait). `resume` ne l'est pas, en [y/N] : seul un oui l'accepte, et seule une entrée
-// fermée ne tranche rien (D30). `coulisses` (lot 14) se place juste avant `resume`, en [y/N] comme lui.
+// fermée ne tranche rien (D30). `coulisses` (lot 14) se place juste avant `resume`, en [y/N] comme lui. `passage` (D40,
+// T67) ouvre les usages en [y/N], juste après `noter` : il s'appuie sur `lecture`.
 const checkedByDefault = (text: string | null): boolean | null => {
   if (text === null) return null;
   if (text.trim() === '' || isYes(text)) return true;
@@ -679,7 +856,8 @@ type Offer = {
   recorded: string;
   without: string; // ce qui manque sans l'usage
 };
-const OFFERED = ['lecture', 'rappel', 'noter', 'coulisses', 'resume'] as const;
+const yesOnly = (text: string | null): boolean | null => (text === null ? null : isYes(text));
+const OFFERED = ['lecture', 'rappel', 'noter', 'passage', 'coulisses', 'resume'] as const;
 const OFFERS: Record<(typeof OFFERED)[number], Offer> = {
   lecture: {
     lines: LECTURE_LINES,
@@ -705,11 +883,19 @@ const OFFERS: Record<(typeof OFFERED)[number], Offer> = {
     recorded: 'Agent notes recorded',
     without: 'the agent writes no note to Leon',
   },
+  passage: {
+    lines: PASSAGE_LINES,
+    question: (path) =>
+      `\nBefore the first change of a file in each Claude Code session you lead, have the agent read Leon first (recorded in ${path})? [y/N] `,
+    answer: yesOnly,
+    recorded: 'Read before the first change recorded',
+    without: 'the agent is not asked to read Leon before its first change',
+  },
   coulisses: {
     lines: COULISSES_LINES,
     question: (path, each = 'each session') =>
       `\nAlso send Leon what happens behind the exchanges of ${each}: the reasoning, the subagents and the reduced tool calls (recorded in ${path})? [y/N] `,
-    answer: (text) => (text === null ? null : isYes(text)),
+    answer: yesOnly,
     recorded: 'Full capture recorded',
     without: 'nothing behind the exchanges is sent',
   },
@@ -717,7 +903,7 @@ const OFFERS: Record<(typeof OFFERED)[number], Offer> = {
     lines: RESUME_LINES,
     question: (path) =>
       `\nAlso let Leon's model provider write a summary of each session and keep the state of your work threads up to date (recorded in ${path})? [y/N] `,
-    answer: (text) => (text === null ? null : isYes(text)),
+    answer: yesOnly,
     recorded: 'Session summaries recorded',
     without: 'no session is summarized',
   },
@@ -727,7 +913,8 @@ const OFFERS: Record<(typeof OFFERED)[number], Offer> = {
 // ce passage, ou à demander dans un terminal sans --oui (D30). Vide : l'installateur n'a plus rien à faire pour eux.
 // Les mêmes pour les quatre outils : `rappel` compris, depuis l'essai d'Antigravity 2.0.6 du 11/11 (annexe 05). Sauf
 // `coulisses` (T52 amendée le 17/11) : jamais pour Cursor, et demandé outil par outil, avec le texte de chacun ; une
-// décision du passage ne le tranche donc jamais.
+// décision du passage ne le tranche donc jamais. Sauf `passage` aussi (T67) : pour Claude Code seulement, et jamais
+// quand `lecture` est refusé (offerUsages revérifie qu'il est accepté juste avant la question).
 export function usagesToOffer(
   tool: ConsentTool,
   consent: FactsConsent | null,
@@ -736,6 +923,14 @@ export function usagesToOffer(
   if (consent === null) return [];
   return OFFERED.filter((usage) => {
     if (usage === 'coulisses' && !COULISSES_TEXTS[tool]) return false;
+    if (
+      usage === 'passage' &&
+      (tool !== 'claude_code' ||
+        consent.refus.includes('lecture') ||
+        options.decisions?.get('lecture') === false)
+    ) {
+      return false;
+    }
     if (consent.usages.includes(usage) || consent.refus.includes(usage)) return false;
     const decided = usage === 'coulisses' ? undefined : options.decisions?.get(usage);
     return decided === undefined
@@ -762,6 +957,13 @@ export async function offerUsages(
   });
   for (const usage of pending) {
     const offer = OFFERS[usage];
+    // `lecture` a pu être refusé ou laissé sans réponse plus haut dans ce passage : la liste est d'avant la boucle.
+    if (
+      usage === 'passage' &&
+      !(await factsConsent(options.home, tool))?.usages.includes('lecture')
+    ) {
+      continue;
+    }
     // La réponse à `coulisses` ne vaut que pour cet outil : son texte diffère d'un outil à l'autre.
     const own = usage === 'coulisses' ? COULISSES_TEXTS[tool] : undefined;
     let accepted = own ? undefined : decisions.get(usage);
@@ -800,16 +1002,17 @@ export async function offerUsages(
       );
       continue;
     }
-    deps.out(refusedLine(tool, options.leon ?? '~/.leon/bin/leon'));
+    deps.out(refusedLine(tool, options.leon ?? '~/.leon/bin/leon', usage));
   }
   return true;
 }
 
-// Le crochet de message, une fois `rappel` donné après les crochets de base (dans le terminal ou par la page, T49) : une
-// seconde écriture des réglages, relus à l'instant. `plan` rend les réglages avec lui (les mêmes s'il y est déjà), null
-// pour une forme inconnue. `backup` : la copie d'avant Leon, faite si elle n'existe pas encore (Claude Code). Rend
+// Les crochets des usages donnés après les crochets de base (dans le terminal ou par la page) : celui de message avec
+// `rappel` (T49), celui de la lecture obligée avec `passage` (T67, Claude Code seulement), ensemble ou chacun seul, par
+// une seconde écriture des réglages, relus à l'instant. `plan` rend les réglages avec eux (les mêmes s'ils y sont déjà),
+// null pour une forme inconnue. `backup` : la copie d'avant Leon, faite si elle n'existe pas encore (Claude Code). Rend
 // 'inchange', 'ecrit', ou 'echec' (dit sur la sortie d'erreur ; l'usage reste écrit, le passage suivant repose le crochet).
-export async function writeReminderHook(
+export async function writeUsageHooks(
   path: string,
   plan: (settings: Json) => Json | null,
   deps: Pick<InstallDeps, 'err'>,
@@ -820,7 +1023,7 @@ export async function writeReminderHook(
   const next = settings && plan(settings);
   if (settings === null || next === null) {
     deps.err(
-      `Leon: ${path} is unreadable or does not have the expected shape: the reminder hook was not added. Fix the file and run the command again.`,
+      `Leon: ${path} is unreadable or does not have the expected shape: what the usages you accepted add to it was not written. Fix the file and run the command again.`,
     );
     return 'echec';
   }
@@ -834,7 +1037,7 @@ export async function writeReminderHook(
     if (backupCreated && backup) await unlink(backup).catch(() => {});
     const code = errorCode(error);
     deps.err(
-      `Leon: could not write ${path}${code ? ` (${code})` : ''}: the reminder hook was not added. Run the command again.`,
+      `Leon: could not write ${path}${code ? ` (${code})` : ''}: what the usages you accepted add to it was not written. Run the command again.`,
     );
     return 'echec';
   }
@@ -866,7 +1069,7 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
   const consented = consent !== null;
   let plan: ReturnType<typeof addLeonHooks>;
   try {
-    plan = addLeonHooks(settings, options.home, consent?.usages.includes('rappel'));
+    plan = addLeonHooks(settings, options.home, consent?.usages);
   } catch (error) {
     if (!(error instanceof SettingsShapeError)) throw error;
     return refuse(`does not have the expected shape (${error.message}).`);
@@ -878,7 +1081,14 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
   if (plan.changes.every((change) => change.action === 'inchange')) {
     for (const line of alerts) deps.out(line);
     if (consented) {
-      if (usagesToOffer('claude_code', consent, options).length === 0) {
+      const installed = await installedLauncher(options.home);
+      // Des entrées de Leon restées dans le bac à sable hors de la forme installée : la seconde écriture les retire.
+      const stale = !installed && removeSandboxEntries(settings, options.home).removed.length > 0;
+      if (
+        usagesToOffer('claude_code', consent, options).length === 0 &&
+        sandboxStep(settings, consent, options, installed) === null &&
+        !stale
+      ) {
         deps.out(`The Leon hooks are already in place in ${path}: nothing to do.`);
         return 0;
       }
@@ -965,18 +1175,36 @@ export async function installHooks(options: InstallOptions, deps: InstallDeps): 
   return (await offerClaudeCodeUsages(options, deps)) ? 0 : 1;
 }
 
-// Les usages, puis le crochet de message si `rappel` est donné (T49).
+// Les usages, puis l'exception du bac à sable avec `passage`, puis la seconde écriture : les crochets des usages donnés
+// (`rappel`, T49 ; `passage`, T67) et, une fois l'exception acceptée, les entrées du bac à sable qui manquent.
 async function offerClaudeCodeUsages(options: InstallOptions, deps: InstallDeps): Promise<boolean> {
   if (!(await offerUsages('claude_code', { ...options, leon: leonCommand(options) }, deps))) {
     return false;
   }
-  if (!(await factsConsent(options.home, 'claude_code'))?.usages.includes('rappel')) return true;
   const path = join(options.configDir, SETTINGS_FILE);
-  const outcome = await writeReminderHook(
+  const installed = await installedLauncher(options.home);
+  await offerSandbox(path, options, deps, installed);
+  const consent = await factsConsent(options.home, 'claude_code');
+  const usages = consent?.usages ?? [];
+  // Hors de la forme installée (passage à la forme clone après coup), les entrées de Leon dans le bac à sable partent :
+  // elles exempteraient un lanceur qui fait tourner le code d'un clone (revue de sécurité de T67).
+  if (!usages.includes('rappel') && !usages.includes('passage') && installed) return true;
+  let changes: HookChange[] = [];
+  let sandboxAdded = false;
+  let sandboxRemoved = false;
+  const outcome = await writeUsageHooks(
     path,
     (settings) => {
       try {
-        return addLeonHooks(settings, options.home, true).settings;
+        const plan = addLeonHooks(settings, options.home, usages);
+        changes = plan.changes;
+        if (!installed) {
+          const stripped = removeSandboxEntries(plan.settings, options.home);
+          sandboxRemoved = stripped.removed.length > 0;
+          return stripped.settings;
+        }
+        sandboxAdded = sandboxStep(settings, consent, options, installed) === 'ajouter';
+        return sandboxAdded ? addSandboxEntries(plan.settings, options.home) : plan.settings;
       } catch (error) {
         if (error instanceof SettingsShapeError) return null;
         throw error;
@@ -986,9 +1214,62 @@ async function offerClaudeCodeUsages(options: InstallOptions, deps: InstallDeps)
     join(options.configDir, BACKUP_FILE),
   );
   if (outcome === 'ecrit') {
-    deps.out(
-      `Reminder hook installed in ${path}: UserPromptSubmit · timeout ${USER_PROMPT_TIMEOUT_S} s · ${launcherHookCommand(options.home, 'reminder')}`,
-    );
+    for (const change of changes.filter((change) => change.action !== 'inchange')) {
+      deps.out(
+        `Leon hook written in ${path}: ${change.event} · timeout ${change.timeout} s · ${change.command}`,
+      );
+    }
+    if (sandboxAdded) {
+      deps.out(`Leon's read commands added to the sandbox exceptions in ${path}.`);
+    }
+    if (sandboxRemoved) {
+      deps.out(
+        `Leon's read commands removed from the sandbox exceptions in ${path}: the Leon command of this computer is no longer the installed one.`,
+      );
+    }
   }
   return outcome !== 'echec';
+}
+
+// L'offre de l'exception du bac à sable (D40 amendée le 23/11, T67) : en [y/N], dans un terminal seulement, jamais avec
+// --oui (sandboxStep). La réponse se range à part dans accord.json (recordSandboxAnswer) ; un non n'est jamais redemandé,
+// une entrée fermée ne tranche rien. Les entrées s'écrivent ensuite avec les crochets des usages.
+async function offerSandbox(
+  path: string,
+  options: InstallOptions,
+  deps: InstallDeps,
+  installed: boolean,
+): Promise<void> {
+  const settings = parseSettings(await load(path));
+  if (settings === null) return; // la seconde écriture le dira
+  const step = sandboxStep(
+    settings,
+    await factsConsent(options.home, 'claude_code'),
+    options,
+    installed,
+  );
+  if (typeof step === 'object' && step !== null) {
+    deps.err(
+      `Leon: "${step.forme}" in ${path} does not have the expected shape: it is not touched, and Leon's read commands are not added to the sandbox exceptions.`,
+    );
+  }
+  if (step !== 'demander') return;
+  for (const line of ['', ...SANDBOX_LINES]) deps.out(line);
+  const accepted = yesOnly(
+    await deps.ask(
+      `\nLet Leon's read commands run outside the Claude Code sandbox (written in ${path})? [y/N] `,
+    ),
+  );
+  if (accepted !== true) {
+    deps.out("Nothing was added: Leon's reads may fail inside the Claude Code sandbox.");
+  }
+  if (accepted === null) return;
+  try {
+    await recordSandboxAnswer(options.home, accepted);
+  } catch (error) {
+    const code = errorCode(error);
+    deps.err(
+      `Leon: could not write ${consentPath(options.home)}${code ? ` (${code})` : ''}: your answer is not kept, and Leon's read commands are not added to the sandbox exceptions. Run the command again.`,
+    );
+  }
 }

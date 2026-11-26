@@ -16,7 +16,12 @@ import { COMPUTER_TOKEN_PREFIX, listApiTokens } from '@/server/auth/api-tokens';
 import { deletionInfo } from '@/server/auth/delete-account';
 import { canInvite, getMembership, listMembers, notesRefusedAt } from '@/server/auth/members';
 import { managersSeeAll } from '@/server/auth/organisation';
-import { getSession, requireUserContext, signedInRecently } from '@/server/auth/session';
+import {
+  getSession,
+  hasPassword,
+  requireUserContext,
+  signedInRecently,
+} from '@/server/auth/session';
 import { readSsoSetup } from '@/server/auth/sso';
 import { ABOUT_MAX_CHARS, readAbout } from '@/server/briefing/about';
 import { claudeCodeInstructions, installCommand } from '@/server/cli/install-command';
@@ -108,6 +113,7 @@ export default async function SettingsPage({
     }),
   ]);
   const twoFactor = Boolean(session?.user.twoFactorEnabled);
+  const password = await hasPassword(ctx.userId);
   const live = allTokens
     .filter((token) => !token.revokedAt)
     .map(({ revokedAt: _, ...token }) => token);
@@ -144,7 +150,7 @@ export default async function SettingsPage({
                 about={about ?? ''}
                 aboutMax={ABOUT_MAX_CHARS}
               />
-              <DeleteAccountSection info={deletion} twoFactor={twoFactor} />
+              <DeleteAccountSection info={deletion} twoFactor={twoFactor} hasPassword={password} />
             </>
           ),
           securite: <SecuritySettings enabled={twoFactor} />,
@@ -172,7 +178,11 @@ export default async function SettingsPage({
               depots={depotsEquipe}
             >
               {deletion.isOwner && (
-                <DeleteOrganizationSection info={deletion} twoFactor={twoFactor} />
+                <DeleteOrganizationSection
+                  info={deletion}
+                  twoFactor={twoFactor}
+                  hasPassword={password}
+                />
               )}
             </WorkspaceSettings>
           ),

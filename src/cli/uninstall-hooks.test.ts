@@ -12,17 +12,19 @@ import {
   consentWithdrawn,
   factsConsent,
   pendingServerWithdrawals,
+  recordSandboxAnswer,
   writeConsent,
 } from './consent';
 import { launcherHookCommand, launcherPath } from './hook-commands';
 import { TokenRefusedError } from './import-claude-code';
-import { installHooks, SETTINGS_FILE } from './install-hooks';
+import { installHooks, SETTINGS_FILE, sandboxEntries } from './install-hooks';
 import { launcherScript, writeLauncher } from './launcher';
 import {
   catchUpWithdrawals,
   connectionWithdrawal,
   type UninstallDeps,
   uninstallHooks,
+  uninstallPassage,
   WITHDRAWAL_NOT_TOLD_LAST_MESSAGE,
   WITHDRAWAL_NOT_TOLD_MESSAGE,
   WITHDRAWAL_REFUSED_MESSAGE,
@@ -361,6 +363,157 @@ describe('uninstallHooks : les crochets de la forme du lanceur (K9)', () => {
 
     expect(run.output).toContain('nothing to remove');
     expect((await readSettings()).hooks).toEqual({ SessionStart: [{ hooks: mine }] });
+  });
+});
+
+// La lecture obligée (D40, T67) : son crochet PreToolUse et les entrées de Leon du bac à sable partent avec le retrait
+// complet ; `--usage passage` ne retire qu'eux, et oublie les réponses à `passage` et au bac à sable, sur le poste seul.
+describe('uninstallHooks et uninstallPassage : le crochet de passage et l’exception du bac à sable', () => {
+  const readFirst = () => ({
+    matcher: 'Edit|Write|MultiEdit|NotebookEdit',
+    hooks: [{ type: 'command', command: launcherHookCommand(home, 'read-first'), timeout: 5 }],
+  });
+  const reminder = () => ({
+    hooks: [{ type: 'command', command: launcherHookCommand(home, 'reminder'), timeout: 5 }],
+  });
+  const mine = { matcher: 'Bash', hooks: [{ type: 'command', command: './garde.sh' }] };
+  // Des entrées de l'utilisateur proches de celles de Leon : seules les entrées exactes partent.
+  const near = [
+    'docker',
+    '~/.leon/bin/leon thread-autre',
+    '~/.leon/bin/leon search',
+    '/autre/.leon/bin/leon thread',
+  ];
+  // De même pour l'écriture interdite : seule `~/.leon` part, pas une entrée voisine.
+  const denied = ['~/.ssh', '~/.leon/bin', '~/.leon/'];
+  const installed = () =>
+    writeSettings({
+      sandbox: {
+        enabled: true,
+        excludedCommands: ['gh pr *', ...sandboxEntries(home), ...near],
+        filesystem: { allowWrite: ['~/.cache'], denyWrite: ['~/.leon', ...denied] },
+      },
+      hooks: {
+        SessionStart: [leonStart()],
+        SessionEnd: [leonEnd()],
+        UserPromptSubmit: [reminder()],
+        PreToolUse: [mine, readFirst()],
+      },
+    });
+  const passageGiven = async () => {
+    await writeConsent(home, 'claude_code', 2, new Date('2026-11-02T14:00:00Z'));
+    await addUsage(home, 'claude_code', 'lecture', new Date('2026-11-03T10:00:00Z'));
+    await addUsage(home, 'claude_code', 'rappel', new Date('2026-11-03T10:00:00Z'));
+    await addUsage(home, 'claude_code', 'passage');
+    await addRefusal(home, 'claude_code', 'resume', new Date('2026-11-04T10:00:00Z'));
+    await recordSandboxAnswer(home, true);
+  };
+  const removePassage = async () => {
+    const lines: string[] = [];
+    const code = await uninstallPassage(
+      { configDir, home },
+      { out: (text) => lines.push(text), err: (text) => lines.push(text) },
+    );
+    return { code, output: lines.join('\n') };
+  };
+
+  it('le retrait complet retire le crochet de passage et les seules entrées de Leon du bac à sable', async () => {
+    await installed();
+    await passageGiven();
+
+    const run = await uninstall();
+
+    expect(run.code).toBe(0);
+    expect(run.output).toContain(`  PreToolUse · ${launcherHookCommand(home, 'read-first')}`);
+    expect(run.output).toContain(`  sandbox.excludedCommands · ~/.leon/bin/leon search *`);
+    expect(run.output).toContain(`  sandbox.filesystem.denyWrite · ~/.leon`);
+    expect(await readSettings()).toEqual({
+      sandbox: {
+        enabled: true,
+        excludedCommands: ['gh pr *', ...near],
+        filesystem: { allowWrite: ['~/.cache'], denyWrite: denied },
+      },
+      hooks: { PreToolUse: [mine] },
+    });
+  });
+
+  it('une liste du bac à sable que le retrait vide disparaît, et `filesystem` qu’il vide aussi ; le bac à sable lui-même reste', async () => {
+    await writeSettings({
+      sandbox: {
+        enabled: true,
+        excludedCommands: sandboxEntries(home),
+        filesystem: { denyWrite: ['~/.leon'] },
+      },
+    });
+
+    await uninstall();
+
+    expect(await readSettings()).toEqual({ sandbox: { enabled: true } });
+  });
+
+  it('--usage passage : ce seul crochet et ces entrées, puis les réponses oubliées ; le reste ne bouge pas', async () => {
+    await installed();
+    await passageGiven();
+
+    const run = await removePassage();
+
+    expect(run.code).toBe(0);
+    expect(run.output).toContain(`  PreToolUse · ${launcherHookCommand(home, 'read-first')}`);
+    expect(run.output).not.toContain('SessionStart ·');
+    expect(run.output).toContain(
+      `Your answer to the usage "passage" is forgotten in ${consentPath(home)}: \`leon setup\` asks it again in a terminal. Your other usages and your consent are not touched, and the Leon server is not told: it never checks this usage.`,
+    );
+    expect(await readSettings()).toEqual({
+      sandbox: {
+        enabled: true,
+        excludedCommands: ['gh pr *', ...near],
+        filesystem: { allowWrite: ['~/.cache'], denyWrite: denied },
+      },
+      hooks: {
+        SessionStart: [leonStart()],
+        SessionEnd: [leonEnd()],
+        UserPromptSubmit: [reminder()],
+        PreToolUse: [mine],
+      },
+    });
+    expect(JSON.parse(await readFile(consentPath(home), 'utf8')).outils.claude_code).toEqual({
+      version: 2,
+      installe_le: '2026-11-02T14:00:00.000Z',
+      usages: { lecture: '2026-11-03T10:00:00.000Z', rappel: '2026-11-03T10:00:00.000Z' },
+      refus: { resume: '2026-11-04T10:00:00.000Z' },
+    });
+    // Sur le poste seul : le serveur n'apprend rien, et l'accord n'est pas retiré.
+    expect(server.told).toEqual([]);
+    expect(await consentWithdrawn(home, 'claude_code')).toBe(false);
+  });
+
+  it('--usage passage oublie aussi un refus, et redonne la question à l’installation suivante', async () => {
+    await writeSettings({ hooks: { SessionStart: [leonStart()], SessionEnd: [leonEnd()] } });
+    await writeConsent(home, 'claude_code', 2);
+    await addUsage(home, 'claude_code', 'lecture');
+    await addRefusal(home, 'claude_code', 'passage');
+    await recordSandboxAnswer(home, false);
+
+    const run = await removePassage();
+
+    expect(run.code).toBe(0);
+    expect(run.output).toContain('nothing to remove');
+    expect(await factsConsent(home, 'claude_code')).toMatchObject({
+      usages: ['lecture'],
+      refus: [],
+    });
+    expect(await factsConsent(home, 'claude_code')).not.toHaveProperty('bac_a_sable');
+  });
+
+  it('--usage passage sur des réglages illisibles : code 1, rien n’y est touché, la réponse est oubliée quand même', async () => {
+    const text = await writeSettings('{ pas du json');
+    await passageGiven();
+
+    const run = await removePassage();
+
+    expect(run.code).toBe(1);
+    expect(await readFile(settingsPath, 'utf8')).toBe(text);
+    expect((await factsConsent(home, 'claude_code'))?.usages).toEqual(['lecture', 'rappel']);
   });
 });
 
@@ -884,6 +1037,10 @@ function leon(args: string[], input = ''): Promise<Outcome> {
     });
     child.on('error', fail);
     child.on('close', (code) => done({ code, stdout, stderr }));
+    // L'enfant a pu finir avant d'avoir lu son entrée : EPIPE n'est pas une erreur ici.
+    child.stdin.on('error', (error: NodeJS.ErrnoException) => {
+      if (error.code !== 'EPIPE') fail(error);
+    });
     child.stdin.end(input);
   });
 }
@@ -939,6 +1096,45 @@ describe('leon retirer-crochets : la vraie commande', () => {
       expect(run.stdout).toBe('');
       expect(await readFile(settingsPath, 'utf8')).toBe(text);
       expect(await consentWithdrawn(home, 'claude_code')).toBe(false);
+    },
+    30_000,
+  );
+
+  it('--usage passage : le seul crochet de passage, sans retirer l’accord', async () => {
+    const readFirst = launcherHookCommand(home, 'read-first');
+    await writeSettings({
+      hooks: {
+        SessionStart: [leonStart()],
+        PreToolUse: [
+          { matcher: 'Edit', hooks: [{ type: 'command', command: readFirst, timeout: 5 }] },
+        ],
+      },
+    });
+    await writeConsent(home, 'claude_code', 2);
+    await addUsage(home, 'claude_code', 'passage');
+
+    const run = await leon(['retirer-crochets', '--usage', 'passage']);
+
+    expect(run.code).toBe(0);
+    expect(run.stderr).toBe('');
+    expect(run.stdout).toContain(`  PreToolUse · ${readFirst}`);
+    expect(await readSettings()).toEqual({ hooks: { SessionStart: [leonStart()] } });
+    expect(await factsConsent(home, 'claude_code')).toMatchObject({ version: 2, usages: [] });
+  }, 30_000);
+
+  it.each([[['--usage', 'lecture']], [['--usage', 'passage', '--outil', 'codex']]])(
+    'refuse %j sans rien retirer, par un message fixe',
+    async (options) => {
+      const text = await writeSettings({ hooks: { SessionStart: [leonStart()] } });
+
+      const run = await leon(['retirer-crochets', ...options]);
+
+      expect(run).toEqual({
+        code: 1,
+        stdout: '',
+        stderr: '--usage: only passage, for Claude Code, can be removed alone.\n',
+      });
+      expect(await readFile(settingsPath, 'utf8')).toBe(text);
     },
     30_000,
   );

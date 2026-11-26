@@ -109,15 +109,32 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers());
 
 describe('gmailConnector : configuration', () => {
-  it('n’accepte que la forme Pipedream', () => {
+  it('se branche par notre appli Google (tout le courrier et ses réglages de base), ou encore par Pipedream', () => {
     const accepts = (value: unknown) => gmailConnector.configSchema.safeParse(value).success;
     expect(accepts(config)).toBe(true);
+    expect(accepts({ authMode: 'oauth', accessToken: 'jeton' })).toBe(true);
     expect(accepts({ ...config, authMode: 'oauth' })).toBe(false);
     expect(accepts({ ...config, accountId: 'pas-un-compte' })).toBe(false);
     expect(gmailConnector.secretFields).toEqual([]);
     expect(gmailConnector.hosts(config)).toEqual(['gmail.googleapis.com']);
+    expect(gmailConnector.oauth).toMatchObject({
+      appKey: 'GOOGLE',
+      scopes: ['https://mail.google.com/', 'https://www.googleapis.com/auth/gmail.settings.basic'],
+    });
     expect(gmailConnector.pipedream).toEqual({ app: 'gmail' });
     expect(gmailConnector.privateRaw).toBe(true);
+  });
+
+  it('par notre appli, présente le jeton à Gmail', async () => {
+    const oauth = { authMode: 'oauth', accessToken: 'jeton-essai' } as const;
+    const { http, calls } = testHttp(gmailConnector, oauth, [
+      { url: `${GMAIL}/gmail/v1/users/me/profile`, json: { emailAddress: 'david@acme.test' } },
+    ]);
+    expect(await gmailConnector.verify(oauth, http)).toEqual({
+      account: 'david@acme.test',
+      accountKey: 'david@acme.test',
+    });
+    expect(calls[0]?.headers.authorization).toBe('Bearer jeton-essai');
   });
 
   it('vérifie par le profil : l’adresse, en minuscules pour la reconnaître', async () => {

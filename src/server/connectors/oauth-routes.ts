@@ -176,9 +176,11 @@ function setPending(c: Context, pending: OAuthPending): void {
 async function startHandler(c: Context, deps: OAuthRoutesDeps): Promise<Response> {
   const provider = asProviderId(c.req.param('provider'));
   const connector = provider && deps.getConnector(provider);
-  if (provider && connector?.pipedream) return pipedreamStart(c, deps, provider, connector);
   const spec = connector ? connector.oauth : undefined;
   const client = spec && oauthClient(spec.appKey);
+  // Notre appli d'abord (Google) ; Pipedream seulement quand elle n'est pas configurée sur ce serveur.
+  if (provider && connector?.pipedream && !client)
+    return pipedreamStart(c, deps, provider, connector);
   if (!provider || !connector || !spec || !client) return c.json(NOT_FOUND, 404);
   const ctx = await sessionContext(c);
   if (!ctx) return c.redirect('/sign-in', 303);
@@ -387,6 +389,9 @@ async function connect(
     const options = { reconnect: true } as const;
     const saved = await saveOAuthTokens(ctx, pending.reconnectId, kept, secretFields, options);
     if (!saved) throw new ConnectorHttpError(null, 'Connection not found');
+    // Passée de Pipedream à notre appli (Gmail, Drive) : Pipedream oublie l'ancien compte et ses jetons.
+    if (stored.config.authMode === 'pipedream')
+      await forgetPipedreamUser(stored.config.externalUserId, deps.fetchImpl);
   } else {
     await createConnection(ctx, {
       provider,

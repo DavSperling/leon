@@ -105,7 +105,8 @@ async function readPages(
       read += page.items.length;
       if (read >= SYNC_ITEMS_MAX) return 'soon';
     }
-    return connector.pipedream ? 'office' : 'later';
+    // Par Pipedream, chaque requête coûte un crédit : la relève se fait aux heures de bureau.
+    return config.authMode === 'pipedream' ? 'office' : 'later';
   } finally {
     // T12 : l'ingestion écrit avec l'accès de l'organisation, selon la liste lue au début. À la fin du passage, même
     // en erreur, les sources GitHub de l'organisation reprennent l'accès que donne la liste du moment (0048).

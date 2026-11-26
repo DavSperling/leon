@@ -4,8 +4,7 @@ import type { TenantContext } from '@/server/auth/tenant-context';
 import { members, users } from '@/server/db/schema/auth';
 import { briefings } from '@/server/db/schema/search';
 import { createFakeLlm } from '@/server/llm/fake-llm';
-import type { Llm } from '@/server/llm/llm';
-import { LlmError } from '@/server/llm/llm';
+import { LLM_UNREACHABLE, type Llm, LlmError } from '@/server/llm/llm';
 import { DATA_GUARD_LINE } from '@/server/llm/prompt-guard';
 import { adminDb, adminPool } from '@/test/db';
 import { createTestUser } from '@/test/fixtures';
@@ -235,6 +234,36 @@ describe('refreshBriefing', () => {
 
     expect(llm.calls).toEqual([]);
     expect(await rowOf(gone, seeded.project)).toBeUndefined();
+  });
+
+  // Audit du 26/11, n° 10 : le 19/11, un 401 sur tous les appels épuisait le plafond du jour sans un seul texte.
+  it('fournisseur injoignable : le créneau du jour est rendu ; une réponse vide, payée, reste comptée', async () => {
+    const seeded = await seedProject(alice);
+    const counted = async () =>
+      (
+        await adminPool.query<{ nombre: number }>(
+          "select nombre from points_par_jour where user_id = $1 and jour = (now() at time zone 'UTC')::date",
+          [alice.userId],
+        )
+      ).rows[0]?.nombre ?? 0;
+    const before = await counted();
+    const down: Llm = {
+      // biome-ignore lint/correctness/useYield: un fournisseur injoignable ne rend rien
+      async *streamText() {
+        throw new LlmError(LLM_UNREACHABLE);
+      },
+      runAgent: () => {
+        throw new Error('inutile ici');
+      },
+    };
+
+    await expect(refreshBriefing(alice, seeded.project, { llm: down })).rejects.toThrow(LlmError);
+    expect(await counted()).toBe(before);
+
+    await expect(refreshBriefing(alice, seeded.project, { llm: writes(['  ']) })).rejects.toThrow(
+      LlmError,
+    );
+    expect(await counted()).toBe(before + 1);
   });
 
   it('sur une panne ou une réponse vide du modèle, lève et garde le point précédent', async () => {

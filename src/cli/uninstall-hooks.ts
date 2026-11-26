@@ -22,8 +22,12 @@
 // - efface aussi le lanceur ~/.leon/bin/leon (launcher.ts) quand plus aucun outil n'a d'accord dans `accord.json`, que
 //   les réglages et l'accord ont bien été retirés et que le serveur a appris chaque retrait : ses crochets n'en ont plus
 //   besoin, et relancer la commande ne sert plus. Un fichier qui n'est pas un lanceur écrit par Leon est gardé ;
+// - retire aussi les entrées exactes que Leon a mises dans `sandbox.excludedCommands` (sandboxEntries, T67) et
+//   `sandbox.filesystem.denyWrite` (SANDBOX_DENY_WRITE), et seulement elles ;
 // - ne demande pas de confirmation, puisqu'il ne fait que retirer, et ne recopie des réglages dans ses messages que
 //   les commandes de Leon qu'il retire.
+// `leon retirer-crochets --usage passage` (uninstallPassage, D40, T67) ne retire que le crochet de `passage` et ces
+// entrées, puis oublie les réponses à `passage` et au bac à sable, sur le poste seul.
 import { access } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { CodeSessionKind } from '../capture/turn';
@@ -32,6 +36,8 @@ import {
   anyToolInstalled,
   CONSENT_AGAIN_HINT,
   consentPath,
+  forgetSandboxAnswer,
+  forgetUsage,
   pendingServerWithdrawals,
   recordServerWithdrawal,
   withdrawalRecorded,
@@ -49,7 +55,9 @@ import {
   type Json,
   load,
   parseSettings,
+  READ_FIRST_HOOK,
   REMINDER_HOOK,
+  removeSandboxEntries,
   SETTINGS_FILE,
   writeAtomically,
 } from './install-hooks';
@@ -60,13 +68,18 @@ const README_HINT = `see the README, section "Retirer les crochets"`;
 
 export type RemovedHook = { event: string; command: string };
 
-// Les réglages sans les crochets de Leon, celui de message (`rappel`, T49) compris, sans modifier l'objet reçu.
-export function removeLeonHooks(settings: Json): { settings: Json; removed: RemovedHook[] } {
-  const next = structuredClone(settings);
-  const removed: RemovedHook[] = [];
+// Les réglages sans les crochets de Leon (`specs` : tous par défaut, ceux de `rappel` et de `passage` compris) ni ses
+// entrées du bac à sable (`excludedCommands` et `filesystem.denyWrite`), sans modifier l'objet reçu. `home` : le dossier
+// personnel de ces entrées.
+export function removeLeonHooks(
+  settings: Json,
+  home: string,
+  specs = [...HOOKS, REMINDER_HOOK, READ_FIRST_HOOK],
+): { settings: Json; removed: RemovedHook[] } {
+  const { settings: next, removed } = removeSandboxEntries(settings, home);
   const hooksRoot = next.hooks;
   if (!isRecord(hooksRoot)) return { settings: next, removed };
-  for (const spec of [...HOOKS, REMINDER_HOOK]) {
+  for (const spec of specs) {
     const groups = hooksRoot[spec.event];
     if (!Array.isArray(groups)) continue;
     const kept: unknown[] = [];
@@ -89,7 +102,12 @@ export function removeLeonHooks(settings: Json): { settings: Json; removed: Remo
     if (kept.length === 0 && groups.length > 0) delete hooksRoot[spec.event];
     else hooksRoot[spec.event] = kept;
   }
-  if (removed.length > 0 && Object.keys(hooksRoot).length === 0) delete next.hooks;
+  if (
+    removed.some((hook) => !hook.event.startsWith('sandbox.')) &&
+    Object.keys(hooksRoot).length === 0
+  ) {
+    delete next.hooks;
+  }
   return { settings: next, removed };
 }
 
@@ -209,7 +227,12 @@ export async function tellBeforeConsent(
 }
 
 // Rend true si les réglages n'ont plus de crochet de Leon (retirés à l'instant ou absents).
-async function removeFromSettings(path: string, deps: UninstallDeps): Promise<boolean> {
+async function removeFromSettings(
+  path: string,
+  home: string,
+  deps: Pick<UninstallDeps, 'out' | 'err'>,
+  specs?: Parameters<typeof removeLeonHooks>[2],
+): Promise<boolean> {
   const loaded = await load(path);
   const settings = parseSettings(loaded);
   if (settings === null) {
@@ -219,7 +242,7 @@ async function removeFromSettings(path: string, deps: UninstallDeps): Promise<bo
     return false;
   }
 
-  const plan = removeLeonHooks(settings);
+  const plan = removeLeonHooks(settings, home, specs);
   if (plan.removed.length === 0) {
     deps.out(`No Leon hook in ${path}: nothing to remove.`);
     return true;
@@ -296,10 +319,45 @@ export async function uninstallHooks(
   options: UninstallOptions,
   deps: UninstallDeps,
 ): Promise<number> {
-  const settingsDone = await removeFromSettings(join(options.configDir, SETTINGS_FILE), deps);
+  const settingsDone = await removeFromSettings(
+    join(options.configDir, SETTINGS_FILE),
+    options.home,
+    deps,
+  );
   const consentDone = await withdrawConsent(options.home, deps);
   if (consentDone) await withdrawOnServer(options.home, deps);
   if (settingsDone && consentDone) await removeUnusedLauncher(options.home, deps);
   deps.out('The sessions already sent stay in Leon: there is no way to delete them yet.');
   return settingsDone && consentDone ? 0 : 1;
+}
+
+// `leon retirer-crochets --usage passage` (D40, T67) : le seul crochet de `passage` et les entrées de Leon du bac à
+// sable, puis les réponses données à `passage` et au bac à sable dans accord.json. Sur le poste seul : le serveur ne
+// vérifie jamais `passage`, et le retrait complet lui ferait vider les usages des sessions déjà envoyées (T43). Ni la
+// version de l'accord, ni ses autres usages, ni les autres crochets ne bougent. Rend 0 si tout est fait.
+export async function uninstallPassage(
+  options: UninstallOptions,
+  deps: Pick<UninstallDeps, 'out' | 'err'>,
+): Promise<number> {
+  const settingsDone = await removeFromSettings(
+    join(options.configDir, SETTINGS_FILE),
+    options.home,
+    deps,
+    [READ_FIRST_HOOK],
+  );
+  const path = consentPath(options.home);
+  try {
+    await forgetUsage(options.home, 'claude_code', 'passage');
+    await forgetSandboxAnswer(options.home);
+  } catch (error) {
+    const code = errorCode(error);
+    deps.err(
+      `Leon: could not write ${path}${code ? ` (${code})` : ''}: your answer to the usage "passage" is not forgotten. Run the command again.`,
+    );
+    return 1;
+  }
+  deps.out(
+    `Your answer to the usage "passage" is forgotten in ${path}: \`leon setup\` asks it again in a terminal. Your other usages and your consent are not touched, and the Leon server is not told: it never checks this usage.`,
+  );
+  return settingsDone ? 0 : 1;
 }

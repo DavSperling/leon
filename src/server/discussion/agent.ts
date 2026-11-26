@@ -7,6 +7,7 @@ import {
 } from '@/lib/discussion-events';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import type { Embedder } from '@/server/embeddings/embedder';
+import { reserveCall } from '@/server/llm/daily-cap';
 import { type AgentEvent, type Llm, LlmError } from '@/server/llm/llm';
 import { createReferenceFilter, referencedNumbers } from '@/server/llm/references';
 import { logError } from '@/server/log';
@@ -103,6 +104,11 @@ async function* runReply(
 ): AsyncGenerator<DiscussionEvent> {
   let turn: Awaited<ReturnType<typeof startReply>>;
   try {
+    // Le plafond du jour (daily-cap.ts), avant toute écriture : la question n'est pas gardée, la page la lui rend.
+    if (!(await reserveCall(ctx.userId, 'discussion'))) {
+      yield { type: 'plafond' };
+      return;
+    }
     turn = await startReply(ctx, discussionId, message);
   } catch (error) {
     logError('discussion.indisponible', error, { etape: 'question' });

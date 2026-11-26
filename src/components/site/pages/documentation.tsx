@@ -1,12 +1,12 @@
 import { ArrowUpRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { Children, type ReactNode } from 'react';
+import { Children, Fragment, type ReactNode } from 'react';
 import { Button } from '@/components/verre/ui/button';
 import { CodeLine, CopyButton } from '@/components/verre/ui/copy';
 import { cn } from '@/lib/verre/cn';
 import { nb } from '@/lib/verre/nb';
 import { Container, CtaLink, tone } from '../parts';
-import { READ_COMMANDS, SECTIONS, settingsPath } from './documentation-markdown';
+import { PROBLEMS, READ_COMMANDS, SECTIONS, settingsPath } from './documentation-markdown';
 import { DocumentationToc } from './documentation-toc';
 import { type DocumentationView, ViewSwitch } from './documentation-view';
 import { PageHero } from './page-hero';
@@ -83,10 +83,16 @@ export function DocumentationPage({
   const claude = useTranslations('claudeCode');
   const settings = useTranslations('settings');
 
-  // Du texte avec des <code> : les morceaux de texte reçoivent la typographie française (espaces fines insécables).
+  // Du texte avec des <code> (et des <b>, les repères des entrées de « En cas de problème ») : les morceaux de texte
+  // reçoivent la typographie française (espaces fines insécables).
   const rich = (key: Parameters<typeof t.rich>[0], values: Record<string, string> = {}) =>
-    Children.map(t.rich(key, { ...values, code: (chunks) => <Code>{chunks}</Code> }), (node) =>
-      typeof node === 'string' ? nb(node) : node,
+    Children.map(
+      t.rich(key, {
+        ...values,
+        code: (chunks) => <Code>{chunks}</Code>,
+        b: (chunks) => <strong>{chunks}</strong>,
+      }),
+      (node) => (typeof node === 'string' ? nb(node) : node),
     );
   const p = (key: Parameters<typeof t.rich>[0], values?: Record<string, string>) => (
     <p>{rich(key, values)}</p>
@@ -271,18 +277,24 @@ export function DocumentationPage({
                 </DocSection>
 
                 <DocSection id="problemes" title={t('problems.title')}>
-                  <h3 className={SUBTITLE}>{nb(t('problems.browser.title'))}</h3>
-                  <p>{rich('problems.browser.text', { path: pathTo(settings('tokensTitle')) })}</p>
-                  {withServer(`~/.leon/bin/leon login --with-token --url ${server}`)}
-                  {p('problems.browser.after')}
-                  <h3 className={SUBTITLE}>{nb(t('problems.noTerminal.title'))}</h3>
-                  {p('problems.noTerminal.text')}
-                  <h3 className={SUBTITLE}>{nb(t('problems.platform.title'))}</h3>
-                  {p('problems.platform.text')}
-                  <h3 className={SUBTITLE}>{nb(t('problems.revoked.title'))}</h3>
-                  {p('problems.revoked.text')}
-                  <h3 className={SUBTITLE}>{nb(t('problems.interrupted.title'))}</h3>
-                  {p('problems.interrupted.text')}
+                  {/* un h3 par catégorie, un h4 par entrée ; « Le navigateur est sur un autre ordinateur » garde sa commande */}
+                  {PROBLEMS.map(({ group, entries }) => (
+                    <Fragment key={group}>
+                      <h3 className={SUBTITLE}>{nb(t(`problems.groups.${group}`))}</h3>
+                      {entries.map((key) => (
+                        <div key={key} className="grid gap-2 border-line [&+&]:border-t [&+&]:pt-4">
+                          <h4 className="font-semibold">{nb(t(`problems.${key}.title`))}</h4>
+                          {p(`problems.${key}.text`, { path: pathTo(settings('tokensTitle')) })}
+                          {key === 'browser' && (
+                            <>
+                              {withServer(`~/.leon/bin/leon login --with-token --url ${server}`)}
+                              {p('problems.browser.after')}
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </Fragment>
+                  ))}
                 </DocSection>
 
                 <DocSection id="clone" title={t('clone.title')}>

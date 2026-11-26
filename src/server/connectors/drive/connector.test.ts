@@ -51,10 +51,23 @@ async function runSync(routes: FakeRoute[], cursor: string | null = null) {
 }
 
 describe('driveConnector', () => {
-  it('passe par Pipedream, vers l’API Drive seulement', () => {
+  it('passe par notre appli Google (Drive complet), ou encore par Pipedream, vers l’API Drive seulement', () => {
     expect(driveConnector.hosts(config)).toEqual(['www.googleapis.com']);
+    expect(driveConnector.oauth).toMatchObject({
+      appKey: 'GOOGLE',
+      scopes: ['https://www.googleapis.com/auth/drive'],
+    });
     expect(driveConnector.pipedream).toEqual({ app: 'google_drive' });
     expect(driveConnector.secretFields).toEqual([]);
+  });
+
+  it('par notre appli, présente le jeton à Drive', async () => {
+    const oauth = { authMode: 'oauth', accessToken: 'jeton-essai' } as const;
+    const { http, calls } = testHttp(driveConnector, oauth, [
+      { url: `${DRIVE}/about`, json: { user: { emailAddress: 'david@acme.test' } } },
+    ]);
+    expect(await driveConnector.verify(oauth, http)).toEqual({ account: 'david@acme.test' });
+    expect(calls[0]?.headers.authorization).toBe('Bearer jeton-essai');
   });
 
   it('vérifie par le compte Drive', async () => {

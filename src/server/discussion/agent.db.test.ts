@@ -5,6 +5,7 @@ import {
   type DiscussionEvent,
 } from '@/lib/discussion-events';
 import type { TenantContext } from '@/server/auth/tenant-context';
+import { DAILY_CAPS } from '@/server/llm/daily-cap';
 import { createFakeLlm } from '@/server/llm/fake-llm';
 import { type AgentEvent, type Llm, LlmError } from '@/server/llm/llm';
 import * as searchModule from '@/server/search/search';
@@ -253,6 +254,27 @@ describe('replyStream', () => {
 
     expect(events).toEqual([{ type: 'indisponible', questionGardee: false }]);
     expect(llm.calls).toHaveLength(0);
+  });
+
+  // Le plafond du jour (llm/daily-cap.ts, 0090) : compté par question, il s'arrête avant toute écriture.
+  it('passé le plafond du jour : « plafond », la question n’est pas écrite et aucun modèle n’est appelé', async () => {
+    const { alice } = await setup();
+    const discussionId = await createDiscussion(alice, { question: 'La clause ?' });
+    await adminPool.query(
+      `insert into appels_par_jour (user_id, etape, jour, nombre)
+       values ($1, 'discussion', (now() at time zone 'UTC')::date, $2)`,
+      [alice.userId, DAILY_CAPS.discussion - 1],
+    );
+    const llm = createFakeLlm({ agent: () => [text('Voici.')] });
+    const ask = () => collect(reply(alice, discussionId, 'Et la suite ?', llm));
+
+    // La dernière question sous le plafond passe, la suivante non.
+    expect((await ask()).at(-1)).toMatchObject({ type: 'fin' });
+    const before = (await getDiscussion(alice, discussionId))?.messages.length;
+    expect(await ask()).toEqual([{ type: 'plafond' }]);
+
+    expect(llm.calls).toHaveLength(1);
+    expect((await getDiscussion(alice, discussionId))?.messages.length).toBe(before);
   });
 
   it('renvoie au modèle les 20 derniers messages au plus, la nouvelle question en dernier', async () => {

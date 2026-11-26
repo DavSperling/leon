@@ -13,7 +13,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { writeConnection } from './connection';
-import { factsConsent } from './consent';
+import { addUsage, factsConsent, writeConsent } from './consent';
 import { hookCommand, launcherHookCommand, launcherPath } from './hook-commands';
 import { SETTINGS_FILE } from './install-hooks';
 import { launcherScript } from './launcher';
@@ -55,6 +55,10 @@ function leon(args: string[], input = '', env: Record<string, string> = {}): Pro
     });
     child.on('error', fail);
     child.on('close', (code) => done({ code, stdout, stderr }));
+    // L'enfant a pu finir avant d'avoir lu son entrée : EPIPE n'est pas une erreur ici.
+    child.stdin.on('error', (error: NodeJS.ErrnoException) => {
+      if (error.code !== 'EPIPE') fail(error);
+    });
     child.stdin.end(input);
   });
 }
@@ -162,10 +166,39 @@ describe('leon setup', () => {
       expect(outcome.stdout).toContain('Claude Code: hooks installed');
       expect(outcome.stdout).not.toContain('usage "resume"');
       expect(outcome.stdout).not.toContain('usage "lecture"');
+      expect(outcome.stdout).not.toContain('usage "passage"');
       expect((await factsConsent(home, 'claude_code'))?.usages).toEqual([]);
       expect(
         JSON.parse(await readFile(join(home, '.leon', 'accord.json'), 'utf8')).outils.claude_code,
       ).toEqual({ version: 2, installe_le: expect.any(String) });
+    },
+    TEST_TIMEOUT_MS,
+  );
+
+  // D40 amendée le 23/11, T67 : l'exception du bac à sable ne se demande que dans un terminal. Par un tube, `passage`
+  // déjà donné et le bac à sable actif, la question n'est pas posée et `sandbox` n'est pas touché. (Sous la forme clone de
+  // ce test, elle ne l'est de toute façon pas : le tube seul se vérifie sous la forme installée, dans install-hooks.test.ts.)
+  it(
+    'par un tube, jamais l’exception du bac à sable, même avec passage déjà donné',
+    async () => {
+      await connect();
+      await writeConsent(home, 'claude_code', 2);
+      await addUsage(home, 'claude_code', 'lecture');
+      await addUsage(home, 'claude_code', 'passage');
+      await writeFile(
+        join(configDir, SETTINGS_FILE),
+        JSON.stringify({ sandbox: { enabled: true } }),
+      );
+
+      const outcome = await leon(['setup', '--depot', clone], 'y\ny\ny\n');
+
+      expect(outcome.code).toBe(0);
+      expect(outcome.stdout).not.toContain('outside the Claude Code sandbox');
+      const settings = JSON.parse(await readFile(join(configDir, SETTINGS_FILE), 'utf8'));
+      expect(settings.sandbox).toEqual({ enabled: true });
+      expect(settings.hooks.PreToolUse[0].hooks[0].command).toBe(
+        launcherHookCommand(home, 'read-first'),
+      );
     },
     TEST_TIMEOUT_MS,
   );

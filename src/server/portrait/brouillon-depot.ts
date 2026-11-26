@@ -4,7 +4,9 @@ import { loadMyConnections } from '@/server/connectors/connections';
 import { gmailClient } from '@/server/connectors/gmail/client';
 import { gmailConnector } from '@/server/connectors/gmail/connector';
 import { replyRaw } from '@/server/connectors/gmail/reply';
+import { googleHttp } from '@/server/connectors/google';
 import { ConnectorHttpError } from '@/server/connectors/http';
+import { ensureFreshTokens } from '@/server/connectors/oauth';
 import { connectorHttp } from '@/server/connectors/pipedream';
 import { sources } from '@/server/db/schema/memory';
 import { brouillons } from '@/server/db/schema/portrait';
@@ -25,8 +27,8 @@ import { relanceRecipients } from './unanswered-mails';
 // Un brouillon est déposé si, et seulement si :
 // - il est complet : son texte ne porte aucun blanc entre crochets (hasBlank). Un brouillon incomplet reste dans Leon
 //   seulement, d'où il ne peut pas partir par erreur ;
-// - son fil est un fil Gmail relevé par une connexion Gmail qu'elle a branchée elle-même, par Pipedream, et qui n'est
-//   pas en pause (loadMyConnections) : ni le fil d'un collègue, ni une boîte branchée par un autre ;
+// - son fil est un fil Gmail relevé par une connexion Gmail qu'elle a branchée elle-même (par l'appli Google de Leon, ou
+//   par Pipedream) et qui n'est pas en pause (loadMyConnections) : ni le fil d'un collègue, ni une boîte branchée par un autre ;
 // - il n'est pas déjà déposé (0081) ;
 // - à l'instant du dépôt, elle dit toujours oui à l'agent de sa sorte, « Brouillons de réponse » pour une réponse,
 //   « Relances » pour une relance (un oui à l'un ne dépose jamais la sorte de l'autre), et n'a pas écarté ce
@@ -39,7 +41,7 @@ import { relanceRecipients } from './unanswered-mails';
 // shortcut: Gmail seulement, un brouillon sur un fil Outlook reste dans Leon ; à déposer par Microsoft Graph quand
 // l'agent doit servir les boîtes Outlook.
 //
-// Deux requêtes par le proxy de Pipedream, donc deux crédits par brouillon déposé : la lecture du fil (s'il attend
+// Deux requêtes, donc deux crédits par brouillon déposé quand la boîte passe par le proxy de Pipedream : la lecture du fil (s'il attend
 // toujours, et les en-têtes du message auquel répondre), puis la création du brouillon. Hors de toute transaction. Les
 // destinataires sont fixés ici, d'après le mail, jamais par le modèle ni par l'appelant :
 // - une réponse va à l'auteur du mail reçu, à qui elle a déjà écrit, ou l'inconnu dont elle a voulu une réponse
@@ -58,13 +60,18 @@ import { relanceRecipients } from './unanswered-mails';
 
 type Deps = { fetchImpl?: typeof fetch }; // tests
 
-// Sa boîte Gmail, celle qui a relevé le fil : une connexion qu'elle a branchée elle-même, par Pipedream, et qui n'est
+// Sa boîte Gmail, celle qui a relevé le fil : une connexion qu'elle a branchée elle-même, et qui n'est
 // pas en pause. Null sinon : ni la boîte d'un collègue, ni une autre de ses boîtes.
 async function gmailOf(ctx: TenantContext, connectionId: string | null, deps: Deps) {
   const connection = (await loadMyConnections(ctx, 'gmail')).find((one) => one.id === connectionId);
-  const config = gmailConnector.configSchema.safeParse(connection?.config);
+  if (!connection) return null;
+  // Par l'appli Google de Leon, chaque requête porte son jeton, renouvelé s'il expire, comme avant une relève (sync.ts).
+  const fresh = await ensureFreshTokens(ctx, connection, gmailConnector, deps);
+  const config = gmailConnector.configSchema.safeParse(fresh);
   return config.success
-    ? gmailClient(connectorHttp('gmail', gmailConnector, config.data, deps))
+    ? gmailClient(
+        googleHttp(config.data, connectorHttp('gmail', gmailConnector, config.data, deps)),
+      )
     : null;
 }
 

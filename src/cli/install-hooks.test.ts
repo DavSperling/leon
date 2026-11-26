@@ -18,8 +18,15 @@ import { API_PATHS } from '../capture/api-contract';
 import { BRIEFING_STDIN_TIMEOUT_MS } from './briefing';
 import { HOOK_DEADLINE_MS } from './capture-session';
 import { writeConnection } from './connection';
-import { addRefusal, addUsage, consentPath, factsConsent, writeConsent } from './consent';
-import { hookCommand, launcherHookCommand } from './hook-commands';
+import {
+  addRefusal,
+  addUsage,
+  consentPath,
+  factsConsent,
+  recordSandboxAnswer,
+  writeConsent,
+} from './consent';
+import { hookCommand, launcherHookCommand, launcherPath } from './hook-commands';
 import {
   addLeonHooks,
   BACKUP_FILE,
@@ -30,11 +37,17 @@ import {
   NOTES_REFUSAL_FAILED,
   NOTES_REOPEN_LINE,
   notesRefusal,
+  PASSAGE_LINES,
+  SANDBOX_LINES,
   SESSION_END_TIMEOUT_S,
   SESSION_START_TIMEOUT_S,
   SETTINGS_FILE,
+  sandboxEntries,
   type UsageDecisions,
+  usagesToOffer,
 } from './install-hooks';
+import { writeLauncher } from './launcher';
+import { readFirstMessage } from './read-first';
 
 // L'installateur des crochets (T14), toujours sur un dossier temporaire : jamais le vrai ~/.claude. Les crochets
 // sont ceux de la doc officielle, https://code.claude.com/docs/en/hooks (voir l'en-tête d'install-hooks.ts).
@@ -1059,7 +1072,7 @@ describe('installHooks : l’usage lecture', () => {
   it('montre son texte mot pour mot après l’accord de base et avant resume, en [Y/n] ; Entrée l’accepte, daté', async () => {
     const run = await install({
       interactive: true,
-      answers: ['oui', '', SANS_REPONSE, SANS_REPONSE, null, 'non'],
+      answers: ['oui', '', SANS_REPONSE, SANS_REPONSE, null, null, 'non'],
     });
 
     expect(run.code).toBe(0);
@@ -1068,6 +1081,7 @@ describe('installHooks : l’usage lecture', () => {
       lectureQuestion(),
       rappelQuestion(),
       noterQuestion(),
+      passageQuestion(),
       coulissesQuestion(),
       resumeQuestion(),
     ]);
@@ -1083,7 +1097,7 @@ describe('installHooks : l’usage lecture', () => {
   });
 
   it.each(['', 'y', 'yes', 'o', 'oui', ' Oui '])('la réponse %j l’accepte', async (answer) => {
-    await install({ interactive: true, answers: ['oui', answer, null, null, null, null] });
+    await install({ interactive: true, answers: ['oui', answer, null, null, null, null, null] });
 
     expect(await rawEntry()).toEqual({
       version: 2,
@@ -1124,7 +1138,10 @@ describe('installHooks : l’usage lecture', () => {
       expect(run.output).not.toContain('This answer is kept');
       expect(await rawEntry()).toEqual({ version: 2, installe_le: expect.any(String) });
 
-      const again = await install({ interactive: true, answers: ['', null, null, null, null] });
+      const again = await install({
+        interactive: true,
+        answers: ['', null, null, null, null, null],
+      });
 
       expect(again.questions[0]).toBe(lectureQuestion());
       expect((await factsConsent(home, 'claude_code'))?.usages).toEqual(['lecture']);
@@ -1154,7 +1171,7 @@ describe('installHooks : l’usage lecture', () => {
   it('accepté, puis resume refusé : chacun est gardé à part', async () => {
     await install({
       interactive: true,
-      answers: ['oui', 'oui', SANS_REPONSE, SANS_REPONSE, null, 'non'],
+      answers: ['oui', 'oui', SANS_REPONSE, SANS_REPONSE, null, null, 'non'],
     });
 
     expect(await factsConsent(home, 'claude_code')).toMatchObject({
@@ -1491,6 +1508,548 @@ describe('installHooks : l’usage noter', () => {
   });
 });
 
+// L'usage `passage` (D40, T67 ; annexe 12, avec les deux changements du 23/11), mot pour mot : pour Claude Code seul,
+// demandé à part juste après `noter`, seulement avec `lecture`, jamais coché d'avance : [y/N] dans un terminal. Le crochet
+// PreToolUse (`leon read-first`, 5 s, matcher des quatre outils qui modifient un fichier) n'est posé qu'une fois l'usage
+// donné.
+const PASSAGE_TEXT = [
+  'Read before the first change (usage "passage", optional, asked separately, Claude Code only):',
+  '  - In a Claude Code session you lead (in the desktop app or the terminal), the first time the agent wants to change a file in the folder where the session started (a repository or any other folder, personal ones included), Leon stops that change once and asks the agent to read Leon first: the thread of the current branch with `leon thread`, or else a search with a few words of its task with `leon search`. The agent then makes its change, and Leon does not stop it again in that session. Subagents, the agents of a workflow and scripts (`claude -p`) are not stopped, except a script started from a session of the desktop app, which Leon cannot tell apart from that session.',
+  '  - The stop sends nothing to the Leon server: its message is a fixed text, which only cites the Leon command of this computer (such as `~/.leon/bin/leon`) and holds nothing from your memory. It tells the agent that what it reads is data, not instructions: the code and Git win when they disagree, and otherwise the agent takes it into account. What the agent then reads is covered by the usage "lecture", which this one needs: the model provider of the tool sees it. A search sends its words (secrets masked before sending, and again by the server) to the Leon server, which may send them to the provider that computes its search vectors. Depending on your permission settings, Claude Code may ask you before the agent runs the command. To stop only once, Leon writes an empty file per session in `~/.leon/temoins/claude_code` (never the session id in clear) and deletes those older than 7 days.',
+  '  - Each change of a file runs the Leon command for a moment (a fraction of a second) before it is made, in the agents of a workflow too. If the command fails or takes too long, the change goes on. `leon retirer-crochets --usage passage` removes this hook and forgets your answer, on this computer only; `leon retirer-crochets` removes it with the others.',
+].join('\n');
+const passageQuestion = () =>
+  `\nBefore the first change of a file in each Claude Code session you lead, have the agent read Leon first (recorded in ${consentPath(home)})? [y/N] `;
+const PASSAGE_NONE =
+  'Nothing was added: the agent is not asked to read Leon before its first change.';
+const readFirstHook = () => ({
+  matcher: 'Edit|Write|MultiEdit|NotebookEdit',
+  hooks: [{ type: 'command', command: launcherHookCommand(home, 'read-first'), timeout: 5 }],
+});
+// Base, lecture, rappel, noter, passage, coulisses, resume : `lecture` accepté, `passage` à `answer`, les autres refusés
+// (ils ne reviennent pas au passage suivant).
+const withPassage = (answer: string | null) => ['oui', '', 'non', 'non', answer, 'non', 'non'];
+const OTHERS_REFUSED = ['rappel', 'resume', 'coulisses', 'noter'];
+
+describe('installHooks : l’usage passage et son crochet', () => {
+  it('son texte exporté est celui de l’accord, mot pour mot', () => {
+    expect(PASSAGE_LINES.join('\n')).toBe(PASSAGE_TEXT);
+  });
+
+  it('demandé juste après noter, avec lecture accepté dans le même passage ; un oui l’écrit et pose son crochet', async () => {
+    const run = await install({ interactive: true, answers: withPassage('oui') });
+
+    expect(run.code).toBe(0);
+    expect(run.questions).toEqual([
+      expect.any(String),
+      lectureQuestion(),
+      rappelQuestion(),
+      noterQuestion(),
+      passageQuestion(),
+      coulissesQuestion(),
+      resumeQuestion(),
+    ]);
+    expect(run.output.indexOf(PASSAGE_TEXT)).toBeGreaterThan(run.output.indexOf(NOTER_TEXT));
+    expect(run.output.indexOf(COULISSES_TEXT)).toBeGreaterThan(run.output.indexOf(PASSAGE_TEXT));
+    expect(run.output).toContain(`Read before the first change recorded in ${consentPath(home)}.`);
+    expect(run.output).toContain(
+      `Leon hook written in ${settingsPath}: PreToolUse · timeout 5 s · ${launcherHookCommand(home, 'read-first')}`,
+    );
+    expect(await factsConsent(home, 'claude_code')).toMatchObject({
+      usages: ['lecture', 'passage'],
+      refus: OTHERS_REFUSED,
+    });
+    // `passage` sans `rappel` : son seul crochet s'ajoute.
+    expect((await readSettings()).hooks).toEqual({
+      SessionStart: [leonStart()],
+      SessionEnd: [leonEnd()],
+      PreToolUse: [readFirstHook()],
+    });
+  });
+
+  it.each([
+    ['refusé', 'non'],
+    ['sans réponse', SANS_REPONSE],
+  ])('jamais demandé quand lecture est %s dans le même passage', async (_name, lecture) => {
+    const run = await install({
+      interactive: true,
+      answers: ['oui', lecture, null, null, null, null],
+    });
+
+    expect(run.questions).not.toContain(passageQuestion());
+    expect(run.output).not.toContain(PASSAGE_TEXT);
+    expect((await factsConsent(home, 'claude_code'))?.usages).not.toContain('passage');
+  });
+
+  it('jamais demandé quand lecture a été refusé avant, ni décoché sur la page', async () => {
+    await leonHooksInPlace();
+    await writeConsent(home, 'claude_code', 2);
+    await addRefusal(home, 'claude_code', 'lecture');
+    const before = await install({ interactive: true, answers: [null, null, null, null] });
+    const page = await install({
+      interactive: true,
+      decisions: new Map([['lecture', false]]),
+      home: join(dir, 'autre'),
+      answers: ['oui', null, null, null, null],
+    });
+
+    expect(before.questions).not.toContain(passageQuestion());
+    expect(page.questions).not.toContain(passageQuestion());
+  });
+
+  it('avec --oui, ni texte ni question ni usage, même dans un terminal et avec lecture donné par la page', async () => {
+    const run = await install({
+      interactive: true,
+      assumeYes: true,
+      decisions: new Map([['lecture', true]]),
+    });
+
+    expect(run.questions).toEqual([]);
+    expect(run.output).not.toContain(PASSAGE_TEXT);
+    expect((await factsConsent(home, 'claude_code'))?.usages).toEqual(['lecture']);
+    expect((await readSettings()).hooks.PreToolUse).toBeUndefined();
+  });
+
+  it('hors terminal, il n’est pas donné : un oui lu d’un tube n’en donne aucun', async () => {
+    const run = await install({ answers: ['oui', 'oui', 'oui', 'oui', 'oui'] });
+
+    expect(run.questions).toHaveLength(1);
+    expect(run.output).not.toContain(PASSAGE_TEXT);
+    expect((await readSettings()).hooks.PreToolUse).toBeUndefined();
+  });
+
+  it('jamais proposé aux autres outils, même avec lecture', () => {
+    const consent = {
+      version: 2,
+      installe_le: new Date(),
+      usages: ['lecture' as const],
+      usages_le: {},
+      refus: [],
+    };
+    const options = { interactive: true, assumeYes: false };
+
+    expect(usagesToOffer('claude_code', consent, options)).toContain('passage');
+    for (const tool of ['codex', 'cursor', 'antigravity'] as const) {
+      expect(usagesToOffer(tool, consent, options), tool).not.toContain('passage');
+    }
+  });
+
+  it.each([
+    [
+      'la forme clone',
+      REPO,
+      'pnpm leon retirer-crochets --usage passage',
+      'pnpm leon installer-crochets',
+    ],
+    [
+      'la forme installée',
+      null,
+      '~/.leon/bin/leon retirer-crochets --usage passage',
+      '~/.leon/bin/leon setup',
+    ],
+  ])(
+    'refusé sous %s : un refus daté, pas de crochet, et la ligne cite le retrait de passage seul puis l’installation',
+    async (_name, repoDir, forget, again) => {
+      const run = await install({ repoDir, interactive: true, answers: withPassage('non') });
+
+      expect(run.output).toContain(PASSAGE_NONE);
+      expect(run.output).toContain(
+        `This answer is kept: you will not be asked again. To change it, run \`${forget}\` (it only forgets this answer, on this computer), then \`${again}\` again.`,
+      );
+      expect(await factsConsent(home, 'claude_code')).toMatchObject({
+        usages: ['lecture'],
+        refus: [...OTHERS_REFUSED, 'passage'],
+      });
+      expect((await readSettings()).hooks.PreToolUse).toBeUndefined();
+    },
+  );
+
+  it('écrit son groupe à côté du PreToolUse de l’utilisateur, sans doublon au passage suivant', async () => {
+    const mine = { matcher: 'Bash', hooks: [{ type: 'command', command: './garde.sh' }] };
+    await writeSettings({ hooks: { PreToolUse: [mine] } });
+
+    await install({ interactive: true, answers: withPassage('oui') });
+    const written = await readFile(settingsPath, 'utf8');
+    const again = await install({ interactive: true, answers: [] });
+
+    expect((await readSettings()).hooks.PreToolUse).toEqual([mine, readFirstHook()]);
+    expect(again.output).toContain('nothing to do');
+    expect(await readFile(settingsPath, 'utf8')).toBe(written);
+  });
+
+  it.each([
+    ['sans rappel', [] as const],
+    ['avec rappel', ['rappel'] as const],
+  ])(
+    'l’usage déjà là mais le crochet ôté à la main (%s) : il est remis, avec --oui',
+    async (_name, others) => {
+      await leonHooksInPlace();
+      await writeConsent(home, 'claude_code', 2);
+      for (const usage of ['lecture', 'passage', ...others] as const) {
+        await addUsage(home, 'claude_code', usage);
+      }
+
+      const run = await install({ assumeYes: true });
+
+      expect(run.code).toBe(0);
+      // L'aperçu montre le crochet, son matcher et son rôle.
+      expect(run.output).toContain(
+        '  PreToolUse (Edit|Write|MultiEdit|NotebookEdit) · timeout 5 s · add',
+      );
+      expect(run.output).toContain(
+        'before the first change of a file in each session you lead, asks the agent once to read Leon first (usage "passage"); it sends nothing.',
+      );
+      expect((await readSettings()).hooks.PreToolUse).toEqual([readFirstHook()]);
+      expect((await readSettings()).hooks.UserPromptSubmit).toEqual(
+        others.length > 0 ? [reminderHook()] : undefined,
+      );
+    },
+  );
+
+  it('crochets en place, passage accepté ensuite : seul son crochet s’ajoute par la seconde écriture', async () => {
+    await leonHooksInPlace();
+    await writeConsent(home, 'claude_code', 2);
+    await addUsage(home, 'claude_code', 'lecture');
+    for (const usage of ['rappel', 'noter', 'coulisses', 'resume'] as const) {
+      await addRefusal(home, 'claude_code', usage);
+    }
+
+    const run = await install({ interactive: true, answers: ['oui'] });
+
+    expect(run.code).toBe(0);
+    expect(run.questions).toEqual([passageQuestion()]);
+    expect(await readSettings()).toEqual({
+      theme: 'dark',
+      hooks: {
+        SessionStart: [leonStart()],
+        SessionEnd: [leonEnd()],
+        PreToolUse: [readFirstHook()],
+      },
+    });
+  });
+});
+
+// L'exception du bac à sable (D40 amendée le 23/11, T67), mot pour mot : proposée avec `passage`, en [y/N], dans un
+// terminal seulement, quand le bac à sable des réglages est actif et que les entrées de Leon y manquent.
+const SANDBOX_TEXT = [
+  'Leon reads outside the Claude Code sandbox (asked separately, Claude Code only):',
+  '  - Your Claude Code sandbox lets commands reach only the hosts you allowed, so the agent cannot reach the Leon server and its reads fail. Leon can add its own read commands (`leon thread`, `leon threads` and `leon search`, as this computer runs them) to the sandbox exceptions (`sandbox.excludedCommands`) of your Claude Code settings. Those commands then run outside the sandbox; a command that chains them with another one stays inside it. So that no sandboxed command can change what those reads run, Leon also forbids sandboxed commands to write in `~/.leon` (`sandbox.filesystem.denyWrite`). Nothing else changes in your sandbox. `leon retirer-crochets --usage passage` and `leon retirer-crochets` remove them.',
+].join('\n');
+const sandboxQuestion = () =>
+  `\nLet Leon's read commands run outside the Claude Code sandbox (written in ${settingsPath})? [y/N] `;
+const SANDBOX_NONE = "Nothing was added: Leon's reads may fail inside the Claude Code sandbox.";
+// Les entrées exactes : le lanceur absolu, puis la forme `~/.leon/bin/leon` du message d'arrêt.
+const leonEntries = () =>
+  [launcherPath(home), '~/.leon/bin/leon'].flatMap((leon) => [
+    `${leon} thread`,
+    `${leon} thread *`,
+    `${leon} threads`,
+    `${leon} threads *`,
+    `${leon} search *`,
+  ]);
+
+describe('installHooks : l’exception du bac à sable', () => {
+  // Proposée sous la forme installée du lanceur seulement (installedLauncher) : posé avant chaque cas.
+  const installedForm = () => writeLauncher(home, { kind: 'installee' });
+  beforeEach(installedForm);
+  const sandboxOn = (extra: Record<string, unknown> = {}) =>
+    writeSettings({ sandbox: { enabled: true, ...extra } });
+  // `passage` déjà donné, les autres usages tranchés : seule l'exception peut rester à demander.
+  const passageGiven = async () => {
+    await writeConsent(home, 'claude_code', 2);
+    await addUsage(home, 'claude_code', 'lecture');
+    await addUsage(home, 'claude_code', 'passage');
+    for (const usage of ['rappel', 'noter', 'coulisses', 'resume'] as const) {
+      await addRefusal(home, 'claude_code', usage);
+    }
+  };
+  const sandboxAnswer = async () =>
+    JSON.parse(await readFile(consentPath(home), 'utf8')).outils.claude_code.bac_a_sable;
+
+  it('son texte et ses entrées sont ceux de la décision, mot pour mot', () => {
+    expect(SANDBOX_LINES.join('\n')).toBe(SANDBOX_TEXT);
+    expect(sandboxEntries(home)).toEqual(leonEntries());
+  });
+
+  // Les lectures que cite le message d'arrêt, sous la forme `~/.leon/bin/leon`, ont chacune leur entrée.
+  it('couvre les lectures que cite le message d’arrêt', () => {
+    const message = readFirstMessage('~/.leon/bin/leon');
+
+    for (const [cited, entry] of [
+      ['`~/.leon/bin/leon thread`', '~/.leon/bin/leon thread'],
+      ['`~/.leon/bin/leon search`', '~/.leon/bin/leon search *'],
+    ]) {
+      expect(message).toContain(cited);
+      expect(sandboxEntries(home)).toContain(entry);
+    }
+  });
+
+  // Sous la forme clone, `~/.leon/bin/leon` lance le code du clone, qu'un agent du bac à sable peut modifier.
+  it.each([
+    [
+      'un lanceur de forme clone',
+      () => writeLauncher(home, { kind: 'clone', repoDir: REPO }, () => true),
+    ],
+    ['sans lanceur', () => rm(launcherPath(home))],
+  ])('jamais proposée avec %s, même acceptée avant', async (_label, launcher) => {
+    await launcher();
+    await sandboxOn();
+
+    const run = await install({ interactive: true, answers: withPassage('oui') });
+    await recordSandboxAnswer(home, true);
+    const again = await install({ interactive: true, answers: [] });
+
+    expect(run.questions).not.toContain(sandboxQuestion());
+    expect(run.output).not.toContain(SANDBOX_TEXT);
+    expect(again.questions).toEqual([]);
+    expect((await readSettings()).sandbox).toEqual({ enabled: true });
+  });
+
+  // Le passage à la forme clone après coup (revue de sécurité de T67) : les entrées de Leon partent, celles de
+  // l'utilisateur restent, et l'installateur le dit.
+  it.each([
+    [
+      'un lanceur de forme clone',
+      () => writeLauncher(home, { kind: 'clone', repoDir: REPO }, () => true),
+    ],
+    ['sans lanceur', () => rm(launcherPath(home))],
+  ])('retirée avec %s, même acceptée avant', async (_label, launcher) => {
+    await passageGiven();
+    await recordSandboxAnswer(home, true);
+    await writeSettings({
+      sandbox: {
+        enabled: true,
+        excludedCommands: ['gh pr *', ...leonEntries()],
+        filesystem: { denyWrite: ['/etc', '~/.leon'] },
+      },
+      hooks: {
+        SessionStart: [leonStart()],
+        SessionEnd: [leonEnd()],
+        PreToolUse: [readFirstHook()],
+      },
+    });
+    await launcher();
+
+    const run = await install({ interactive: true, answers: [] });
+
+    expect(run.code).toBe(0);
+    expect(run.questions).toEqual([]);
+    expect((await readSettings()).sandbox).toEqual({
+      enabled: true,
+      excludedCommands: ['gh pr *'],
+      filesystem: { denyWrite: ['/etc'] },
+    });
+    expect(run.output).toContain(
+      `Leon's read commands removed from the sandbox exceptions in ${settingsPath}: the Leon command of this computer is no longer the installed one.`,
+    );
+  });
+
+  it('demandée juste après un oui à passage, texte d’abord ; un oui écrit les entrées exactes et range la réponse', async () => {
+    await sandboxOn({ network: { allowedDomains: ['github.com'] } });
+
+    const run = await install({ interactive: true, answers: [...withPassage('oui'), 'oui'] });
+
+    expect(run.code).toBe(0);
+    expect(run.questions.at(-1)).toBe(sandboxQuestion());
+    expect(run.questions.at(-2)).toBe(resumeQuestion());
+    expect(run.output.indexOf(SANDBOX_TEXT)).toBeGreaterThan(run.output.indexOf(PASSAGE_TEXT));
+    expect(run.output).toContain(
+      `Leon's read commands added to the sandbox exceptions in ${settingsPath}.`,
+    );
+    expect((await readSettings()).sandbox).toEqual({
+      enabled: true,
+      network: { allowedDomains: ['github.com'] },
+      excludedCommands: leonEntries(),
+      filesystem: { denyWrite: ['~/.leon'] },
+    });
+    expect(await sandboxAnswer()).toEqual({ accepte_le: expect.any(String) });
+  });
+
+  it.each([
+    ['absent', undefined],
+    ['éteint', { enabled: false }],
+    ['à une autre valeur que true', { enabled: 'true' }],
+  ])('jamais demandée quand le bac à sable est %s', async (_name, sandbox) => {
+    await writeSettings(sandbox === undefined ? {} : { sandbox });
+
+    const run = await install({ interactive: true, answers: withPassage('oui') });
+
+    expect(run.questions).not.toContain(sandboxQuestion());
+    expect(run.output).not.toContain(SANDBOX_TEXT);
+    expect((await readSettings()).sandbox).toEqual(sandbox);
+  });
+
+  it('jamais demandée sans passage, ni après un non à passage', async () => {
+    await sandboxOn();
+
+    const run = await install({ interactive: true, answers: withPassage('non') });
+
+    expect(run.questions).not.toContain(sandboxQuestion());
+    expect((await readSettings()).sandbox).toEqual({ enabled: true });
+  });
+
+  it('jamais avec --oui, ni hors d’un terminal', async () => {
+    await sandboxOn();
+    await passageGiven();
+    await writeSettings({
+      sandbox: { enabled: true },
+      hooks: {
+        SessionStart: [leonStart()],
+        SessionEnd: [leonEnd()],
+        PreToolUse: [readFirstHook()],
+      },
+    });
+    const before = await readFile(settingsPath, 'utf8');
+
+    const forced = await install({ interactive: true, assumeYes: true });
+    const piped = await install({ answers: ['oui'] });
+
+    expect(forced.questions).toEqual([]);
+    expect(piped.questions).toEqual([]);
+    expect(forced.output).toContain('nothing to do');
+    expect(await readFile(settingsPath, 'utf8')).toBe(before);
+    expect(await sandboxAnswer()).toBeUndefined();
+  });
+
+  it('passage accepté avant, le bac à sable allumé depuis : seule l’exception est demandée', async () => {
+    await passageGiven();
+    await writeSettings({
+      sandbox: { enabled: true },
+      hooks: {
+        SessionStart: [leonStart()],
+        SessionEnd: [leonEnd()],
+        PreToolUse: [readFirstHook()],
+      },
+    });
+
+    const run = await install({ interactive: true, answers: ['y'] });
+
+    expect(run.code).toBe(0);
+    expect(run.questions).toEqual([sandboxQuestion()]);
+    expect((await readSettings()).sandbox.excludedCommands).toEqual(leonEntries());
+  });
+
+  it('jamais deux fois : ni après un oui, ni après un non', async () => {
+    await sandboxOn();
+    await install({ interactive: true, answers: [...withPassage('oui'), 'oui'] });
+    const yes = await install({ interactive: true, answers: [] });
+
+    expect(yes.questions).toEqual([]);
+    expect(yes.output).toContain('nothing to do');
+
+    await rm(home, { recursive: true, force: true });
+    await installedForm();
+    await sandboxOn();
+    const no = await install({ interactive: true, answers: [...withPassage('oui'), 'non'] });
+    const again = await install({ interactive: true, answers: [] });
+
+    expect(no.output).toContain(SANDBOX_NONE);
+    expect(await sandboxAnswer()).toEqual({ refuse_le: expect.any(String) });
+    expect((await readSettings()).sandbox).toEqual({ enabled: true });
+    expect(again.questions).toEqual([]);
+  });
+
+  it('l’entrée fermée ne tranche rien : rien n’est écrit, et la question revient', async () => {
+    await sandboxOn();
+
+    const run = await install({ interactive: true, answers: [...withPassage('oui'), null] });
+    const again = await install({ interactive: true, answers: [null] });
+
+    expect(run.output).toContain(SANDBOX_NONE);
+    expect(await sandboxAnswer()).toBeUndefined();
+    expect(again.questions).toEqual([sandboxQuestion()]);
+    expect((await readSettings()).sandbox).toEqual({ enabled: true });
+  });
+
+  it('ajoute sans doublon, après les entrées de l’utilisateur, qui restent', async () => {
+    await sandboxOn({
+      excludedCommands: ['gh pr *', '~/.leon/bin/leon search *', 42],
+      filesystem: { allowWrite: ['~/.cache'], denyWrite: ['~/.ssh', '~/.leon/bin'] },
+    });
+
+    await install({ interactive: true, answers: [...withPassage('oui'), 'oui'] });
+
+    expect((await readSettings()).sandbox.excludedCommands).toEqual([
+      'gh pr *',
+      '~/.leon/bin/leon search *',
+      42,
+      ...leonEntries().filter((entry) => entry !== '~/.leon/bin/leon search *'),
+    ]);
+    expect((await readSettings()).sandbox.filesystem).toEqual({
+      allowWrite: ['~/.cache'],
+      denyWrite: ['~/.ssh', '~/.leon/bin', '~/.leon'],
+    });
+  });
+
+  // Sans elle, une session ouverte dans le dossier personnel pourrait réécrire la CLI que la lecture exemptée lance.
+  it('acceptée, l’écriture interdite dans ~/.leon ôtée à la main : elle est remise, une fois', async () => {
+    await passageGiven();
+    await recordSandboxAnswer(home, true);
+    await writeSettings({
+      sandbox: {
+        enabled: true,
+        excludedCommands: leonEntries(),
+        filesystem: { denyWrite: ['~/.ssh'] },
+      },
+      hooks: {
+        SessionStart: [leonStart()],
+        SessionEnd: [leonEnd()],
+        PreToolUse: [readFirstHook()],
+      },
+    });
+
+    const run = await install({ assumeYes: true });
+    const again = await install({ assumeYes: true });
+
+    expect(run.questions).toEqual([]);
+    expect((await readSettings()).sandbox).toEqual({
+      enabled: true,
+      excludedCommands: leonEntries(),
+      filesystem: { denyWrite: ['~/.ssh', '~/.leon'] },
+    });
+    expect(again.output).toContain('nothing to do');
+  });
+
+  it('acceptée, puis des entrées ôtées à la main : elles sont remises sans rien redemander', async () => {
+    await passageGiven();
+    await recordSandboxAnswer(home, true);
+    await writeSettings({
+      sandbox: { enabled: true, excludedCommands: ['gh pr *'] },
+      hooks: {
+        SessionStart: [leonStart()],
+        SessionEnd: [leonEnd()],
+        PreToolUse: [readFirstHook()],
+      },
+    });
+
+    const run = await install({ assumeYes: true });
+
+    expect(run.questions).toEqual([]);
+    expect((await readSettings()).sandbox.excludedCommands).toEqual(['gh pr *', ...leonEntries()]);
+  });
+
+  it.each([
+    ['excludedCommands en texte', { excludedCommands: 'gh pr *' }, 'sandbox.excludedCommands'],
+    ['excludedCommands à null', { excludedCommands: null }, 'sandbox.excludedCommands'],
+    ['filesystem en liste', { filesystem: ['~/.ssh'] }, 'sandbox.filesystem'],
+    ['denyWrite en texte', { filesystem: { denyWrite: '~/.ssh' } }, 'sandbox.filesystem.denyWrite'],
+  ])(
+    'une forme inattendue (%s) est laissée telle quelle, et le dit',
+    async (_label, extra, field) => {
+      await sandboxOn(extra);
+
+      const run = await install({ interactive: true, answers: withPassage('oui') });
+
+      expect(run.code).toBe(0);
+      expect(run.questions).not.toContain(sandboxQuestion());
+      expect(run.output).toContain(
+        `Leon: "${field}" in ${settingsPath} does not have the expected shape: it is not touched, and Leon's read commands are not added to the sandbox exceptions.`,
+      );
+      expect((await readSettings()).sandbox).toEqual({ enabled: true, ...extra });
+    },
+  );
+});
+
 // L'appel de la route du refus (C16), avec la connexion de l'ordinateur : rien d'autre ne part.
 describe('notesRefusal', () => {
   const CONNECTION = {
@@ -1574,12 +2133,17 @@ describe('installHooks : les usages tranchés dans le passage', () => {
   it('une réponse du terminal va dans les décisions, pour les outils suivants du passage, sauf coulisses', async () => {
     const decisions: UsageDecisions = new Map();
 
-    await install({ interactive: true, decisions, answers: ['oui', '', null, null, 'oui', null] });
+    await install({
+      interactive: true,
+      decisions,
+      answers: ['oui', '', null, null, null, 'oui', null],
+    });
 
     expect([...decisions]).toEqual([
       ['lecture', true],
       ['rappel', null],
       ['noter', null],
+      ['passage', null],
       ['resume', null],
     ]);
     expect(await factsConsent(home, 'claude_code')).toMatchObject({
@@ -1848,11 +2412,11 @@ describe('installHooks : l’usage resume', () => {
 
     const run = await install({
       interactive: true,
-      answers: ['oui', SANS_REPONSE, SANS_REPONSE, null],
+      answers: ['oui', SANS_REPONSE, SANS_REPONSE, null, null],
     });
 
     expect(run.code).toBe(0);
-    expect(run.questions).toHaveLength(4);
+    expect(run.questions).toHaveLength(5);
     expect(await readFile(settingsPath, 'utf8')).not.toContain('/ancien/leon');
     expect(await readFile(consentPath(home), 'utf8')).toBe(consentBefore);
   });
@@ -1915,7 +2479,7 @@ describe('installHooks : l’usage resume', () => {
   it('tout en place, les usages compris : rien n’est demandé', async () => {
     await leonHooksInPlace();
     await writeConsent(home, 'claude_code', 2);
-    await install({ interactive: true, answers: ['oui', 'oui', 'oui', 'oui', 'oui'] });
+    await install({ interactive: true, answers: ['oui', 'oui', 'oui', 'oui', 'oui', 'oui'] });
 
     const run = await install({ interactive: true, answers: [] });
 
@@ -2443,6 +3007,20 @@ describe('le README', () => {
 
     expect(written).toContain(launcherHookCommand(README_HOME, 'briefing'));
     expect(await readme()).toContain(written);
+  });
+
+  // La lecture obligée (D40, T67) : le crochet `PreToolUse` et les règles de permission à ajouter soi-même, avec la forme
+  // `~/.leon/bin/leon` que cite le message d'arrêt, les mêmes lectures que l'exception du bac à sable.
+  it('montre le crochet de la lecture obligée comme l’installateur l’écrit, et les règles de permission de ses lectures', async () => {
+    const text = await readme();
+    const hooks = addLeonHooks({}, README_HOME, ['passage']).settings.hooks as {
+      PreToolUse: unknown;
+    };
+
+    expect(text).toContain(JSON.stringify({ hooks: { PreToolUse: hooks.PreToolUse } }, null, 2));
+    const tilde = sandboxEntries(README_HOME).filter((entry) => entry.startsWith('~/'));
+    expect(tilde).toHaveLength(5);
+    for (const entry of tilde) expect(text).toContain(`"Bash(${entry})"`);
   });
 
   it('ne montre plus les crochets pnpm d’avant comme ce que l’installateur écrit', async () => {

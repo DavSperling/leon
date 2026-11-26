@@ -1,7 +1,14 @@
 import type { Env } from '../env';
 import { logError } from '../log';
 import { logUsage, toolDefinitions } from './anthropic-llm';
-import { type AgentEvent, type ChatMessage, type Llm, LlmError, type LlmStep } from './llm';
+import {
+  type AgentEvent,
+  type ChatMessage,
+  LLM_UNREACHABLE,
+  type Llm,
+  LlmError,
+  type LlmStep,
+} from './llm';
 import { EFFORT_BY_STEP, modelForStep } from './models';
 import { executeAgentTool } from './run-tool';
 
@@ -92,7 +99,7 @@ type TurnRequest = {
 // corps de la réponse n'est ni journalisé ni levé (il peut citer le prompt ou les passages captés) : seuls l'étape
 // et l'état HTTP.
 function failure(step: LlmStep, status: string): LlmError {
-  const error = new LlmError('appel au modèle impossible');
+  const error = new LlmError(LLM_UNREACHABLE);
   logError('llm.appel', error, { step, status });
   return error;
 }

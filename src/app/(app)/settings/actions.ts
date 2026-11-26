@@ -35,6 +35,7 @@ import { setManager, setManagersSeeAll } from '@/server/auth/organisation';
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
 import {
   getSession,
+  hasPassword,
   requestHeaders,
   requireUserContext,
   signedInRecently,
@@ -477,21 +478,26 @@ const AccountDeletionInputSchema = DeletionInputSchema.extend({
 const RESEND_SPACING_MS = 600;
 
 // Ce qui part ne revient pas : le mot tapé, le mot de passe et, avec la 2FA, le code de l'application. Rend le
-// message du premier qui ne passe pas, ou null.
+// message du premier qui ne passe pas, ou null. Un compte sans mot de passe (Google, Microsoft, One Tap, SSO) ne
+// peut pas en donner : à la place, une connexion de moins d'une heure (signedInRecently), comme pour la mémoire.
 async function confirmIdentity({ password, code, word }: DeletionInput): Promise<string | null> {
   const t = await getTranslations('deleteAccount');
   const security = await getTranslations('security');
   if (!(await passwordCheckAllowed())) return security('tooManyAttempts');
   if (word.trim() !== t('word')) return t('wrongWord', { word: t('word') });
   const headers = await requestHeaders();
-  try {
-    await auth.api.verifyPassword({ body: { password }, headers });
-  } catch {
-    return security('wrongPassword');
+  const session = await getSession();
+  if (session && !(await hasPassword(session.user.id))) {
+    if (!(await signedInRecently())) return t('reconnect');
+  } else {
+    try {
+      await auth.api.verifyPassword({ body: { password }, headers });
+    } catch {
+      return security('wrongPassword');
+    }
   }
   // Avec une session ouverte, Better Auth ne compte pas les échecs du code : seule la limite d'essais protège.
   // Une session qui vient de disparaître ne dispense pas du code.
-  const session = await getSession();
   if (!session || session.user.twoFactorEnabled) {
     try {
       await auth.api.verifyTOTP({ body: { code }, headers });

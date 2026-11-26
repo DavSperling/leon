@@ -204,6 +204,29 @@ export const auth = betterAuth({
     '/refresh-token',
     '/list-accounts',
     '/account-info',
+    // Ce que l'appli ne fait que par ses server actions, sous ses propres règles, ou ne fait pas du tout : par HTTP,
+    // une session suffirait à les contourner (audit du 26/11, n° 8). Le profil : six avatars ou une image de 32 Ko, un
+    // nom de 100 caractères (updateProfileImageAction) ; la route accepterait n'importe quelle adresse d'image, que le
+    // navigateur de chaque collègue irait charger. Le mot de passe : la vérification passe par la limite d'essais.
+    '/update-user',
+    '/verify-password',
+    '/change-email',
+    '/delete-user',
+    '/link-social',
+    '/unlink-account',
+    // L'organisation : une seule par personne, créée à l'inscription sous verrou (createOrganizationForUser) ; les
+    // membres, les rôles et les invitations passent par les écrans Équipe (members.ts, liens d'invitation de 0033).
+    '/organization/create',
+    '/organization/update',
+    '/organization/delete',
+    '/organization/leave',
+    '/organization/set-active',
+    '/organization/invite-member',
+    '/organization/cancel-invitation',
+    '/organization/accept-invitation',
+    '/organization/reject-invitation',
+    '/organization/remove-member',
+    '/organization/update-member-role',
   ],
   // Le jeton de réinitialisation n'est gardé qu'en empreinte, comme les liens d'invitation et les jetons d'API.
   verification: {

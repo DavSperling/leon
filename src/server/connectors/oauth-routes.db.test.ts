@@ -1297,4 +1297,101 @@ describe('Pipedream : Gmail par le bouton', () => {
     const loaded = await claimConnection(paul.ctx, id);
     expect(loaded?.config.accountId).toBe('apn_old1');
   });
+
+  describe('par notre appli Google, quand elle est configurée', () => {
+    const GMAIL_SCOPES =
+      'https://mail.google.com/ https://www.googleapis.com/auth/gmail.settings.basic';
+    const googleTokens = (): FakeRoute => ({
+      method: 'POST',
+      url: 'https://oauth2.googleapis.com/token',
+      json: {
+        access_token: ACCESS,
+        refresh_token: REFRESH,
+        expires_in: 3599,
+        scope: GMAIL_SCOPES,
+        token_type: 'Bearer',
+      },
+    });
+    const directProfile = (email = 'David@Acme.test'): FakeRoute => ({
+      url: PROFILE,
+      json: { emailAddress: email },
+    });
+
+    beforeEach(() => {
+      vi.stubEnv('LEON_OAUTH_GOOGLE_ID', 'id-essai.apps.googleusercontent.com');
+      vi.stubEnv('LEON_OAUTH_GOOGLE_SECRET', 'secret-essai-google');
+    });
+
+    async function connectDirect(
+      person: Person,
+      routes: FakeRoute[],
+      form: Record<string, string> = { since: '30' },
+    ) {
+      const made = makeApp({ routes, connector: gmailConnector });
+      const go = await start(made.app, person, form, {}, 'gmail');
+      const query = { code: 'code-1', state: stateOf(go) };
+      const response = await back(made.app, person, query, oauthCookieOf(go), 'google');
+      return { ...made, go, response };
+    }
+
+    it('va chez Google, sans rien demander à Pipedream, pour tout Gmail et ses réglages de base', async () => {
+      const paul = await signUp();
+      const { app, fetchImpl } = makeApp({ connector: gmailConnector });
+
+      const go = await start(app, paul, { since: '30' }, {}, 'gmail');
+
+      expect(go.status).toBe(303);
+      const target = new URL(location(go) ?? '');
+      expect(`${target.origin}${target.pathname}`).toBe(
+        'https://accounts.google.com/o/oauth2/v2/auth',
+      );
+      expect(target.searchParams.get('scope')).toBe(GMAIL_SCOPES);
+      expect(target.searchParams.get('redirect_uri')).toBe(`${ORIGIN}${BASE}/google/retour`);
+      expect(fetchImpl.calls).toEqual([]);
+    });
+
+    it('crée la connexion au retour : jetons chiffrés, profil lu avec le jeton', async () => {
+      const paul = await signUp();
+      const { response, fetchImpl } = await connectDirect(paul, [googleTokens(), directProfile()]);
+
+      expect(location(response)).toBe('/connections?branche=gmail');
+      expect(fetchImpl.calls.at(-1)?.headers.authorization).toBe(`Bearer ${ACCESS}`);
+      const { rows } = await adminPool.query(
+        'select label, config from connections where tenant_id = $1',
+        [paul.ctx.tenantId],
+      );
+      expect(rows).toHaveLength(1);
+      expect(rows[0].label).toBe('David@Acme.test');
+      expect(rows[0].config).toMatchObject({ authMode: 'oauth', accountKey: 'david@acme.test' });
+      expect(rows[0].config).not.toHaveProperty('accessToken');
+      const id = (await connectionsOf(paul.ctx.tenantId))[0]?.id ?? '';
+      const loaded = await claimConnection(paul.ctx, id);
+      expect(loaded?.config).toMatchObject({ accessToken: ACCESS, refreshToken: REFRESH });
+    });
+
+    it('« Reconnecter » passe une connexion Pipedream sur notre appli, et Pipedream oublie l’ancien compte', async () => {
+      vi.stubEnv('LEON_OAUTH_GOOGLE_SECRET', '');
+      const paul = await signUp();
+      const first = await connectGmail(paul, [accounts(['apn_old1']), profile()]);
+      const id = (await connectionsOf(paul.ctx.tenantId))[0]?.id ?? '';
+      const oldUser = linkBody(first.fetchImpl)?.external_user_id;
+      vi.stubEnv('LEON_OAUTH_GOOGLE_SECRET', 'secret-essai-google');
+
+      const again = await connectDirect(
+        paul,
+        [googleTokens(), directProfile('david@acme.test'), pdToken(), removal()],
+        { reconnect: id, since: '30' },
+      );
+
+      expect(location(again.response)).toBe('/connections?branche=gmail');
+      expect(await connectionsOf(paul.ctx.tenantId)).toEqual([{ id }]);
+      const loaded = await claimConnection(paul.ctx, id);
+      expect(loaded?.config).toMatchObject({ authMode: 'oauth', accessToken: ACCESS });
+      expect(loaded?.config).not.toHaveProperty('accountId');
+      expect(again.fetchImpl.calls.at(-1)).toMatchObject({
+        method: 'DELETE',
+        url: `${CONNECT}/users/${oldUser}`,
+      });
+    });
+  });
 });

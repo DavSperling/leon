@@ -1,8 +1,10 @@
 import { APIError } from 'better-auth/api';
+import { sql } from 'drizzle-orm';
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { cache } from 'react';
 import { noteActivity } from '@/server/admin/stats';
+import { db } from '@/server/db/client';
 import { auth } from './auth';
 import { resolveSessionContext, type TenantContext } from './tenant-context';
 
@@ -37,6 +39,15 @@ export async function signedInRecently(): Promise<boolean> {
   const session = await getSession();
   if (!session) return false;
   return Date.now() - new Date(session.session.createdAt).getTime() < RECENT_SIGN_IN_MS;
+}
+
+// Le compte a un mot de passe (un compte « credential » de Better Auth). Faux pour qui n'est entré que par Google,
+// Microsoft, One Tap ou le SSO : lui demander son mot de passe, c'est le refuser à coup sûr.
+export async function hasPassword(userId: string): Promise<boolean> {
+  const { rows } = await db.execute(
+    sql`select 1 from account where "userId" = ${userId} and "providerId" = 'credential' limit 1`,
+  );
+  return rows.length > 0;
 }
 
 // Où l'on renvoie une personne connectée qui n'a pas (ou pas fini) son espace.

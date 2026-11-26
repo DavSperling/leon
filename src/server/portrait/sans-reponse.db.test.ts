@@ -21,7 +21,6 @@ vi.mock('@/server/pipeline/queue');
 const HOUR = 3_600_000;
 const DAY = 24 * HOUR;
 const ago = (ms: number) => new Date(Date.now() - ms);
-const NONE = '{"sans_reponse": true}';
 const DRAFT = 'Bonjour Léa,\n\nMerci, c’est bien noté.\n\nBien à vous';
 
 const tenantIds: string[] = [];
@@ -238,20 +237,27 @@ describe('prepareReply : « Préparer une réponse » à un mail jugé sans rép
 });
 
 describe('du jugement de Leon au brouillon qu’elle demande', () => {
-  // Un faux modèle qui rend une réponse par appel, la dernière ensuite, et garde ses appels.
+  // Un faux modèle : son tri juge tout mail sans réponse à donner ; pour un brouillon, une réponse par appel, la
+  // dernière ensuite. Garde les appels du brouillon, et compte ceux du tri.
   function answering(...answers: string[]) {
     const fake = createFakeLlm({ texts: [] });
+    let sorted = 0;
     const llm: Llm = {
       ...fake,
       async *streamText(request) {
+        if (request.step === 'tri') {
+          sorted += 1;
+          yield '{"reponse": false}';
+          return;
+        }
         yield* fake.streamText(request);
         yield answers[fake.calls.length - 1] ?? answers.at(-1) ?? '';
       },
     };
-    return { llm, calls: fake.calls };
+    return { llm, calls: fake.calls, sorted: () => sorted };
   }
 
-  it('un mail jugé sans réponse entre dans la liste sans autre appel ; « Préparer une réponse » en coûte un, compté dans le plafond du jour, et le brouillon arrive', async () => {
+  it('un mail jugé sans réponse entre dans la liste sans autre appel ; « Préparer une réponse » fait écrire le brouillon, d’un appel compté dans le plafond du jour, sans repasser par le tri', async () => {
     const [julie] = await people();
     vi.spyOn(console, 'info').mockImplementation(() => {});
     // Sa fiche et son oui à l'agent : un échange avec Léa, à qui elle a répondu.
@@ -268,31 +274,33 @@ describe('du jugement de Leon au brouillon qu’elle demande', () => {
       acl: [julie.userId],
     });
     await mail(julie, 'la visite', 2);
-    const { llm, calls } = answering(NONE, JSON.stringify({ brouillon: DRAFT }));
+    const { llm, calls, sorted } = answering(JSON.stringify({ brouillon: DRAFT }));
+    const counted = async () => {
+      const { rows } = await adminPool.query<{ nombre: number }>(
+        'select nombre from brouillons_par_jour where user_id = $1',
+        [julie.userId],
+      );
+      return rows[0]?.nombre ?? 0;
+    };
 
-    // Leon lit le mail, et le juge sans réponse à donner.
+    // Leon lit le mail : le tri le juge sans réponse à donner, et l'appel du brouillon n'a pas lieu.
     expect(await writeBrouillons(julie, { llm })).toBe(0);
     const [listed] = await readSansReponse(julie, 20);
     expect(listed).toMatchObject({ from: 'Léa Roy' });
     expect(await writeBrouillons(julie, { llm })).toBe(0);
-    expect(calls).toHaveLength(1);
+    expect([sorted(), calls.length, await counted()]).toEqual([1, 0, 0]);
 
-    // Elle demande quand même une réponse : un appel de plus, avec ses indications, et jamais « sans réponse ».
+    // Elle demande quand même une réponse : l'appel du brouillon, avec ses indications, et jamais « sans réponse ».
     const kept = await prepareReply(julie, listed?.id ?? '', 'Remerciez-la pour la visite.');
     expect(await writeBrouillons(julie, { llm })).toBe(1);
 
-    expect(calls).toHaveLength(2);
-    expect(calls[1]?.system).toContain("elle t'a demandé ce brouillon");
-    expect(calls[1]?.system).not.toContain('sans_reponse');
-    expect(calls[1]?.messages[0]?.content).toContain(
+    expect([sorted(), calls.length, await counted()]).toEqual([1, 1, 1]);
+    expect(calls[0]?.system).toContain("elle t'a demandé ce brouillon");
+    expect(calls[0]?.system).not.toContain('sans_reponse');
+    expect(calls[0]?.messages[0]?.content).toContain(
       '<indications>Remerciez-la pour la visite.</indications>',
     );
     expect((await readShown(julie)).prets).toMatchObject([{ id: kept, texte: DRAFT }]);
     expect(await readSansReponse(julie, 20)).toEqual([]);
-    const { rows } = await adminPool.query<{ nombre: number }>(
-      'select nombre from brouillons_par_jour where user_id = $1',
-      [julie.userId],
-    );
-    expect(rows[0]?.nombre).toBe(2);
   });
 });

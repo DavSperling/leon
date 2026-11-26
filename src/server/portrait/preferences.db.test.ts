@@ -60,12 +60,17 @@ async function team(): Promise<[TenantContext, TenantContext, TenantContext]> {
   return people as [TenantContext, TenantContext, TenantContext];
 }
 
-// Un faux modèle qui rend une réponse par appel, la dernière ensuite, et garde ses appels.
+// Un faux modèle qui rend une réponse par appel, la dernière ensuite, et garde ses appels. Le tri d'un mail qui attend
+// (tri-prompt.ts) n'en fait pas partie : il dit toujours qu'une réponse est attendue.
 function answering(...answers: string[]) {
   const fake = createFakeLlm({ texts: [] });
   const llm: Llm = {
     ...fake,
     async *streamText(request) {
+      if (request.step === 'tri') {
+        yield '{"reponse": true}';
+        return;
+      }
       yield* fake.streamText(request);
       yield answers[fake.calls.length - 1] ?? answers.at(-1) ?? '';
     },

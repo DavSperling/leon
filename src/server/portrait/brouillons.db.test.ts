@@ -132,18 +132,26 @@ async function julieWaiting(...titles: string[]): Promise<TenantContext> {
   return julie;
 }
 
-// Un faux modèle qui rend une réponse par appel, la dernière ensuite, et garde ses appels.
-function answering(...answers: string[]) {
+// Le verdict du tri d'un mail qui attend (tri-prompt.ts) : une réponse est attendue, ou non.
+const OUI = '{"reponse": true}';
+const NON = '{"reponse": false}';
+// Un faux modèle qui rend une réponse par appel, la dernière ensuite, et garde ses appels. Le tri a ses verdicts et ses
+// appels à part (`tris`) : `calls` ne garde que les autres appels, ceux du brouillon et des préférences.
+function sorting(verdicts: string[], ...answers: string[]) {
   const fake = createFakeLlm({ texts: [] });
+  const tri = createFakeLlm({ texts: [] });
   const llm: Llm = {
     ...fake,
     async *streamText(request) {
-      yield* fake.streamText(request);
-      yield answers[fake.calls.length - 1] ?? answers.at(-1) ?? '';
+      const [one, said] = request.step === 'tri' ? [tri, verdicts] : [fake, answers];
+      yield* one.streamText(request);
+      yield said[one.calls.length - 1] ?? said.at(-1) ?? '';
     },
   };
-  return { llm, calls: fake.calls };
+  return { llm, calls: fake.calls, tris: tri.calls };
 }
+// Le même, où le tri dit de chaque mail qu'il attend une réponse : le brouillon s'écrit comme sans tri.
+const answering = (...answers: string[]) => sorting([OUI], ...answers);
 
 // L'objet du fil que chaque appel au modèle a reçu, dans l'ordre des appels.
 const subjectsOf = (calls: Array<{ messages: Array<{ content: string }> }>) =>
@@ -374,31 +382,44 @@ describe('writeBrouillons', () => {
     ]);
   });
 
-  it('le fournisseur est injoignable : l’appel du jour est rendu, le passage s’arrête, et le mail ne compte pas un raté', async () => {
-    const julie = await julieWaiting('Devis 2027', 'Contrat');
-    const fake = answering(draft());
-    const down: Llm = {
-      ...fake.llm,
-      // biome-ignore lint/correctness/useYield: le fournisseur ne rend rien
-      async *streamText(request) {
-        // L'appel est gardé, puis le fournisseur ne répond pas.
-        await fake.llm.streamText(request)[Symbol.asyncIterator]().next();
-        throw new LlmError(LLM_UNREACHABLE);
-      },
-    };
-    vi.spyOn(console, 'error').mockImplementation(() => {});
-    vi.spyOn(console, 'info').mockImplementation(() => {});
-    const now = new Date();
+  // Le tri est le premier appel d'un mail qui attend : la panne s'y voit d'abord, ou à l'appel du brouillon qui le suit.
+  it.each([
+    ['au tri', 'tri', 3, 0],
+    ['à l’appel du brouillon', 'brouillon', 3, 3],
+  ] as const)(
+    'le fournisseur est injoignable %s : l’appel du jour est rendu, le passage s’arrête, et le mail ne compte pas un raté',
+    async (_, failing, tris, calls) => {
+      const julie = await julieWaiting('Devis 2027', 'Contrat');
+      const fake = answering(draft());
+      const down: Llm = {
+        ...fake.llm,
+        async *streamText(request) {
+          if (request.step !== failing) {
+            yield* fake.llm.streamText(request);
+            return;
+          }
+          // L'appel est gardé, puis le fournisseur ne répond pas.
+          await fake.llm.streamText(request)[Symbol.asyncIterator]().next();
+          throw new LlmError(LLM_UNREACHABLE);
+        },
+      };
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      vi.spyOn(console, 'info').mockImplementation(() => {});
+      const now = new Date();
 
-    // Trois relèves pendant la panne : un seul appel tenté par passage, aucun compté sous le plafond du jour.
-    for (let pass = 0; pass < 3; pass += 1)
-      expect(await writeBrouillons(julie, { llm: down, now })).toBe(0);
+      // Trois relèves pendant la panne : le passage s'arrête à son premier appel resté sans réponse, aucun n'est compté
+      // sous le plafond du jour, et rien ne s'écrit.
+      for (let pass = 0; pass < 3; pass += 1)
+        expect(await writeBrouillons(julie, { llm: down, now })).toBe(0);
 
-    expect(fake.calls).toHaveLength(3);
-    expect(await counted(julie)).toBe(0);
-    // Le fournisseur revenu : ses deux mails au passage suivant, sans attendre un jour.
-    expect(await writeBrouillons(julie, { llm: answering(draft()).llm, now })).toBe(2);
-  });
+      expect(fake.tris).toHaveLength(tris);
+      expect(fake.calls).toHaveLength(calls);
+      expect(await counted(julie)).toBe(0);
+      expect(await stored(julie)).toEqual([]);
+      // Le fournisseur revenu : ses deux mails au passage suivant, sans attendre un jour.
+      expect(await writeBrouillons(julie, { llm: answering(draft()).llm, now })).toBe(2);
+    },
+  );
 
   it('laisse remonter une erreur qui n’est pas du modèle', async () => {
     const julie = await julieWaiting('Devis 2027');
@@ -487,6 +508,165 @@ describe('writeBrouillons', () => {
     expect(await writeBrouillons(julie, { llm })).toBe(0);
 
     expect(calls).toHaveLength(0);
+  });
+});
+
+describe('writeBrouillons : le tri avant l’écriture', () => {
+  // Les verdicts du tri, dans son journal : des identifiants et un oui ou un non.
+  const sortedIn = (info: { mock: { calls: unknown[][] } }) =>
+    info.mock.calls
+      .filter((args) => args[1] === 'brouillons.sorted')
+      .map((args) => JSON.parse(String(args[2])));
+
+  it('un mail que le tri juge sans réponse ne coûte pas l’appel du brouillon : sa ligne le dit, et l’appel réservé est rendu', async () => {
+    // « Merci » est le plus récent : trié le premier.
+    const julie = await julieWaiting('Merci', 'Devis 2027');
+    const { llm, calls, tris } = sorting([NON, OUI], draft());
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+
+    expect(await writeBrouillons(julie, { llm })).toBe(1);
+
+    expect(tris.map((call) => call.step)).toEqual(['tri', 'tri']);
+    expect(subjectsOf(tris)).toEqual(['Merci', 'Devis 2027']);
+    // Le modèle du brouillon n'a lu que le mail qui attend une réponse.
+    expect(calls.map((call) => call.step)).toEqual(['brouillon']);
+    expect(subjectsOf(calls)).toEqual(['Devis 2027']);
+    expect(await titlesOf(julie)).toEqual([
+      ['Devis 2027', DRAFT],
+      ['Merci', null],
+    ]);
+    expect(await stored(julie)).toHaveLength(2);
+    for (const row of await stored(julie))
+      expect(row).toMatchObject({ questions: null, indications: null, acl: [julie.userId] });
+    // Le plafond du jour ne compte que l'appel du brouillon.
+    expect(await counted(julie)).toBe(1);
+    expect(sortedIn(info)).toEqual([
+      { userId: julie.userId, sourceId: expect.any(String), reponse: false },
+      { userId: julie.userId, sourceId: expect.any(String), reponse: true },
+    ]);
+    expect(JSON.stringify(info.mock.calls)).not.toMatch(/Bonjour|Léa|@|Merci/);
+    // Un mail trié n'est jamais retrié, ni lu par le modèle du brouillon.
+    const again = sorting([OUI], draft());
+    expect(await writeBrouillons(julie, { llm: again.llm })).toBe(0);
+    expect(again.tris).toHaveLength(0);
+    expect(again.calls).toHaveLength(0);
+    // Et l'accueil ne le montre pas.
+    expect((await readShown(julie)).demandes).toEqual([]);
+  });
+
+  it('le tri ne lit que le fil : ni sa façon d’écrire, ni ses exemples', async () => {
+    const julie = await julieWaiting('Devis 2027');
+    const { llm, tris } = sorting([OUI], draft());
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+
+    await writeBrouillons(julie, { llm });
+
+    const prompt = tris[0]?.messages[0]?.content ?? '';
+    expect(prompt.startsWith(DATA_GUARD_LINE)).toBe(true);
+    expect(prompt).toContain('<personne nom="Julie Martin"/>');
+    expect(prompt).toMatch(
+      /<fil objet="Devis 2027">\n<message de="Léa Roy" date="[^"]+">Bonjour Julie, une question sur : Devis 2027\.<\/message>\n<\/fil>$/,
+    );
+    expect(prompt).not.toMatch(/<facon|<exemple|@/);
+  });
+
+  it.each([
+    ['sans JSON', 'Oui, ce mail attend une réponse.'],
+    ['vide', ''],
+    ['d’une autre forme', '{"sans_reponse": true}'],
+  ])(
+    'une réponse du tri illisible (%s) : le brouillon s’écrit comme sans tri',
+    async (_, verdict) => {
+      const julie = await julieWaiting('Devis 2027');
+      const { llm, calls, tris } = sorting([verdict], draft());
+      const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+
+      expect(await writeBrouillons(julie, { llm })).toBe(1);
+
+      expect(tris).toHaveLength(1);
+      expect(calls).toHaveLength(1);
+      expect(await titlesOf(julie)).toEqual([['Devis 2027', DRAFT]]);
+      expect(await counted(julie)).toBe(1);
+      expect(sortedIn(info)).toMatchObject([{ reponse: null }]);
+    },
+  );
+
+  it('le tri refusé ou coupé : le brouillon s’écrit comme sans tri, et l’échec est journalisé', async () => {
+    const julie = await julieWaiting('Devis 2027');
+    const fake = answering(draft());
+    const llm: Llm = {
+      ...fake.llm,
+      async *streamText(request) {
+        if (request.step === 'tri') throw new LlmError('refus du modèle');
+        yield* fake.llm.streamText(request);
+      },
+    };
+    const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+
+    expect(await writeBrouillons(julie, { llm })).toBe(1);
+
+    expect(fake.calls).toHaveLength(1);
+    expect(await titlesOf(julie)).toEqual([['Devis 2027', DRAFT]]);
+    expect(log.mock.calls.flat().map(String).join('\n')).toContain('brouillons.sort_failed');
+  });
+
+  it('ne trie pas ses réponses aux questions de Leon : elle attend ce brouillon', async () => {
+    const julie = await julieWaiting('Devis 2027');
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    expect(await writeBrouillons(julie, { llm: answering(ask()).llm })).toBe(0);
+    const [asked] = await stored(julie);
+    expect(await answerQuestions(julie, asked?.id ?? '', ['Oui, à 10 h.', ''])).toBe(true);
+    const { llm, calls, tris } = sorting([NON], draft());
+
+    expect(await writeBrouillons(julie, { llm })).toBe(1);
+
+    expect(tris).toHaveLength(0);
+    expect(calls).toHaveLength(1);
+  });
+
+  it('ne trie pas son oui à une relance : elle l’a demandée', async () => {
+    const julie = await julieRelance();
+    expect(await answerRelance(julie, await unanswered(julie), '')).not.toBeNull();
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    const { llm, calls, tris } = sorting([NON], draft(RELANCE));
+
+    expect(await writeBrouillons(julie, { llm })).toBe(1);
+
+    expect(tris).toHaveLength(0);
+    expect(calls).toHaveLength(1);
+  });
+
+  it('au plafond du jour, aucun tri : le mail attend sans rien coûter', async () => {
+    const julie = await julieWaiting('Devis 2027');
+    await adminPool.query(
+      `insert into brouillons_par_jour (user_id, jour, nombre)
+       values ($1, (now() at time zone 'UTC')::date, $2)`,
+      [julie.userId, BROUILLONS_DAILY_CAP],
+    );
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { llm, calls, tris } = sorting([NON], draft());
+
+    expect(await writeBrouillons(julie, { llm })).toBe(0);
+
+    expect(tris).toHaveLength(0);
+    expect(calls).toHaveLength(0);
+    expect(await stored(julie)).toEqual([]);
+  });
+
+  it('trie cinq mails par passage au plus, même quand aucun n’attend de réponse', async () => {
+    const julie = await julieWaiting('1', '2', '3', '4', '5', '6', '7');
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    const { llm, calls, tris } = sorting([NON], draft());
+
+    expect(await writeBrouillons(julie, { llm })).toBe(0);
+
+    expect(tris).toHaveLength(5);
+    expect(await writeBrouillons(julie, { llm })).toBe(0);
+    expect(tris).toHaveLength(7);
+    expect(calls).toHaveLength(0);
+    expect(await counted(julie)).toBe(0);
+    expect((await titlesOf(julie)).map(([, texte]) => texte)).toEqual(Array(7).fill(null));
   });
 });
 

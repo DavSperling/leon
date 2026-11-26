@@ -7,17 +7,17 @@ export const gmailCatalog: CatalogEntry = {
   keyHelp: '',
   keyAccepted: false,
   oauthHelp:
-    'La connexion passe par Pipedream, le service qui garde l’accès pour Leon : Google vous demande d’autoriser « Pipedream » à lire, écrire et envoyer vos courriers. Leon ne fait que lire (hors promotions, réseaux sociaux, brouillons et indésirables) ; il n’écrit et n’envoie rien.',
+    'Google vous demande d’autoriser « Leon » à lire vos courriers. L’appli n’étant pas encore validée par Google, un écran d’avertissement s’affiche d’abord : cliquez sur « Paramètres avancés », puis sur « Accéder à Leon (non sécurisé) ». Leon ne fait que lire (hors promotions, réseaux sociaux, brouillons et indésirables) ; il n’écrit et n’envoie rien.',
   docsUrl: 'https://support.google.com/accounts/answer/3466521',
   triedForReal: true,
   warning:
-    'Le texte des courriers peut être lu, comme une conversation, par vous et, sur le site de Leon, par vos managers en remontant. L’accès est gardé par Pipedream, hébergé aux États-Unis.',
+    'Le texte des courriers peut être lu, comme une conversation, par vous et, sur le site de Leon, par vos managers en remontant.',
   en: {
     fields: {},
     keyHelp: '',
     oauthHelp:
-      'The connection goes through Pipedream, the service that holds the access for Leon: Google asks you to authorize “Pipedream” to read, write, and send your email. Leon only reads (excluding Promotions, Social, drafts, and spam); it writes and sends nothing.',
+      'Google asks you to allow “Leon” to read your email. Google hasn’t verified the app yet, so a warning screen comes first: click “Advanced”, then “Go to Leon (unsafe)”. Leon only reads (excluding Promotions, Social, drafts, and spam); it writes and sends nothing.',
     warning:
-      'The text of emails can be read, like a conversation, by you and, on the Leon website, by the managers above you. The access is held by Pipedream, hosted in the United States.',
+      'The text of emails can be read, like a conversation, by you and, on the Leon website, by the managers above you.',
   },
 };

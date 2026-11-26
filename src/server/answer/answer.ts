@@ -1,6 +1,7 @@
 import { ANSWER_NOT_ENOUGH, type AnswerEvent } from '@/lib/answer-events';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import type { Embedder } from '@/server/embeddings/embedder';
+import { reserveCall } from '@/server/llm/daily-cap';
 import { type Llm, LlmError } from '@/server/llm/llm';
 import { createReferenceFilter } from '@/server/llm/references';
 import { logError } from '@/server/log';
@@ -175,6 +176,14 @@ async function* streamAnswer(
     const filter = createReferenceFilter(new Set(prompt.numbered.map((entry) => entry.n)));
     let text = '';
     try {
+      // Le plafond du jour (daily-cap.ts), compté juste avant l'appel payé : ni une réponse gardée, ni une recherche
+      // sans résultat ne le consomment.
+      // shortcut: passé le plafond, l'encadré dit « Réponse indisponible » comme pour une panne ; un texte à part si
+      // des personnes l'atteignent pour de bon (150 recherches différentes dans la journée).
+      if (!(await reserveCall(ctx.userId, 'reponse'))) {
+        yield { type: 'indisponible' };
+        return;
+      }
       reading = llm
         .streamText({
           step: 'reponse',

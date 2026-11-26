@@ -65,6 +65,8 @@ export type DiscussionEvent =
   | { type: 'actions'; items: ActionView[] }
   | { type: 'fin'; reason: DiscussionEndReason }
   | { type: 'indisponible'; questionGardee: boolean }
+  // Le plafond de questions du jour est atteint (llm/daily-cap.ts) : rien n'est écrit, aucun modèle n'est appelé.
+  | { type: 'plafond' }
   | { type: 'en-cours' };
 
 // Phrases fixes que le serveur garde à la fin d'une réponse (finalReplyText). Elles restent en français dans la base,
@@ -141,7 +143,7 @@ export function parseDiscussionEvent(data: string): DiscussionEvent | null {
       : null;
   }
   if (type === 'indisponible') return { type, questionGardee: questionGardee === true };
-  if (type === 'en-cours') return { type };
+  if (type === 'en-cours' || type === 'plafond') return { type };
   return null;
 }
 

@@ -487,7 +487,8 @@
     "requestReply": "Demander la réponse",
     "privacyHint": "Leon ne lit que ce que vous avez le droit de voir.",
     "messages": "Messages de la discussion",
-    "tooMany": "Leon répond déjà à deux de vos questions. Attendez qu’une réponse soit finie, puis réessayez."
+    "tooMany": "Leon répond déjà à deux de vos questions. Attendez qu’une réponse soit finie, puis réessayez.",
+    "dailyCap": "Vous avez atteint le nombre de questions du jour : la question n’a pas été envoyée. Vous pourrez la poser de nouveau demain ; la recherche marche toujours."
   },
   "discussionView": {
     "sourceLabel": "Source {number} : {title}",

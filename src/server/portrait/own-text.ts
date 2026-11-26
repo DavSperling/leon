@@ -64,14 +64,28 @@ export function ownText(mail: string): { text: string; signature: string | null 
   };
 }
 
-// Le début d'un mail, pour l'accueil : ce que son auteur a écrit, sur une ligne, coupé à un mot. Un mail sans un mot de
-// son auteur (un transfert nu) donne le début de son texte tel qu'il est.
+// Le début d'un mail, pour l'accueil : ce que son auteur a écrit, coupé à un mot. Ses lignes se suivent sur une seule
+// tant qu'elles se lisent dans le même sens ; un changement de sens (un paragraphe en hébreu dans un mail en français)
+// va à la ligne, pour que l'écran donne à chacune le sien. Une ligne sans lettre garde le sens de la précédente. Un mail
+// sans un mot de son auteur (un transfert nu) donne le début de son texte tel qu'il est.
 export const EXCERPT_CHARS = 280;
+// Une ligne qui commence par une lettre d'une écriture lue de droite à gauche.
+const RTL = /^[^\p{L}]*[\p{Script=Hebrew}\p{Script=Arabic}\p{Script=Syriac}\p{Script=Thaana}]/u;
 export function excerptOf(mail: string): string {
-  const flat = (ownText(mail).text || mail).replace(/\s+/g, ' ').trim();
-  if (flat.length <= EXCERPT_CHARS) return flat;
+  const groups: string[] = [];
+  let rtl: boolean | null = null;
+  for (const raw of (ownText(mail).text || mail).split(/\r\n?|\n/)) {
+    const line = raw.replace(/\s+/g, ' ').trim();
+    if (!line) continue;
+    const turns = /\p{L}/u.test(line) ? RTL.test(line) : null;
+    if (groups.length === 0 || (turns !== null && rtl !== null && turns !== rtl)) groups.push(line);
+    else groups[groups.length - 1] += ` ${line}`;
+    rtl = turns ?? rtl;
+  }
+  const text = groups.join('\n');
+  if (text.length <= EXCERPT_CHARS) return text;
   // Jamais un demi-emoji en fin de coupe.
-  const cut = flat.slice(0, EXCERPT_CHARS).replace(/[\uD800-\uDBFF]$/, '');
-  const word = cut.lastIndexOf(' ');
+  const cut = text.slice(0, EXCERPT_CHARS).replace(/[\uD800-\uDBFF]$/, '');
+  const word = Math.max(cut.lastIndexOf(' '), cut.lastIndexOf('\n'));
   return `${word > EXCERPT_CHARS / 2 ? cut.slice(0, word) : cut}…`;
 }

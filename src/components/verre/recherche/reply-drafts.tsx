@@ -524,11 +524,15 @@ export function MailView({
           </Button>
         )}
       </div>
-      {/* Le début du mail, sous son objet : de quoi savoir à quoi l'on répond. Déplié dessous, le texte entier le remplace. */}
+      {/* Le début du mail, sous son objet : de quoi savoir à quoi l'on répond, une ligne par sens de lecture. Déplié
+          dessous, le texte entier le remplace. */}
       {source.extrait && mail.sorte !== 'preference' && !(ownRead && !onRead) && (
         <p
           dir="auto"
-          className="mt-3 line-clamp-3 max-w-[680px] text-body [overflow-wrap:anywhere] text-fg-2"
+          className={cn(
+            'mt-3 line-clamp-3 max-w-[680px] whitespace-pre-line text-body [overflow-wrap:anywhere] text-fg-2',
+            PARAGRAPHS,
+          )}
         >
           {source.extrait}
         </p>

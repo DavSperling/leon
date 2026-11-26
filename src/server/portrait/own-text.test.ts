@@ -268,6 +268,34 @@ describe('excerptOf : le début lisible d’un mail', () => {
     );
   });
 
+  it('un mail qui mêle l’hébreu et le français : une ligne par changement de sens de lecture, les lignes d’un même sens réunies', () => {
+    const text = mail(
+      'Bonjour Claire,',
+      '',
+      'Merci pour les plans. Voici leur réponse :',
+      '',
+      'הפגישה ביום חמישי בשעה 10:00 מתאימה לנו.',
+      'נביא את הדוגמאות.',
+      '',
+      'Pouvez-vous confirmer l’adresse ?',
+      '12/12',
+      'Dana',
+    );
+
+    expect(excerptOf(text)).toBe(
+      [
+        'Bonjour Claire, Merci pour les plans. Voici leur réponse :',
+        'הפגישה ביום חמישי בשעה 10:00 מתאימה לנו. נביא את הדוגמאות.',
+        // Une ligne sans lettre garde le sens de celle qui la précède.
+        'Pouvez-vous confirmer l’adresse ? 12/12 Dana',
+      ].join('\n'),
+    );
+    // Un mot d'hébreu dans une phrase en français ne change pas son sens : elle commence en français.
+    expect(excerptOf('Bonjour,\nLe mot שלום veut dire bonjour.')).toBe(
+      'Bonjour, Le mot שלום veut dire bonjour.',
+    );
+  });
+
   it('l’hébreu, seul ou mêlé au français, reste tel qu’il est écrit ; un mail vide ne rend rien', () => {
     expect(excerptOf('שלום דוד,\n\nקיבלת את ההצעה? Merci de confirmer.')).toBe(
       'שלום דוד, קיבלת את ההצעה? Merci de confirmer.',

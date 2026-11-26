@@ -56,9 +56,13 @@ import {
   panelMails,
   panelReducer,
   quietMails,
+  rememberSkip,
+  SKIP_SEND,
+  SKIP_TRASH,
   sendAlwaysAsks,
   sendQuestion,
   shownIndex,
+  skipsConfirm,
 } from '@/lib/reply-drafts';
 import { formatDate } from '@/lib/verre';
 import { cn } from '@/lib/verre/cn';
@@ -768,22 +772,36 @@ type Done = { ok: true; resteDansGmail?: boolean; id?: string };
 const REFRESH_MS = 5_000;
 const REFRESH_MAX = 180_000;
 
-// « Ne plus me demander » avant « Envoyer » : retenu dans ce navigateur seulement. Un navigateur qui refuse le stockage
-// demande toujours.
-const SEND_KEY = 'leon-envoyer-sans-demander';
-const readSkip = () => {
-  try {
-    return localStorage.getItem(SEND_KEY) === 'oui';
-  } catch {
-    return false;
-  }
-};
-const saveSkip = () => {
-  try {
-    localStorage.setItem(SEND_KEY, 'oui');
-  } catch {}
-};
 type Result = Done | { error: string };
+
+// « Ne plus me demander », dans la confirmation d'un geste (envoyer un brouillon, supprimer un mail) : cochée, le
+// panneau ne redemande plus pour ce geste dans ce navigateur (lib/reply-drafts.ts).
+function DontAsk({
+  id,
+  checked,
+  disabled,
+  onChange,
+}: {
+  id: string;
+  checked: boolean;
+  disabled?: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  const t = useTranslations('draftQuestions');
+  return (
+    <label htmlFor={id} className="mt-2 flex cursor-pointer items-center gap-2 text-ui text-fg">
+      <input
+        id={id}
+        type="checkbox"
+        className="size-4 cursor-pointer accent-[var(--ink)]"
+        checked={checked}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.checked)}
+      />
+      {t('sendDraft.dontAsk')}
+    </label>
+  );
+}
 
 // La colonne de gauche d'un panneau : ses mails, dans son ordre, celui qu'il montre marqué ; un clic montre ce mail.
 // Ce que chacun attend se dit d'une pastille, sauf pour les mails jugés sans réponse à donner, qui n'attendent rien.
@@ -865,8 +883,10 @@ function QuietMails({ sansReponse, max }: { sansReponse: HomeSansReponse[]; max:
   const doneId = useId();
   const lineId = useId();
   const [open, setOpen] = useState(false);
-  // La clé du mail dont « Supprimer le mail » attend sa confirmation.
+  // La clé du mail dont « Supprimer le mail » attend sa confirmation, et sa case « Ne plus me demander ».
   const [asked, setAsked] = useState<string | null>(null);
+  const [dontAsk, setDontAsk] = useState(false);
+  const dontAskId = useId();
   const [failed, setFailed] = useState(false);
   const [panel, dispatch] = useReducer(panelReducer, CLOSED);
   const [sending, startSending] = useTransition();
@@ -912,16 +932,20 @@ function QuietMails({ sansReponse, max }: { sansReponse: HomeSansReponse[]; max:
       dispatch({ type: 'close', mails, key: mail.key, id: null });
     });
 
+  // « Supprimer le mail », confirmé ou sans redemander : le mail part à la corbeille de sa boîte Gmail.
+  const trash = (mail: PanelMail) =>
+    close(mail, startDiscarding, () => trashMailAction(mail.id), t('trash.done'));
+
   if (sansReponse.length === 0 && !open) return null;
   return (
     <>
       {mails.length > 0 && (
-        <p className="mt-2 flex flex-wrap items-center gap-x-1 text-ui text-muted">
+        <p className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-ui font-medium text-fg">
           <span id={lineId}>{t('quiet.line', { count: mails.length })}</span>
           {/* « Les voir » rappelle la phrase qui dit quoi */}
           <Button
             size="sm"
-            variant="quiet"
+            variant="secondary"
             aria-haspopup="dialog"
             aria-describedby={lineId}
             onClick={() => {
@@ -966,12 +990,24 @@ function QuietMails({ sansReponse, max }: { sansReponse: HomeSansReponse[]; max:
           asking
             ? {
                 title: t('trash.confirm'),
-                text: t('trash.confirmText'),
+                text: (
+                  <>
+                    {t('trash.confirmText')}
+                    <DontAsk
+                      id={dontAskId}
+                      checked={dontAsk}
+                      disabled={discarding}
+                      onChange={setDontAsk}
+                    />
+                  </>
+                ),
                 yes: t('trash.yes'),
                 no: t('keep'),
                 busy: discarding,
-                onYes: () =>
-                  close(shown, startDiscarding, () => trashMailAction(shown.id), t('trash.done')),
+                onYes: () => {
+                  if (dontAsk) rememberSkip(SKIP_TRASH);
+                  trash(shown);
+                },
                 onNo: () => {
                   setAsked(null);
                   document.getElementById(`${shown.key}-supprimer`)?.focus();
@@ -1032,7 +1068,11 @@ function QuietMails({ sansReponse, max }: { sansReponse: HomeSansReponse[]; max:
                   t('writing'),
                 )
               }
-              onTrash={() => setAsked(mail.key)}
+              onTrash={() => {
+                if (skipsConfirm(SKIP_TRASH)) return trash(mail);
+                setDontAsk(false);
+                setAsked(mail.key);
+              }}
             />
           ))
         ) : (
@@ -1083,10 +1123,8 @@ export function ReplyDrafts({
   const [open, setOpen] = useState(false);
   // La confirmation sur place : écarter un brouillon déposé, ou l'envoyer.
   const [asked, setAsking] = useState<Asking>(null);
-  // « Ne plus me demander » : coché dans la confirmation, puis retenu (lu après le premier rendu, comme le thème).
+  // « Ne plus me demander » : coché dans la confirmation d'« Envoyer » ou de « Supprimer le mail », puis retenu.
   const [dontAsk, setDontAsk] = useState(false);
-  const [skipSend, setSkipSend] = useState(false);
-  useEffect(() => setSkipSend(readSkip()), []);
   const dontAskId = useId();
   const [failed, setFailed] = useState<boolean | 'bouge'>(false);
   // « Voir le mail » sur l'accueil : la clé du mail dont le texte est à droite.
@@ -1259,13 +1297,16 @@ export function ReplyDrafts({
       setAsking({ type: 'discard', key: mail.key });
     },
     onSendDraft: () => {
-      if (skipSend && !sendAlwaysAsks(mail)) return send(mail);
+      if (skipsConfirm(SKIP_SEND) && !sendAlwaysAsks(mail)) return send(mail);
       setDontAsk(false);
       if (!open) openPanel(mail);
       setAsking({ type: 'send', key: mail.key });
     },
-    // Le mail reçu part à la corbeille de Gmail : le panneau demande d'abord.
+    // Le mail reçu part à la corbeille de Gmail, qui le garde trente jours : le panneau demande d'abord, sauf si elle a
+    // coché « Ne plus me demander ».
     onTrash: () => {
+      if (skipsConfirm(SKIP_TRASH)) return trash(mail);
+      setDontAsk(false);
       if (!open) openPanel(mail);
       setAsking({ type: 'trash', key: mail.key });
     },
@@ -1451,11 +1492,24 @@ export function ReplyDrafts({
             : asking === 'trash' && shown
               ? {
                   title: t('trash.confirm'),
-                  text: t('trash.confirmText'),
+                  text: (
+                    <>
+                      {t('trash.confirmText')}
+                      <DontAsk
+                        id={dontAskId}
+                        checked={dontAsk}
+                        disabled={discarding}
+                        onChange={setDontAsk}
+                      />
+                    </>
+                  ),
                   yes: t('trash.yes'),
                   no: t('keep'),
                   busy: discarding,
-                  onYes: () => trash(shown),
+                  onYes: () => {
+                    if (dontAsk) rememberSkip(SKIP_TRASH);
+                    trash(shown);
+                  },
                   onNo: () => {
                     setAsking(null);
                     document.getElementById(`${shown.key}-supprimer`)?.focus();
@@ -1469,20 +1523,12 @@ export function ReplyDrafts({
                         {t('sendDraft.confirmText')}
                         {/* Une relance à plusieurs demande toujours : la case n'y aurait aucun effet. */}
                         {!sendAlwaysAsks(shown) && (
-                          <label
-                            htmlFor={dontAskId}
-                            className="mt-2 flex cursor-pointer items-center gap-2 text-ui text-fg"
-                          >
-                            <input
-                              id={dontAskId}
-                              type="checkbox"
-                              className="size-4 cursor-pointer accent-[var(--ink)]"
-                              checked={dontAsk}
-                              disabled={sending}
-                              onChange={(event) => setDontAsk(event.target.checked)}
-                            />
-                            {t('sendDraft.dontAsk')}
-                          </label>
+                          <DontAsk
+                            id={dontAskId}
+                            checked={dontAsk}
+                            disabled={sending}
+                            onChange={setDontAsk}
+                          />
                         )}
                       </>
                     ),
@@ -1491,10 +1537,7 @@ export function ReplyDrafts({
                     no: t('sendDraft.notYet'),
                     busy: sending,
                     onYes: () => {
-                      if (dontAsk) {
-                        saveSkip();
-                        setSkipSend(true);
-                      }
+                      if (dontAsk) rememberSkip(SKIP_SEND);
                       send(shown);
                     },
                     onNo: () => {

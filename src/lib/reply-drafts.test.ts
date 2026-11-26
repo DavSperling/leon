@@ -1,5 +1,5 @@
 import { createTranslator } from 'next-intl';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type {
   HomeBrouillon,
   HomeDemande,
@@ -22,9 +22,13 @@ import {
   panelMails,
   panelReducer,
   quietMails,
+  rememberSkip,
+  SKIP_SEND,
+  SKIP_TRASH,
   sendAlwaysAsks,
   sendQuestion,
   shownIndex,
+  skipsConfirm,
 } from './reply-drafts';
 
 // Le panneau de l'agent « Brouillons de réponse », sans écran : le rendu de test n'a pas de clic. Données inventées.
@@ -541,5 +545,46 @@ describe('quietMails : ses mails que Leon a jugés sans réponse à donner', () 
 
     expect(gmail && canTrash(gmail)).toBe(true);
     expect(outlook && canTrash(outlook)).toBe(false);
+  });
+});
+
+describe('« Ne plus me demander » : retenu dans ce navigateur, geste par geste', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  // Le stockage d'un navigateur, réduit à ce que le panneau en lit et y écrit.
+  const storage = () => {
+    const kept = new Map<string, string>();
+    return {
+      getItem: (key: string) => kept.get(key) ?? null,
+      setItem: (key: string, value: string) => void kept.set(key, value),
+    };
+  };
+
+  it('demande tant que rien n’est retenu, puis plus, pour ce geste seulement', () => {
+    vi.stubGlobal('localStorage', storage());
+
+    expect(skipsConfirm(SKIP_TRASH)).toBe(false);
+    rememberSkip(SKIP_TRASH);
+
+    expect(skipsConfirm(SKIP_TRASH)).toBe(true);
+    // « Supprimer le mail » sans redemander ne vaut pas pour « Envoyer », qui garde sa question.
+    expect(skipsConfirm(SKIP_SEND)).toBe(false);
+  });
+
+  it('garde la clé d’avant pour « Envoyer » : un choix déjà fait dans ce navigateur reste retenu', () => {
+    expect(SKIP_SEND).toBe('leon-envoyer-sans-demander');
+    expect(SKIP_TRASH).not.toBe(SKIP_SEND);
+  });
+
+  it('un navigateur sans stockage, ou qui le refuse, demande toujours, sans lever', () => {
+    vi.stubGlobal('localStorage', undefined);
+    expect(() => rememberSkip(SKIP_TRASH)).not.toThrow();
+    expect(skipsConfirm(SKIP_TRASH)).toBe(false);
+
+    const refuse = () => {
+      throw new Error('stockage refusé');
+    };
+    vi.stubGlobal('localStorage', { getItem: refuse, setItem: refuse });
+    expect(() => rememberSkip(SKIP_TRASH)).not.toThrow();
+    expect(skipsConfirm(SKIP_TRASH)).toBe(false);
   });
 });

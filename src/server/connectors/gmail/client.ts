@@ -7,7 +7,7 @@ import {
   GOOGLE_RATE_LIMIT,
   ResponseTooBigError,
 } from '../http';
-import { headerOf } from './map';
+import { headerOf, parseAddress, parseAddressList } from './map';
 import {
   DraftSchema,
   type GmailMessage,
@@ -163,9 +163,11 @@ export function gmailClient(http: ConnectorHttp) {
       return read;
     },
 
-    // Ce qu'il faut d'un message pour lui répondre dans son fil (reply.ts) : trois en-têtes. Le message reçu pour une
-    // réponse, son propre mail pour une relance. C'est le fil qui se lit, sans les corps, pour savoir d'abord s'il
-    // attend toujours : Leon ne connaît la boîte que telle qu'à la dernière relève. Rend null quand il n'y a plus à
+    // Ce qu'il faut d'un message pour lui répondre dans son fil (reply.ts) : trois en-têtes, et `elsewhere`, vrai quand
+    // il demande qu'on lui réponde à une autre adresse que celle de son expéditeur (Reply-To : le formulaire de contact
+    // d'un site, une assistante). Le message reçu pour une réponse, son propre mail pour une relance. C'est le fil qui
+    // se lit, sans les corps, pour savoir d'abord s'il attend toujours : Leon ne connaît la boîte que telle qu'à la
+    // dernière relève. Rend null quand il n'y a plus à
     // répondre : le message n'y est plus, il est à la corbeille ou en indésirable, ou un message plus récent le suit
     // (elle a écrit depuis Gmail, ou on lui a écrit ; un brouillon ne compte pas). Une seule requête, un crédit ;
     // jamais rejouée, sauf par le proxy de Pipedream sur un 401, une fois, avec un jeton neuf (pipedream.ts).
@@ -173,7 +175,10 @@ export function gmailClient(http: ConnectorHttp) {
       const { messages } = await http.json(
         {
           url: `${GMAIL}/gmail/v1/users/me/threads/${encodeURIComponent(threadId)}`,
-          query: { format: 'metadata', metadataHeaders: ['Message-ID', 'References', 'Subject'] },
+          query: {
+            format: 'metadata',
+            metadataHeaders: ['Message-ID', 'References', 'Subject', 'From', 'Reply-To'],
+          },
           once: true,
         },
         ThreadSchema,
@@ -185,10 +190,14 @@ export function gmailClient(http: ConnectorHttp) {
       // La date des messages n'est pas lue : la documentation ne la promet pas avec format=metadata.
       const followed = messages?.slice(index + 1).some((one) => !one.labelIds?.includes('DRAFT'));
       if (!received || binned || followed) return null;
+      const from = parseAddress(headerOf(received.payload, 'from')).email?.toLowerCase();
       return {
         messageId: headerOf(received.payload, 'message-id'),
         references: headerOf(received.payload, 'references'),
         subject: headerOf(received.payload, 'subject'),
+        elsewhere: parseAddressList(headerOf(received.payload, 'reply-to')).some(
+          (address) => address.toLowerCase() !== from,
+        ),
       };
     },
 

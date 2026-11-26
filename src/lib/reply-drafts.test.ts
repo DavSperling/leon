@@ -10,6 +10,7 @@ import type {
 import en from '../../messages/en.json';
 import fr from '../../messages/fr.json';
 import {
+  askingFor,
   CLOSED,
   confirmsDiscard,
   countsOf,
@@ -443,5 +444,19 @@ describe('panelReducer : mail par mail', () => {
 
     expect(shownIndex(mails, id(1))).toBe(1);
     expect(shownIndex(mails, 'disparu')).toBe(0);
+  });
+});
+
+describe('askingFor : la confirmation ouverte suit son mail', () => {
+  const [paul, lea] = panelMails([], [pret(1, 20, true), pret(2, 21, true)], {});
+
+  it('vaut pour le mail qui l’a demandée, et pour lui seul', () => {
+    const asking = { type: 'discard' as const, key: lea?.key ?? '' };
+
+    expect(askingFor(asking, lea)).toBe('discard');
+    // Un autre mail montré (un clic dans la liste, un accueil relu) : la question se ferme, rien ne tombe sur lui.
+    expect(askingFor(asking, paul)).toBe(false);
+    expect(askingFor(asking, undefined)).toBe(false);
+    expect(askingFor(null, lea)).toBe(false);
   });
 });

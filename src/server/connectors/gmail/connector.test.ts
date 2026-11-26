@@ -607,6 +607,7 @@ describe('gmailClient : un brouillon de réponse dans un fil', () => {
       messageId: '<m1@mail.client.test>',
       references: null,
       subject: 'Devis cuisine',
+      elsewhere: false,
     });
 
     expect(calls).toHaveLength(1);
@@ -618,8 +619,34 @@ describe('gmailClient : un brouillon de réponse dans un fil', () => {
       ['metadataHeaders', 'Message-ID'],
       ['metadataHeaders', 'References'],
       ['metadataHeaders', 'Subject'],
+      ['metadataHeaders', 'From'],
+      ['metadataHeaders', 'Reply-To'],
     ]);
   });
+
+  it.each([
+    ['sans adresse de réponse', undefined, false],
+    ['la même adresse, dans une autre casse', 'Léa Roy <LEA@client.test>', false],
+    ['une autre adresse (un formulaire de contact)', 'jean@prospect.test', true],
+    ['plusieurs, dont une autre', 'lea@client.test, assistante@client.test', true],
+  ])(
+    'le message demande-t-il de répondre ailleurs qu’à son expéditeur ? %s',
+    async (_, replyTo, elsewhere) => {
+      const headers = [
+        { name: 'Message-ID', value: '<m1@mail.client.test>' },
+        { name: 'From', value: 'Léa Roy <lea@client.test>' },
+        ...(replyTo ? [{ name: 'Reply-To', value: replyTo }] : []),
+      ];
+      const { http } = testHttp(gmailConnector, config, [
+        {
+          url: `${THREADS}/t1`,
+          json: { id: 't1', messages: [{ id: 'm1', threadId: 't1', payload: { headers } }] },
+        },
+      ]);
+
+      expect(await gmailClient(http).replyHeaders('t1', 'm1')).toMatchObject({ elsewhere });
+    },
+  );
 
   it.each([
     [

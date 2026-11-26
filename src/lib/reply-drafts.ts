@@ -117,6 +117,12 @@ export const shownIndex = (mails: PanelMail[], at: string | null) =>
 // Le brouillon déposé dans ses brouillons Gmail : « Écarter » l'en supprime pour de bon, il demande d'abord.
 export const confirmsDiscard = (mail: PanelMail) => mail.sorte === 'pret' && mail.mail.depose;
 
+// La confirmation ouverte (« Écarter ce brouillon ? », « Envoyer … ? ») ne vaut que pour le mail qui l'a demandée : un
+// autre mail montré (un clic dans la liste, un accueil relu), elle se ferme, et rien ne tombe sur lui.
+export type Asking = { type: 'discard' | 'send'; key: string } | null;
+export const askingFor = (asking: Asking, shown: PanelMail | undefined) =>
+  asking !== null && asking.key === shown?.key ? asking.type : false;
+
 // La question avant « Envoyer » un brouillon déposé (draftQuestions.sendDraft) : à qui il part, de la façon la plus
 // courte. Une réponse nomme son correspondant ; une relance, son premier destinataire, et compte les autres, en « à »
 // et en copie. Sans nom, la question ne nomme personne : une relance déposée en a toujours un (brouillon-depot.ts).

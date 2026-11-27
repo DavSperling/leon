@@ -22,6 +22,7 @@
     "leon": "node --env-file-if-exists=.env.local --import tsx src/cli/leon.ts",
     "ext:dev": "wxt extension",
     "ext:build": "wxt build extension",
+    "ext:zip": "WXT_PUBLIC_LEON_URL=https://leonmemory.com wxt zip extension && pnpm ext:zip:firefox",
     "ext:zip:firefox": "WXT_PUBLIC_LEON_URL=https://leonmemory.com wxt zip extension -b firefox",
     "postinstall": "wxt prepare extension"
   },

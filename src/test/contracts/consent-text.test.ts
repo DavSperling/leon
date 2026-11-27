@@ -19,7 +19,10 @@ function consentSection(): string {
 describe("écran de consentement de l'extension", () => {
   it('existe et dit ce qui est envoyé, ce qui ne l’est jamais et qui voit la conversation', () => {
     const text = consentSection();
-    expect(text).toContain('Ce qui est envoyé à votre serveur Leon');
+    // La destination est nommée (décision O4), en français et dans les data-en.
+    expect(text).toContain('Ce qui est envoyé à Leon (leonmemory.com)');
+    expect(text).toContain('What is sent to Leon (leonmemory.com)');
+    expect(text).not.toMatch(/votre serveur|your (leon )?server/i);
     expect(text).toContain("Ce qui ne l'est jamais");
     expect(text).toContain(
       'peut être lue par vous et, sur le site de Leon, par vos managers en remontant',

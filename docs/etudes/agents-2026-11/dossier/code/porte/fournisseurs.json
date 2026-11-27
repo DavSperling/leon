@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "generatedBy": "pnpm porte:generer (src/server/webhooks/providers-json.ts) : ne pas modifier à la main",
+  "paths": {
+    "app": "/h/{outil}",
+    "abonnement": "/h/{outil}/{abonnement}",
+    "cycle": "/h/{outil}/{abonnement}/cycle"
+  },
+  "limits": {
+    "bodyMaxBytes": 262144,
+    "headersMaxBytes": 8192,
+    "headerValueMaxChars": 1024,
+    "echoMaxChars": 1024,
+    "deliveryIdMaxChars": 200,
+    "accountMaxChars": 200,
+    "refusalMinDelayMs": 200,
+    "lookupMissesPerIp": 300,
+    "lookupMissesUnknownIp": 3000,
+    "lookupMissesWindowSeconds": 600,
+    "negativeCacheSeconds": 600,
+    "secretCacheSeconds": 60,
+    "cacheMaxEntries": 10000
+  },
+  "keptHeaders": [
+    "content-type",
+    "user-agent",
+    "webhook-id",
+    "webhook-timestamp"
+  ],
+  "tools": {
+    "fathom": {
+      "scope": "abonnement",
+      "bodyFormat": "json",
+      "deliveryHeader": "webhook-id",
+      "lifecycle": false,
+      "verification": {
+        "mode": "standard-webhooks",
+        "secret": {
+          "from": "abonnement"
+        }
+      }
+    },
+    "hubspot": {
+      "scope": "app",
+      "bodyFormat": "json",
+      "accountPointer": "/*/portalId",
+      "lifecycle": false,
+      "verification": {
+        "mode": "hmac-sha256",
+        "header": "x-hubspot-signature-v3",
+        "encoding": "base64",
+        "signed": [
+          "method",
+          "uri",
+          "body",
+          "timestamp"
+        ],
+        "separator": "",
+        "timestamp": {
+          "source": "header",
+          "name": "x-hubspot-request-timestamp",
+          "unit": "ms",
+          "toleranceSeconds": 300
+        },
+        "secret": {
+          "from": "env",
+          "name": "LEON_OAUTH_HUBSPOT_SECRET"
+        }
+      }
+    },
+    "outlook": {
+      "scope": "abonnement",
+      "bodyFormat": "json",
+      "handshake": "echo-validation-token",
+      "lifecycle": true,
+      "verification": {
+        "mode": "jeton",
+        "bodyPointer": "/value/*/clientState",
+        "secret": {
+          "from": "abonnement"
+        }
+      }
+    }
+  }
+}

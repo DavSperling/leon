@@ -1,0 +1,914 @@
+{
+  "version": 1,
+  "generatedBy": "pnpm porte:generer (src/server/webhooks/providers-json.ts) : ne pas modifier à la main",
+  "verification": [
+    {
+      "name": "outlook : clientState juste dans chaque notification",
+      "verification": {
+        "mode": "jeton",
+        "bodyPointer": "/value/*/clientState",
+        "secret": {
+          "from": "abonnement"
+        }
+      },
+      "bodyFormat": "json",
+      "secret": "exemple-fictif-clientstate-0123456789abcde",
+      "method": "POST",
+      "uri": "https://porte.exemple.test/h/outlook/5d2f8e14-3b6a-4c7d-8e9f-0a1b2c3d4e5f",
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": "{\"value\":[{\"subscriptionId\":\"abonnement-exemple-1\",\"clientState\":\"exemple-fictif-clientstate-0123456789abcde\",\"changeType\":\"created\",\"resource\":\"Users('u1')/Messages('m1')\",\"resourceData\":{\"id\":\"AAMkAGI2-exemple-fictif-1\"}},{\"subscriptionId\":\"abonnement-exemple-1\",\"clientState\":\"exemple-fictif-clientstate-0123456789abcde\",\"changeType\":\"created\",\"resource\":\"Users('u1')/Messages('m2')\",\"resourceData\":{\"id\":\"AAMkAGI2-exemple-fictif-2\"}}]}",
+      "now": 1795165200000,
+      "expected": "ok"
+    },
+    {
+      "name": "outlook : une notification sur deux porte un autre clientState",
+      "verification": {
+        "mode": "jeton",
+        "bodyPointer": "/value/*/clientState",
+        "secret": {
+          "from": "abonnement"
+        }
+      },
+      "bodyFormat": "json",
+      "secret": "exemple-fictif-clientstate-0123456789abcde",
+      "method": "POST",
+      "uri": "https://porte.exemple.test/h/outlook/5d2f8e14-3b6a-4c7d-8e9f-0a1b2c3d4e5f",
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": "{\"value\":[{\"subscriptionId\":\"abonnement-exemple-1\",\"clientState\":\"exemple-fictif-clientstate-0123456789abcde\",\"changeType\":\"created\",\"resource\":\"Users('u1')/Messages('m1')\",\"resourceData\":{\"id\":\"AAMkAGI2-exemple-fictif-1\"}},{\"subscriptionId\":\"abonnement-exemple-1\",\"clientState\":\"autre\",\"changeType\":\"created\",\"resource\":\"Users('u1')/Messages('m2')\",\"resourceData\":{\"id\":\"AAMkAGI2-exemple-fictif-2\"}}]}",
+      "now": 1795165200000,
+      "expected": "signature"
+    },
+    {
+      "name": "outlook : value vide",
+      "verification": {
+        "mode": "jeton",
+        "bodyPointer": "/value/*/clientState",
+        "secret": {
+          "from": "abonnement"
+        }
+      },
+      "bodyFormat": "json",
+      "secret": "exemple-fictif-clientstate-0123456789abcde",
+      "method": "POST",
+      "uri": "https://porte.exemple.test/h/outlook/5d2f8e14-3b6a-4c7d-8e9f-0a1b2c3d4e5f",
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": "{\"value\":[]}",
+      "now": 1795165200000,
+      "expected": "entete"
+    },
+    {
+      "name": "hubspot : méthode, adresse, corps et horodatage signés",
+      "verification": {
+        "mode": "hmac-sha256",
+        "header": "x-hubspot-signature-v3",
+        "encoding": "base64",
+        "signed": [
+          "method",
+          "uri",
+          "body",
+          "timestamp"
+        ],
+        "separator": "",
+        "timestamp": {
+          "source": "header",
+          "name": "x-hubspot-request-timestamp",
+          "unit": "ms",
+          "toleranceSeconds": 300
+        },
+        "secret": {
+          "from": "env",
+          "name": "LEON_OAUTH_HUBSPOT_SECRET"
+        }
+      },
+      "bodyFormat": "json",
+      "secret": "exemple-fictif-secret-client-hubspot",
+      "method": "POST",
+      "uri": "https://porte.exemple.test/h/hubspot",
+      "headers": {
+        "content-type": "application/json",
+        "x-hubspot-request-timestamp": "1795165198000",
+        "x-hubspot-signature-v3": "GWs7KXRb9x+a8cyZCCCKBhD2pgUQxb+ZXtoS0SN16hQ="
+      },
+      "body": "[{\"eventId\":1001,\"subscriptionId\":2001,\"portalId\":12345678,\"occurredAt\":1795165190000,\"subscriptionType\":\"object.creation\",\"objectTypeId\":\"0-46\",\"objectId\":3001}]",
+      "now": 1795165200000,
+      "expected": "ok"
+    },
+    {
+      "name": "hubspot : la même requête reçue sur une autre adresse",
+      "verification": {
+        "mode": "hmac-sha256",
+        "header": "x-hubspot-signature-v3",
+        "encoding": "base64",
+        "signed": [
+          "method",
+          "uri",
+          "body",
+          "timestamp"
+        ],
+        "separator": "",
+        "timestamp": {
+          "source": "header",
+          "name": "x-hubspot-request-timestamp",
+          "unit": "ms",
+          "toleranceSeconds": 300
+        },
+        "secret": {
+          "from": "env",
+          "name": "LEON_OAUTH_HUBSPOT_SECRET"
+        }
+      },
+      "bodyFormat": "json",
+      "secret": "exemple-fictif-secret-client-hubspot",
+      "method": "POST",
+      "uri": "https://porte.exemple.test/h/hubspot?x=1",
+      "headers": {
+        "content-type": "application/json",
+        "x-hubspot-request-timestamp": "1795165198000",
+        "x-hubspot-signature-v3": "GWs7KXRb9x+a8cyZCCCKBhD2pgUQxb+ZXtoS0SN16hQ="
+      },
+      "body": "[{\"eventId\":1001,\"subscriptionId\":2001,\"portalId\":12345678,\"occurredAt\":1795165190000,\"subscriptionType\":\"object.creation\",\"objectTypeId\":\"0-46\",\"objectId\":3001}]",
+      "now": 1795165200000,
+      "expected": "signature"
+    },
+    {
+      "name": "hubspot : horodatage de plus de 300 secondes",
+      "verification": {
+        "mode": "hmac-sha256",
+        "header": "x-hubspot-signature-v3",
+        "encoding": "base64",
+        "signed": [
+          "method",
+          "uri",
+          "body",
+          "timestamp"
+        ],
+        "separator": "",
+        "timestamp": {
+          "source": "header",
+          "name": "x-hubspot-request-timestamp",
+          "unit": "ms",
+          "toleranceSeconds": 300
+        },
+        "secret": {
+          "from": "env",
+          "name": "LEON_OAUTH_HUBSPOT_SECRET"
+        }
+      },
+      "bodyFormat": "json",
+      "secret": "exemple-fictif-secret-client-hubspot",
+      "method": "POST",
+      "uri": "https://porte.exemple.test/h/hubspot",
+      "headers": {
+        "content-type": "application/json",
+        "x-hubspot-request-timestamp": "1795164899000",
+        "x-hubspot-signature-v3": "SqLxqVjI2W9KGdOYOOGtAPlbV6djAdm0FegMShCihzE="
+      },
+      "body": "[{\"eventId\":1001,\"subscriptionId\":2001,\"portalId\":12345678,\"occurredAt\":1795165190000,\"subscriptionType\":\"object.creation\",\"objectTypeId\":\"0-46\",\"objectId\":3001}]",
+      "now": 1795165200000,
+      "expected": "horodatage"
+    },
+    {
+      "name": "fathom : standard-webhooks",
+      "verification": {
+        "mode": "standard-webhooks",
+        "secret": {
+          "from": "abonnement"
+        }
+      },
+      "bodyFormat": "json",
+      "secret": "whsec_ZXhlbXBsZS1maWN0aWYtZmF0aG9tLTMyLW9jdGV0cyE=",
+      "method": "POST",
+      "uri": "https://porte.exemple.test/h/fathom/9c4e1a27-8b3d-4e6f-a0b1-c2d3e4f5a6b7",
+      "headers": {
+        "content-type": "application/json",
+        "webhook-id": "msg_exemple_fictif_0001",
+        "webhook-timestamp": "1795165198",
+        "webhook-signature": "v1,/3J0tD0qA5b//XHWXngsIpnG0RnKm1RadU3H3RtNZgY="
+      },
+      "body": "{\"recording_id\":4242,\"title\":\"Exemple fictif\",\"created_at\":\"2026-11-20T08:55:00Z\"}",
+      "now": 1795165200000,
+      "expected": "ok"
+    },
+    {
+      "name": "fathom : deux signatures, la seconde juste (rotation du secret)",
+      "verification": {
+        "mode": "standard-webhooks",
+        "secret": {
+          "from": "abonnement"
+        }
+      },
+      "bodyFormat": "json",
+      "secret": "whsec_ZXhlbXBsZS1maWN0aWYtZmF0aG9tLTMyLW9jdGV0cyE=",
+      "method": "POST",
+      "uri": "https://porte.exemple.test/h/fathom/9c4e1a27-8b3d-4e6f-a0b1-c2d3e4f5a6b7",
+      "headers": {
+        "content-type": "application/json",
+        "webhook-id": "msg_exemple_fictif_0001",
+        "webhook-timestamp": "1795165198",
+        "webhook-signature": "v1,AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE= v1,/3J0tD0qA5b//XHWXngsIpnG0RnKm1RadU3H3RtNZgY="
+      },
+      "body": "{\"recording_id\":4242,\"title\":\"Exemple fictif\",\"created_at\":\"2026-11-20T08:55:00Z\"}",
+      "now": 1795165200000,
+      "expected": "ok"
+    },
+    {
+      "name": "fathom : horodatage de 6 minutes",
+      "verification": {
+        "mode": "standard-webhooks",
+        "secret": {
+          "from": "abonnement"
+        }
+      },
+      "bodyFormat": "json",
+      "secret": "whsec_ZXhlbXBsZS1maWN0aWYtZmF0aG9tLTMyLW9jdGV0cyE=",
+      "method": "POST",
+      "uri": "https://porte.exemple.test/h/fathom/9c4e1a27-8b3d-4e6f-a0b1-c2d3e4f5a6b7",
+      "headers": {
+        "content-type": "application/json",
+        "webhook-id": "msg_exemple_fictif_0001",
+        "webhook-timestamp": "1795164840",
+        "webhook-signature": "v1,zzXbKfi5Ft3avMNHHgh+z5SlDiSEDADbifbWSPR7lL0="
+      },
+      "body": "{\"recording_id\":4242,\"title\":\"Exemple fictif\",\"created_at\":\"2026-11-20T08:55:00Z\"}",
+      "now": 1795165200000,
+      "expected": "horodatage"
+    },
+    {
+      "name": "corps seul, hexadécimal avec préfixe sha256=",
+      "verification": {
+        "mode": "hmac-sha256",
+        "header": "x-signature-exemple",
+        "encoding": "hex",
+        "prefix": "sha256=",
+        "signed": [
+          "body"
+        ],
+        "separator": "",
+        "secret": {
+          "from": "abonnement"
+        }
+      },
+      "bodyFormat": "json",
+      "secret": "exemple-fictif-secret",
+      "method": "POST",
+      "uri": "https://porte.exemple.test/h/exemple",
+      "headers": {
+        "content-type": "application/json",
+        "x-signature-exemple": "sha256=7978e406b6b0c9a11d87f804c40070e04da7b0a7d4ee208c43d0d45183f28e42"
+      },
+      "body": "{\"exemple\":\"fictif\",\"n\":1}",
+      "now": 1795165200000,
+      "expected": "ok"
+    },
+    {
+      "name": "corps seul : un octet du corps changé",
+      "verification": {
+        "mode": "hmac-sha256",
+        "header": "x-signature-exemple",
+        "encoding": "hex",
+        "prefix": "sha256=",
+        "signed": [
+          "body"
+        ],
+        "separator": "",
+        "secret": {
+          "from": "abonnement"
+        }
+      },
+      "bodyFormat": "json",
+      "secret": "exemple-fictif-secret",
+      "method": "POST",
+      "uri": "https://porte.exemple.test/h/exemple",
+      "headers": {
+        "content-type": "application/json",
+        "x-signature-exemple": "sha256=7978e406b6b0c9a11d87f804c40070e04da7b0a7d4ee208c43d0d45183f28e42"
+      },
+      "body": "{\"exemple\":\"fictif\",\"n\":2}",
+      "now": 1795165200000,
+      "expected": "signature"
+    },
+    {
+      "name": "corps seul : en-tête de signature absent",
+      "verification": {
+        "mode": "hmac-sha256",
+        "header": "x-signature-exemple",
+        "encoding": "hex",
+        "prefix": "sha256=",
+        "signed": [
+          "body"
+        ],
+        "separator": "",
+        "secret": {
+          "from": "abonnement"
+        }
+      },
+      "bodyFormat": "json",
+      "secret": "exemple-fictif-secret",
+      "method": "POST",
+      "uri": "https://porte.exemple.test/h/exemple",
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": "{\"exemple\":\"fictif\",\"n\":1}",
+      "now": 1795165200000,
+      "expected": "entete"
+    },
+    {
+      "name": "corps seul : hexadécimal en majuscules",
+      "verification": {
+        "mode": "hmac-sha256",
+        "header": "x-signature-exemple",
+        "encoding": "hex",
+        "prefix": "sha256=",
+        "signed": [
+          "body"
+        ],
+        "separator": "",
+        "secret": {
+          "from": "abonnement"
+        }
+      },
+      "bodyFormat": "json",
+      "secret": "exemple-fictif-secret",
+      "method": "POST",
+      "uri": "https://porte.exemple.test/h/exemple",
+      "headers": {
+        "content-type": "application/json",
+        "x-signature-exemple": "sha256=7978E406B6B0C9A11D87F804C40070E04DA7B0A7D4EE208C43D0D45183F28E42"
+      },
+      "body": "{\"exemple\":\"fictif\",\"n\":1}",
+      "now": 1795165200000,
+      "expected": "ok"
+    },
+    {
+      "name": "horodatage dans le corps, tolérance de 60 secondes",
+      "verification": {
+        "mode": "hmac-sha256",
+        "header": "x-signature-exemple",
+        "encoding": "hex",
+        "signed": [
+          "body"
+        ],
+        "separator": "",
+        "timestamp": {
+          "source": "body",
+          "name": "/webhookTimestamp",
+          "unit": "ms",
+          "toleranceSeconds": 60
+        },
+        "secret": {
+          "from": "abonnement"
+        }
+      },
+      "bodyFormat": "json",
+      "secret": "exemple-fictif-secret",
+      "method": "POST",
+      "uri": "https://porte.exemple.test/h/exemple",
+      "headers": {
+        "content-type": "application/json",
+        "x-signature-exemple": "aafdc04788ffa74bbd1b91e92ffae616a686bd2feea6f3d99a579660fed2a504"
+      },
+      "body": "{\"action\":\"create\",\"type\":\"Issue\",\"organizationId\":\"org-exemple\",\"data\":{\"id\":\"iss-exemple\"},\"webhookTimestamp\":1795165199000}",
+      "now": 1795165200000,
+      "expected": "ok"
+    },
+    {
+      "name": "horodatage dans le corps, à 61 secondes",
+      "verification": {
+        "mode": "hmac-sha256",
+        "header": "x-signature-exemple",
+        "encoding": "hex",
+        "signed": [
+          "body"
+        ],
+        "separator": "",
+        "timestamp": {
+          "source": "body",
+          "name": "/webhookTimestamp",
+          "unit": "ms",
+          "toleranceSeconds": 60
+        },
+        "secret": {
+          "from": "abonnement"
+        }
+      },
+      "bodyFormat": "json",
+      "secret": "exemple-fictif-secret",
+      "method": "POST",
+      "uri": "https://porte.exemple.test/h/exemple",
+      "headers": {
+        "content-type": "application/json",
+        "x-signature-exemple": "3fe41244bcae558f7878fdb0d069d7937dac92e0a967829de46445a303604ba2"
+      },
+      "body": "{\"action\":\"create\",\"type\":\"Issue\",\"organizationId\":\"org-exemple\",\"data\":{\"id\":\"iss-exemple\"},\"webhookTimestamp\":1795165139000}",
+      "now": 1795165200000,
+      "expected": "horodatage"
+    },
+    {
+      "name": "littéral, horodatage et corps joints par « : »",
+      "verification": {
+        "mode": "hmac-sha256",
+        "header": "x-signature-exemple",
+        "encoding": "hex",
+        "prefix": "v0=",
+        "signed": [
+          {
+            "literal": "v0"
+          },
+          "timestamp",
+          "body"
+        ],
+        "separator": ":",
+        "timestamp": {
+          "source": "header",
+          "name": "x-horodatage-exemple",
+          "unit": "s",
+          "toleranceSeconds": 300
+        },
+        "secret": {
+          "from": "abonnement"
+        }
+      },
+      "bodyFormat": "json",
+      "secret": "exemple-fictif-secret",
+      "method": "POST",
+      "uri": "https://porte.exemple.test/h/exemple",
+      "headers": {
+        "content-type": "application/json",
+        "x-horodatage-exemple": "1795165198",
+        "x-signature-exemple": "v0=2a5113d9d24e68d51a993ae451af2ec0ad9d6699147562fb428a8d1af7537a79"
+      },
+      "body": "{\"exemple\":\"fictif\",\"n\":1}",
+      "now": 1795165200000,
+      "expected": "ok"
+    },
+    {
+      "name": "horodatage puis corps, secret hexadécimal",
+      "verification": {
+        "mode": "hmac-sha256",
+        "header": "x-signature-exemple",
+        "encoding": "hex",
+        "signed": [
+          "timestamp",
+          "body"
+        ],
+        "separator": "",
+        "timestamp": {
+          "source": "header",
+          "name": "x-horodatage-exemple",
+          "unit": "s",
+          "toleranceSeconds": 300
+        },
+        "secret": {
+          "from": "abonnement"
+        },
+        "secretEncoding": "hex"
+      },
+      "bodyFormat": "json",
+      "secret": "6578656d706c652d6669637469662d636c652d68657861646563696d616c65",
+      "method": "POST",
+      "uri": "https://porte.exemple.test/h/exemple",
+      "headers": {
+        "content-type": "application/json",
+        "x-horodatage-exemple": "1795165198",
+        "x-signature-exemple": "093b9657c054804ef7ba1467e8d0f0d6be0497d615eb759d67e1aff9d9dce9f5"
+      },
+      "body": "{\"exemple\":\"fictif\",\"n\":1}",
+      "now": 1795165200000,
+      "expected": "ok"
+    },
+    {
+      "name": "secret hexadécimal illisible",
+      "verification": {
+        "mode": "hmac-sha256",
+        "header": "x-signature-exemple",
+        "encoding": "hex",
+        "signed": [
+          "timestamp",
+          "body"
+        ],
+        "separator": "",
+        "timestamp": {
+          "source": "header",
+          "name": "x-horodatage-exemple",
+          "unit": "s",
+          "toleranceSeconds": 300
+        },
+        "secret": {
+          "from": "abonnement"
+        },
+        "secretEncoding": "hex"
+      },
+      "bodyFormat": "json",
+      "secret": "zz-pas-hexa",
+      "method": "POST",
+      "uri": "https://porte.exemple.test/h/exemple",
+      "headers": {
+        "content-type": "application/json",
+        "x-horodatage-exemple": "1795165198",
+        "x-signature-exemple": "093b9657c054804ef7ba1467e8d0f0d6be0497d615eb759d67e1aff9d9dce9f5"
+      },
+      "body": "{\"exemple\":\"fictif\",\"n\":1}",
+      "now": 1795165200000,
+      "expected": "secret"
+    },
+    {
+      "name": "hmac-sha1 en base64, corps seul",
+      "verification": {
+        "mode": "hmac-sha1",
+        "header": "x-signature-exemple",
+        "encoding": "base64",
+        "signed": [
+          "body"
+        ],
+        "separator": "",
+        "secret": {
+          "from": "abonnement"
+        }
+      },
+      "bodyFormat": "json",
+      "secret": "exemple-fictif-secret",
+      "method": "POST",
+      "uri": "https://porte.exemple.test/h/exemple",
+      "headers": {
+        "content-type": "application/json",
+        "x-signature-exemple": "htPoeCgzWkcz29T1Mfq25v7YF2c="
+      },
+      "body": "{\"exemple\":\"fictif\",\"n\":1}",
+      "now": 1795165200000,
+      "expected": "ok"
+    },
+    {
+      "name": "jeton dans un en-tête",
+      "verification": {
+        "mode": "jeton",
+        "header": "x-jeton-exemple",
+        "secret": {
+          "from": "abonnement"
+        }
+      },
+      "bodyFormat": "json",
+      "secret": "exemple-fictif-jeton",
+      "method": "POST",
+      "uri": "https://porte.exemple.test/h/exemple",
+      "headers": {
+        "content-type": "application/json",
+        "x-jeton-exemple": "exemple-fictif-jeton"
+      },
+      "body": "",
+      "now": 1795165200000,
+      "expected": "ok"
+    },
+    {
+      "name": "jeton dans un en-tête : mauvais jeton",
+      "verification": {
+        "mode": "jeton",
+        "header": "x-jeton-exemple",
+        "secret": {
+          "from": "abonnement"
+        }
+      },
+      "bodyFormat": "json",
+      "secret": "exemple-fictif-jeton",
+      "method": "POST",
+      "uri": "https://porte.exemple.test/h/exemple",
+      "headers": {
+        "content-type": "application/json",
+        "x-jeton-exemple": "autre"
+      },
+      "body": "",
+      "now": 1795165200000,
+      "expected": "signature"
+    },
+    {
+      "name": "jeton dans le corps : corps illisible",
+      "verification": {
+        "mode": "jeton",
+        "bodyPointer": "/value/*/clientState",
+        "secret": {
+          "from": "abonnement"
+        }
+      },
+      "bodyFormat": "json",
+      "secret": "exemple-fictif-clientstate-0123456789abcde",
+      "method": "POST",
+      "uri": "https://porte.exemple.test/h/exemple",
+      "headers": {
+        "content-type": "application/json"
+      },
+      "body": "{\"value\":",
+      "now": 1795165200000,
+      "expected": "format"
+    }
+  ],
+  "decryption": [
+    {
+      "name": "secret d’un abonnement Outlook",
+      "key": "CQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQk=",
+      "aad": "0b7a3c52-6f0e-4d9a-9e1f-2a4c5b6d7e8f:5d2f8e14-3b6a-4c7d-8e9f-0a1b2c3d4e5f",
+      "stored": "v1:AQEBAQEBAQEBAQEB:Ntdy2t7CLUJQv0o3cBPEdg:3AjkCGOLrV13Jzy5jOmtcNCsoaSRswmhmNYkpB3za-YGTjFuH7mP4wJd",
+      "plain": "exemple-fictif-clientstate-0123456789abcde"
+    },
+    {
+      "name": "le même secret lu pour un autre abonnement : refusé",
+      "key": "CQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQk=",
+      "aad": "0b7a3c52-6f0e-4d9a-9e1f-2a4c5b6d7e8f:9c4e1a27-8b3d-4e6f-a0b1-c2d3e4f5a6b7",
+      "stored": "v1:AQEBAQEBAQEBAQEB:Ntdy2t7CLUJQv0o3cBPEdg:3AjkCGOLrV13Jzy5jOmtcNCsoaSRswmhmNYkpB3za-YGTjFuH7mP4wJd",
+      "plain": null
+    }
+  ],
+  "gate": {
+    "env": {
+      "LEON_PORTE_URL": "https://porte.exemple.test",
+      "LEON_PORTE_KEY": "CQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQk=",
+      "LEON_OAUTH_HUBSPOT_SECRET": "exemple-fictif-secret-client-hubspot"
+    },
+    "store": {
+      "subscriptions": [
+        {
+          "outil": "outlook",
+          "id": "5d2f8e14-3b6a-4c7d-8e9f-0a1b2c3d4e5f",
+          "tenantId": "0b7a3c52-6f0e-4d9a-9e1f-2a4c5b6d7e8f",
+          "stored": "v1:AQEBAQEBAQEBAQEB:Ntdy2t7CLUJQv0o3cBPEdg:3AjkCGOLrV13Jzy5jOmtcNCsoaSRswmhmNYkpB3za-YGTjFuH7mP4wJd"
+        },
+        {
+          "outil": "fathom",
+          "id": "9c4e1a27-8b3d-4e6f-a0b1-c2d3e4f5a6b7",
+          "tenantId": "0b7a3c52-6f0e-4d9a-9e1f-2a4c5b6d7e8f",
+          "stored": "v1:AgICAgICAgICAgIC:f47B5yN3vE5-Qhyn9yeniA:jXyVET0dyhyHj3lolOggfA1cRDnWpDaUWasmnLm4nJ1Q8ch-n6fHkmO3rMf2yroQbFk"
+        }
+      ]
+    },
+    "cases": [
+      {
+        "name": "outlook : écho du jeton de validation",
+        "request": {
+          "method": "POST",
+          "path": "/h/outlook/5d2f8e14-3b6a-4c7d-8e9f-0a1b2c3d4e5f",
+          "query": "validationToken=jeton%20de%20validation%20exemple",
+          "headers": {
+            "content-type": "text/plain"
+          },
+          "body": ""
+        },
+        "now": 1795165200000,
+        "expected": {
+          "status": 200,
+          "contentType": "text/plain; charset=utf-8",
+          "body": "jeton de validation exemple",
+          "deposits": []
+        }
+      },
+      {
+        "name": "outlook : jeton de validation avec un caractère de contrôle",
+        "request": {
+          "method": "POST",
+          "path": "/h/outlook/5d2f8e14-3b6a-4c7d-8e9f-0a1b2c3d4e5f",
+          "query": "validationToken=a%0Ab",
+          "headers": {},
+          "body": ""
+        },
+        "now": 1795165200000,
+        "expected": {
+          "status": 400,
+          "body": "{\"error\":\"Invalid request\"}",
+          "deposits": []
+        }
+      },
+      {
+        "name": "outlook : livraison juste",
+        "request": {
+          "method": "POST",
+          "path": "/h/outlook/5d2f8e14-3b6a-4c7d-8e9f-0a1b2c3d4e5f",
+          "query": "",
+          "headers": {
+            "content-type": "application/json",
+            "user-agent": "exemple-fictif"
+          },
+          "body": "{\"value\":[{\"subscriptionId\":\"abonnement-exemple-1\",\"clientState\":\"exemple-fictif-clientstate-0123456789abcde\",\"changeType\":\"created\",\"resource\":\"Users('u1')/Messages('m1')\",\"resourceData\":{\"id\":\"AAMkAGI2-exemple-fictif-1\"}},{\"subscriptionId\":\"abonnement-exemple-1\",\"clientState\":\"exemple-fictif-clientstate-0123456789abcde\",\"changeType\":\"created\",\"resource\":\"Users('u1')/Messages('m2')\",\"resourceData\":{\"id\":\"AAMkAGI2-exemple-fictif-2\"}}]}"
+        },
+        "now": 1795165200000,
+        "expected": {
+          "status": 202,
+          "body": "",
+          "deposits": [
+            {
+              "outil": "outlook",
+              "abonnement": "5d2f8e14-3b6a-4c7d-8e9f-0a1b2c3d4e5f",
+              "compte": null,
+              "genre": "livraison",
+              "livraison": "e80a1ac0c7a48455a7c93692772a7c4bbafdef4510bd35421e889a1a04aeecbf",
+              "corps": "{\"value\":[{\"subscriptionId\":\"abonnement-exemple-1\",\"clientState\":\"exemple-fictif-clientstate-0123456789abcde\",\"changeType\":\"created\",\"resource\":\"Users('u1')/Messages('m1')\",\"resourceData\":{\"id\":\"AAMkAGI2-exemple-fictif-1\"}},{\"subscriptionId\":\"abonnement-exemple-1\",\"clientState\":\"exemple-fictif-clientstate-0123456789abcde\",\"changeType\":\"created\",\"resource\":\"Users('u1')/Messages('m2')\",\"resourceData\":{\"id\":\"AAMkAGI2-exemple-fictif-2\"}}]}",
+              "entetes": {
+                "content-type": "application/json",
+                "user-agent": "exemple-fictif"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "outlook : adresse inconnue",
+        "request": {
+          "method": "POST",
+          "path": "/h/outlook/00000000-0000-4000-8000-000000000000",
+          "query": "",
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": "{\"value\":[{\"subscriptionId\":\"abonnement-exemple-1\",\"clientState\":\"exemple-fictif-clientstate-0123456789abcde\",\"changeType\":\"created\",\"resource\":\"Users('u1')/Messages('m1')\",\"resourceData\":{\"id\":\"AAMkAGI2-exemple-fictif-1\"}},{\"subscriptionId\":\"abonnement-exemple-1\",\"clientState\":\"exemple-fictif-clientstate-0123456789abcde\",\"changeType\":\"created\",\"resource\":\"Users('u1')/Messages('m2')\",\"resourceData\":{\"id\":\"AAMkAGI2-exemple-fictif-2\"}}]}"
+        },
+        "now": 1795165200000,
+        "expected": {
+          "status": 401,
+          "body": "{\"error\":\"Invalid signature\"}",
+          "deposits": []
+        }
+      },
+      {
+        "name": "outlook : octet nul dans le corps",
+        "request": {
+          "method": "POST",
+          "path": "/h/outlook/5d2f8e14-3b6a-4c7d-8e9f-0a1b2c3d4e5f",
+          "query": "",
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": "{\"value\":[{\"subscriptionId\":\"abonnement-exemple-1\",\"clientState\":\"exemple-fictif-clientstate-0123456789abcde\",\"changeType\":\"cre\u0000ated\",\"resource\":\"Users('u1')/Messages('m1')\",\"resourceData\":{\"id\":\"AAMkAGI2-exemple-fictif-1\"}},{\"subscriptionId\":\"abonnement-exemple-1\",\"clientState\":\"exemple-fictif-clientstate-0123456789abcde\",\"changeType\":\"created\",\"resource\":\"Users('u1')/Messages('m2')\",\"resourceData\":{\"id\":\"AAMkAGI2-exemple-fictif-2\"}}]}"
+        },
+        "now": 1795165200000,
+        "expected": {
+          "status": 400,
+          "body": "{\"error\":\"Invalid request\"}",
+          "deposits": []
+        }
+      },
+      {
+        "name": "outlook : notification de cycle de vie",
+        "request": {
+          "method": "POST",
+          "path": "/h/outlook/5d2f8e14-3b6a-4c7d-8e9f-0a1b2c3d4e5f/cycle",
+          "query": "",
+          "headers": {
+            "content-type": "application/json"
+          },
+          "body": "{\"value\":[{\"subscriptionId\":\"abonnement-exemple-1\",\"lifecycleEvent\":\"reauthorizationRequired\",\"clientState\":\"exemple-fictif-clientstate-0123456789abcde\"}]}"
+        },
+        "now": 1795165200000,
+        "expected": {
+          "status": 202,
+          "body": "",
+          "deposits": [
+            {
+              "outil": "outlook",
+              "abonnement": "5d2f8e14-3b6a-4c7d-8e9f-0a1b2c3d4e5f",
+              "compte": null,
+              "genre": "cycle",
+              "livraison": "44dea510cad9b20399dceedffab86518dfce702dc8b977189d0d96ca814aef01",
+              "corps": "{\"value\":[{\"subscriptionId\":\"abonnement-exemple-1\",\"lifecycleEvent\":\"reauthorizationRequired\",\"clientState\":\"exemple-fictif-clientstate-0123456789abcde\"}]}",
+              "entetes": {
+                "content-type": "application/json"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "hubspot : livraison juste, deux organisations écoutent le compte",
+        "request": {
+          "method": "POST",
+          "path": "/h/hubspot",
+          "query": "",
+          "headers": {
+            "content-type": "application/json",
+            "x-hubspot-request-timestamp": "1795165198000",
+            "x-hubspot-signature-v3": "GWs7KXRb9x+a8cyZCCCKBhD2pgUQxb+ZXtoS0SN16hQ="
+          },
+          "body": "[{\"eventId\":1001,\"subscriptionId\":2001,\"portalId\":12345678,\"occurredAt\":1795165190000,\"subscriptionType\":\"object.creation\",\"objectTypeId\":\"0-46\",\"objectId\":3001}]"
+        },
+        "now": 1795165200000,
+        "expected": {
+          "status": 202,
+          "body": "",
+          "deposits": [
+            {
+              "outil": "hubspot",
+              "abonnement": null,
+              "compte": "12345678",
+              "genre": "livraison",
+              "livraison": "4b907cad4007b804f03ef58dee38b25a571368597faa1056dd793f4f039c1e9f",
+              "corps": "[{\"eventId\":1001,\"subscriptionId\":2001,\"portalId\":12345678,\"occurredAt\":1795165190000,\"subscriptionType\":\"object.creation\",\"objectTypeId\":\"0-46\",\"objectId\":3001}]",
+              "entetes": {
+                "content-type": "application/json"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "hubspot : reçu sur une adresse d’abonnement",
+        "request": {
+          "method": "POST",
+          "path": "/h/hubspot/5d2f8e14-3b6a-4c7d-8e9f-0a1b2c3d4e5f",
+          "query": "",
+          "headers": {
+            "content-type": "application/json",
+            "x-hubspot-request-timestamp": "1795165198000",
+            "x-hubspot-signature-v3": "GWs7KXRb9x+a8cyZCCCKBhD2pgUQxb+ZXtoS0SN16hQ="
+          },
+          "body": "[{\"eventId\":1001,\"subscriptionId\":2001,\"portalId\":12345678,\"occurredAt\":1795165190000,\"subscriptionType\":\"object.creation\",\"objectTypeId\":\"0-46\",\"objectId\":3001}]"
+        },
+        "now": 1795165200000,
+        "expected": {
+          "status": 401,
+          "body": "{\"error\":\"Invalid signature\"}",
+          "deposits": []
+        }
+      },
+      {
+        "name": "hubspot : deux comptes dans une même livraison",
+        "request": {
+          "method": "POST",
+          "path": "/h/hubspot",
+          "query": "",
+          "headers": {
+            "content-type": "application/json",
+            "x-hubspot-request-timestamp": "1795165198000",
+            "x-hubspot-signature-v3": "dtZtn6GSBPoIvJ0fiEq+DPyxgKLA4OKQOYQ8R0A5/kA="
+          },
+          "body": "[{\"portalId\":12345678,\"objectId\":1},{\"portalId\":87654321,\"objectId\":2}]"
+        },
+        "now": 1795165200000,
+        "expected": {
+          "status": 202,
+          "body": "",
+          "deposits": []
+        }
+      },
+      {
+        "name": "hubspot : secret d’application absent",
+        "env": {
+          "LEON_OAUTH_HUBSPOT_SECRET": ""
+        },
+        "request": {
+          "method": "POST",
+          "path": "/h/hubspot",
+          "query": "",
+          "headers": {
+            "content-type": "application/json",
+            "x-hubspot-request-timestamp": "1795165198000",
+            "x-hubspot-signature-v3": "GWs7KXRb9x+a8cyZCCCKBhD2pgUQxb+ZXtoS0SN16hQ="
+          },
+          "body": "[{\"eventId\":1001,\"subscriptionId\":2001,\"portalId\":12345678,\"occurredAt\":1795165190000,\"subscriptionType\":\"object.creation\",\"objectTypeId\":\"0-46\",\"objectId\":3001}]"
+        },
+        "now": 1795165200000,
+        "expected": {
+          "status": 503,
+          "body": "{\"error\":\"Unavailable\"}",
+          "deposits": []
+        }
+      },
+      {
+        "name": "fathom : livraison juste, identifiée par webhook-id",
+        "request": {
+          "method": "POST",
+          "path": "/h/fathom/9c4e1a27-8b3d-4e6f-a0b1-c2d3e4f5a6b7",
+          "query": "",
+          "headers": {
+            "content-type": "application/json",
+            "webhook-id": "msg_exemple_fictif_0001",
+            "webhook-timestamp": "1795165198",
+            "webhook-signature": "v1,/3J0tD0qA5b//XHWXngsIpnG0RnKm1RadU3H3RtNZgY="
+          },
+          "body": "{\"recording_id\":4242,\"title\":\"Exemple fictif\",\"created_at\":\"2026-11-20T08:55:00Z\"}"
+        },
+        "now": 1795165200000,
+        "expected": {
+          "status": 202,
+          "body": "",
+          "deposits": [
+            {
+              "outil": "fathom",
+              "abonnement": "9c4e1a27-8b3d-4e6f-a0b1-c2d3e4f5a6b7",
+              "compte": null,
+              "genre": "livraison",
+              "livraison": "msg_exemple_fictif_0001",
+              "corps": "{\"recording_id\":4242,\"title\":\"Exemple fictif\",\"created_at\":\"2026-11-20T08:55:00Z\"}",
+              "entetes": {
+                "content-type": "application/json",
+                "webhook-id": "msg_exemple_fictif_0001",
+                "webhook-timestamp": "1795165198"
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

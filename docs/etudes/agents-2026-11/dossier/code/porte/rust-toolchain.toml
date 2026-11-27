@@ -1,0 +1,5 @@
+# La chaîne Rust de la porte (dossier agents, chapitre 15). La même que l'image du Dockerfile et que le job `porte`
+# de .github/workflows/tests.yml : les trois changent ensemble. rustfmt et clippy s'installent à part (CI, poste).
+[toolchain]
+channel = "1.97.0"
+profile = "minimal"

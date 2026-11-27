@@ -146,6 +146,24 @@ export function setupReturn(params: Record<string, string | string[] | undefined
   return typeof branche === 'string' ? `${state}?${new URLSearchParams({ branche })}` : state;
 }
 
+// Le `state` du lien d'accord de l'administrateur (Microsoft le rend tel quel) : la page de départ et l'outil, que
+// l'adresse de retour ne dit plus depuis qu'Outlook, OneDrive et Teams partagent une appli.
+export const adminConsentState = (tool: ProviderId, returnTo?: OAuthReturnPath): string =>
+  `${returnTo ?? '/connections'}?${new URLSearchParams({ outil: tool })}`;
+
+// Une page hors de la liste fermée, ou un outil inconnu, vaut null. Un `state` réduit à la page (avant le
+// 27/11/2026) reste lu.
+export function readAdminConsentState(state: unknown): {
+  returnTo: OAuthReturnPath | null;
+  tool: ProviderId | null;
+} {
+  if (typeof state !== 'string') return { returnTo: null, tool: null };
+  const at = state.indexOf('?');
+  const path = at === -1 ? state : state.slice(0, at);
+  const query = new URLSearchParams(at === -1 ? '' : state.slice(at + 1));
+  return { returnTo: isOAuthReturnPath(path) ? path : null, tool: providerOf(query.get('outil')) };
+}
+
 // Les codes que le retour de l'éditeur met dans `?erreur=` (voir oauth-routes.ts).
 export const OAUTH_RETURN_CODES = [
   'annule',
@@ -167,7 +185,7 @@ export type OAuthNotice = {
   adminConsent: boolean; // la page joint le lien d'accord administrateur de l'outil
 };
 
-// Dit au retour d'Outlook (`admin`) et avant son bouton.
+// Dit au retour d'un outil Microsoft (`admin`) et avant son bouton.
 export const ADMIN_CONSENT_MESSAGE =
   "L'administrateur Microsoft de votre entreprise doit d'abord autoriser Leon.";
 export const ADMIN_CONSENT_MESSAGE_EN =
@@ -197,7 +215,7 @@ function errorText(code: OAuthReturnCode, tool: ProviderId | null): string {
     case 'admin':
       return ADMIN_CONSENT_MESSAGE;
     case 'admin_accorde':
-      return 'Accord donné : cliquez de nouveau sur Se connecter avec Outlook.';
+      return `Accord donné : cliquez de nouveau sur Se connecter avec ${object}.`;
     case 'autre_compte':
       return `Reconnectez ${object} avec le même compte et le même site, ou ajoutez une autre connexion.`;
     case 'vide':
@@ -227,7 +245,7 @@ function errorTextEn(code: OAuthReturnCode, tool: ProviderId | null): string {
     case 'admin':
       return ADMIN_CONSENT_MESSAGE_EN;
     case 'admin_accorde':
-      return 'Consent granted: click Continue with Outlook again.';
+      return `Consent granted: click Continue with ${object} again.`;
     case 'autre_compte':
       return `Reconnect ${object} with the same account and site, or add another connection.`;
     case 'vide':

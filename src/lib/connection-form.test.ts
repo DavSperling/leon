@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  adminConsentState,
   canReconnect,
   canSyncNow,
   fieldsFromForm,
@@ -12,6 +13,7 @@ import {
   oauthStartPath,
   otherOwnersNote,
   panelMode,
+  readAdminConsentState,
   resultMessage,
   setupReturn,
   statusLine,
@@ -191,6 +193,34 @@ describe('isOAuthReturnPath', () => {
   });
 });
 
+describe('adminConsentState et readAdminConsentState', () => {
+  it('mettent dans `state` la page de départ et l’outil, et les relisent', () => {
+    expect(adminConsentState('outlook')).toBe('/connections?outil=outlook');
+    expect(adminConsentState('outlook', '/welcome/tools')).toBe('/welcome/tools?outil=outlook');
+    expect(readAdminConsentState('/welcome/tools?outil=outlook')).toEqual({
+      returnTo: '/welcome/tools',
+      tool: 'outlook',
+    });
+  });
+
+  it('lisent encore un `state` réduit à la page', () => {
+    expect(readAdminConsentState('/welcome/tools')).toEqual({
+      returnTo: '/welcome/tools',
+      tool: null,
+    });
+  });
+
+  it.each([
+    ['//ailleurs?outil=outlook', { returnTo: null, tool: 'outlook' }],
+    ['/connections?outil=inconnu', { returnTo: '/connections', tool: null }],
+    ['https://ailleurs/connections', { returnTo: null, tool: null }],
+    [undefined, { returnTo: null, tool: null }],
+    [42, { returnTo: null, tool: null }],
+  ])('ne suivent ni une page hors liste, ni un outil inconnu (%j)', (state, expected) => {
+    expect(readAdminConsentState(state)).toEqual(expected);
+  });
+});
+
 describe('panelMode', () => {
   it('met le bouton en premier quand l’appli est configurée, avec la clé en secours si elle est acceptée', () => {
     expect(panelMode({ oauthReady: true, keyAccepted: true })).toBe('oauth+key');
@@ -257,7 +287,7 @@ describe('oauthNotice', () => {
       "L'administrateur Microsoft de votre entreprise doit d'abord autoriser Leon.",
     );
     expect(text('admin_accorde')).toBe(
-      'Accord donné : cliquez de nouveau sur Se connecter avec Outlook.',
+      'Accord donné : cliquez de nouveau sur Se connecter avec Linear.',
     );
     expect(text('vide')).toBe(
       "Leon est connecté à Linear, mais n'y a accès à rien pour l'instant.",

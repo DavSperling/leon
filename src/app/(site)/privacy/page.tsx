@@ -7,7 +7,7 @@ import { A, Contact, LegalPage, type LegalSection, List } from '@/components/sit
 export const metadata: Metadata = {
   title: 'Privacy Policy',
   description:
-    'How Leon collects, uses and protects your data, including the data you connect from Google.',
+    'How Leon collects, uses and protects your data, including the data you connect from Google and Microsoft.',
 };
 
 const SECTIONS: LegalSection[] = [
@@ -132,6 +132,40 @@ const SECTIONS: LegalSection[] = [
     ),
   },
   {
+    id: 'microsoft',
+    title: 'Data from Microsoft',
+    body: (
+      <>
+        <p>
+          If you connect Outlook, Leon asks Microsoft for full access to your mail and calendar. It
+          asks for these permissions now so that you will not need to approve again when Leon starts
+          acting for you: read, write, send and delete email, read and change your calendar, and
+          read your mailbox settings, such as time zone and working hours. Leon does not ask to
+          change your mailbox settings or rules, so it cannot forward your email. With a work or
+          school account, your organization’s Microsoft administrator approves Leon once for the
+          whole organization.
+        </p>
+        <p>
+          Today, Leon imports the email in your inbox and sent items, with details such as sender,
+          recipients, subject and date, and your calendar events, except those marked personal,
+          private or confidential. It does not send, change or delete anything in your Microsoft
+          account. We will update this policy before it does.
+        </p>
+        <p>
+          Leon uses this data in the same way and within the same limits as data from Google,
+          described above: only to provide its features to you, private to you in Leon, never sold,
+          never used for advertising or to train AI models.
+        </p>
+        <p>
+          You can disconnect Outlook at any time in Leon. With a personal account, you can also
+          remove Leon’s access from your{' '}
+          <A href="https://account.live.com/consent/Manage">Microsoft account</A>; with a work or
+          school account, your Microsoft administrator can remove it for the whole organization.
+        </p>
+      </>
+    ),
+  },
+  {
     id: 'how-we-use',
     title: 'How we use data',
     body: (
@@ -238,7 +272,7 @@ const SECTIONS: LegalSection[] = [
         <li>
           Disconnecting a tool stops new imports. What was already imported stays until it is
           deleted. Write to <Contact /> and we will delete the content imported from your own
-          accounts, such as your Gmail or Google Drive, within 30 days.
+          accounts, such as your Gmail, Google Drive or Outlook, within 30 days.
         </li>
         <li>
           Database backups are kept for 7 days, so deleted data can remain in a backup for up to 7
@@ -330,7 +364,7 @@ export default function Page() {
   return (
     <LegalPage
       title="Privacy Policy"
-      lead="How Leon collects, uses and protects your data, including the data you connect from Google. Last updated November 26, 2026."
+      lead="How Leon collects, uses and protects your data, including the data you connect from Google and Microsoft. Last updated November 27, 2026."
       sections={SECTIONS}
     />
   );

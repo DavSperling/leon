@@ -782,6 +782,19 @@ describe('accord de l’administrateur', () => {
     expect(location(outside)).toBe('/connections?erreur=admin_accorde&outil=github');
     expect(location(ordinary)).toBe('/connections?erreur=annule&outil=github');
   });
+
+  it('dit de quel outil il s’agit quand une appli en sert plusieurs (Microsoft : l’outil est dans `state`)', async () => {
+    const paul = await signUp();
+    const { app } = makeApp({ connector: withConsent() });
+    const consent = { admin_consent: 'True', state: '/welcome/tools?outil=outlook' };
+    const refusal = { error: 'consent_required', error_description: 'AADSTS65004: denied' };
+
+    const granted = await back(app, paul, consent, undefined, 'microsoft');
+    const denied = await back(app, paul, { ...consent, ...refusal }, undefined, 'microsoft');
+
+    expect(location(granted)).toBe('/welcome/tools?erreur=admin_accorde&outil=outlook');
+    expect(location(denied)).toBe('/welcome/tools?erreur=admin&outil=outlook');
+  });
 });
 
 describe('« Reconnecter »', () => {

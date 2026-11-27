@@ -13,15 +13,20 @@ import { listFiles, readText } from './files';
 // - src/app/.well-known/** : la découverte OAuth du MCP distant (RFC 9728 pour la ressource, RFC 8414 pour le serveur
 //   d'autorisation). Publics par nature : un client qui n'a encore ni compte ni jeton les lit pour savoir où s'autoriser.
 //   Ils ne portent que des adresses tirées de BETTER_AUTH_URL.
+// - src/app/.well-known/microsoft-identity-association.json/route.ts : la preuve que leonmemory.com est le domaine
+//   d'éditeur des applis Microsoft de Leon, lue par Microsoft. Publique par nature, elle ne porte que les identifiants
+//   des applis, déjà publics dans chaque adresse d'autorisation.
 const importsOf = (path: string) =>
   [...readText(path).matchAll(/from\s+'([^']+)'/g)].map((match) => match[1]).toSorted();
+const MICROSOFT_DOMAIN = 'src/app/.well-known/microsoft-identity-association.json/route.ts';
 
 describe('route handlers de Next', () => {
-  it('ne sont que ceux de l’API, de la documentation en Markdown, du script d’installation et de la découverte OAuth', () => {
+  it('ne sont que ceux de l’API, de la documentation en Markdown, du script d’installation, de la découverte OAuth et du domaine Microsoft', () => {
     // `**` ne descend pas dans les dossiers qui commencent par un point (.well-known) : le second motif les cherche.
     expect(
       [...listFiles('src/app/**/route.ts'), ...listFiles('src/app/**/.*/**/route.ts')].sort(),
     ).toEqual([
+      MICROSOFT_DOMAIN,
       'src/app/.well-known/oauth-authorization-server/route.ts',
       'src/app/.well-known/oauth-protected-resource/api/mcp/route.ts',
       'src/app/.well-known/oauth-protected-resource/route.ts',
@@ -56,12 +61,17 @@ describe('route handlers de Next', () => {
     ]);
   });
 
-  it.each(listFiles('src/app/**/.*/**/route.ts'))(
+  it.each(listFiles('src/app/**/.*/**/route.ts').filter((path) => path !== MICROSOFT_DOMAIN))(
     'GET %s, public, ne touche ni la base, ni la session, ni les cookies',
     (path) => {
       expect(importsOf(path)).toEqual(['@/server/oauth/metadata']);
     },
   );
+
+  it('GET /.well-known/microsoft-identity-association.json, public, ne lit que les identifiants des applis', () => {
+    expect(importsOf(MICROSOFT_DOMAIN)).toEqual(['@/server/connectors/oauth-env', '@/server/env']);
+    expect(importsOf('src/server/connectors/oauth-env.ts')).toEqual([]);
+  });
 
   it('les métadonnées OAuth ne tirent que BETTER_AUTH_URL et les chemins du contrat', () => {
     expect(importsOf('src/server/oauth/metadata.ts')).toEqual([

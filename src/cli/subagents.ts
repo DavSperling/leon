@@ -141,3 +141,92 @@ export async function loadCodexSubagents(
   }
   return subagents;
 }
+
+// Les appels Workflow d'une session Claude Code dont le run ne rend pas la session externe, pour le tri de T63
+// (extractClaudeCodeFacts), par l'`id` de leur bloc tool_use (relevé du 23/11, sur les formes). La ligne du résultat de
+// l'appel porte `toolUseResult.runId` et `transcriptDir`, le dossier du run :
+// `<dossier du fichier>/<session>/subagents/workflows/<runId>`, où <session> est celle du fichier, ou celle dont une
+// session reprise recopie l'historique. Il n'est lu que s'il a exactement cette forme. Les agents sont ceux que nomme son
+// `journal.jsonl`, chacun passé à `externalAgent` (isExternalWorkflowAgent) dès qu'il est lu, puis oublié : un run pèse
+// souvent des dizaines de Mo (621 Mo pour la plus grosse session du poste au 23/11), et le crochet de chaque tour le
+// relit. Un agent lancé sans fichier n'a encore rien fait ; si le journal le dit fini, ou si le journal ne se lit pas,
+// le run n'est pas jugé : son appel restera externe. La dernière ligne d'un fichier, pas encore finie d'écrire (sans
+// retour à la ligne), n'est pas lue : le run peut encore tourner. Un run cité deux fois (une reprise) est lu une fois.
+// Au premier run externe ou non jugé, la lecture s'arrête : la session est externe, et les appels suivants, hors de
+// l'ensemble, le sont aussi. Sans `readdir`, rien n'est lu.
+const RUN_ID = /^wf_[a-z0-9-]{1,64}$/;
+const AGENT_ID = /^[a-z0-9]{1,64}$/;
+const RunResultSchema = z.object({
+  type: z.literal('user'),
+  isSidechain: z.boolean().optional(),
+  toolUseResult: z.object({ runId: z.string().regex(RUN_ID), transcriptDir: z.string() }),
+  message: z.object({ content: z.array(z.unknown()) }),
+});
+const ToolResultIdSchema = z.object({ type: z.literal('tool_result'), tool_use_id: z.string() });
+const JournalSchema = z.object({
+  type: z.string(),
+  agentId: z.string().regex(AGENT_ID).optional(),
+});
+
+const writtenLines = (text: string) => text.slice(0, text.lastIndexOf('\n') + 1);
+
+function parseJson(raw: string): unknown {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export async function loadWorkflowRuns(
+  sessionFile: string,
+  content: string,
+  deps: Lecture,
+  externalAgent: (agent: string) => boolean,
+): Promise<Set<string>> {
+  const local = new Set<string>();
+  if (!deps.readdir || !isAbsolute(sessionFile) || !sessionFile.endsWith('.jsonl')) return local;
+  const judged = new Map<string, boolean | null>();
+  for (const raw of content.split('\n')) {
+    const line = RunResultSchema.safeParse(parseJson(raw));
+    if (!line.success || line.data.isSidechain) continue;
+    const [id, ...others] = line.data.message.content.flatMap((block) => {
+      const result = ToolResultIdSchema.safeParse(block);
+      return result.success ? [result.data.tool_use_id] : [];
+    });
+    const { runId, transcriptDir } = line.data.toolUseResult;
+    const owner = basename(dirname(dirname(dirname(transcriptDir))));
+    const expected = join(dirname(sessionFile), owner, 'subagents', 'workflows', runId);
+    if (id === undefined || others.length > 0 || !UUID.test(owner) || transcriptDir !== expected)
+      continue;
+    if (!judged.has(transcriptDir)) {
+      const external = await externalRun(transcriptDir, deps, externalAgent).catch(() => null);
+      judged.set(transcriptDir, external);
+    }
+    if (judged.get(transcriptDir) !== false) break;
+    local.add(id);
+  }
+  return local;
+}
+
+async function externalRun(
+  dir: string,
+  deps: Lecture,
+  externalAgent: (agent: string) => boolean,
+): Promise<boolean> {
+  const named = new Set<string>();
+  const finished = new Set<string>();
+  for (const raw of writtenLines(await deps.readFile(join(dir, 'journal.jsonl'))).split('\n')) {
+    if (raw === '') continue;
+    const { type, agentId } = JournalSchema.parse(JSON.parse(raw));
+    if (agentId === undefined) continue;
+    named.add(agentId);
+    if (type !== 'started') finished.add(agentId); // `result`, `failed`
+  }
+  for (const agentId of named) {
+    const text = await deps.readFile(join(dir, `agent-${agentId}.jsonl`)).catch(() => null);
+    if (text === null && finished.has(agentId)) throw new Error('agent fini sans fichier');
+    if (text !== null && externalAgent(writtenLines(text))) return true;
+  }
+  return false;
+}

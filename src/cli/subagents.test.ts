@@ -6,7 +6,12 @@ import {
   extractAntigravityBackstage,
   extractAntigravityFacts,
 } from '../capture/antigravity';
-import { loadAntigravitySubagents, loadCodexSubagents, loadSubagents } from './subagents';
+import {
+  loadAntigravitySubagents,
+  loadCodexSubagents,
+  loadSubagents,
+  loadWorkflowRuns,
+} from './subagents';
 
 // Un disque inventé : chemin → contenu ; un dossier se liste par ses noms.
 const SESSION = '/home/demo/.claude/projects/-demo/55555555-5555-4555-8555-555555555555.jsonl';
@@ -521,5 +526,192 @@ describe('loadCodexSubagents', () => {
   it('sans listage du disque, rend une table vide', async () => {
     const { readFile } = disque({ [chemin(S)]: lance(L), [chemin(L)]: 'L' }, {});
     expect(await loadCodexSubagents(chemin(S), { readFile })).toEqual(new Map());
+  });
+});
+
+// Les runs de workflow (décision d'Amos du 23/11) : la ligne du résultat de l'appel Workflow porte `toolUseResult.runId`
+// et `transcriptDir` ; le run nomme ses agents dans `journal.jsonl`. Formes relevées le 23/11, contenus inventés : un
+// agent dont le contenu dit « externe » l'est, pour le juge de ces tests.
+describe('loadWorkflowRuns', () => {
+  const PROJET = '/home/demo/.claude/projects/-demo';
+  const ORIGINE = '44444444-4444-4444-8444-444444444444';
+  const run = (session: string, runId = 'wf_1a2b3c4d-5e6') =>
+    `${PROJET}/${session}/subagents/workflows/${runId}`;
+  const RUN = run('55555555-5555-4555-8555-555555555555');
+  const AUTRE = run('55555555-5555-4555-8555-555555555555', 'wf_9f8e7d6c-5b4');
+  const resultat = (
+    toolUseId: string,
+    transcriptDir: string,
+    runId = 'wf_1a2b3c4d-5e6',
+    extra = {},
+  ) =>
+    JSON.stringify({
+      type: 'user',
+      message: { content: [{ type: 'tool_result', tool_use_id: toolUseId, content: 'lancé' }] },
+      toolUseResult: { status: 'async_launched', runId, taskId: 't1', transcriptDir },
+      ...extra,
+    });
+  const journal = (...lignes: object[]) => `${lignes.map((l) => JSON.stringify(l)).join('\n')}\n`;
+  const demarre = (agentId: string) => ({
+    type: 'started',
+    agentId,
+    key: 'k',
+    label: 'l',
+    phase: 'p',
+  });
+  const fini = (agentId: string) => ({ type: 'result', agentId, key: 'k', result: 'r' });
+  // Le juge note ce qu'on lui passe : on vérifie ainsi la ligne pas finie d'écrire.
+  const juge =
+    (vus: string[] = []) =>
+    (agent: string) => {
+      vus.push(agent);
+      return agent.includes('externe');
+    };
+  const lecteur = (fichiers: Record<string, string>, lus: string[] = []) => {
+    const deps = disque(fichiers, {});
+    return {
+      ...deps,
+      readFile: async (path: string) => {
+        lus.push(path);
+        return deps.readFile(path);
+      },
+    };
+  };
+  const charger = (
+    contenu: string,
+    fichiers: Record<string, string>,
+    vus?: string[],
+    lus?: string[],
+  ) => loadWorkflowRuns(SESSION, contenu, lecteur(fichiers, lus), juge(vus));
+
+  it('juge les agents que nomme le journal, sans la ligne pas finie d’écrire, et garde l’appel d’un run local', async () => {
+    const vus: string[] = [];
+    const local = await charger(
+      resultat('toolu_w', RUN),
+      {
+        [`${RUN}/journal.jsonl`]: `${journal({ type: 'launched' }, demarre('a1'), fini('a1'), demarre('b2'))}{"type":"sta`,
+        [`${RUN}/agent-a1.jsonl`]: 'ligne 1\nligne 2\n',
+        [`${RUN}/agent-b2.jsonl`]: 'ligne 1\nligne en cou',
+      },
+      vus,
+    );
+
+    expect(local).toEqual(new Set(['toolu_w']));
+    expect(vus).toEqual(['ligne 1\nligne 2\n', 'ligne 1\n']);
+  });
+
+  it('lit le run d’une session reprise dans le dossier de la session d’origine, au même projet', async () => {
+    const origine = run(ORIGINE);
+    const local = await charger(resultat('toolu_w', origine), {
+      [`${origine}/journal.jsonl`]: journal(demarre('a1'), fini('a1')),
+      [`${origine}/agent-a1.jsonl`]: 'x\n',
+    });
+
+    expect(local).toEqual(new Set(['toolu_w']));
+  });
+
+  it('un agent lancé sans fichier n’a encore rien fait ; un agent fini sans fichier laisse le run non jugé', async () => {
+    const enCours = await charger(resultat('toolu_w', RUN), {
+      [`${RUN}/journal.jsonl`]: journal(demarre('a1')),
+    });
+    const perdu = await charger(resultat('toolu_w', RUN), {
+      [`${RUN}/journal.jsonl`]: journal(demarre('a1'), { type: 'failed', agentId: 'a1', key: 'k' }),
+    });
+
+    expect(enCours).toEqual(new Set(['toolu_w']));
+    expect(perdu).toEqual(new Set());
+  });
+
+  it.each([
+    ['un journal absent', {}],
+    ['un journal illisible', { [`${RUN}/journal.jsonl`]: 'pas du JSON\n' }],
+    ['un agentId hors forme', { [`${RUN}/journal.jsonl`]: journal(demarre('../x')) }],
+  ])('ne garde pas l’appel pour %s', async (_cas, fichiers) => {
+    expect(await charger(resultat('toolu_w', RUN), fichiers)).toEqual(new Set());
+  });
+
+  it('au premier run externe, s’arrête : rien n’est lu des runs d’après', async () => {
+    const lus: string[] = [];
+    const fichiers = {
+      [`${RUN}/journal.jsonl`]: journal(demarre('a1'), demarre('a2')),
+      [`${RUN}/agent-a1.jsonl`]: 'externe\n',
+      [`${RUN}/agent-a2.jsonl`]: 'x\n',
+      [`${AUTRE}/journal.jsonl`]: journal(demarre('b1')),
+      [`${AUTRE}/agent-b1.jsonl`]: 'x\n',
+    };
+    const contenu = [resultat('toolu_w', RUN), resultat('toolu_v', AUTRE, 'wf_9f8e7d6c-5b4')].join(
+      '\n',
+    );
+
+    expect(await charger(contenu, fichiers, [], lus)).toEqual(new Set());
+    expect(lus).toEqual([`${RUN}/journal.jsonl`, `${RUN}/agent-a1.jsonl`]);
+  });
+
+  it('lit une fois un run cité par deux appels (une reprise)', async () => {
+    const lus: string[] = [];
+    const fichiers = {
+      [`${RUN}/journal.jsonl`]: journal(demarre('a1')),
+      [`${RUN}/agent-a1.jsonl`]: 'x\n',
+    };
+    const contenu = [resultat('toolu_w', RUN), resultat('toolu_v', RUN)].join('\n');
+
+    expect(await charger(contenu, fichiers, [], lus)).toEqual(new Set(['toolu_w', 'toolu_v']));
+    expect(lus).toEqual([`${RUN}/journal.jsonl`, `${RUN}/agent-a1.jsonl`]);
+  });
+
+  it.each([
+    [
+      'hors du dossier du projet',
+      '/home/demo/autre/55555555-5555-4555-8555-555555555555/subagents/workflows/wf_1a2b3c4d-5e6',
+      'wf_1a2b3c4d-5e6',
+    ],
+    [
+      'remontant par ..',
+      `${PROJET}/x/../55555555-5555-4555-8555-555555555555/subagents/workflows/wf_1a2b3c4d-5e6`,
+      'wf_1a2b3c4d-5e6',
+    ],
+    ['une session qui n’est pas un UUID', run('pas-un-uuid'), 'wf_1a2b3c4d-5e6'],
+    [
+      'un autre runId que le dossier',
+      run('55555555-5555-4555-8555-555555555555', 'wf_autre'),
+      'wf_1a2b3c4d-5e6',
+    ],
+    [
+      'un runId hors forme',
+      `${PROJET}/55555555-5555-4555-8555-555555555555/subagents/workflows/../x`,
+      '../x',
+    ],
+  ])('ne lit rien pour un transcriptDir %s', async (_cas, dossier, runId) => {
+    const lus: string[] = [];
+    expect(await charger(resultat('toolu_w', dossier, runId), {}, [], lus)).toEqual(new Set());
+    expect(lus).toEqual([]);
+  });
+
+  it('ignore une ligne de sous-agent, ou qui répond à deux appels à la fois', async () => {
+    const fichiers = {
+      [`${RUN}/journal.jsonl`]: journal(demarre('a1')),
+      [`${RUN}/agent-a1.jsonl`]: 'x\n',
+    };
+    const deux = JSON.stringify({
+      ...JSON.parse(resultat('toolu_w', RUN)),
+      message: {
+        content: [
+          { type: 'tool_result', tool_use_id: 'toolu_w', content: 'a' },
+          { type: 'tool_result', tool_use_id: 'toolu_x', content: 'b' },
+        ],
+      },
+    });
+
+    expect(
+      await charger(resultat('toolu_w', RUN, undefined, { isSidechain: true }), fichiers),
+    ).toEqual(new Set());
+    expect(await charger(deux, fichiers)).toEqual(new Set());
+  });
+
+  it('sans listage du disque, rend un ensemble vide', async () => {
+    const { readFile } = disque({ [`${RUN}/journal.jsonl`]: journal() }, {});
+    expect(await loadWorkflowRuns(SESSION, resultat('toolu_w', RUN), { readFile }, juge())).toEqual(
+      new Set(),
+    );
   });
 });

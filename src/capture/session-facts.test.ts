@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   extractClaudeCodeFacts,
+  isExternalWorkflowAgent,
   recheckCommand,
   reduceToolName,
   SessionFactsSchema,
@@ -631,6 +632,79 @@ describe('extractClaudeCodeFacts', () => {
         erreurs: 0,
         externe: false,
       });
+    });
+  });
+
+  // Décision d'Amos du 23/11 : un appel Workflow se juge sur les échanges des agents de son run, par la règle de T63
+  // sans le rapport final ; la CLI juge chaque agent à la lecture (loadWorkflowRuns). Formes relevées le 23/11 ;
+  // fixtures inventées.
+  describe('l’agent d’un run de workflow (isExternalWorkflowAgent)', () => {
+    const SA = { isSidechain: true, agentId: 'a1b2c3d4e5f6a7b8c' };
+    const consigne = JSON.stringify({ type: 'user', ...SA, message: { content: 'Consigne.' } });
+    const geste = (id: string, name: string, input: unknown) => [
+      appel(id, name, input, SA),
+      resultat(id, 'ok', SA),
+    ];
+    // Un agent de workflow finit par rendre son StructuredOutput, sans message end_turn après.
+    const agent = (...lignes: string[]) =>
+      [consigne, ...lignes, ...geste('so', 'StructuredOutput', { verdict: 'ok' })].join('\n');
+
+    it('un agent qui ne fait que lire et rendre son StructuredOutput : non externe', () => {
+      expect(isExternalWorkflowAgent(agent(...geste('r1', 'Read', {})), false)).toBe(false);
+    });
+
+    it.each([
+      ['WebFetch', { url: 'https://x.example' }],
+      ['Bash', { command: 'gh pr view 12' }],
+      ['mcp__github__get_issue', {}],
+      ['Agent', {}],
+      ['Workflow', {}],
+    ])('un agent qui appelle %s %j : externe', (name, input) => {
+      expect(isExternalWorkflowAgent(agent(...geste('e1', name, input)), false)).toBe(true);
+    });
+
+    it('un agent encore en cours, qui n’a fait que lire : non externe', () => {
+      const enCours = [consigne, ...geste('r1', 'Read', {})].join('\n');
+      expect(isExternalWorkflowAgent(enCours, false)).toBe(false);
+    });
+
+    it('une ligne illisible : externe', () => {
+      expect(isExternalWorkflowAgent(agent('ceci n’est pas du JSON'), false)).toBe(true);
+    });
+
+    it('un sous-agent de l’agent, retrouvé, qui ne fait que lire : non externe ; un mcp__leon__thread, selon le serveur', () => {
+      const sousAgent = [
+        consigne,
+        ...geste('t1', 'Grep', {}),
+        JSON.stringify({
+          type: 'assistant',
+          ...SA,
+          message: { content: [{ type: 'text', text: 'Rapport.' }], stop_reason: 'end_turn' },
+        }),
+      ].join('\n');
+      const lance = agent(...geste('a2', 'Agent', { prompt: 'Relis.' }));
+      expect(isExternalWorkflowAgent(lance, false, new Map([['a2', sousAgent]]))).toBe(false);
+      const leon = agent(...geste('l1', 'mcp__leon__thread', {}));
+      expect(isExternalWorkflowAgent(leon, true)).toBe(false);
+      expect(isExternalWorkflowAgent(leon, false)).toBe(true);
+    });
+  });
+
+  describe('l’appel Workflow, jugé par son run', () => {
+    const session = appel('w1', 'Workflow', { script: 'export const meta = {}' });
+    const externe = (workflows?: Set<string>, contenu = session) =>
+      extractClaudeCodeFacts(contenu, RACINE, false, undefined, workflows).externe;
+
+    it('un run local : non externe, même écrit sur deux lignes', () => {
+      expect(externe(new Set(['w1']))).toBe(false);
+      expect(externe(new Set(['w1']), [session, session].join('\n'))).toBe(false);
+    });
+
+    it.each([
+      ['sans ensemble', undefined],
+      ['un autre appel seulement', new Set(['autre'])],
+    ])('un run qui n’est pas jugé local (%s) : externe', (_cas, workflows) => {
+      expect(externe(workflows)).toBe(true);
     });
   });
 

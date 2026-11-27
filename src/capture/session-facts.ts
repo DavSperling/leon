@@ -85,7 +85,8 @@ const GIT_COMMIT = new RegExp(String.raw`\bgit${GIT_OPTIONS}\s+commit\b`);
 // tout outil absent de cette liste d'outils locaux de Claude Code rend la session externe (WebFetch, WebSearch,
 // Workflow, tout mcp__* hors des outils locaux de Leon, tout nom inconnu). Aucune commande `leon` n'est une commande
 // réseau (D36). Un appel Agent ou Task se juge sur les échanges de son sous-agent, par la même règle (T63 :
-// isExternalSubagent) ; sans eux, il rend la session externe.
+// isExternalSubagent) ; sans eux, il rend la session externe. Un appel Workflow, sur ceux des agents de son run
+// (décision d'Amos du 23/11 : isExternalWorkflowAgent).
 const LOCAL_TOOLS = new Set([
   'Read',
   'Write',
@@ -118,7 +119,9 @@ const LOCAL_TOOLS = new Set([
   'ToolSearch',
   'Skill',
   'AskUserQuestion', // la réponse est celle de l'utilisateur
+  'StructuredOutput', // un agent de workflow y rend son propre résultat au script
 ]);
+const WORKFLOW_TOOL = 'Workflow';
 // Le serveur MCP de Leon, sous le nom que pose son installation (#121 : `claude mcp add … leon`, `codex mcp add leon`),
 // et ceux de ses outils qui ne rendent que la mémoire de l'auteur (D36, A14) : ils ne rendent pas la session externe
 // quand la CLI a reconnu le serveur à l'URL de sa configuration (leon-mcp.ts). `search`, `fetch` et `briefing` rendent
@@ -321,6 +324,9 @@ function isExternalCall({ name, input }: Call, leonMcp: boolean): boolean {
 // Les échanges des sous-agents d'une session : `id` du bloc tool_use de l'appel Agent ou Task → contenu du fichier
 // `.jsonl` de son sous-agent (annexe 08, chargés par la CLI : subagents.ts).
 export type Subagents = ReadonlyMap<string, string>;
+// Les appels Workflow d'une session dont le run ne la rend pas externe, par l'`id` de leur bloc tool_use (jugés par la
+// CLI à la lecture, agent par agent, avec isExternalWorkflowAgent : loadWorkflowRuns).
+export type Workflows = ReadonlySet<string>;
 
 // La règle du rapport final (T63, annexe 08) : un sous-agent a rendu son rapport quand la dernière ligne de
 // conversation de son fichier est un message assistant fini par end_turn. Reprise par les coulisses.
@@ -346,12 +352,14 @@ function isExternalAnyCall(
 // qu'il a fait (échec fermé) : une ligne qui n'est pas du JSON, une ligne sans type ou une ligne de conversation hors de
 // la forme connue, ou pas de rapport final (la dernière ligne de conversation n'est pas un message assistant fini par
 // end_turn : coupé, ou encore en cours). Une ligne d'un autre type se saute, quelle que soit sa forme. Toutes ses lignes
-// portent isSidechain.
+// portent isSidechain. `report` faux, pour un agent de workflow, le rapport final n'est pas demandé
+// (isExternalWorkflowAgent).
 function isExternalSubagent(
   content: string,
   leonMcp: boolean,
   subagents: Subagents | undefined,
   visited: Set<string>,
+  report = true,
 ): boolean {
   let finished = false;
   for (const raw of content.split('\n')) {
@@ -375,8 +383,18 @@ function isExternalSubagent(
       if (call.success && isExternalAnyCall(call.data, leonMcp, subagents, visited)) return true;
     }
   }
-  return !finished;
+  return report && !finished;
 }
+
+// Un agent d'un run de workflow (décision d'Amos du 23/11), par la règle de isExternalSubagent sans le rapport final : il
+// compte par ses appels, fini ou non. Le run est lancé en tâche de fond, son texte n'entre dans la session qu'à sa
+// notification de fin, et `externe`, une fois vrai, le reste (record-facts.ts) : exiger le rapport au crochet du tour qui
+// le lance rendrait externes toutes ces sessions. Le crochet du tour qu'ouvre la notification rejuge tous les agents.
+export const isExternalWorkflowAgent = (
+  content: string,
+  leonMcp: boolean,
+  subagents?: Subagents,
+): boolean => isExternalSubagent(content, leonMcp, subagents, new Set(), false);
 
 // Ce que les appels d'outils d'une session apprennent, avant les bornes de C1 (buildFacts). Commun aux lecteurs des
 // outils de code : chacun lit son format, et passe ici ses commandes, ses fichiers et ses tâches.
@@ -484,12 +502,15 @@ function recordResult(
 // les fichiers écrits ailleurs sont retirés ; null, hors de tout dépôt, aucun fichier. Les sous-agents
 // (`isSidechain`) ne sont pas la session. `leonMcp` : le serveur `leon` de la configuration de Claude Code est celui de
 // la connexion (leon-mcp.ts) ; faux, tout outil MCP compte. `subagents` : les échanges des sous-agents (T63), qui ne
-// décident que de `externe` ; un appel Agent ou Task absent de la table rend la session externe.
+// décident que de `externe` ; un appel Agent ou Task absent de la table rend la session externe. `workflows` : les
+// appels Workflow dont le run est local ; tout autre appel Workflow rend la session externe, comme celui d'un sous-agent
+// (isExternalCall).
 export function extractClaudeCodeFacts(
   content: string,
   root: string | null,
   leonMcp = false,
   subagents?: Subagents,
+  workflows?: Workflows,
 ): SessionFacts {
   const visited = new Set<string>();
   const calls = new Map<string, Call>();
@@ -525,7 +546,10 @@ export function extractClaudeCodeFacts(
       const call = ToolUseSchema.safeParse(block);
       if (call.success) {
         calls.set(call.data.id, call.data);
-        external ||= isExternalAnyCall(call.data, leonMcp, subagents, visited);
+        external ||=
+          call.data.name === WORKFLOW_TOOL
+            ? !workflows?.has(call.data.id)
+            : isExternalAnyCall(call.data, leonMcp, subagents, visited);
       }
       const result = ToolResultSchema.safeParse(block);
       if (!result.success) continue;

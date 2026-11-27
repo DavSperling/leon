@@ -176,10 +176,12 @@ const SECTIONS: LegalSection[] = [
           calendar, except meetings marked personal, private or confidential. It also reads who is a
           member of each channel and chat and who was invited to each meeting, to decide which
           colleagues can see them, and keeps only which members of your Leon workspace are among
-          them. It checks Teams for new content at most once a day, as Microsoft requires. Leon does
-          not send, change or delete anything in your Microsoft account. We will update this policy
-          before it does. Microsoft alerts Leon as soon as email arrives, you send email or your
-          calendar changes, so that Leon imports it right away; these alerts contain no content.
+          them. Leon does not send, change or delete anything in your Microsoft account. We will
+          update this policy before it does. Microsoft alerts Leon as soon as email arrives, you
+          send email or your calendar changes, a message is posted in your chats or in your teams’
+          channels, or the transcript of a meeting you organize is ready, so that Leon imports it
+          right away; these alerts contain no content, only where the change happened. Leon also
+          checks Teams for anything missed, at most once a day.
         </p>
         <p>
           Leon uses this data in the same way and within the same limits as data from Google,

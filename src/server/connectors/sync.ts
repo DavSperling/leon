@@ -19,7 +19,7 @@ import {
 } from './connections';
 import { ConnectorAuthError, ConnectorHttpError } from './http';
 import { ingestConnectorItems, removeConnectorItems, removeConnectorTurns } from './ingest-items';
-import { keepNotified } from './microsoft-notifications';
+import { keepNotified, takeSignaled } from './microsoft-notifications';
 import { normalizeItem } from './normalize';
 import { ensureFreshTokens, OAuthRefusedError } from './oauth';
 import { connectorHttp } from './pipedream';
@@ -85,6 +85,7 @@ async function readPages(
   connection: LoadedConnection,
   deps: SyncDeps,
   ready: Ready,
+  signaled: string[],
 ): Promise<Again> {
   const { connector, config } = ready;
   const http = connectorHttp(connection.provider, connector, config, deps);
@@ -92,6 +93,7 @@ async function readPages(
     cursor: connection.cursor,
     since: connection.since,
     ...(connection.provider === 'github' && { depotsEquipe: await teamRepos(ctx) }),
+    ...(signaled.length > 0 && { signaled }),
   };
   let read = 0;
   try {
@@ -150,8 +152,11 @@ async function readWithRenewal(
   deps: SyncDeps,
   ready: Ready,
 ): Promise<Again> {
+  // Teams : les lieux que Microsoft a signalés (0098), pris une fois pour les deux essais ; la lecture les garde dans
+  // son curseur dès sa première page.
+  const signaled = await takeSignaled(ctx, connection);
   try {
-    return await readPages(ctx, connection, deps, ready);
+    return await readPages(ctx, connection, deps, ready, signaled);
   } catch (error) {
     const { refreshToken } = connection.config;
     const renewable =
@@ -166,7 +171,7 @@ async function readWithRenewal(
   });
   const renewed = prepare({ ...connection, config }, deps);
   if ('message' in renewed) throw new ConnectorHttpError(null, renewed.message);
-  return readPages(ctx, connection, deps, renewed);
+  return readPages(ctx, connection, deps, renewed, signaled);
 }
 
 // Audit 5 n° 2 : une connexion OAuth enregistrée sans `accountKey` se reconnaît au libellé, et ne se

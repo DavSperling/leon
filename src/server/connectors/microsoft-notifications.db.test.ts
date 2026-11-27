@@ -5,10 +5,17 @@ import { adminPool } from '@/test/db';
 import { type FakeRoute, fakeFetch } from '@/test/fake-fetch';
 import { createTestTenant } from '@/test/fixtures';
 import { createConnection } from './connections';
-import { keepNotified, NOTIFICATIONS_PATH } from './microsoft-notifications';
+import {
+  keepNotified,
+  markNotified,
+  NOTIFICATIONS_PATH,
+  takeSignaled,
+} from './microsoft-notifications';
 import { OAUTH_SECRET_FIELDS } from './oauth';
 import { outlookConnector } from './outlook/connector';
 import { runConnectorSync } from './sync';
+import { teamsChatsConnector, teamsConnector } from './teams/connector';
+import { EVERYWHERE } from './teams/daily';
 import type { AnyConnector } from './types';
 
 vi.mock('@/server/pipeline/queue');
@@ -59,23 +66,34 @@ function configOf(expiresAt: string) {
   };
 }
 
-async function outlookConnection(expiresAt: string) {
+async function connectionOf(
+  ctx: TenantContext,
+  provider: 'outlook' | 'teams' | 'teamschats',
+  expiresAt: string,
+) {
   const config = configOf(expiresAt);
-  const id = await createConnection(paul, {
-    provider: 'outlook',
+  const id = await createConnection(ctx, {
+    provider,
     label: 'Paul (paul@outlook.test)',
     config,
     secretFields: OAUTH_SECRET_FIELDS,
     since: new Date(Date.now() - 24 * HOUR),
   });
-  return { id, provider: 'outlook' as const, config };
+  return { id, provider, config };
 }
+const outlookConnection = (expiresAt: string) => connectionOf(paul, 'outlook', expiresAt);
 
-async function seedSubscription(connectionId: string, ressource: string, id: string, due: boolean) {
+async function seedSubscription(
+  connectionId: string,
+  ressource: string,
+  id: string,
+  due: boolean,
+  tenantId = paul.tenantId,
+) {
   await adminPool.query(
     `insert into abonnements_microsoft (id, tenant_id, connection_id, ressource, empreinte, prochain_renouvellement)
      values ($1, $2, $3, $4, sha256(convert_to('secret-' || $1, 'UTF8')), now() + $5::interval)`,
-    [id, paul.tenantId, connectionId, ressource, due ? '-1 minute' : '1 hour'],
+    [id, tenantId, connectionId, ressource, due ? '-1 minute' : '1 hour'],
   );
 }
 
@@ -220,14 +238,223 @@ describe('keepNotified : les abonnements par lesquels Microsoft prévient Leon',
     expect((await rowsOf(connection.id)).size).toBe(0);
   });
 
-  it("une erreur de Microsoft n'arrête ni les autres abonnements ni la relève", async () => {
+  it("une erreur de Microsoft n'arrête ni les autres abonnements ni la relève, et un refus attend le lendemain", async () => {
     const connection = await outlookConnection(inMinutes(60));
     const refused: FakeRoute = { method: 'POST', url: SUBSCRIPTIONS, status: 400, json: {} };
     const fetchImpl = fakeFetch([refused, created(abo('2')), created(abo('3'))]);
 
     await keepNotified(paul, connection, outlookConnector, { fetchImpl, publicUrl: PUBLIC });
 
-    expect([...(await rowsOf(connection.id)).keys()].sort()).toEqual([EVENTS, SENT].sort());
+    const rows = await rowsOf(connection.id);
+    expect([rows.get(SENT)?.id, rows.get(EVENTS)?.id]).toEqual([abo('2'), abo('3')]);
+    // Le refus est gardé un jour, sans secret : rien n'est redemandé avant.
+    expect(rows.get(INBOX)).toMatchObject({ id: expect.stringMatching(/^refus:/), empreinte: '' });
+    expect(rows.get(INBOX)?.minutes).toBeGreaterThan(23 * 60);
+    const idle = fakeFetch([]);
+    await keepNotified(paul, connection, outlookConnector, { fetchImpl: idle, publicUrl: PUBLIC });
+    expect(idle.calls).toHaveLength(0);
+  });
+});
+
+describe('keepNotified : Teams et Teams Chat (0098)', () => {
+  it('Teams Chat suit les conversations et les transcriptions du compte ; des transcriptions fermées à Graph sont redemandées le lendemain, par une création', async () => {
+    const connection = await connectionOf(paul, 'teamschats', inMinutes(60));
+    const closed: FakeRoute = {
+      method: 'POST',
+      url: SUBSCRIPTIONS,
+      status: 403,
+      json: {
+        error: { code: 'Forbidden', innerError: { code: 'GraphAccessToTranscriptsDisabled' } },
+      },
+    };
+    const fetchImpl = fakeFetch([created(abo('conversations')), closed]);
+
+    await keepNotified(paul, connection, teamsChatsConnector, { fetchImpl, publicUrl: PUBLIC });
+
+    const bodies = fetchImpl.calls.map((call) => call.body as Record<string, string>);
+    expect(bodies.map((body) => [body.resource, body.changeType])).toEqual([
+      ['/users/compte-1/chats/getAllMessages', 'created,updated,deleted'],
+      ['users/compte-1/onlineMeetings/getAllTranscripts', 'created'],
+    ]);
+    const transcripts = 'users/compte-1/onlineMeetings/getAllTranscripts';
+    expect((await rowsOf(connection.id)).get(transcripts)?.id).toMatch(/^refus:/);
+
+    // Le lendemain : une création, jamais un renouvellement de la ligne du refus.
+    await adminPool.query(
+      `update abonnements_microsoft set prochain_renouvellement = now() - interval '1 minute'
+        where connection_id = $1 and ressource = $2`,
+      [connection.id, transcripts],
+    );
+    const retry = fakeFetch([created(abo('transcriptions'))]);
+    await keepNotified(paul, connection, teamsChatsConnector, {
+      fetchImpl: retry,
+      publicUrl: PUBLIC,
+    });
+
+    expect(retry.calls.map((call) => call.method)).toEqual(['POST']);
+    expect((await rowsOf(connection.id)).get(transcripts)?.id).toBe(abo('transcriptions'));
+  });
+
+  it("Teams suit chaque canal de la liste du jour, sauf celui qu'un collègue suit déjà, et le reprend s'il ne le renouvelle plus", async () => {
+    const team = await createTestTenant(['Paul', 'Marie']);
+    tenantIds.push(team.tenantId);
+    const [paulBis, marie] = team.members as [TenantContext, TenantContext];
+    const [general, devis] = [`19:general-${mark}@thread.tacv2`, `19:devis-${mark}@thread.tacv2`];
+    const resource = (channel: string) => `/teams/equipe-${mark}/channels/${channel}/messages`;
+    const place = (key: string) => ({ key, parent: `equipe-${mark}`, name: key, origin: {} });
+    const cursor = JSON.stringify({
+      listedAt: new Date().toISOString(),
+      places: [place(general), place(devis)],
+      read: {},
+      pending: null,
+    });
+    const theirs = await connectionOf(marie, 'teams', inMinutes(60));
+    await seedSubscription(theirs.id, resource(general), abo('marie'), false, team.tenantId);
+    const mine = { ...(await connectionOf(paulBis, 'teams', inMinutes(60))), cursor };
+
+    const fetchImpl = fakeFetch([created(abo('devis'))]);
+    await keepNotified(paulBis, mine, teamsConnector, { fetchImpl, publicUrl: PUBLIC });
+
+    expect(fetchImpl.calls.map((call) => (call.body as Record<string, string>).resource)).toEqual([
+      resource(devis),
+    ]);
+    expect([...(await rowsOf(mine.id)).keys()]).toEqual([resource(devis)]);
+
+    // Marie ne le renouvelle plus depuis plus d'une heure (connexion en pause, retirée…) : Paul s'y abonne.
+    await adminPool.query(
+      `update abonnements_microsoft set prochain_renouvellement = now() - interval '2 hours' where id = $1`,
+      [abo('marie')],
+    );
+    const takeover = fakeFetch([created(abo('general'))]);
+    await keepNotified(paulBis, mine, teamsConnector, { fetchImpl: takeover, publicUrl: PUBLIC });
+
+    expect(takeover.calls).toHaveLength(1);
+    expect((await rowsOf(mine.id)).get(resource(general))?.id).toBe(abo('general'));
+  });
+
+  it("ne retire pas l'abonnement qu'un autre a déjà sur un canal : il réessaie dans une heure", async () => {
+    const channel = `19:partage-${mark}@thread.tacv2`;
+    const cursor = JSON.stringify({
+      listedAt: new Date().toISOString(),
+      places: [{ key: channel, parent: `hote-${mark}`, name: 'Partagé', origin: {} }],
+      read: {},
+      pending: null,
+    });
+    const mine = { ...(await connectionOf(paul, 'teams', inMinutes(60))), cursor };
+    const fetchImpl = fakeFetch([
+      {
+        method: 'POST',
+        url: SUBSCRIPTIONS,
+        status: 409,
+        json: {
+          error: { message: 'Subscription Id 7f105c7d-2dc5-4530-97cd-4e7af6534c07 already exists' },
+        },
+      },
+    ]);
+
+    await keepNotified(paul, mine, teamsConnector, { fetchImpl, publicUrl: PUBLIC });
+
+    expect(fetchImpl.calls.map((call) => call.method)).toEqual(['POST']);
+    const row = (await rowsOf(mine.id)).get(`/teams/hote-${mark}/channels/${channel}/messages`);
+    expect(row?.id).toMatch(/^refus:/);
+    expect(row?.minutes).toBeGreaterThan(58);
+    expect(row?.minutes).toBeLessThan(61);
+  });
+});
+
+describe('markNotified et takeSignaled : où Teams a changé (0098)', () => {
+  it("garde le lieu d'une notification Teams au bon secret pour la relève suivante de la connexion, et pour elle seule", async () => {
+    const team = await createTestTenant(['Paul', 'Marie']);
+    tenantIds.push(team.tenantId);
+    const [paulBis, marie] = team.members as [TenantContext, TenantContext];
+    const chats = await connectionOf(paulBis, 'teamschats', inMinutes(60));
+    const mail = await connectionOf(paulBis, 'outlook', inMinutes(60));
+    await seedSubscription(
+      chats.id,
+      '/users/compte-1/chats/getAllMessages',
+      abo('chats'),
+      false,
+      team.tenantId,
+    );
+    await seedSubscription(mail.id, INBOX, abo('mail'), false, team.tenantId);
+    const chat = `19:${mark}@thread.v2`;
+    const notice = (id: string, resource: string, clientState = `secret-${id}`) => ({
+      subscriptionId: id,
+      clientState,
+      resource,
+    });
+
+    const due = await markNotified([
+      notice(abo('chats'), `chats('${chat}')/messages('1')`),
+      notice(abo('chats'), `chats('${chat}')/messages('2')`),
+      notice(abo('chats'), `chats('19:autre@thread.v2')/messages('3')`, 'secret-faux'),
+      notice(abo('mail'), `chats('19:courrier@thread.v2')/messages('4')`),
+    ]);
+
+    expect(due).toBe(2);
+    expect(await takeSignaled(marie, chats)).toEqual([]);
+    expect(await takeSignaled(paulBis, mail)).toEqual([]);
+    expect(await takeSignaled(paulBis, chats)).toEqual([chat]);
+    expect(await takeSignaled(paulBis, chats)).toEqual([]);
+  });
+
+  it('des notifications perdues font tout relire, et renouveler l’abonnement', async () => {
+    const chats = await connectionOf(paul, 'teamschats', inMinutes(60));
+    await seedSubscription(chats.id, '/users/compte-1/chats/getAllMessages', abo('perdues'), false);
+
+    await markNotified([
+      {
+        subscriptionId: abo('perdues'),
+        clientState: `secret-${abo('perdues')}`,
+        lifecycleEvent: 'missed',
+      },
+    ]);
+
+    expect(await takeSignaled(paul, chats)).toEqual([EVERYWHERE]);
+    expect(
+      (await rowsOf(chats.id)).get('/users/compte-1/chats/getAllMessages')?.minutes,
+    ).toBeLessThan(0.1);
+  });
+});
+
+describe('runConnectorSync : une relève Teams Chat relit tout de suite la conversation signalée', () => {
+  it('lit la seule conversation signalée, sans relire la liste, et la retire des signaux', async () => {
+    const connection = await connectionOf(paul, 'teamschats', inMinutes(60));
+    const chat = `19:${mark}@thread.v2`;
+    const before = new Date(Date.now() - HOUR).toISOString();
+    const cursor = JSON.stringify({
+      listedAt: before,
+      places: [{ key: chat, parent: null, name: 'Chantier', origin: { chat: 'Chantier' } }],
+      read: { [chat]: before },
+      pending: null,
+    });
+    await adminPool.query(
+      'update connections set next_sync_at = now(), cursor = $2 where id = $1',
+      [connection.id, cursor],
+    );
+    await adminPool.query(
+      'insert into lieux_signales (tenant_id, connection_id, cle) values ($1, $2, $3)',
+      [paul.tenantId, connection.id, chat],
+    );
+    const messages = `${GRAPH}/chats/${encodeURIComponent(chat)}/messages`;
+    const fetchImpl = fakeFetch([{ url: messages, json: { value: [] } }]);
+    const job = { connectionId: connection.id, tenantId: paul.tenantId, userId: paul.userId };
+
+    const result = await runConnectorSync(job, {
+      getConnector: () => teamsChatsConnector,
+      fetchImpl,
+      publicUrl: 'http://localhost:3000',
+    });
+
+    expect(result).toBe('ok');
+    expect(fetchImpl.calls.map((call) => call.url.split('?')[0])).toEqual([messages]);
+    const { rows } = await adminPool.query<{ cursor: string; signals: number }>(
+      `select cursor, (select count(*)::int from lieux_signales where connection_id = $1) as signals
+         from connections where id = $1`,
+      [connection.id],
+    );
+    expect(rows[0]?.signals).toBe(0);
+    expect(JSON.parse(rows[0]?.cursor ?? 'null').signaled).toEqual([]);
   });
 });
 

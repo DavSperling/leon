@@ -111,6 +111,10 @@ const LOCAL_TOOLS = new Set([
   'EnterPlanMode',
   'KillShell',
   'BashOutput',
+  // Des accusés courts, sans texte d'ailleurs (décision d'Amos du 23/11, D36). SendMessage n'en est pas : la réponse
+  // d'une autre session entre en tour injecté (T43) sans que rien ne juge ce qu'elle a lu.
+  'SubagentHandback',
+  'SendUserFile',
   'ToolSearch',
   'Skill',
   'AskUserQuestion', // la réponse est celle de l'utilisateur

@@ -124,8 +124,13 @@ export type Connector<Config> = {
   // Le bouton passe par Pipedream Connect (pipedream.ts) : `app` est le nom de l'appli chez Pipedream.
   // La configuration est alors PipedreamConfigSchema, et chaque requête passe par son proxy.
   pipedream?: { app: string };
+  // Microsoft Graph prévient Leon de chaque changement de ces ressources, et la relève suit tout de suite
+  // (microsoft-notifications.ts).
+  watch?: readonly GraphWatch[];
 };
 export type AnyConnector = Connector<Record<string, unknown>>;
+// `resource` : le chemin suivi, ex. « /me/mailFolders('inbox')/messages » ; `changeType` : « created », « updated »…
+export type GraphWatch = { resource: string; changeType: string };
 
 // La partie publique d'un connecteur, lue par l'interface (aucun code serveur).
 export type CatalogField = {

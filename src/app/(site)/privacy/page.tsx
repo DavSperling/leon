@@ -149,7 +149,9 @@ const SECTIONS: LegalSection[] = [
           Today, Leon imports the email in your inbox and sent items, with details such as sender,
           recipients, subject and date, and your calendar events, except those marked personal,
           private or confidential. It does not send, change or delete anything in your Microsoft
-          account. We will update this policy before it does.
+          account. We will update this policy before it does. Microsoft alerts Leon as soon as email
+          arrives, you send email or your calendar changes, so that Leon imports it right away;
+          these alerts contain no content.
         </p>
         <p>
           Leon uses this data in the same way and within the same limits as data from Google,

@@ -19,6 +19,7 @@ import {
 } from './connections';
 import { ConnectorAuthError, ConnectorHttpError } from './http';
 import { ingestConnectorItems, removeConnectorItems, removeConnectorTurns } from './ingest-items';
+import { keepNotified } from './microsoft-notifications';
 import { normalizeItem } from './normalize';
 import { ensureFreshTokens, OAuthRefusedError } from './oauth';
 import { connectorHttp } from './pipedream';
@@ -32,6 +33,7 @@ export type SyncDeps = {
   getConnector: (id: ProviderId) => AnyConnector | null;
   fetchImpl?: typeof fetch; // tests
   sleep?: (ms: number) => Promise<void>; // tests
+  publicUrl?: string; // tests : l'adresse de Leon que Microsoft appelle
 };
 export type SyncResult = 'skipped' | 'ok' | 'auth_error' | 'error';
 
@@ -252,6 +254,8 @@ export async function runConnectorSync(job: ConnectorSyncJob, deps: SyncDeps): P
   }
   if (again === 'lost') return 'skipped';
   await rememberAccountKey(ctx, fresh, deps, ready);
+  // Les abonnements par lesquels Microsoft prévient Leon dès que quelque chose arrive, sous la même réservation.
+  await keepNotified(ctx, fresh, ready.connector, deps);
   await finishSync(ctx, connection.id, connection.lockedAt, { kind: 'ok', again });
   // La relève d'une boîte a pu apporter un mail qui attend une réponse : un passage de l'agent « Brouillons de
   // réponse » pour qui l'a branchée, si elle lui a dit oui.

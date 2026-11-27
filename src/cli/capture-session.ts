@@ -37,7 +37,12 @@ import { dirname, isAbsolute, join, resolve, sep } from 'node:path';
 import { z } from 'zod';
 import { parseClaudeCodeSession } from '../capture/claude-code';
 import { extractBackstage } from '../capture/session-backstage';
-import { extractClaudeCodeFacts, isExternalWorkflowAgent } from '../capture/session-facts';
+import {
+  type AgentActions,
+  extractAgentActions,
+  extractClaudeCodeFacts,
+  isExternalWorkflowAgent,
+} from '../capture/session-facts';
 import type { Turn } from '../capture/turn';
 import type { Outil } from './hook-commands';
 import {
@@ -220,11 +225,21 @@ async function capture(stdin: string, deps: CaptureDeps): Promise<void> {
       dirs: root === null ? [start] : [start, root],
       url: deps.mcpUrl,
     });
-    // Après leonMcp : les agents d'un run se jugent à la lecture, par la règle de la session.
-    const workflows = await loadWorkflowRuns(input.transcript_path, content, deps, (agent) =>
-      isExternalWorkflowAgent(agent, leonMcp, subagents),
+    // Après leonMcp : les agents d'un run se jugent à la lecture, par la règle de la session. Chacun est aussi relevé
+    // pour `commandes_agents` ; seul son relevé reste en mémoire, jamais le contenu du run.
+    const workflowAgents: AgentActions[] = [];
+    const workflows = await loadWorkflowRuns(input.transcript_path, content, deps, (agent) => {
+      workflowAgents.push(extractAgentActions(agent));
+      return isExternalWorkflowAgent(agent, leonMcp, subagents);
+    });
+    const faits = extractClaudeCodeFacts(
+      content,
+      root,
+      leonMcp,
+      subagents,
+      workflows,
+      workflowAgents,
     );
-    const faits = extractClaudeCodeFacts(content, root, leonMcp, subagents, workflows);
     const source = { content, root, fin: true, faits };
     if (!(await sendSessionFacts(session, source, { dryRun: false, projectKey }, deps))) {
       warn(FACTS_REFUSED_MESSAGE);

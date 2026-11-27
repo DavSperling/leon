@@ -10,7 +10,7 @@ import { withTenant } from '@/server/db/with-tenant';
 import type { Llm } from '@/server/llm/llm';
 import { createReferenceFilter } from '@/server/llm/references';
 import { textArray } from '@/server/search/filters-sql';
-import { ABOUT_MAX_CHARS, readAbout } from './about';
+import { ABOUT_MAX_CHARS, readAbout, readLocale } from './about';
 import { gatherAboutMaterial } from './about-material';
 import { buildAboutPrompt } from './about-prompt';
 import { accountIsGone } from './briefings';
@@ -86,6 +86,8 @@ export async function proposeAbout(
     material,
     await readOnboardingMember(ctx),
     organization?.name ?? '',
+    // dans la langue qu'elle a choisie pour son compte, quand elle en a choisi une
+    await readLocale(ctx.userId),
   );
   const text = await writeText(deps.llm, prompt);
   // L'appel au modèle dure jusqu'à 120 s : un compte supprimé entre-temps ne garde pas de texte écrit d'après ses sources.

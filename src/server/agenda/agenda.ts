@@ -2,6 +2,7 @@ import { and, eq, sql } from 'drizzle-orm';
 import type { SourceKind } from '@/capture/turn';
 import { byStart, parisTime, type RendezVous, type StoredRendezVous, weekDays } from '@/lib/agenda';
 import type { TenantContext } from '@/server/auth/tenant-context';
+import { readLocale } from '@/server/briefing/about';
 import { accountIsGone } from '@/server/briefing/briefings';
 import { db } from '@/server/db/client';
 import { agendas } from '@/server/db/schema/search';
@@ -139,6 +140,9 @@ export type Week = { days: string[]; rendezVous: RendezVous[]; preparedAt: Date 
 // La semaine de Paris qui contient `now` : les réunions Outlook, puis les rendez-vous trouvés dans les e-mails dont
 // la personne voit encore la source. Un rendez-vous des e-mails à la même heure et au même titre qu'une réunion
 // Outlook (son invitation) n'est montré qu'une fois.
+// shortcut: un titre écrit dans la langue de son compte (agenda-prompt.ts) n'est plus celui d'une réunion Outlook
+// d'une autre langue, et son invitation se montre alors une seconde fois ; à rapprocher par l'heure et l'invitation si
+// cela se voit.
 export async function readWeek(ctx: TenantContext, now: Date = new Date()): Promise<Week> {
   const days = weekDays(now);
   return withTenant(ctx, async (tx) => {
@@ -244,6 +248,9 @@ export async function refreshAgenda(
     );
     return;
   }
+  // Les titres s'écrivent dans la langue qu'elle a choisie pour son compte, quand elle en a choisi une. Lue avant de
+  // réserver : une lecture en panne ne prend pas un créneau du jour.
+  const locale = await readLocale(ctx.userId);
   const { rows } = await db.execute<{ ok: boolean }>(
     sql`select reserver_agenda(${ctx.userId}, ${AGENDA_DAILY_CAP}) as ok`,
   );
@@ -256,7 +263,7 @@ export async function refreshAgenda(
     first: days[0] as string,
     last: weekDays(new Date(now.getTime() + 7 * DAY_MS))[6] as string,
   };
-  const prompt = buildAgendaPrompt(mails, period);
+  const prompt = buildAgendaPrompt(mails, period, locale);
   let answer = '';
   try {
     for await (const delta of deps.llm.streamText({

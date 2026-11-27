@@ -297,6 +297,28 @@ describe('proposeAbout', () => {
     );
     expect(prompt).toContain('<espace nom="Organisation de test"/>');
   });
+
+  it('demande le texte dans la langue de son compte quand elle en a choisi une, sinon dans celle de ses sources, comme avant', async () => {
+    const [alice, bob] = await newPair();
+    await seedPeople(alice, bob);
+    await adminDb.update(users).set({ locale: 'fr' }).where(eq(users.id, bob.userId));
+    const llm = createFakeLlm({ texts: ['Texte.'] });
+
+    await proposeAbout(alice, { llm });
+    await proposeAbout(bob, { llm });
+
+    const [without, french] = llm.calls.map((call) =>
+      call.messages.map((message) => message.content).join('\n'),
+    );
+    expect(without?.startsWith(`${DATA_GUARD_LINE}\n`)).toBe(true);
+    expect(llm.calls[0]?.system).toContain('- Dans la langue de la majorité de ses sources, ');
+    expect(
+      french?.startsWith(
+        `Écris ta réponse en français : c'est la langue de son compte.\n${DATA_GUARD_LINE}\n`,
+      ),
+    ).toBe(true);
+    expect(llm.calls[1]?.system).toContain("- Dans la langue que le message t'indique en tête, ");
+  });
 });
 
 describe('gatherAboutMaterial', () => {

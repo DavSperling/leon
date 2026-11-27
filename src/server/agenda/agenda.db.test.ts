@@ -151,6 +151,25 @@ describe('refreshAgenda', () => {
     ]);
   });
 
+  it('demande les titres dans la langue de son compte quand elle en a choisi une, sinon dans celle du mail, comme avant', async () => {
+    await mail(alice, 'Visio mardi 10 h.');
+    const before = createFakeLlm({ texts: [''] });
+    await refreshAgenda(alice, { llm: before, now });
+    expect(before.calls[0]?.system).toContain('- titre : quelques mots, dans la langue du mail. ');
+
+    await mail(alice, 'Nouveau : déjeuner vendredi midi.');
+    await adminPool.query('update "user" set locale = $2 where id = $1', [alice.userId, 'fr']);
+    const after = createFakeLlm({ texts: [''] });
+    await refreshAgenda(alice, { llm: after, now: new Date(now.getTime() + 60_000) });
+    // Alice sert aux autres tests du fichier : sa langue repart avant toute attente.
+    await adminPool.query('update "user" set locale = null where id = $1', [alice.userId]);
+
+    expect(after.calls[0]?.system).toContain(
+      "- titre : quelques mots, en français : c'est la langue de son compte, ",
+    );
+    expect(after.calls[0]?.messages[0]?.content.startsWith(DATA_GUARD_LINE)).toBe(true);
+  });
+
   it('ne rappelle pas le modèle sans e-mail arrivé depuis, ni passé le plafond du jour', async () => {
     await mail(alice, 'Visio mardi 10 h.');
     await refreshAgenda(alice, { llm: createFakeLlm({ texts: [''] }), now });

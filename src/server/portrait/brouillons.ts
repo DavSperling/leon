@@ -159,8 +159,9 @@ export async function writeBrouillons(
     ...(reponses ? await readWaitingMails(ctx, now, resting) : []),
   ].slice(0, WAITING_MAX);
   if (mails.length === 0 && retouches.length === 0) return 0;
+  // Son nom, et la langue qu'elle a choisie pour son compte (0094) : Leon lui pose ses questions dans cette langue.
   const [person] = await db
-    .select({ name: users.name })
+    .select({ name: users.name, locale: users.locale })
     .from(users)
     .where(eq(users.id, ctx.userId));
   // Ses mails écrits de sa main : le brouillon y prend ses exemples. Sans mail à préparer, rien à lire.
@@ -207,6 +208,7 @@ export async function writeBrouillons(
         indications: owed?.indications ?? undefined,
         relance,
         voulue,
+        locale: person?.locale,
       });
       let answer = '';
       try {

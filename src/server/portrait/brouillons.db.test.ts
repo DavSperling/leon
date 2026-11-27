@@ -291,6 +291,29 @@ describe('writeBrouillons', () => {
     expect(await counted(julie)).toBe(1);
   });
 
+  it('demande ses questions dans la langue de son compte quand elle en a choisi une, sinon dans celle du mail, comme avant', async () => {
+    const julie = await julieWaiting('Devis 2027');
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    const before = answering(ask());
+    await writeBrouillons(julie, { llm: before.llm });
+    expect(before.calls[0]?.system).toContain(
+      '- Adresse-toi directement à elle, dans la langue du mail reçu.',
+    );
+
+    await adminDb.update(users).set({ locale: 'en' }).where(eq(users.id, julie.userId));
+    await mailThread(julie, 'Facture', [received(ago(HOUR / 2), 'Bonjour Julie, et la facture ?')]);
+    const after = answering(ask());
+    await writeBrouillons(julie, { llm: after.llm });
+
+    expect(after.calls).toHaveLength(1);
+    expect(after.calls[0]?.system).toContain(
+      "- Adresse-toi directement à elle, en anglais : c'est la langue de son compte, ",
+    );
+    // Le brouillon, lui, reste dans la langue du mail reçu, et le message ne dit rien de sa langue.
+    expect(after.calls[0]?.system).toContain('- Écris dans la langue du mail reçu, ');
+    expect(after.calls[0]?.messages[0]?.content.startsWith(DATA_GUARD_LINE)).toBe(true);
+  });
+
   it('n’appelle jamais deux fois le modèle pour le même mail : un second passage ne demande que le mail arrivé depuis', async () => {
     const julie = await julieWaiting('Devis 2027');
     vi.spyOn(console, 'info').mockImplementation(() => {});

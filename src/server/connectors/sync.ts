@@ -266,8 +266,11 @@ export async function runConnectorSync(job: ConnectorSyncJob, deps: SyncDeps): P
   await keepNotified(ctx, fresh, ready.connector, deps);
   await finishSync(ctx, connection.id, connection.lockedAt, { kind: 'ok', again });
   // La relève d'une boîte a pu apporter un mail qui attend une réponse : un passage de l'agent « Brouillons de
-  // réponse » pour qui l'a branchée, si elle lui a dit oui.
-  if (MAIL_KINDS.some((kind) => kind === connection.provider)) await requestBrouillons(ctx);
+  // réponse » pour qui l'a branchée, si elle lui a dit oui. Pas tant qu'il reste à lire (« soon ») : Outlook lit la
+  // boîte de réception avant les éléments envoyés, et un mail auquel elle a déjà répondu passerait pour le dernier de
+  // son fil tant que sa réponse n'est pas relevée.
+  if (again !== 'soon' && MAIL_KINDS.some((kind) => kind === connection.provider))
+    await requestBrouillons(ctx);
   return 'ok';
 }
 

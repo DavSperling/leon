@@ -218,17 +218,18 @@ describe('runConnectorSync : la fin de la relève d’une boîte', () => {
     },
   );
 
-  it('la demande aussi quand il reste à lire, et même sans rien de neuf', async () => {
+  it('ne la demande pas tant qu’il reste à lire (la réponse à un mail lu peut manquer encore), puis même sans rien de neuf', async () => {
     const id = await seedConnection(paul, { provider: 'gmail', nextSyncAt: DUE });
     const connector = fakeConnector({ items: SYNC_ITEMS_MAX + 1, pageSize: 100 });
 
     await run(id, connector);
+    expect(requestBrouillons).not.toHaveBeenCalled();
     await makeDue(id);
     await run(id, connector);
     await makeDue(id);
     await run(id, connector);
 
-    expect(requestBrouillons).toHaveBeenCalledTimes(3);
+    expect(requestBrouillons).toHaveBeenCalledTimes(2);
   });
 
   it('ne demande rien pour un autre outil, ni quand la relève échoue', async () => {

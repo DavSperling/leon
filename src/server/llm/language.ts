@@ -4,6 +4,12 @@
 // en clair, en tête du message, corrige. Le nom rendu est celui que le prompt écrit (« Écris en anglais »).
 // Module pur.
 
+import type { Locale } from '@/i18n/request';
+
+// Les langues de l'écran, du nom que le prompt leur donne : celle qu'une personne a choisie pour son compte (0094),
+// dans laquelle s'écrit ce que le modèle écrit pour elle, quelle que soit la langue de sa matière.
+export const ACCOUNT_LANGUAGES: Record<Locale, string> = { fr: 'français', en: 'anglais' };
+
 // Une écriture à elle seule dit la langue.
 const SCRIPTS: Array<[RegExp, string]> = [
   [/\p{Script=Hebrew}/gu, 'hébreu'],

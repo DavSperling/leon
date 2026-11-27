@@ -6,6 +6,7 @@ import {
   EventsSchema,
   JoinedTeamsSchema,
   MeetingsSchema,
+  MembersSchema,
   MeSchema,
   MessagesSchema,
   RootsSchema,
@@ -57,6 +58,9 @@ export function teamsClient({ accessToken }: { accessToken: string }, http: Conn
     // Seuls id, displayName, description, isArchived et tenantId y sont remplis : la visibilité se lit à part.
     teams: () => all(get(`${GRAPH}/me/joinedTeams`), JoinedTeamsSchema),
 
+    // Les équipes de la personne, et celles qui hébergent un canal partagé dont elle est membre directe.
+    associatedTeams: () => all(get(`${GRAPH}/me/teamwork/associatedTeams`), JoinedTeamsSchema),
+
     async visibility(teamId: string): Promise<string | null> {
       const team = await http.json(
         get(`${GRAPH}/teams/${path(teamId)}`, { $select: 'visibility' }),
@@ -65,18 +69,30 @@ export function teamsClient({ accessToken }: { accessToken: string }, http: Conn
       return team.visibility ?? null;
     },
 
-    // Sans cet en-tête, un canal partagé arrive comme « unknownFutureValue ».
-    channels: (teamId: string) =>
+    // Les canaux de l'équipe que la personne voit, et ceux partagés avec l'équipe. Sans cet en-tête, un canal partagé
+    // arrive comme « unknownFutureValue ».
+    allChannels: (teamId: string) =>
       all(
         {
-          url: `${GRAPH}/teams/${path(teamId)}/channels`,
+          url: `${GRAPH}/teams/${path(teamId)}/allChannels`,
           headers: { ...headers, prefer: 'include-unknown-enum-members' },
         },
         ChannelsSchema,
       ),
 
+    // Tous les membres d'un canal, ceux d'une équipe avec qui il est partagé compris.
+    channelMembers: (teamId: string, channelId: string) =>
+      all(
+        get(`${GRAPH}/teams/${path(teamId)}/channels/${path(channelId)}/allMembers`),
+        MembersSchema,
+      ),
+
     chats: () =>
       all(get(`${GRAPH}/me/chats`, { $top: PAGE_SIZE, $expand: 'members' }), ChatsSchema),
+
+    // Tous les membres d'une conversation, avec le début de l'historique de chacun.
+    chatMembers: (chatId: string) =>
+      all(get(`${GRAPH}/chats/${path(chatId)}/members`), MembersSchema),
 
     // Les messages d'un canal avec leurs réponses, du fil le plus récemment animé au moins récent.
     roots(link: string | null, teamId: string, channelId: string) {

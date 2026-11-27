@@ -104,7 +104,9 @@ function ChoiceTile({
       <span className="tl__pic">{picture}</span>
       <span className="tl__id">
         <span className="tl__name">{item.label}</span>
-        <span className="tl__sub">{item.privateRaw ? tt('private') : tt('shared')}</span>
+        <span className="tl__sub">
+          {item.memberAccess ? tt('members') : item.privateRaw ? tt('private') : tt('shared')}
+        </span>
       </span>
       <span
         aria-hidden="true"

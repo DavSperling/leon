@@ -1,13 +1,21 @@
 import { htmlToText, mergeSpeakerTurns } from '../normalize';
-import type { ConnectorItem, ConnectorTurn } from '../types';
+import type { Audience, AudienceMember, ConnectorItem, ConnectorTurn } from '../types';
 import type { Place } from './daily';
-import type { Event, Message, Root, Transcript } from './schemas';
+import type { Event, Member, Message, Root, Transcript } from './schemas';
 
 // De la réponse de Graph à des éléments du socle. Chaque message est un tour `participant` daté de son envoi. Un fil
 // de canal regroupe un message et ses réponses ; une conversation privée se découpe par jour (UTC), comme Slack.
 // Graph ne donne pas l'adresse de l'auteur, seulement son nom.
 
 const iso = (value: string) => new Date(value).toISOString();
+
+// Un membre d'une conversation ou d'un canal, tel que Leon le retrouve dans l'organisation (0097) : son adresse, son
+// identifiant Microsoft, et le début de l'historique qu'il voit.
+export const memberOf = (member: Member): AudienceMember => ({
+  email: member.email ?? null,
+  id: member.userId ?? null,
+  since: member.visibleHistoryStartDateTime ?? null,
+});
 
 // Un identifiant de message n'est unique que dans son canal ou sa conversation : le tour porte les deux, pour que
 // `removedTurns` le retrouve dans tout le compte.
@@ -65,6 +73,7 @@ export function threadItem(place: Place, root: Root, replies: Message[]): Connec
     updatedAt: last.ts,
     origin: place.origin,
     turns,
+    audience: place.key,
   };
 }
 
@@ -89,6 +98,7 @@ export function chatDays(place: Place, messages: Message[]): ConnectorItem[] {
         updatedAt: turns.at(-1)?.ts ?? `${day}T00:00:00.000Z`,
         origin: place.origin,
         turns,
+        audience: place.key,
       };
     })
     .sort((a, b) => Date.parse(a.updatedAt) - Date.parse(b.updatedAt));
@@ -143,6 +153,15 @@ function speeches(vtt: string, startMs: number, people: Person[]): ConnectorTurn
   return mergeSpeakerTurns(turns);
 }
 
+// Qui voit une transcription : l'organisateur et les invités de la réunion, par leur adresse (l'agenda n'en dit pas
+// plus). Chaque transcription est son propre lieu.
+export const transcriptAudience = (event: Event, transcript: Transcript): Audience => ({
+  key: `transcript:${transcript.id}`,
+  members: peopleOf(event).flatMap((person) =>
+    person.address ? [{ email: person.address, id: null }] : [],
+  ),
+});
+
 // Une transcription devient un élément de nature « reunion », comme celles de Fathom ou tl;dv. Son identifiant est
 // unique dans tout Graph. Un texte sans aucune prise de parole datée (format sans nom inconnu) est gardé d'un bloc.
 export function transcriptItem(
@@ -169,5 +188,6 @@ export function transcriptItem(
     updatedAt: new Date(Date.parse(transcript.endDateTime ?? start)).toISOString(),
     origin: names.length > 0 ? { participants: names.join(', ') } : {},
     turns,
+    audience: `transcript:${transcript.id}`,
   };
 }

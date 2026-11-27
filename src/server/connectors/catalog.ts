@@ -63,6 +63,7 @@ export type CatalogItem = Omit<CatalogEntry, 'keyAccepted' | 'en'> & {
   family: ProviderFamily;
   available: boolean; // le connecteur existe (sinon « bientôt »)
   privateRaw: boolean; // le texte lu reste privé à qui branche (boîte mail, Drive, Slack)
+  memberAccess: boolean; // chaque élément est visible des membres de son lieu chez l'outil (Teams), sans partage
   // Le connecteur a un bouton et son appli (ou Pipedream) est configurée sur ce serveur.
   oauthReady: boolean;
   keyAccepted: boolean; // la clé collée reste possible
@@ -160,6 +161,7 @@ export function catalogItem(
     family: PROVIDER_FAMILIES[entry.id],
     available: connector !== null,
     privateRaw: connector?.privateRaw === true,
+    memberAccess: connector?.memberAccess === true,
     oauthReady: client !== null || (connector?.pipedream !== undefined && pipedreamEnv() !== null),
     keyAccepted: entry.keyAccepted ?? true,
     oauthPreFields: spec?.preFields ?? [],

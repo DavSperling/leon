@@ -55,9 +55,18 @@ type CardConn = Pick<
 >;
 
 /** Qui voit ce qu'une connexion relève : son choix, sinon celui de l'outil (privé à qui branche, ou l'équipe).
- *  GitHub : toujours l'équipe (les dépôts d'équipe, choisis par un administrateur). */
-export const scopeOf = (c: Pick<CardConn, 'provider' | 'partage'>, privateRaw: boolean): string =>
-  c.provider === 'github' ? 'equipe' : (c.partage ?? (privateRaw ? 'moi' : 'equipe'));
+ *  GitHub : toujours l'équipe (les dépôts d'équipe, choisis par un administrateur). Teams : les membres de chaque
+ *  canal ou conversation (`memberAccess`), sans choix. */
+export const scopeOf = (
+  c: Pick<CardConn, 'provider' | 'partage'>,
+  privateRaw: boolean,
+  memberAccess = false,
+): string =>
+  c.provider === 'github'
+    ? 'equipe'
+    : memberAccess
+      ? 'membres'
+      : (c.partage ?? (privateRaw ? 'moi' : 'equipe'));
 
 /** Ce qui ne va pas sur une connexion, en un mot : arrêtée (créateur parti), déconnectée (refus d'accès : la relève
  *  ne repartira pas seule, `nextSyncAt` nul), erreur de relève (elle réessaie), sinon rien. */

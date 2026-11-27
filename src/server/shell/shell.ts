@@ -79,7 +79,7 @@ const PLAIN = 'aaaaaaceeeeiiiinooooouuuuyy';
 const folded = (column: AnyColumn) => sql`translate(lower(${column}), ${ACCENTS}, ${PLAIN})`;
 
 // Ce que la barre de commande trouve pour quelques lettres : cinq par groupe au plus, les noms qui commencent par ces
-// lettres d'abord. Un outil vient du catalogue (les 42 outils branchables) ; son état se lit sous les droits de la
+// lettres d'abord. Un outil vient du catalogue (les 43 outils branchables) ; son état se lit sous les droits de la
 // personne, comme sa carte sur Connexions : en panne si l'une de ses connexions est en erreur ou arrêtée, en pause si
 // toutes le sont.
 export async function searchShell(ctx: TenantContext, query: string): Promise<ShellFound> {

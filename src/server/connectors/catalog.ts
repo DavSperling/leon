@@ -39,6 +39,7 @@ import { mondayCatalog } from './monday/catalog';
 import { notionCatalog } from './notion/catalog';
 import { redirectUri } from './oauth';
 import { oauthClient } from './oauth-env';
+import { onedriveCatalog } from './onedrive/catalog';
 import { outlookCatalog } from './outlook/catalog';
 import { pipedreamEnv } from './pipedream';
 import { pipedriveCatalog } from './pipedrive/catalog';
@@ -65,7 +66,7 @@ export type CatalogItem = Omit<CatalogEntry, 'keyAccepted' | 'en'> & {
   oauthReady: boolean;
   keyAccepted: boolean; // la clé collée reste possible
   oauthPreFields: string[]; // champs non secrets à remplir avant le clic
-  // Lien d'accord de l'administrateur (Outlook). L'identifiant d'une appli n'est pas un secret ;
+  // Lien d'accord de l'administrateur (Outlook, OneDrive). L'identifiant d'une appli n'est pas un secret ;
   // son secret ne sort jamais d'ici.
   adminConsentUrl: string | null;
 };
@@ -113,6 +114,7 @@ export const CATALOG_ENTRIES: Record<ProviderId, CatalogEntry> = {
   gmail: gmailCatalog,
   drive: driveCatalog,
   slack: slackCatalog,
+  onedrive: onedriveCatalog,
 };
 
 // Les textes de l'entrée dans la langue demandée : l'anglais vient du bloc `en`, tout autre code garde

@@ -50,7 +50,7 @@ export const TOOL_COUNT = Object.keys(PROVIDER_LABELS).length;
 
 export type ToolGroup = { family: ProviderFamily; label: string; tools: ProviderId[] };
 
-/** Les 42 outils branchables, par famille, dans l'ordre de l'écran Connexions. */
+/** Les 43 outils branchables, par famille, dans l'ordre de l'écran Connexions. */
 const groupsOf = (labels: Record<ProviderFamily, string>): ToolGroup[] =>
   PROVIDER_FAMILIES_ORDER.map((family) => ({
     family,
@@ -442,7 +442,7 @@ export const TEAMS: Team[] = [
       },
       {
         title: 'Des règles de confidentialité claires',
-        text: 'Par défaut, ce que lisent les outils branchés est partagé avec l’équipe, sauf une boîte mail, Google Drive et Slack. Les discussions de chacun avec Leon restent à lui ; ses conversations d’IA, ses sessions de code et ses notes peuvent être lues par lui et, sur le site de Leon, par ses managers en remontant.',
+        text: 'Par défaut, ce que lisent les outils branchés est partagé avec l’équipe, sauf une boîte mail, Google Drive, OneDrive et Slack. Les discussions de chacun avec Leon restent à lui ; ses conversations d’IA, ses sessions de code et ses notes peuvent être lues par lui et, sur le site de Leon, par ses managers en remontant.',
       },
     ],
     demo: DEMOS[2] as Demo,
@@ -645,7 +645,7 @@ export const NOT_YET = [
   { title: 'SOC 2 et ISO 27001', text: 'Leon n’a aucune des deux certifications à ce jour.' },
   {
     title: 'Les droits de chaque outil, repris tels quels',
-    text: 'Pour l’instant, ce que lit une connexion est visible par défaut de toute l’équipe, sauf une boîte mail (Outlook, Gmail), Google Drive et Slack, qui peuvent être lus par qui les branche et, sur le site de Leon, par ses managers en remontant.',
+    text: 'Pour l’instant, ce que lit une connexion est visible par défaut de toute l’équipe, sauf une boîte mail (Outlook, Gmail), Google Drive, OneDrive / SharePoint et Slack, qui peuvent être lus par qui les branche et, sur le site de Leon, par ses managers en remontant.',
   },
   { title: 'L’export des données', text: 'Pas encore d’export des données d’un espace.' },
 ] as const;
@@ -686,7 +686,7 @@ export const FAQ = [
   },
   {
     q: 'Qui voit quoi ?',
-    a: 'Par défaut, ce que lit une connexion est visible de toute l’équipe, comme dans un outil partagé, sauf une boîte mail (Outlook, Gmail), Google Drive et Slack, qui peuvent être lus par qui les branche et, sur le site de Leon, par ses managers en remontant. Les conversations captées avec vos assistants d’IA, vos sessions de code et vos notes peuvent être lues par vous et, sur le site de Leon, par vos managers en remontant ; vos discussions avec Leon, par vous seul. Un propriétaire ou un administrateur choisit le manager de chacun : un administrateur peut donc se nommer manager de quelqu’un, ou placer un invité sous lui, et lire alors ce que cette personne ne partage pas.',
+    a: 'Par défaut, ce que lit une connexion est visible de toute l’équipe, comme dans un outil partagé, sauf une boîte mail (Outlook, Gmail), Google Drive, OneDrive / SharePoint et Slack, qui peuvent être lus par qui les branche et, sur le site de Leon, par ses managers en remontant. Les conversations captées avec vos assistants d’IA, vos sessions de code et vos notes peuvent être lues par vous et, sur le site de Leon, par vos managers en remontant ; vos discussions avec Leon, par vous seul. Un propriétaire ou un administrateur choisit le manager de chacun : un administrateur peut donc se nommer manager de quelqu’un, ou placer un invité sous lui, et lire alors ce que cette personne ne partage pas.',
   },
   {
     q: 'Et quand Leon ne sait pas ?',
@@ -770,6 +770,8 @@ export const READS: Record<ProviderId, string> = {
     'Les messages des canaux que votre compte Slack peut voir. Jamais les messages privés ni les conversations de groupe.',
   drive:
     'Documents, présentations et feuilles Google, fichiers PDF, Word, Excel, PowerPoint et texte.',
+  onedrive:
+    'Votre OneDrive et les bibliothèques des sites SharePoint que vous pouvez ouvrir : fichiers PDF, Word, Excel, PowerPoint et texte.',
   granola: 'Les réunions : la transcription, ou le résumé quand il n’y en a pas.',
   fathom:
     'Les réunions que le titulaire de la clé a enregistrées ou reçues en partage : la transcription, ou le résumé à défaut.',
@@ -1164,7 +1166,7 @@ const TEAMS_EN: Team[] = [
       },
       {
         title: 'Clear privacy rules',
-        text: 'By default, content from connections is visible to the team, except email, Google Drive and Slack. Each person’s chats with Leon stay theirs; their AI conversations, coding sessions and notes can be read by them and, on the Leon website, by the managers above them.',
+        text: 'By default, content from connections is visible to the team, except email, Google Drive, OneDrive and Slack. Each person’s chats with Leon stay theirs; their AI conversations, coding sessions and notes can be read by them and, on the Leon website, by the managers above them.',
       },
     ],
     demo: DEMOS_EN[2] as Demo,
@@ -1336,7 +1338,7 @@ const NOT_YET_EN: Twin<typeof NOT_YET> = [
   { title: 'SOC 2 and ISO 27001', text: 'Leon holds neither certification today.' },
   {
     title: 'Mirroring each tool’s own permissions',
-    text: 'For now a connection’s content is shared with the whole team by default, except email (Outlook, Gmail), Google Drive and Slack, which can be read by whoever connects them and, on the Leon website, by the managers above them.',
+    text: 'For now a connection’s content is shared with the whole team by default, except email (Outlook, Gmail), Google Drive, OneDrive / SharePoint and Slack, which can be read by whoever connects them and, on the Leon website, by the managers above them.',
   },
   { title: 'Data export', text: 'No export of a workspace’s data yet.' },
 ];
@@ -1375,7 +1377,7 @@ const FAQ_EN: Twin<typeof FAQ> = [
   },
   {
     q: 'Who can see what?',
-    a: 'By default, content from a connection is shared with the whole team, as in a shared tool, except email (Outlook, Gmail), Google Drive and Slack, which can be read by whoever connects them and, on the Leon website, by the managers above them. AI assistant conversations, coding sessions and notes can be read by their author and, on the Leon website, by the managers above them; chats with Leon, by their author only. An owner or an admin chooses each person’s manager: an admin can therefore make themselves someone’s manager, or place someone they invite under them, and then read what that person doesn’t share.',
+    a: 'By default, content from a connection is shared with the whole team, as in a shared tool, except email (Outlook, Gmail), Google Drive, OneDrive / SharePoint and Slack, which can be read by whoever connects them and, on the Leon website, by the managers above them. AI assistant conversations, coding sessions and notes can be read by their author and, on the Leon website, by the managers above them; chats with Leon, by their author only. An owner or an admin chooses each person’s manager: an admin can therefore make themselves someone’s manager, or place someone they invite under them, and then read what that person doesn’t share.',
   },
   {
     q: 'What happens when Leon doesn’t know?',
@@ -1451,6 +1453,8 @@ const READS_EN: Record<ProviderId, string> = {
     'Messages from the channels your Slack account can see. Never direct messages or group chats.',
   drive:
     'Google documents, presentations and spreadsheets, PDF, Word, Excel, PowerPoint and text files.',
+  onedrive:
+    'Your OneDrive and the document libraries of the SharePoint sites you can open: PDF, Word, Excel, PowerPoint and text files.',
   granola: 'Meetings: the transcript, or the summary when there is none.',
   fathom:
     'Meetings the key’s owner recorded or was shared: the transcript, or the summary when there is none.',

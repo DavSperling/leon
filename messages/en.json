@@ -1591,7 +1591,7 @@
         },
         "microsoft": {
           "title": "Microsoft 365",
-          "text": "Teams, OneDrive and SharePoint. Outlook mail and calendar are already supported."
+          "text": "Teams. Outlook mail and calendar, OneDrive and SharePoint are already supported."
         },
         "files": {
           "title": "Images and scanned PDFs",
@@ -1682,7 +1682,7 @@
         },
         "microsoft": {
           "title": "Microsoft 365",
-          "text": "Teams, OneDrive, SharePoint."
+          "text": "Teams."
         },
         "files": {
           "title": "Images and scanned PDFs",
@@ -1740,14 +1740,14 @@
       "notYetLead": "We would rather you read it here than discover it later.",
       "ctaTitle": "Start with one tool and check the permissions yourself.",
       "ctaText": "Create a workspace, connect a tool, and see exactly what is shared with the team and what isn’t.",
-      "whoLead": "Every item is one or the other. Email, Google Drive and Slack can be read by whoever connects them and, on the Leon website, by the managers above them.",
+      "whoLead": "Every item is one or the other. Email, Google Drive, OneDrive and Slack can be read by whoever connects them and, on the Leon website, by the managers above them.",
       "teamRows": {
         "docs": "Tickets and docs",
         "meetings": "Meeting transcripts and CRM notes",
         "support": "Support conversations and shared inboxes"
       },
       "youRows": {
-        "mail": "Your email, Google Drive and Slack",
+        "mail": "Your email, Google Drive, OneDrive and Slack",
         "ai": "Your AI conversations and coding sessions",
         "chats": "Your chats with Leon and the notes you save"
       },

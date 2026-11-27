@@ -67,6 +67,10 @@ function spawnAndWait(
     });
     child.on('error', fail);
     child.on('close', (code) => done({ code, stdout, stderr }));
+    // L'enfant a pu finir avant d'avoir lu son entrée : EPIPE n'est pas une erreur ici.
+    child.stdin.on('error', (error: NodeJS.ErrnoException) => {
+      if (error.code !== 'EPIPE') fail(error);
+    });
     child.stdin.end(options.input);
   });
 }

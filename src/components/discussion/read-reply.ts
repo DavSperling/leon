@@ -33,6 +33,8 @@ export type ReplyOutcome =
   | { status: 'indisponible'; questionGardee: boolean }
   // 429 : l'utilisateur a déjà deux réponses en cours ; rien n'est écrit.
   | { status: 'occupe' }
+  // Le plafond de questions du jour est atteint ; rien n'est écrit.
+  | { status: 'plafond' }
   // 401 : la session a expiré ; rien n'est écrit.
   | { status: 'session' }
   // 403 : la page est ouverte à une autre adresse que celle réglée pour Leon (BETTER_AUTH_URL) ; rien n'est écrit.
@@ -45,7 +47,7 @@ const CUT: ReplyOutcome = { status: 'coupee' };
 // la remet dans la saisie. « en-cours » et « coupee » ont leur propre chemin (la page relit la discussion).
 export function questionNotWritten(outcome: ReplyOutcome): boolean {
   if (outcome.status === 'indisponible') return !outcome.questionGardee;
-  return ['sans-modele', 'occupe', 'session', 'origine'].includes(outcome.status);
+  return ['sans-modele', 'occupe', 'plafond', 'session', 'origine'].includes(outcome.status);
 }
 
 // La question que « Réessayer » renvoie après un échec : celle qui vient d'échouer, tant qu'elle est encore dans
@@ -105,6 +107,8 @@ export async function readReply(
           return { status: 'finie', content, citations, actions };
         } else if (event.type === 'en-cours') {
           return { status: 'en-cours' };
+        } else if (event.type === 'plafond') {
+          return { status: 'plafond' };
         } else {
           return { status: 'indisponible', questionGardee: event.questionGardee };
         }

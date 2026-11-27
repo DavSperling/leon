@@ -1,12 +1,14 @@
 import { z } from 'zod';
+import { type GoogleConfig, GoogleConfigSchema, googleHttp, googleOAuth } from '../google';
 import { advance, isDone, type Mark, MarkSchema } from '../outlook/cursor';
-import { type PipedreamConfig, PipedreamConfigSchema } from '../pipedream';
 import type { Connector, ConnectorItem, SyncPage } from '../types';
 import { driveClient } from './client';
 import type { DriveFile } from './schemas';
 
-// Google Drive, par Pipedream Connect (pipedream.ts) : l'appli Google est celle de Pipedream (droit
-// `drive` complet) ; chaque requête passe par son proxy et coûte 1 crédit. Doc : voir client.ts.
+// Google Drive par l'appli Google de Leon (google.ts), droit `drive` complet (voir, créer, modifier, partager,
+// supprimer) ; aujourd'hui, Leon ne fait que lire. Sans cette appli, par Pipedream Connect (pipedream.ts) :
+// l'appli Google de Pipedream (droit `drive` complet aussi), et chaque requête passe par son proxy pour
+// 1 crédit. Doc : voir client.ts.
 //
 // Un fichier est une page, avec un seul tour `document` : son texte à sa dernière modification. Leon lit
 // les documents, présentations et feuilles de calcul Google, les fichiers texte ou Markdown, et les PDF,
@@ -55,16 +57,17 @@ function fileItem(file: DriveFile, text: string): ConnectorItem | null {
   };
 }
 
-export const driveConnector: Connector<PipedreamConfig> = {
+export const driveConnector: Connector<GoogleConfig> = {
   id: 'drive',
-  configSchema: PipedreamConfigSchema,
+  configSchema: GoogleConfigSchema,
   secretFields: [],
   hosts: () => ['www.googleapis.com'],
+  oauth: googleOAuth('https://www.googleapis.com/auth/drive'),
   pipedream: { app: 'google_drive' },
   privateRaw: true, // Mon Drive mêle travail et documents personnels
 
-  async verify(_config, http) {
-    const { user } = await driveClient(http).about();
+  async verify(config, http) {
+    const { user } = await driveClient(googleHttp(config, http)).about();
     const address = user.emailAddress;
     const key = user.permissionId ? { accountKey: user.permissionId } : {};
     if (user.displayName)
@@ -73,8 +76,8 @@ export const driveConnector: Connector<PipedreamConfig> = {
   },
 
   // Un fichier à la fois : chaque export est une requête, la position avance après chacun.
-  async *sync(_config, { cursor, since }, http): AsyncGenerator<SyncPage> {
-    const client = driveClient(http);
+  async *sync(config, { cursor, since }, http): AsyncGenerator<SyncPage> {
+    const client = driveClient(googleHttp(config, http));
     let mark = readMark(cursor);
     for await (const files of client.files(mark ? new Date(mark.at) : since)) {
       for (const file of files) {

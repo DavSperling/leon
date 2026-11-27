@@ -7,10 +7,43 @@ import {
   GOOGLE_RATE_LIMIT,
   ResponseTooBigError,
 } from '../http';
-import { type GmailMessage, ListSchema, MessageSchema, ProfileSchema } from './schemas';
+import { headerOf, parseAddress, parseAddressList } from './map';
+import {
+  DraftSchema,
+  type GmailMessage,
+  ListSchema,
+  MessageSchema,
+  ProfileSchema,
+  ThreadSchema,
+} from './schemas';
 
 // Les requêtes vers l'API Gmail. Les messages se lisent par lots (une requête, donc un crédit Pipedream,
 // pour BATCH_SIZE messages) : https://developers.google.com/workspace/gmail/api/guides/batch
+//
+// Les seules écritures (portrait/brouillon-depot.ts) : un brouillon créé dans un fil (replyHeaders, puis createDraft),
+// la réponse de l'agent « Brouillons de réponse » à l'auteur du mail reçu, ou la relance de l'agent « Relances » aux
+// destinataires de son mail resté sans réponse, en « à » et en copie, sans elle ; ce même brouillon supprimé
+// (deleteDraft) quand elle l'écarte dans Leon, ou, pour une relance, quand son fil a bougé avant qu'elle l'envoie ; et
+// ce brouillon envoyé (sendDraft) quand elle clique « Envoyer » dans Leon et le confirme ; et un mail reçu mis à la
+// corbeille (trashMessage) quand elle clique « Supprimer » dans Leon et le confirme. Rien d'autre n'est envoyé, supprimé
+// ni modifié.
+// Doc relue le 23/11/2026 :
+//   https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.threads/get (format=metadata,
+//     metadataHeaders répété, gmail.modify accepté ; ce format ne rend que « IDs, labels, and email headers »)
+//   https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.drafts/create (POST …/drafts, corps
+//     { message: { raw, threadId } }, gmail.modify accepté)
+//   https://developers.google.com/workspace/gmail/api/guides/drafts (raw : un message RFC 2822 en base64url)
+//   https://developers.google.com/workspace/gmail/api/guides/threads (les messages d'un fil sont rendus dans l'ordre ;
+//     pour rester dans le fil : threadId, In-Reply-To et References, et un objet qui correspond)
+//   https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.drafts/delete (DELETE …/drafts/<id>,
+//     suppression immédiate et définitive, gmail.modify accepté)
+//   https://pipedream.com/docs/connect/api-proxy (un POST avec un corps JSON passe ; 30 s au plus)
+// Doc relue le 26/11/2026 :
+//   https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/trash (POST …/messages/<id>/trash,
+//     corps vide, rend le message ; mail.google.com ou gmail.modify)
+//   https://support.google.com/mail/answer/7401 (un mail supprimé reste trente jours à la corbeille, d'où il se reprend)
+// Non vérifié : aucun brouillon réel n'a été créé. La documentation ne dit pas si un nom d'en-tête demandé dans une
+// autre casse est rendu (« Message-Id »), ni si un message à la corbeille reste dans la lecture du fil.
 
 const GMAIL = 'https://gmail.googleapis.com';
 export const LIST_SIZE = 100;
@@ -133,6 +166,102 @@ export function gmailClient(http: ConnectorHttp) {
       }
       if (missing.length > 0) throw new ConnectorHttpError(429, 'Gmail rate limit reached');
       return read;
+    },
+
+    // Ce qu'il faut d'un message pour lui répondre dans son fil (reply.ts) : trois en-têtes, et `elsewhere`, vrai quand
+    // il demande qu'on lui réponde à une autre adresse que celle de son expéditeur (Reply-To : le formulaire de contact
+    // d'un site, une assistante). Le message reçu pour une réponse, son propre mail pour une relance. C'est le fil qui
+    // se lit, sans les corps, pour savoir d'abord s'il attend toujours : Leon ne connaît la boîte que telle qu'à la
+    // dernière relève. Rend null quand il n'y a plus à
+    // répondre : le message n'y est plus, il est à la corbeille ou en indésirable, ou un message plus récent le suit
+    // (elle a écrit depuis Gmail, ou on lui a écrit ; un brouillon ne compte pas). Une seule requête, un crédit ;
+    // jamais rejouée, sauf par le proxy de Pipedream sur un 401, une fois, avec un jeton neuf (pipedream.ts).
+    async replyHeaders(threadId: string, messageId: string) {
+      const { messages } = await http.json(
+        {
+          url: `${GMAIL}/gmail/v1/users/me/threads/${encodeURIComponent(threadId)}`,
+          query: {
+            format: 'metadata',
+            metadataHeaders: ['Message-ID', 'References', 'Subject', 'From', 'Reply-To'],
+          },
+          once: true,
+        },
+        ThreadSchema,
+      );
+      const index = messages?.findIndex((one) => one.id === messageId) ?? -1;
+      const received = messages?.[index];
+      const binned = received?.labelIds?.some((label) => label === 'TRASH' || label === 'SPAM');
+      // Gmail rend les messages d'un fil dans l'ordre (guides/threads) : ce qui suit le message reçu est plus récent.
+      // La date des messages n'est pas lue : la documentation ne la promet pas avec format=metadata.
+      const followed = messages?.slice(index + 1).some((one) => !one.labelIds?.includes('DRAFT'));
+      if (!received || binned || followed) return null;
+      const from = parseAddress(headerOf(received.payload, 'from')).email?.toLowerCase();
+      return {
+        messageId: headerOf(received.payload, 'message-id'),
+        references: headerOf(received.payload, 'references'),
+        subject: headerOf(received.payload, 'subject'),
+        elsewhere: parseAddressList(headerOf(received.payload, 'reply-to')).some(
+          (address) => address.toLowerCase() !== from,
+        ),
+      };
+    },
+
+    // Un brouillon de plus dans le fil : la seule écriture de Leon dans une boîte, jamais un envoi. `raw` : le message
+    // en RFC 2822, en base64url (reply.ts). Jamais rejouée : une réponse perdue a pu créer le brouillon. Seul un 401
+    // l'est, une fois, par le proxy de Pipedream (pipedream.ts) : un accès refusé n'a rien créé. Rend son identifiant.
+    async createDraft(threadId: string, raw: string): Promise<string> {
+      const draft = await http.json(
+        {
+          url: `${GMAIL}/gmail/v1/users/me/drafts`,
+          method: 'POST',
+          body: { message: { threadId, raw } },
+          once: true,
+        },
+        DraftSchema,
+      );
+      return draft.id;
+    },
+
+    // Envoie un brouillon que Leon a déposé (createDraft), tel qu'il est dans Gmail, quand elle clique « Envoyer » dans
+    // Leon et le confirme : le seul envoi de Leon depuis une boîte, et jamais d'un autre brouillon. Jamais rejouée : une
+    // réponse perdue a pu envoyer le mail. Seul un 401 l'est, une fois, par le proxy de Pipedream. Un brouillon qui n'y
+    // est plus (elle l'a envoyé ou supprimé dans Gmail) rend 404 : lève, rien n'est parti.
+    // https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.drafts/send (POST …/drafts/send,
+    // corps { id }, gmail.modify accepté ; rend le message envoyé)
+    async sendDraft(draftId: string): Promise<void> {
+      await http.text({
+        url: `${GMAIL}/gmail/v1/users/me/drafts/send`,
+        method: 'POST',
+        body: { id: draftId },
+        once: true,
+      });
+    },
+
+    // Met à la corbeille de sa boîte un mail qu'elle a reçu, quand elle clique « Supprimer » dans Leon et le confirme
+    // (brouillon-depot.ts, trashMail) : il y reste trente jours, d'où elle peut le reprendre ; jamais une suppression
+    // définitive. Jamais rejouée, sauf un 401 par le proxy de Pipedream ; la refaire ne change rien, le mail y est déjà.
+    async trashMessage(messageId: string): Promise<void> {
+      await http.text({
+        url: `${GMAIL}/gmail/v1/users/me/messages/${encodeURIComponent(messageId)}/trash`,
+        method: 'POST',
+        once: true,
+      });
+    },
+
+    // Supprime un brouillon que Leon a déposé (createDraft), quand elle l'écarte dans Leon ou qu'une relance devient
+    // inutile : la seule suppression de Leon dans une boîte, et jamais d'un autre message. Définitive, sans passer par
+    // la corbeille. Un brouillon qui n'y est plus (elle l'a envoyé ou supprimé) rend 404 : il n'y a plus rien à
+    // retirer. Jamais rejouée, sauf un 401 par le proxy de Pipedream.
+    async deleteDraft(draftId: string): Promise<void> {
+      try {
+        await http.text({
+          url: `${GMAIL}/gmail/v1/users/me/drafts/${encodeURIComponent(draftId)}`,
+          method: 'DELETE',
+          once: true,
+        });
+      } catch (error) {
+        if (!(error instanceof ConnectorHttpError && error.status === 404)) throw error;
+      }
     },
   };
 }

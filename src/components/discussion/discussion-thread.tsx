@@ -51,6 +51,7 @@ type Reply =
   // `retry` : la question que « Réessayer » renvoie (retryQuestion), ou null.
   | { status: 'indisponible'; questionGardee: boolean; retry: string | null }
   | { status: 'occupe'; retry: string | null }
+  | { status: 'plafond' }
   | { status: 'session' }
   | { status: 'origine' }
   | { status: 'sans-modele' };
@@ -308,6 +309,7 @@ export function DiscussionThread({
       text: t('tooMany'),
       action: reply.retry !== null ? retry(reply.retry) : undefined,
     };
+  else if (reply.status === 'plafond') notice = { text: t('dailyCap') };
   else if (reply.status === 'session')
     notice = {
       text: t('sessionExpired'),

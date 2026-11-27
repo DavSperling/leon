@@ -4,14 +4,13 @@ import type { TenantContext } from '@/server/auth/tenant-context';
 import { members, users } from '@/server/db/schema/auth';
 import { briefings } from '@/server/db/schema/search';
 import { createFakeLlm } from '@/server/llm/fake-llm';
-import type { Llm } from '@/server/llm/llm';
-import { LlmError } from '@/server/llm/llm';
+import { LLM_UNREACHABLE, type Llm, LlmError } from '@/server/llm/llm';
 import { DATA_GUARD_LINE } from '@/server/llm/prompt-guard';
 import { adminDb, adminPool } from '@/test/db';
 import { createTestUser } from '@/test/fixtures';
 import { dropTeams, emailOf, newTeam, seedIndexed } from '@/test/seed-indexed';
 import { seedRun } from '@/test/seed-search';
-import { readAbout, saveAbout } from './about';
+import { readAbout, readLocale, saveAbout, saveLocale } from './about';
 import {
   BRIEFING_DAILY_CAP,
   BRIEFING_DISMISSED_MAX,
@@ -235,6 +234,36 @@ describe('refreshBriefing', () => {
 
     expect(llm.calls).toEqual([]);
     expect(await rowOf(gone, seeded.project)).toBeUndefined();
+  });
+
+  // Audit du 26/11, n° 10 : le 19/11, un 401 sur tous les appels épuisait le plafond du jour sans un seul texte.
+  it('fournisseur injoignable : le créneau du jour est rendu ; une réponse vide, payée, reste comptée', async () => {
+    const seeded = await seedProject(alice);
+    const counted = async () =>
+      (
+        await adminPool.query<{ nombre: number }>(
+          "select nombre from points_par_jour where user_id = $1 and jour = (now() at time zone 'UTC')::date",
+          [alice.userId],
+        )
+      ).rows[0]?.nombre ?? 0;
+    const before = await counted();
+    const down: Llm = {
+      // biome-ignore lint/correctness/useYield: un fournisseur injoignable ne rend rien
+      async *streamText() {
+        throw new LlmError(LLM_UNREACHABLE);
+      },
+      runAgent: () => {
+        throw new Error('inutile ici');
+      },
+    };
+
+    await expect(refreshBriefing(alice, seeded.project, { llm: down })).rejects.toThrow(LlmError);
+    expect(await counted()).toBe(before);
+
+    await expect(refreshBriefing(alice, seeded.project, { llm: writes(['  ']) })).rejects.toThrow(
+      LlmError,
+    );
+    expect(await counted()).toBe(before + 1);
   });
 
   it('sur une panne ou une réponse vide du modèle, lève et garde le point précédent', async () => {
@@ -612,5 +641,42 @@ describe('saveAbout', () => {
     await expect(saveAbout(alice, 'x'.repeat(501))).rejects.toThrow();
     await saveAbout(alice, null);
     expect(await readAbout(alice.userId)).toBeNull();
+  });
+});
+
+describe('saveLocale', () => {
+  it('garde la langue avec le compte, périme ses seuls points, et le point suivant s’écrit dans cette langue', async () => {
+    const mine = await seedProject(alice);
+    await refreshBriefing(alice, mine.project, { llm: writes(['Premier point [1].']) });
+    const theirs = await seedProject(bob);
+    await refreshBriefing(bob, theirs.project, { llm: writes(['Point de Bob [1].']) });
+    expect(await readLocale(alice.userId)).toBeNull();
+
+    await saveLocale(alice, 'fr');
+
+    expect(await readLocale(alice.userId)).toBe('fr');
+    expect(await readLocale(bob.userId)).toBeNull();
+    expect((await rowOf(alice, mine.project))?.stale).toBe(true);
+    expect((await rowOf(bob, theirs.project))?.stale).toBe(false);
+
+    // Sans langue choisie, ce point se serait écrit en anglais (rien de reconnu dans si peu de mots) : son compte décide.
+    const llm = writes(['Second point [1].']);
+    await refreshBriefing(alice, mine.project, { llm });
+    const sent = llm.calls[0]?.messages.map((message) => message.content).join('\n') ?? '';
+    expect(sent.startsWith("Écris ta réponse en français : c'est la langue de son compte.\n")).toBe(
+      true,
+    );
+
+    // La même langue choisie de nouveau ne périme rien : un point refait coûte un appel au modèle.
+    await saveLocale(alice, 'fr');
+    expect((await rowOf(alice, mine.project))?.stale).toBe(false);
+    await saveLocale(alice, 'en');
+    expect(await readLocale(alice.userId)).toBe('en');
+    expect((await rowOf(alice, mine.project))?.stale).toBe(true);
+
+    // La base n'accepte que les langues de l'écran.
+    await expect(
+      adminPool.query('update "user" set locale = $2 where id = $1', [alice.userId, 'de']),
+    ).rejects.toThrow();
   });
 });

@@ -293,7 +293,11 @@ export async function setConnectionPaused(
 }
 
 // Une connexion en pause n'a pas d'échéance : « Synchroniser maintenant » ne la réveille pas. Le
-// statut ne bouge pas : une erreur reste affichée jusqu'à ce que le passage dise si elle est réglée.
+// statut ne bouge pas : une erreur reste affichée jusqu'à ce que le passage dise si elle est réglée. Tout membre
+// peut le demander (décision du deuxième jet), mais chaque passage se paie (crédits Pipedream, quotas de l'outil) :
+// pour la connexion d'un autre, pas plus d'un passage par SYNC_NOW_SPACING. Qui peut la mettre en pause (son créateur,
+// un propriétaire, un administrateur) n'attend pas : il vient peut-être de réparer sa clé.
+export const SYNC_NOW_SPACING = '15 minutes';
 export async function requestSyncNow(ctx: TenantContext, id: string): Promise<boolean> {
   const rows = await withTenant(ctx, (tx) =>
     tx
@@ -304,6 +308,8 @@ export async function requestSyncNow(ctx: TenantContext, id: string): Promise<bo
           eq(connections.id, id),
           inArray(connections.status, ['active', 'error']),
           creatorIsMember,
+          sql`(${manageable(ctx)} or ${connections.lastSyncAt} is null
+               or ${connections.lastSyncAt} < now() - ${SYNC_NOW_SPACING}::interval)`,
         ),
       )
       .returning({ id: connections.id }),
@@ -312,8 +318,9 @@ export async function requestSyncNow(ctx: TenantContext, id: string): Promise<bo
 }
 
 // Le créateur choisit qui voit ce que la connexion relève, et tout ce qu'elle a déjà relevé suit (partager_connexion).
-// Faux pour un autre membre, pour un groupe d'une autre organisation, ou pour GitHub : la fin de chaque relève y remet
-// l'accès que donnent les dépôts d'équipe (aligner_sources_github, 0048).
+// Faux pour un autre membre, pour un groupe d'une autre organisation, pour GitHub (la fin de chaque relève y remet
+// l'accès que donnent les dépôts d'équipe, aligner_sources_github, 0048) et pour Teams et Teams Chat (les membres de
+// chaque conversation ou canal décident, 0097).
 export async function shareConnection(
   ctx: TenantContext,
   id: string,
@@ -323,7 +330,8 @@ export async function shareConnection(
   const { rows } = await withTenant(ctx, (tx) =>
     tx.execute<{ shared: boolean }>(
       sql`select partager_connexion(${id}, ${acl}::uuid[]) as shared
-           where not exists (select 1 from connections where id = ${id} and provider = 'github')`,
+           where not exists (select 1 from connections
+                              where id = ${id} and provider in ('github', 'teams', 'teamschats'))`,
     ),
   );
   return rows[0]?.shared === true;

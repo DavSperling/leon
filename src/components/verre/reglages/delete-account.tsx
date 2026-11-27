@@ -17,6 +17,8 @@ type DeletionProps = {
   effects: string[];
   successors?: DeletionInfo['successors']; // présent seulement quand un nouveau propriétaire est obligatoire
   twoFactor: boolean;
+  // Faux pour un compte entré par Google, Microsoft ou le SSO : le serveur demande alors une connexion récente.
+  hasPassword: boolean;
   run: Run;
   dangerZone?: boolean;
 };
@@ -63,6 +65,7 @@ function DeletionPanel({
   effects,
   successors,
   twoFactor,
+  hasPassword,
   run,
 }: DeletionProps & { open: boolean; onOpenChange: (open: boolean) => void }) {
   const t = useTranslations('deleteAccount');
@@ -144,9 +147,13 @@ function DeletionPanel({
             />
           </Field>
         )}
-        <Field label={security('password')} error={at.password ? nb(error) : undefined}>
-          <Input name="password" type="password" autoComplete="current-password" required />
-        </Field>
+        {hasPassword ? (
+          <Field label={security('password')} error={at.password ? nb(error) : undefined}>
+            <Input name="password" type="password" autoComplete="current-password" required />
+          </Field>
+        ) : (
+          <p className="text-label text-muted">{nb(t('noPassword'))}</p>
+        )}
         {twoFactor && (
           <Field label={security('code')} error={at.code ? error : undefined}>
             <Input
@@ -179,9 +186,11 @@ function DeletionPanel({
 export function DeleteAccountSection({
   info,
   twoFactor,
+  hasPassword,
 }: {
   info: DeletionInfo;
   twoFactor: boolean;
+  hasPassword: boolean;
 }) {
   const t = useTranslations('deleteAccount');
   const organization = info.organizationName;
@@ -195,6 +204,7 @@ export function DeleteAccountSection({
       }
       successors={info.needsSuccessor ? info.successors : undefined}
       twoFactor={twoFactor}
+      hasPassword={hasPassword}
       dangerZone
       // Ce que le panneau annonce part avec la demande : si l'équipe a changé entre-temps, le serveur refuse.
       run={(input, successorId) =>
@@ -208,9 +218,11 @@ export function DeleteAccountSection({
 export function DeleteOrganizationSection({
   info,
   twoFactor,
+  hasPassword,
 }: {
   info: DeletionInfo;
   twoFactor: boolean;
+  hasPassword: boolean;
 }) {
   const t = useTranslations('deleteOrganization');
   return (
@@ -221,6 +233,7 @@ export function DeleteOrganizationSection({
         t('effectMembers', { count: info.activeMembers }),
       ]}
       twoFactor={twoFactor}
+      hasPassword={hasPassword}
       run={(input) => deleteOrganizationAction(input)}
     />
   );

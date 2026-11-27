@@ -25,6 +25,95 @@ export const SECTIONS = [
   { id: 'clone', key: 'clone' },
 ] as const;
 
+// « En cas de problème » : ses catégories (problems.groups) et leurs entrées (problems.<clé>), dans l'ordre de la page.
+// Chaque entrée dit ce qu'on voit, pourquoi, comment vérifier et que faire.
+export const PROBLEMS = [
+  { group: 'start', entries: ['findMessage'] },
+  {
+    group: 'install',
+    entries: [
+      'browser',
+      'noTerminal',
+      'platform',
+      'installFailed',
+      'revoked',
+      'interrupted',
+      'notConnected',
+      'envFirst',
+      'wrongAccount',
+      'loginFailed',
+      'loginRefused',
+      'setupStops',
+      'settingsFile',
+      'pageNotAnswered',
+      'updateFailed',
+      'serverNotTold',
+    ],
+  },
+  {
+    group: 'silent',
+    entries: [
+      'envOnly',
+      'disableAllHooks',
+      'trustFolder',
+      'cloneForm',
+      'consentWithdrawn',
+      'noConsentTool',
+      'noReminder',
+    ],
+  },
+  { group: 'server', entries: ['unreachable', 'serverOlder'] },
+  { group: 'capture', entries: ['sessionMissing', 'partialCapture', 'importOld', 'catchUp'] },
+  {
+    group: 'agent',
+    entries: [
+      'agentDoesNotRead',
+      'readFirstStop',
+      'readFirstNoStop',
+      'readFirstLoop',
+      'unrelatedReminder',
+    ],
+  },
+  {
+    group: 'read',
+    entries: [
+      'readingNotAllowed',
+      'sandbox',
+      'permissionPrompts',
+      'readUsage',
+      'noteRefused',
+      'emptyAnswers',
+    ],
+  },
+  {
+    group: 'poor',
+    entries: [
+      'externalSessions',
+      'noSummary',
+      'noModel',
+      'threadState',
+      'threadMissing',
+      'projectKey',
+      'searchMisses',
+      'cutOrMasked',
+      'noReasoning',
+      'notYet',
+      'githubNotRead',
+    ],
+  },
+  {
+    group: 'tools',
+    entries: [
+      'codexApprove',
+      'codexLate',
+      'cursorSilent',
+      'cursorHooks',
+      'cursorLimits',
+      'antigravity',
+    ],
+  },
+] as const;
+
 // Les commandes de lecture du poste (read-commands.ts), dans les deux langues : la CLI est en anglais.
 export const READ_COMMANDS = [
   '~/.leon/bin/leon threads',
@@ -66,7 +155,7 @@ export function documentationMarkdown({
   const settings = createTranslator({ locale, messages, namespace: 'settings' });
   // Les <code> des messages deviennent des `morceaux de code`.
   const md = (key: Parameters<typeof t.markup>[0], values: Record<string, string> = {}) =>
-    t.markup(key, { ...values, code: (chunks) => `\`${chunks}\`` });
+    t.markup(key, { ...values, code: (chunks) => `\`${chunks}\``, b: (chunks) => `**${chunks}**` });
   const title = (key: Parameters<typeof t>[0]) => `### ${t(key)}`;
 
   const server = address ?? `<${t('addressPlaceholder')}>`;
@@ -145,20 +234,20 @@ export function documentationMarkdown({
       md('disconnect.all'),
       md('disconnect.kept'),
     ],
-    problems: [
-      title('problems.browser.title'),
-      md('problems.browser.text', { path: settingsPath(settings, settings('tokensTitle')) }),
-      fence('sh', `~/.leon/bin/leon login --with-token --url ${server}`),
-      md('problems.browser.after'),
-      title('problems.noTerminal.title'),
-      md('problems.noTerminal.text'),
-      title('problems.platform.title'),
-      md('problems.platform.text'),
-      title('problems.revoked.title'),
-      md('problems.revoked.text'),
-      title('problems.interrupted.title'),
-      md('problems.interrupted.text'),
-    ],
+    // un ### par catégorie, un #### par entrée ; « Le navigateur est sur un autre ordinateur » garde sa commande
+    problems: PROBLEMS.flatMap(({ group, entries }) => [
+      title(`problems.groups.${group}`),
+      ...entries.flatMap((key) => [
+        `#### ${t(`problems.${key}.title`)}`,
+        md(`problems.${key}.text`, { path: settingsPath(settings, settings('tokensTitle')) }),
+        ...(key === 'browser'
+          ? [
+              fence('sh', `~/.leon/bin/leon login --with-token --url ${server}`),
+              md('problems.browser.after'),
+            ]
+          : []),
+      ]),
+    ]),
     clone: [
       md('clone.lead'),
       fence('sh', 'pnpm leon setup --depot <clone>'),

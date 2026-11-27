@@ -9,6 +9,9 @@
 // (« Nothing is captured from Codex sessions for now ») : sans `capture_le`, rien n'est capté de cet outil, et le
 // rattrapage ne lit que les fichiers modifiés après cette date. Claude Code n'en a pas besoin : sa capture date du
 // lot 1. Le retrait l'efface, comme le reste.
+// `bac_a_sable` (D40 amendée le 23/11, T67) garde, à part des usages (ce n'en est pas un), la réponse de Claude Code à
+// l'exception du bac à sable : `{ accepte_le }` ou `{ refuse_le }`, jamais redemandée. `leon retirer-crochets --usage
+// passage` l'efface avec la réponse donnée à `passage` (forgetUsage, forgetSandboxAnswer) ; le retrait aussi.
 // Ce que le serveur de la connexion a appris des retraits (POST /api/v1/retrait, T43) s'écrit à part, dans
 // `~/.leon/retraits-serveur.json` : pour chaque outil, la date (`installe_le`) de l'entrée en version 0 dont il a appris
 // le retrait. Le rattrapage, lancé en tâche de fond, l'écrit : il ne réécrit donc jamais accord.json, qu'une commande de
@@ -49,6 +52,13 @@ const EntrySchema = z.object({
   usages: DatedSchema,
   refus: DatedSchema,
   capture_le: z.iso.datetime({ offset: true }).optional().catch(undefined),
+  bac_a_sable: z
+    .union([
+      z.object({ accepte_le: z.iso.datetime({ offset: true }) }),
+      z.object({ refuse_le: z.iso.datetime({ offset: true }) }),
+    ])
+    .optional()
+    .catch(undefined),
 });
 const WithdrawnSchema = z.object({ version: z.literal(0) });
 
@@ -62,6 +72,8 @@ export type FactsConsent = {
   refus: Usage[];
   // L'accord de capture (outils hors Claude Code), absent s'il n'a pas été donné.
   capture_le?: Date;
+  // La réponse à l'exception du bac à sable (Claude Code, T67) : true acceptée, false refusée, absente sans réponse.
+  bac_a_sable?: boolean;
 };
 
 // Ce que disent les commandes quand l'accord est retiré (leon.ts, briefing.ts, uninstall-hooks.ts), juste pour les deux
@@ -108,6 +120,7 @@ export async function factsConsent(home: string, tool: ConsentTool): Promise<Fac
     ),
     refus: USAGES.filter((usage) => entry.data.refus?.[usage] !== undefined),
     ...(entry.data.capture_le ? { capture_le: new Date(entry.data.capture_le) } : {}),
+    ...(entry.data.bac_a_sable ? { bac_a_sable: 'accepte_le' in entry.data.bac_a_sable } : {}),
   };
 }
 
@@ -287,3 +300,58 @@ export const addUsage = (home: string, tool: ConsentTool, usage: Usage, now = ne
 // Un refus (C7 révisé, A16) : l'usage n'est plus proposé, jusqu'au retrait.
 export const addRefusal = (home: string, tool: ConsentTool, usage: Usage, now = new Date()) =>
   addDated(home, tool, 'refus', usage, now);
+
+// (isRecord d'install-hooks.ts ferait de même, mais ce module-là importe celui-ci.)
+const isObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+// Réécrit l'entrée d'un outil par `edit`, sur un fichier lisible où elle est un objet ; rien n'est écrit si rien ne change.
+async function editEntry(
+  home: string,
+  tool: ConsentTool,
+  edit: (entry: Record<string, unknown>) => Record<string, unknown>,
+): Promise<void> {
+  const entries = await readEntries(home);
+  const entry = entries?.[tool];
+  if (!entries || !isObject(entry)) return;
+  const next = edit(entry);
+  if (JSON.stringify(next) !== JSON.stringify(entry)) {
+    await writeEntries(home, { ...entries, [tool]: next });
+  }
+}
+
+// Efface la réponse donnée à un usage, accord ou refus (`leon retirer-crochets --usage passage`, T67), et rien d'autre :
+// ni la version, ni les dates, ni les autres usages. L'usage sera de nouveau proposé.
+export const forgetUsage = (home: string, tool: ConsentTool, usage: Usage) =>
+  editEntry(home, tool, (entry) => {
+    const next = { ...entry };
+    for (const field of ['usages', 'refus'] as const) {
+      const dated = entry[field];
+      if (isObject(dated) && Object.hasOwn(dated, usage)) {
+        const { [usage]: _forgotten, ...rest } = dated;
+        next[field] = rest;
+      }
+    }
+    return next;
+  });
+
+// La réponse de Claude Code à l'exception du bac à sable (T67), datée, à part des usages. Comme addDated : seulement sur
+// un accord qui couvre les gestes.
+export async function recordSandboxAnswer(
+  home: string,
+  accepted: boolean,
+  now = new Date(),
+): Promise<void> {
+  if ((await factsConsent(home, 'claude_code')) === null) {
+    throw new Error('no consent for claude_code to record the sandbox answer in');
+  }
+  const date = now.toISOString();
+  await editEntry(home, 'claude_code', (entry) => ({
+    ...entry,
+    bac_a_sable: accepted ? { accepte_le: date } : { refuse_le: date },
+  }));
+}
+
+// L'efface (`leon retirer-crochets --usage passage`) : la question reviendra avec `passage`.
+export const forgetSandboxAnswer = (home: string) =>
+  editEntry(home, 'claude_code', ({ bac_a_sable: _forgotten, ...rest }) => rest);

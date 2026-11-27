@@ -11,7 +11,7 @@ import { pathExists, readText } from '@/test/contracts/files';
 import en from '../../../../messages/en.json';
 import fr from '../../../../messages/fr.json';
 import { DocumentationPage } from './documentation';
-import { documentationMarkdown } from './documentation-markdown';
+import { documentationMarkdown, PROBLEMS } from './documentation-markdown';
 
 // Les boutons « Copier » que la page pose elle-même (pas ceux de CodeLine) : ce qu'ils copient et confirment.
 const copies: Record<string, unknown>[] = [];
@@ -184,27 +184,71 @@ describe('la page Documentation', () => {
     );
     const codes = codesOf(render(locale));
 
-    const used = codes.flatMap((code) => [...code.matchAll(/(?:^|[\s/])leon (\S+)/g)]);
+    // un mot, pas un chemin : `grep -n leon ~/.gemini/config/hooks.json` ne cite aucune commande
+    const used = codes.flatMap((code) => [...code.matchAll(/(?:^|[\s/])leon ([a-z][a-z-]*)/g)]);
     expect(used.length).toBeGreaterThan(8);
-    for (const [, command] of used) expect(commands, command).toContain(command);
-    // `--bare` et `claude -p` sont ceux de Claude Code, cités par le texte d'accord de `leon setup`.
-    const flags = new Set(codes.flatMap((code) => code.match(/--[a-z-]+/g) ?? []));
+    // « Il n'existe pas de commande leon status ni leon doctor » (problems.findMessage) : cités pour dire qu'ils manquent.
+    const ABSENT = ['status', 'doctor'];
+    for (const word of ABSENT) expect(commands).not.toContain(word);
+    expect(codes.filter((code) => /leon (status|doctor)\b/.test(code))).toEqual([
+      'leon status',
+      'leon doctor',
+    ]);
+    for (const [, command = ''] of used)
+      if (!ABSENT.includes(command)) expect(commands, command).toContain(command);
+    // Les options des autres outils : `--bare` (et `claude -p`) de Claude Code, cités par le texte d'accord de
+    // `leon setup`, `git branch --show-current` et `node --version`. `-rw-------` (les droits d'un fichier) n'en est pas une.
+    const OTHERS = ['--bare', '--show-current', '--version'];
+    const flags = new Set(codes.flatMap((code) => code.match(/(?<![\w-])--[a-z][a-z-]*/g) ?? []));
     expect([...flags].toSorted()).toEqual(
       [
-        '--bare',
+        ...OTHERS,
         '--depot',
         '--oui',
         '--outil',
         '--previous',
+        '--project',
         '--read',
+        '--since',
+        '--tool',
         '--url',
+        '--usage',
         '--with-token',
         '--yes',
       ].toSorted(),
     );
-    for (const flag of flags) if (flag !== '--bare') expect(cli, flag).toContain(flag);
+    for (const flag of flags) if (!OTHERS.includes(flag)) expect(cli, flag).toContain(flag);
     // Les mots seuls, sans « leon » devant, sont aussi des commandes de la CLI.
     for (const word of ['logout', 'retirer-crochets']) expect(commands).toContain(word);
+  });
+
+  // « En cas de problème » : chaque entrée des messages est rendue, dans l'ordre de PROBLEMS, et les deux langues ont les
+  // mêmes catégories et les mêmes entrées.
+  it('rend chaque entrée de « En cas de problème », les mêmes dans les deux langues', () => {
+    const entries = (problems: Record<string, unknown>) =>
+      Object.keys(problems).filter((key) => key !== 'title' && key !== 'groups');
+
+    for (const [, messages] of LOCALES) {
+      const { problems } = messages.site.documentation;
+      expect(Object.keys(problems.groups)).toEqual(PROBLEMS.map(({ group }) => group));
+      expect(entries(problems)).toEqual(PROBLEMS.flatMap(({ entries }) => entries));
+    }
+  });
+
+  // Un renvoi (see “…”, voyez « … ») cite le titre exact d'une autre entrée, ou celui d'une section de la page.
+  it.each(LOCALES)('ses renvois citent des titres qui existent (%s)', (locale, messages) => {
+    const d = messages.site.documentation;
+    const [open, close] = locale === 'en' ? ['see “', '”'] : ['voyez « ', ' »'];
+    const keys = PROBLEMS.flatMap(({ entries }) => entries);
+    const titles = [d.read.title, ...keys.map((key) => d.problems[key].title)];
+    const refs = keys.flatMap((key) => d.problems[key].text.split(open).slice(1));
+
+    expect(refs.length).toBeGreaterThan(8);
+    for (const ref of refs)
+      expect(
+        titles.some((title) => ref.startsWith(`${title}${close}`)),
+        ref,
+      ).toBe(true);
   });
 
   // Les noms que la page donne aux boutons et aux écrans sont ceux de l'application.
@@ -222,6 +266,9 @@ describe('la page Documentation', () => {
         `${s.title} › ${s.tabIntegrations} › ${s.computersTitle} › ${s.revoke}`,
       );
       expect(text).toContain(`${s.title} › ${s.tabIntegrations} › ${s.tokensTitle}`);
+      // « En cas de problème » : les dépôts d'équipe (githubNotRead) et la Mémoire (serverNotTold).
+      expect(text).toContain(`${s.title} › ${s.tabWorkspace} › ${s.depotsTitle}`);
+      expect(text).toContain(`${s.title} › ${s.tabMemory}`);
     },
   );
 

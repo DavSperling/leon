@@ -4,7 +4,7 @@ import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SessionFacts } from '@/capture/session-facts';
 import type { SourceKind } from '@/capture/turn';
 import type { TenantContext } from '@/server/auth/tenant-context';
-import { removeConnectorItems } from '@/server/connectors/ingest-items';
+import { removeConnectorItems, removeConnectorTurns } from '@/server/connectors/ingest-items';
 import { sources } from '@/server/db/schema/memory';
 import { withTenant } from '@/server/db/with-tenant';
 import { addDocument, deleteDocument, deleteFolder } from '@/server/documents/documents';
@@ -618,6 +618,33 @@ describe('une source liée qui disparaît', () => {
     expect(await readVersion(paul, id, 1)).toBeNull();
     expect(await listVersions(paul, id)).toEqual([]);
     expect((await searchPassages(paul, { query: 'zorglubrangement' })).hits).toEqual([]);
+  });
+
+  // 0095 : le dernier message du fil supprimé chez l'outil emporte sa source, qui quitte aussi le fil.
+  it('source de connecteur vidée par un message supprimé : elle quitte le fil, qui est mis en file', async () => {
+    const { paul } = await team();
+    await filed(paul, { prs: [{ repo: 'acme/leon', numero: 146, par: 'gh-pr-create' }] });
+    const message = await item(paul, {
+      kind: 'slack',
+      externalId: `channel:dev:${randomUUID()}`,
+      title: '#dev, 27/11/2026',
+      texts: ['Relis https://github.com/acme/leon/pull/146, zorglubretrait.'],
+    });
+    const { id } = await onlyFil(paul);
+    expect(await link(paul, message)).toEqual([id]);
+    mocks.enqueueFilMaj.mockClear();
+    const connection = {
+      id: await seedConnection(paul, { provider: 'slack' }),
+      provider: 'slack' as const,
+      createdBy: paul.userId,
+    };
+
+    // `tour-0` : l'identifiant que seedRun donne au seul tour.
+    expect(await removeConnectorTurns(paul, connection, ['tour-0'])).toBe(1);
+
+    expect((await onlyFil(paul)).metadata.liees).toEqual([]);
+    expect(mocks.enqueueFilMaj.mock.calls).toEqual([[jobOf(paul, id)]]);
+    expect((await searchPassages(paul, { query: 'zorglubretrait' })).hits).toEqual([]);
   });
 
   it('document supprimé, dossier supprimé ou remplacé : ils quittent le fil, qui est mis en file, et l’ancien état n’est rendu par aucune lecture', async () => {

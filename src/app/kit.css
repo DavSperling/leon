@@ -675,4 +675,528 @@
   .doc-list > li::marker {
     color: var(--muted);
   }
+
+  /* ---------- L'écran Agents : chaque agent est un badge, son personnage sur un aplat de sa couleur ---------- */
+  /* Deux badges par rangée pour les agents en service, trois pour les autres : des dizaines se rangent encore. */
+  .agents-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(max(280px, (100% - 32px) / 3), 1fr));
+    gap: 16px;
+  }
+  .agents-grid--2 {
+    grid-template-columns: repeat(auto-fill, minmax(max(320px, (100% - 16px) / 2), 1fr));
+  }
+  @media (max-width: 599px) {
+    .agents-grid,
+    .agents-grid--2 {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  /* Le personnage (agents/face.tsx) : des formes à plat, sans trait de contour. Endormi : gris, les yeux fermés, la
+     tête penchée. Éveillé (.is-on sur un parent) : la tête de papier, le corps d'encre, ses accessoires de sa seconde
+     couleur ; il cligne des yeux. À venir (.is-soon) : une silhouette de sa couleur, sans visage. Les couleurs du
+     personnage éveillé ne changent pas de thème : il est toujours sur l'aplat de son drapeau. */
+  .af {
+    --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: block;
+    overflow: visible;
+  }
+  .af__sk {
+    fill: color-mix(in oklab, var(--text) 9%, var(--glass));
+    transition: fill 500ms var(--ease-out);
+  }
+  .af__bo,
+  .af__ac {
+    fill: color-mix(in oklab, var(--text) 22%, var(--glass));
+    transition: fill 500ms var(--ease-out);
+  }
+  .af__ln {
+    fill: none;
+    stroke: var(--n-500);
+    stroke-width: 3.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke 500ms var(--ease-out);
+  }
+  .af__eye {
+    fill: var(--n-500);
+    transform-box: fill-box;
+    transform-origin: center;
+    transform: scaleY(0.14);
+    transition:
+      fill 500ms var(--ease-out),
+      transform 500ms var(--spring);
+  }
+  .af__glint {
+    fill: #fff;
+    opacity: 0;
+    transition: opacity 300ms;
+  }
+  .af__mouth {
+    transform-box: fill-box;
+    transform-origin: center;
+    transform: scale(0.45, 0.1);
+    transition:
+      stroke 500ms var(--ease-out),
+      transform 500ms var(--spring);
+  }
+  .af__hd {
+    transform-origin: 80px 104px;
+    transform: rotate(-5deg) translateY(4px);
+    transition: transform 800ms var(--ease-out);
+  }
+  .af__eyes {
+    transition: transform 250ms var(--ease-out);
+  }
+  .is-on .af__sk {
+    fill: #fff;
+  }
+  .is-on .af__bo {
+    fill: var(--flag-ink);
+  }
+  .is-on .af__ac {
+    fill: var(--af-2);
+  }
+  .is-on .af__ln {
+    stroke: var(--flag-ink);
+  }
+  .is-on .af__eye {
+    fill: var(--flag-ink);
+    transform: none;
+    animation: af-blink 5.2s calc(var(--i, 0) * -1.3s) infinite;
+  }
+  .is-on .af__glint {
+    opacity: 1;
+  }
+  .is-on .af__mouth,
+  .is-on .af__hd {
+    transform: none;
+  }
+  @keyframes af-blink {
+    0%,
+    93%,
+    100% {
+      transform: scaleY(1);
+    }
+    96.5% {
+      transform: scaleY(0.1);
+    }
+  }
+  .is-soon .af {
+    --sil: color-mix(in oklab, var(--flag, var(--line-strong)) 42%, var(--glass));
+  }
+  .is-wanted .af {
+    --sil: color-mix(in oklab, var(--flag) 78%, var(--glass));
+  }
+  .is-soon :is(.af__sk, .af__bo, .af__ac) {
+    fill: var(--sil);
+  }
+  .is-soon .af__ln {
+    stroke: var(--sil);
+  }
+  .is-soon .af__face {
+    display: none;
+  }
+  .is-soon .af__hd {
+    transform: none;
+  }
+
+  /* Le badge : à gauche la photo à fleur de carte, la fente du cordon percée dedans ; à droite le nom, le déclencheur
+     et l'état. Tout le badge est le contrôle. À l'arrivée les badges se posent l'un après l'autre (--i), puis la
+     couleur gagne la photo des agents actifs et ils se lèvent. Endormi, l'agent ne montre que sa tête au bas du
+     cadre ; pointé, il se hausse un peu. */
+  .agent {
+    --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 16px;
+    width: 100%;
+    height: 100%;
+    min-height: 116px;
+    padding: 0 16px 0 0;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--glass);
+    box-shadow: var(--sh-1);
+    color: var(--text);
+    text-align: left;
+    transition:
+      translate var(--med) var(--ease-out),
+      box-shadow var(--med) var(--ease-out),
+      scale var(--fast) var(--ease-out);
+    animation: badge-in 640ms var(--ease-out) backwards;
+    animation-delay: calc(var(--i, 0) * 80ms);
+  }
+  .agent--wide {
+    gap: 20px;
+    min-height: 196px;
+  }
+  button.agent:active {
+    scale: 0.985;
+  }
+  .agent:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+  @keyframes badge-in {
+    from {
+      opacity: 0;
+      translate: 0 20px;
+    }
+  }
+  /* La fente du cordon, percée dans la photo : on voit le bureau au travers. */
+  .agent::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 11px;
+    z-index: 1;
+    width: 9px;
+    height: 40px;
+    margin-top: -20px;
+    border-radius: 5px;
+    background: var(--bg);
+    box-shadow: inset 0 1px 1.5px rgba(15, 15, 13, 0.2);
+  }
+  .agent__photo {
+    position: relative;
+    display: grid;
+    place-items: end center;
+    width: 122px;
+    padding-left: 14px;
+    overflow: hidden;
+    background: color-mix(in oklab, var(--text) 3%, var(--glass));
+  }
+  .agent--wide > .agent__photo {
+    width: 200px;
+  }
+  .is-soon > .agent__photo {
+    background: color-mix(in oklab, var(--flag, var(--glass)) 13%, var(--glass));
+  }
+  /* L'aplat de sa couleur, et derrière sa tête un disque plus clair, à bord net : il gagne la photo depuis le bas. */
+  .agent__photo::before,
+  .agent-well::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(
+        circle at 50% 58%,
+        color-mix(in oklab, var(--flag) 72%, #fff) 0 46%,
+        transparent 46.4%
+      ),
+      var(--flag);
+    clip-path: circle(0% at 50% 100%);
+    transition: clip-path 750ms var(--ease-out);
+  }
+  .is-on > .agent__photo::before,
+  .agent-well.is-on::before {
+    clip-path: circle(125% at 50% 100%);
+  }
+  .is-on > .agent__photo::before {
+    animation: photo-in 750ms var(--ease-out) backwards;
+    animation-delay: calc(var(--i, 0) * 80ms + 300ms);
+  }
+  @keyframes photo-in {
+    from {
+      clip-path: circle(0% at 50% 100%);
+    }
+  }
+  .agent__photo > .af {
+    position: relative;
+    width: 100px;
+    translate: 0 40%;
+    transition: translate 900ms var(--spring);
+  }
+  .agent--wide > .agent__photo > .af {
+    width: 176px;
+  }
+  .is-on > .agent__photo > .af {
+    translate: 0 0;
+    animation: rise-in 900ms var(--spring) backwards;
+    animation-delay: calc(var(--i, 0) * 80ms + 300ms);
+  }
+  .is-soon > .agent__photo > .af {
+    translate: 0 30%;
+  }
+  .is-wanted > .agent__photo > .af {
+    translate: 0 8%;
+  }
+  @keyframes rise-in {
+    from {
+      translate: 0 40%;
+    }
+  }
+  .agent__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 14px 0 12px;
+  }
+  .agent--wide > .agent__text {
+    padding: 18px 0 8px;
+  }
+  .agent__name {
+    font: 600 16px / 20px var(--font);
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+  .agent--wide .agent__name {
+    font-size: 20px;
+    line-height: 24px;
+    letter-spacing: -0.025em;
+  }
+  .agent__when {
+    margin-top: 2px;
+    font: 400 13px / 18px var(--font);
+    color: var(--muted);
+    text-wrap: balance;
+  }
+  .agent--wide .agent__when {
+    margin-top: 6px;
+    font-size: 14px;
+    line-height: 20px;
+  }
+  /* L'état, au pied du badge ; sur un grand, sous un filet. Vide, il ne prend pas de place. */
+  .agent__state {
+    display: flex;
+    align-items: center;
+    min-height: 24px;
+    margin-top: auto;
+    padding-top: 8px;
+  }
+  .agent__state:empty {
+    display: none;
+  }
+  .agent--wide .agent__state {
+    min-height: 44px;
+    border-top: 1px solid var(--line);
+  }
+  /* Actif : le point vert d'un état sain, qui lance deux ondes à l'arrivée puis se tait. Demandé (un agent à venir
+     qu'elle veut) : le mot, discret. */
+  .agent__on,
+  .agent__asked {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 7px;
+    font: 500 13px / 1 var(--font);
+  }
+  .agent__on::before,
+  .agent__on::after {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--ok);
+  }
+  .agent__on::after {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    margin-top: -3.5px;
+    opacity: 0;
+    animation: on-ping 1300ms var(--ease-out) 2;
+    animation-delay: calc(var(--i, 0) * 80ms + 1000ms);
+  }
+  @keyframes on-ping {
+    from {
+      opacity: 0.5;
+    }
+    to {
+      opacity: 0;
+      scale: 3.6;
+    }
+  }
+  .agent__asked {
+    color: var(--muted);
+  }
+  /* Ce qui ferme la page : les agents qu'on construira soi-même. Un badge en pointillé, sans couleur ni ombre. Rien
+     ne s'y ouvre encore : rien n'y bouge au pointeur. */
+  .agent-own {
+    border: 1px dashed var(--line-strong);
+    background: none;
+    box-shadow: none;
+  }
+  .agent-own > .agent__photo {
+    background: none;
+  }
+  .agent-own .agent__name,
+  .agent-own .agent__when {
+    color: var(--muted);
+  }
+
+  @media (hover: hover) {
+    button.agent:hover {
+      translate: 0 -2px;
+      box-shadow: var(--sh-2);
+    }
+    button.agent:hover:not(.is-on, .is-wanted) > .agent__photo > .af {
+      translate: 0 24%;
+    }
+    .agent:hover .mark::before {
+      transform: scaleX(1);
+    }
+    .agent:hover .agent__pill {
+      border-color: var(--text);
+    }
+  }
+  .agent:focus-visible .mark::before {
+    transform: scaleX(1);
+  }
+  .agent:focus-visible .agent__pill {
+    border-color: var(--text);
+  }
+
+  /* La feuille qu'un agent laisse : son exemple, montré dans son panneau. */
+  .agent-sheet {
+    position: relative;
+    display: block;
+    padding: 14px 18px 18px 24px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--glass);
+    box-shadow: var(--sh-2);
+    color: var(--text);
+  }
+  [data-theme="dark"] .agent-sheet {
+    border-color: var(--line-strong);
+  }
+  /* Son drapeau sort du bord gauche, comme celui de l'original d'une source (.doc). */
+  .agent-sheet > .flag--left {
+    position: absolute;
+    top: 14px;
+    left: -11px;
+    min-width: 0;
+    width: 22px;
+    height: 18px;
+    padding: 0;
+  }
+  .agent-sheet__meta {
+    display: block;
+    overflow: hidden;
+    font: 400 13px / 1.45 var(--font);
+    color: var(--muted);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .agent-sheet__body {
+    display: grid;
+    gap: 3px;
+    font: 400 15px / 1.45 var(--serif);
+    text-wrap: pretty;
+  }
+  .agent-sheet__meta + .agent-sheet__body {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+  }
+  .agent-sheet__row {
+    display: block;
+  }
+  /* Le pied : le bouton « Envoyer » d'un brouillon prêt, en encre, ou une étiquette. Dessiné, pas un bouton. */
+  .agent-sheet__foot {
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    margin-top: 12px;
+    padding: 0 10px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font: 500 13px / 1 var(--font);
+    white-space: nowrap;
+  }
+  .agent-sheet__foot.is-ink {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: var(--on-ink);
+  }
+
+  /* Dans le panneau : l'agent, et devant lui son exemple en grand, sur une bande de bureau qui prend sa couleur quand
+     il est actif. Les deux sont posés au-dessus de l'aplat (.agent-well::before, avec la photo du badge). */
+  .agent-well {
+    position: relative;
+    overflow: hidden;
+    margin: -20px -24px 20px;
+    padding: 40px 32px 32px 44px;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg);
+  }
+  .agent-well__face {
+    position: relative;
+    width: min(240px, 60%);
+    margin: 0 auto -44px;
+  }
+  .agent-sheet--lg {
+    max-width: 400px;
+    margin-inline: auto;
+    padding: 18px 24px 22px 28px;
+    rotate: -0.6deg;
+    animation: none;
+  }
+  .agent-sheet--lg > .flag--left {
+    top: 18px;
+    left: -12px;
+    width: 24px;
+    height: 20px;
+  }
+  .agent-sheet--lg .agent-sheet__body {
+    gap: 4px;
+    margin-top: 12px;
+    padding-top: 12px;
+    font-size: 18px;
+  }
+  .agent-sheet--lg .agent-sheet__body.hl-arrive {
+    animation-delay: 240ms;
+  }
+  .agent-well__label {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    font: 400 13px / 1 var(--font);
+    color: var(--muted);
+  }
+  .agent-well.is-on > .agent-well__label {
+    color: var(--flag-ink);
+  }
+
+  /* La grande fenêtre d'un agent (SidePanel wide) : à gauche l'exemple sur sa bande de bureau, de toute la hauteur ; à
+     droite son état, son geste et ce qu'il est. Sous 1024 px, l'un sous l'autre. */
+  .agent-open {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    align-items: start;
+    gap: 40px;
+    min-height: 100%;
+  }
+  @media (max-width: 1023px) {
+    .agent-open {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 20px;
+      min-height: 0;
+    }
+  }
+  .agent-open > .agent-well {
+    display: grid;
+    align-self: stretch;
+    align-content: center;
+    min-height: 360px;
+    margin: 0;
+    padding: 48px 32px 40px 44px;
+    border: 0;
+    border-radius: 12px;
+  }
+  @media (max-width: 1023px) {
+    .agent-open > .agent-well {
+      min-height: 0;
+      padding: 40px 24px 28px 36px;
+    }
+  }
+  .agent-open .agent-sheet--lg {
+    width: 100%;
+  }
 }

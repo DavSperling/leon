@@ -334,6 +334,12 @@ describe('extractClaudeCodeFacts', () => {
     ['Bash', { command: '/usr/local/bin/gh api repos/demo/leon' }],
     ['Bash', { command: '"git" clone https://github.com/o/r' }],
     ['Bash', { command: '"npm" view leftpad' }],
+    // Les autres outils de l'app de bureau restent externes : seuls trois noms exacts sont locaux (D36, 23/11).
+    ['mcp__ccd_session_mgmt__search_session_transcripts', {}],
+    ['mcp__ccd_session__read_widget_context', {}],
+    ['mcp__ccd_session_mgmt__send_message', {}],
+    ['mcp__ccd_pr__get_status', {}],
+    ['mcp__ccd_turn__update_plan_x', {}],
   ])('marque la session externe sur %s %j', (name, input) => {
     expect(extractClaudeCodeFacts(appel('e1', name, input), RACINE).externe).toBe(true);
   });
@@ -358,6 +364,9 @@ describe('extractClaudeCodeFacts', () => {
     ['Bash', { command: 'cat ./curl.md' }],
     ['TaskCreate', { subject: 'x' }],
     ['Read', { file_path: `${RACINE}/a.ts` }],
+    ['mcp__ccd_turn__update_plan', { items: [{ content: 'x', status: 'pending' }] }],
+    ['mcp__ccd_turn__wrap_up', { recap: 'x' }],
+    ['mcp__ccd_session__mark_chapter', { title: 'x' }],
   ])('ne marque pas externe %s %j', (name, input) => {
     expect(extractClaudeCodeFacts(appel('e1', name, input), RACINE).externe).toBe(false);
   });

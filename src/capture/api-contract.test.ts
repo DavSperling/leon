@@ -1,10 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import {
+  AUTHORIZE_USAGES,
   ChercherRequestSchema,
   COULISSES_BLOCS_MAX,
+  ContextRequestSchema,
   CoulissesRequestSchema,
   DossierRequestSchema,
   FilRequestSchema,
+  NoterRequestSchema,
+  RappelRequestSchema,
+  SessionFactsPayloadSchema,
+  USAGES,
   VersionsRequestSchema,
 } from './api-contract';
 
@@ -122,5 +128,54 @@ describe('corps des coulisses', () => {
     ['un usage inconnu', body([raisonnement], { usages: ['tout'] })],
   ])('refuse %s', (_, value) => {
     expect(ok(value)).toBe(false);
+  });
+});
+
+// Le piège de `z.enum` (annexe 12, D40) : un usage inconnu du serveur lui fait refuser tout le corps, en 400. `passage`
+// entre donc dans USAGES avec la commande, et chacun des six schémas qui reçoivent des usages l'accepte.
+describe('l’usage passage', () => {
+  const projet = 'github.com/acme/leon';
+  const usages = [...USAGES];
+  const faits = {
+    branche: null,
+    prs: [],
+    commits: [],
+    fichiers: [],
+    commandes: [],
+    taches: [],
+    erreurs: 0,
+    externe: false,
+    echanges: 0,
+    debut: null,
+    fin: null,
+  };
+  const raisonnement = { role: 'raisonnement', id: 'a1', ts: '2026-11-23T10:00:00Z', texte: 'x' };
+
+  it('est connu du serveur, jamais montré sur la page « Autoriser »', () => {
+    expect(USAGES).toContain('passage');
+    expect(AUTHORIZE_USAGES).not.toContain('passage');
+  });
+
+  it.each([
+    [
+      'les faits',
+      SessionFactsPayloadSchema,
+      { kind: 'claude_code', external_id: 's-1', accord: 2, usages, faits, fin: true },
+    ],
+    ['le contexte', ContextRequestSchema, { projet, branche: null, session: 's-1', usages }],
+    ['les lectures', DossierRequestSchema, { projet, usages }],
+    [
+      'le rappel',
+      RappelRequestSchema,
+      { projet, branche: null, session: 's-1', message: 'x', outil: 'claude_code', usages },
+    ],
+    ['noter', NoterRequestSchema, { projet, outil: 'claude_code', texte: 'x', usages }],
+    [
+      'les coulisses',
+      CoulissesRequestSchema,
+      { kind: 'claude_code', external_id: 's-1', usages, blocs: [raisonnement] },
+    ],
+  ] as const)('est accepté par le corps de %s', (_label, schema, body) => {
+    expect(schema.safeParse(body).success).toBe(true);
   });
 });

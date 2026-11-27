@@ -1,9 +1,10 @@
 import { createHash } from 'node:crypto';
+import { z } from 'zod';
 import { maskSecrets } from '@/capture/mask-secrets';
 import { prepareTurnText } from '@/capture/prepare-turn-text';
 import type { AuthorSide, ProviderId } from '@/capture/turn';
 import { logError } from '@/server/log';
-import type { ConnectorItem, ConnectorTurn } from './types';
+import type { Audience, AudienceMember, ConnectorItem, ConnectorTurn } from './types';
 
 // Ce que le socle fait du texte des outils avant de l'ingérer : HTML en texte, découpe, masquage,
 // identifiants de tours qui changent avec le texte.
@@ -16,6 +17,17 @@ const ID_MAX = 200;
 const ID_ROOM = 20; // « :123456 » et « # » plus 12 caractères d'empreinte
 const AUTHOR_NAME_MAX = 200;
 const AUTHOR_EMAIL_MAX = 320;
+const RECIPIENTS_MAX = 100; // adresses gardées par liste (« à », « copie »)
+
+// Une adresse de destinataire, comme la base la garde : sans espaces autour, en minuscules. Sa forme est celle
+// qu'un navigateur accepte : celle de zod par défaut écarte des adresses qui existent (« r&d@acme.fr », une
+// extension en « .xn-- »). Un domaine accentué non encodé reste écarté.
+const AddressSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .max(AUTHOR_EMAIL_MAX)
+  .pipe(z.email({ pattern: z.regexes.html5Email }));
 
 export type NormalizedTurn = {
   externalId: string;
@@ -24,6 +36,9 @@ export type NormalizedTurn = {
   authorEmail: string | null;
   authorSide: AuthorSide | null;
   internalNote: boolean;
+  recipientsTo: string[];
+  recipientsCc: string[];
+  automated: boolean | null;
   text: string;
   ts: Date;
 };
@@ -310,13 +325,30 @@ function validDate(value: string): Date | null {
 // comme dans un jsonb, et dans un jsonb la moitié isolée d'un emoji (JSON.stringify l'écrit
 // « \ud83d », le jsonb la rejette ; un text la reçoit en U+FFFD). Un seul élément qui en porte une
 // ferait échouer l'insertion, donc le passage entier, à chaque relève.
-function clean(value: string): string {
+export function clean(value: string): string {
   return value.replaceAll('\u0000', '').toWellFormed();
 }
 
 function clip(value: string | null, max: number): string | null {
   return head(clean(value ?? '').trim(), max) || null;
 }
+
+// Les adresses d'une liste de destinataires : sans doublon, RECIPIENTS_MAX au plus. Ce qui n'a pas la forme
+// d'une adresse (AddressSchema), ou la dépasse en longueur, est laissé de côté plutôt que coupé : une adresse
+// coupée en désigne une autre.
+function addresses(list: string[] | undefined): string[] {
+  const kept = new Set<string>();
+  for (const value of list ?? []) {
+    if (kept.size === RECIPIENTS_MAX) break;
+    const address = AddressSchema.safeParse(value);
+    if (address.success) kept.add(address.data);
+  }
+  return [...kept];
+}
+
+// La racine de l'identifiant rangé d'un tour : `racine#empreinte`, ou `racine:n#empreinte` pour la n-ième part d'un
+// texte découpé. removeConnectorTurns retrouve les tours par elle.
+export const turnStem = (externalId: string): string => head(clean(externalId), ID_MAX - ID_ROOM);
 
 function normalizeTurn(turn: ConnectorTurn, ts: Date): NormalizedTurn[] {
   const masked = maskSecrets(clean(turn.text));
@@ -325,7 +357,9 @@ function normalizeTurn(turn: ConnectorTurn, ts: Date): NormalizedTurn[] {
       ? head(masked, TURN_TEXT_CAP - TRUNCATION_MARK.length) + TRUNCATION_MARK
       : masked;
   const parts = splitText(capped, CONNECTOR_TURN_MAX);
-  const stem = head(clean(turn.externalId), ID_MAX - ID_ROOM);
+  const stem = turnStem(turn.externalId);
+  const recipientsTo = addresses(turn.recipients?.to);
+  const recipientsCc = addresses(turn.recipients?.cc);
   return parts.flatMap((part, index) => {
     const text = prepareTurnText(part);
     if (text === null) return [];
@@ -339,6 +373,9 @@ function normalizeTurn(turn: ConnectorTurn, ts: Date): NormalizedTurn[] {
         authorEmail: clip(turn.author.email, AUTHOR_EMAIL_MAX),
         authorSide: turn.side ?? null,
         internalNote: turn.internalNote === true,
+        recipientsTo,
+        recipientsCc,
+        automated: turn.automated ?? null,
         text,
         ts,
       },
@@ -389,5 +426,26 @@ export function normalizeItem(item: ConnectorItem, provider: ProviderId): Normal
     updatedAt: updatedAt.toISOString(),
     origin: cleanOrigin(item.origin),
     turns,
+    ...(item.audience === undefined ? {} : { audience: clean(item.audience) }),
   };
+}
+
+// Les membres d'un lieu comme la base les compare (0097) : une adresse en minuscules (illisible : sans adresse), un
+// identifiant nettoyé, un début d'historique lisible (sinon tout l'historique). Un membre sans adresse ni identifiant
+// ne se retrouve pas : il part. Un lieu à la clé trop longue est refusé.
+export function normalizeAudience(audience: Audience, provider: ProviderId): Audience | null {
+  const key = clean(audience.key);
+  if (key === '' || key.length > ID_MAX) {
+    logError('connector.audience_refused', new Error('Clé de lieu illisible'), { provider });
+    return null;
+  }
+  if (audience.team === true) return { key, team: true };
+  const members = audience.members.flatMap((member): AudienceMember[] => {
+    const email = AddressSchema.safeParse(member.email ?? '').data ?? null;
+    const raw = member.id === null ? '' : clean(member.id).trim();
+    const id = raw !== '' && raw.length <= ID_MAX ? raw : null;
+    const since = member.since ? (validDate(member.since)?.toISOString() ?? null) : null;
+    return email || id ? [{ email, id, since }] : [];
+  });
+  return { key, members };
 }

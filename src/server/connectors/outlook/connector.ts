@@ -116,6 +116,12 @@ export const outlookConnector: Connector<Config> = {
   hosts: () => ['graph.microsoft.com'],
   oauth: outlookOAuth,
   privateRaw: true, // une boîte mail et un agenda sont personnels
+  // Microsoft prévient Leon d'un mail reçu ou envoyé et d'un changement d'agenda : la relève suit tout de suite.
+  watch: [
+    { resource: "/me/mailFolders('inbox')/messages", changeType: 'created' },
+    { resource: "/me/mailFolders('sentitems')/messages", changeType: 'created' },
+    { resource: '/me/events', changeType: 'created,updated' },
+  ],
 
   async verify(config, http) {
     const me = await graphClient(config, http).me();

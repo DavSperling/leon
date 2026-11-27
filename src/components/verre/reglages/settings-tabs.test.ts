@@ -35,6 +35,11 @@ describe('tabOf', () => {
     expect(tabOf('#memoire')).toBe('memoire');
   });
 
+  // L'onglet « Ma fiche » (la fiche de la personne, portrait/) est le sixième groupe.
+  it('ouvre Ma fiche pour #fiche', () => {
+    expect(tabOf('#fiche')).toBe('fiche');
+  });
+
   it('garde les autres ancres : un groupe par son nom, le reste rien', () => {
     expect(tabOf('#profil')).toBe('profil');
     expect(tabOf('#securite')).toBe('securite');

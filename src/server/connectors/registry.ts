@@ -30,6 +30,7 @@ import { miroConnector } from './miro/connector';
 import { missiveConnector } from './missive/connector';
 import { mondayConnector } from './monday/connector';
 import { notionConnector } from './notion/connector';
+import { onedriveConnector } from './onedrive/connector';
 import { outlookConnector } from './outlook/connector';
 import { pipedriveConnector } from './pipedrive/connector';
 import { plainConnector } from './plain/connector';
@@ -38,12 +39,13 @@ import { productboardConnector } from './productboard/connector';
 import { sentryConnector } from './sentry/connector';
 import { shortcutConnector } from './shortcut/connector';
 import { slackConnector } from './slack/connector';
+import { teamsChatsConnector, teamsConnector } from './teams/connector';
 import { tldvConnector } from './tldv/connector';
 import { trelloConnector } from './trello/connector';
 import type { AnyConnector } from './types';
 import { zendeskConnector } from './zendesk/connector';
 
-// Les 42 connecteurs, un par outil. Un bouchon (null) apparaît « bientôt » dans l'interface.
+// Les 45 connecteurs, un par outil. Un bouchon (null) apparaît « bientôt » dans l'interface.
 export const CONNECTORS: Record<ProviderId, AnyConnector | null> = {
   github: githubConnector,
   notion: notionConnector,
@@ -87,6 +89,9 @@ export const CONNECTORS: Record<ProviderId, AnyConnector | null> = {
   gmail: gmailConnector,
   drive: driveConnector,
   slack: slackConnector,
+  onedrive: onedriveConnector,
+  teams: teamsConnector,
+  teamschats: teamsChatsConnector,
 };
 
 export function getConnector(id: ProviderId): AnyConnector | null {

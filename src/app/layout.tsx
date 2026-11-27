@@ -57,7 +57,8 @@ export const metadata: Metadata = {
   title: { default: 'Leon', template: '%s · Leon' },
 };
 
-// La langue vient du cookie (src/i18n/request.ts) : le site, la connexion et l'app lisent les mêmes messages.
+// La langue vient du compte de la personne connectée, sinon du cookie (src/i18n/request.ts) : le site, la connexion
+// et l'app lisent les mêmes messages.
 export default async function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html

@@ -41,8 +41,8 @@ describe('oauthClient', () => {
     expect(oauthClient('ATTIO')).toEqual({ id: 'a', secret: 'b' });
   });
 
-  it('connaît les 16 applis', () => {
-    expect(OAUTH_APP_KEYS).toHaveLength(16);
+  it('connaît les 17 applis', () => {
+    expect(OAUTH_APP_KEYS).toHaveLength(17);
   });
 });
 

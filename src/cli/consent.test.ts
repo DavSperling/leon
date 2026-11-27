@@ -11,8 +11,11 @@ import {
   consentPath,
   consentWithdrawn,
   factsConsent,
+  forgetSandboxAnswer,
+  forgetUsage,
   pendingServerWithdrawals,
   recordCapture,
+  recordSandboxAnswer,
   recordServerWithdrawal,
   serverWithdrawalsPath,
   withdrawalRecorded,
@@ -362,6 +365,124 @@ describe('recordCapture : l’accord de capture, daté', () => {
     );
     expect(await factsConsent(home, 'codex')).toMatchObject({ version: 2 });
     expect((await factsConsent(home, 'codex'))?.capture_le).toBeUndefined();
+  });
+});
+
+describe('forgetUsage : `leon retirer-crochets --usage passage` oublie une réponse (T67)', () => {
+  const raw = async () => JSON.parse(await readFile(consentPath(home), 'utf8')).outils;
+
+  it('efface l’usage de `usages` et de `refus`, et rien d’autre : version, dates, autres usages et autres outils', async () => {
+    await writeConsent(home, 'claude_code', 2, new Date('2026-11-02T14:00:00Z'));
+    await addUsage(home, 'claude_code', 'lecture', new Date('2026-11-03T10:00:00Z'));
+    await addUsage(home, 'claude_code', 'passage');
+    await addRefusal(home, 'claude_code', 'resume', new Date('2026-11-04T10:00:00Z'));
+    await recordSandboxAnswer(home, true, new Date('2026-11-05T10:00:00Z'));
+    await writeConsent(home, 'codex', 2, new Date('2026-11-02T15:00:00Z'));
+    await addUsage(home, 'codex', 'lecture', new Date('2026-11-03T11:00:00Z'));
+    const codex = (await raw()).codex;
+
+    await forgetUsage(home, 'claude_code', 'passage');
+
+    expect((await raw()).claude_code).toEqual({
+      version: 2,
+      installe_le: '2026-11-02T14:00:00.000Z',
+      usages: { lecture: '2026-11-03T10:00:00.000Z' },
+      refus: { resume: '2026-11-04T10:00:00.000Z' },
+      bac_a_sable: { accepte_le: '2026-11-05T10:00:00.000Z' },
+    });
+    expect((await raw()).codex).toEqual(codex);
+
+    await addRefusal(home, 'claude_code', 'passage');
+    await forgetUsage(home, 'claude_code', 'passage');
+
+    expect(await factsConsent(home, 'claude_code')).toMatchObject({
+      usages: ['lecture'],
+      refus: ['resume'],
+    });
+  });
+
+  it('rien à oublier : le fichier n’est pas réécrit ; absent, il n’est pas créé', async () => {
+    await forgetUsage(home, 'claude_code', 'passage');
+    expect(await readdir(home)).toEqual([]);
+
+    await writeConsent(home, 'claude_code', 2);
+    await addUsage(home, 'claude_code', 'lecture');
+    const before = await readFile(consentPath(home), 'utf8');
+    const { mtimeMs } = await stat(consentPath(home));
+
+    await forgetUsage(home, 'claude_code', 'passage');
+
+    expect(await readFile(consentPath(home), 'utf8')).toBe(before);
+    expect((await stat(consentPath(home))).mtimeMs).toBe(mtimeMs);
+  });
+});
+
+describe('recordSandboxAnswer : la réponse à l’exception du bac à sable, à part des usages (T67)', () => {
+  const raw = async () => JSON.parse(await readFile(consentPath(home), 'utf8')).outils.claude_code;
+
+  it.each([
+    [true, 'accepte_le'],
+    [false, 'refuse_le'],
+  ])('%s : rangée datée sous `bac_a_sable.%s`, sans toucher aux usages', async (accepted, key) => {
+    await writeConsent(home, 'claude_code', 2);
+    await addUsage(home, 'claude_code', 'passage');
+
+    await recordSandboxAnswer(home, accepted, new Date('2026-11-23T10:00:00Z'));
+
+    expect(await raw()).toEqual({
+      version: 2,
+      installe_le: expect.any(String),
+      usages: { passage: expect.any(String) },
+      bac_a_sable: { [key]: '2026-11-23T10:00:00.000Z' },
+    });
+    expect(await factsConsent(home, 'claude_code')).toMatchObject({
+      usages: ['passage'],
+      bac_a_sable: accepted,
+    });
+  });
+
+  it('sans accord qui couvre les gestes : rien n’est écrit, et l’appel échoue', async () => {
+    await expect(recordSandboxAnswer(home, true)).rejects.toThrow();
+    expect(await readdir(home)).toEqual([]);
+  });
+
+  it('retouchée à la main en une forme illisible : aucune réponse, et l’accord reste', async () => {
+    await writeRaw(
+      JSON.stringify({
+        outils: {
+          claude_code: {
+            version: 2,
+            installe_le: '2026-11-02T14:00:00Z',
+            usages: { lecture: '2026-11-02T14:00:00Z' },
+            bac_a_sable: { accepte_le: 'hier' },
+          },
+        },
+      }),
+    );
+
+    const consent = await factsConsent(home, 'claude_code');
+
+    expect(consent?.usages).toEqual(['lecture']);
+    expect(consent).not.toHaveProperty('bac_a_sable');
+  });
+
+  it('forgetSandboxAnswer l’efface, et rien d’autre ; le retrait l’efface aussi', async () => {
+    await writeConsent(home, 'claude_code', 2, new Date('2026-11-02T14:00:00Z'));
+    await addUsage(home, 'claude_code', 'passage', new Date('2026-11-03T10:00:00Z'));
+    await recordSandboxAnswer(home, false);
+
+    await forgetSandboxAnswer(home);
+
+    expect(await raw()).toEqual({
+      version: 2,
+      installe_le: '2026-11-02T14:00:00.000Z',
+      usages: { passage: '2026-11-03T10:00:00.000Z' },
+    });
+
+    await recordSandboxAnswer(home, true);
+    await writeConsent(home, 'claude_code', 0);
+
+    expect(await raw()).toEqual({ version: 0, installe_le: expect.any(String) });
   });
 });
 

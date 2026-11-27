@@ -1,7 +1,16 @@
 import type { z } from 'zod';
 
 // Les étapes qui appellent le modèle : le modèle de chacune se règle (models.ts).
-export type LlmStep = 'reponse' | 'discussion' | 'point' | 'resume' | 'fil' | 'agenda';
+export type LlmStep =
+  | 'reponse'
+  | 'discussion'
+  | 'point'
+  | 'resume'
+  | 'fil'
+  | 'agenda'
+  | 'fiche'
+  | 'brouillon'
+  | 'tri';
 
 export type ChatMessage = { role: 'user' | 'assistant'; content: string };
 
@@ -59,3 +68,10 @@ export interface Llm {
 export class LlmError extends Error {
   override name = 'LlmError';
 }
+
+// Le fournisseur est injoignable ou refuse l'appel (réseau, 401, 429, 5xx) : rien n'a été écrit, donc rien n'est payé.
+// Les plafonds du jour rendent alors leur créneau (briefings.ts, agenda.ts) ; une réponse vide, tronquée ou refusée
+// est un appel payé, qui reste compté.
+export const LLM_UNREACHABLE = 'appel au modèle impossible';
+export const isUnreachable = (error: unknown) =>
+  error instanceof LlmError && error.message === LLM_UNREACHABLE;

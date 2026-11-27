@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { boolean, pgTable, smallint, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import type { Locale } from '@/i18n/request';
 import { COMPANY_SIZES } from '@/lib/onboarding';
 
 // Tables de Better Auth (0002-auth.sql) : noms de colonnes en camelCase, tels que Better Auth les génère.
@@ -11,6 +12,8 @@ export const users = pgTable('user', {
   image: text('image'),
   twoFactorEnabled: boolean('twoFactorEnabled').notNull().default(false),
   about: text('about'),
+  // Sa langue choisie (0094), que la base borne à celles de l'écran ; null : jamais choisie.
+  locale: text('locale').$type<Locale>(),
   // Posé à la suppression du compte (0040) : la ligne reste, vidée de ce qui rend la personne joignable.
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
   createdAt: timestamp('createdAt', { withTimezone: true }).notNull().defaultNow(),

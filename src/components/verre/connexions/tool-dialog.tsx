@@ -443,11 +443,13 @@ function useScopeWord(groups: GroupOption[]) {
   return (c: Pick<ConnectionView, 'isCreator' | 'createdBy'>, scope: string) =>
     scope === 'equipe'
       ? t('team')
-      : scope === 'moi'
-        ? c.isCreator
-          ? t('onlyYou')
-          : t('onlyName', { name: c.createdBy.name })
-        : label(scope);
+      : scope === 'membres'
+        ? t('members')
+        : scope === 'moi'
+          ? c.isCreator
+            ? t('onlyYou')
+            : t('onlyName', { name: c.createdBy.name })
+          : label(scope);
 }
 
 /** Le créateur change qui voit ce que sa connexion relève : enregistré tout de suite, « Enregistré » dit sur place. */
@@ -626,7 +628,7 @@ function ConnectionBlock({
   const locale = useLocale();
   const scopeWord = useScopeWord(groups ?? []);
   const github = c.provider === 'github';
-  const scope = scopeOf(c, entry.privateRaw);
+  const scope = scopeOf(c, entry.privateRaw, entry.memberAccess);
   const oauth = canReconnect(c);
   const trouble = troubleOf(c);
   const [replacing, setReplacing] = useState(false);
@@ -722,12 +724,13 @@ function ConnectionBlock({
       <Facts className="mt-1">
         <Fact label={t('account')}>{nb(c.label)}</Fact>
         <Fact label={t('visibleTo')}>
-          {c.isCreator && !github && groups ? (
+          {c.isCreator && !github && !entry.memberAccess && groups ? (
             <ShareField c={c} value={scope} groups={groups} />
           ) : (
             scopeWord(c, scope)
           )}
           {github && <small>{t('githubScope')}</small>}
+          {entry.memberAccess && <small>{t('membersScope')}</small>}
         </Fact>
         <Fact label={t('itemsSaved')}>
           {c.itemsSynced ? formatNumber(c.itemsSynced, locale) : t('noneYet')}
@@ -946,8 +949,13 @@ function ToolPanel({
         </PanelDone>
         <Facts>
           <Fact label={t('visibleTo')}>
-            {github || !entry.privateRaw ? t('team') : t('onlyYou')}
+            {entry.memberAccess
+              ? t('members')
+              : github || !entry.privateRaw
+                ? t('team')
+                : t('onlyYou')}
             {github && <small>{t('githubScope')}</small>}
+            {entry.memberAccess && <small>{t('membersScope')}</small>}
           </Fact>
         </Facts>
       </>
@@ -967,10 +975,20 @@ function ToolPanel({
         {entry.warning && <Notice tone="warning">{nb(entry.warning)}</Notice>}
         <Facts>
           <Fact label={t('whoWillSee')}>
-            {github || !entry.privateRaw ? t('team') : t('onlyYou')}
+            {entry.memberAccess
+              ? t('members')
+              : github || !entry.privateRaw
+                ? t('team')
+                : t('onlyYou')}
             <small>
               {nb(
-                github ? t('githubScope') : entry.privateRaw ? t('privateTool') : t('sharedTool'),
+                entry.memberAccess
+                  ? t('membersScope')
+                  : github
+                    ? t('githubScope')
+                    : entry.privateRaw
+                      ? t('privateTool')
+                      : t('sharedTool'),
               )}
             </small>
           </Fact>

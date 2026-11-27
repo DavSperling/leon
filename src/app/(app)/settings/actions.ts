@@ -35,6 +35,8 @@ import { setManager, setManagersSeeAll } from '@/server/auth/organisation';
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
 import {
   getSession,
+  getUserContext,
+  hasPassword,
   requestHeaders,
   requireUserContext,
   signedInRecently,
@@ -42,7 +44,7 @@ import {
 } from '@/server/auth/session';
 import { registerSso, removeSso, SsoInputSchema, verifySsoDomain } from '@/server/auth/sso';
 import type { TenantContext } from '@/server/auth/tenant-context';
-import { ABOUT_MAX_CHARS, saveAbout } from '@/server/briefing/about';
+import { ABOUT_MAX_CHARS, saveAbout, saveLocale } from '@/server/briefing/about';
 import { setDepotEquipe } from '@/server/connectors/github/depots-equipe';
 import { forgetPipedreamUser } from '@/server/connectors/pipedream';
 import { RESEND_BATCH_MAX, sendDeletionEmails } from '@/server/email/account-deleted';
@@ -55,7 +57,21 @@ import {
   readMemoryVersion,
   restoreMemoryVersion,
 } from '@/server/memory/memory-section';
+import { AGENTS, type AgentId } from '@/server/portrait/agents';
+import { sendBrouillon, trashMail, withdrawBrouillon } from '@/server/portrait/brouillon-depot';
+import { QUESTIONS_MAX, REPONSE_MAX_CHARS } from '@/server/portrait/brouillon-prompt';
+import { answerQuestions, answerRelance, discardBrouillon } from '@/server/portrait/brouillons';
+import { requestBrouillons } from '@/server/portrait/brouillons-queue';
+import { correctFields, retireLine } from '@/server/portrait/fiche';
+import { answerPreference } from '@/server/portrait/preferences';
+import { answerProposal } from '@/server/portrait/propositions';
+import { prepareReply } from '@/server/portrait/sans-reponse';
+import { requestFicheBuild } from '@/server/portrait/screen';
+import { clean } from '@/server/portrait/synthese-prompt';
 
+// La langue choisie : dans le cookie de ce navigateur (le site et la connexion le lisent, sans session), et, pour une
+// personne connectée, avec son compte (0094). Sans cela elle repassait en anglais sur un autre navigateur ou une fois
+// ses cookies effacés. Une panne de la base ne refuse pas le choix : le cookie le tient ici, et elle est notée.
 export async function setLocaleAction(formData: FormData): Promise<void> {
   const locale = z.enum(locales).safeParse(formData.get('locale'));
   if (!locale.success) return;
@@ -66,6 +82,11 @@ export async function setLocaleAction(formData: FormData): Promise<void> {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
   });
+  const ctx = await getUserContext();
+  if (ctx)
+    await saveLocale(ctx, locale.data).catch((error) =>
+      logError('langue.enregistrer', error, { userId: ctx.userId }),
+    );
   revalidatePath('/', 'layout');
 }
 
@@ -462,21 +483,26 @@ const AccountDeletionInputSchema = DeletionInputSchema.extend({
 const RESEND_SPACING_MS = 600;
 
 // Ce qui part ne revient pas : le mot tapé, le mot de passe et, avec la 2FA, le code de l'application. Rend le
-// message du premier qui ne passe pas, ou null.
+// message du premier qui ne passe pas, ou null. Un compte sans mot de passe (Google, Microsoft, One Tap, SSO) ne
+// peut pas en donner : à la place, une connexion de moins d'une heure (signedInRecently), comme pour la mémoire.
 async function confirmIdentity({ password, code, word }: DeletionInput): Promise<string | null> {
   const t = await getTranslations('deleteAccount');
   const security = await getTranslations('security');
   if (!(await passwordCheckAllowed())) return security('tooManyAttempts');
   if (word.trim() !== t('word')) return t('wrongWord', { word: t('word') });
   const headers = await requestHeaders();
-  try {
-    await auth.api.verifyPassword({ body: { password }, headers });
-  } catch {
-    return security('wrongPassword');
+  const session = await getSession();
+  if (session && !(await hasPassword(session.user.id))) {
+    if (!(await signedInRecently())) return t('reconnect');
+  } else {
+    try {
+      await auth.api.verifyPassword({ body: { password }, headers });
+    } catch {
+      return security('wrongPassword');
+    }
   }
   // Avec une session ouverte, Better Auth ne compte pas les échecs du code : seule la limite d'essais protège.
   // Une session qui vient de disparaître ne dispense pas du code.
-  const session = await getSession();
   if (!session || session.user.twoFactorEnabled) {
     try {
       await auth.api.verifyTOTP({ body: { code }, headers });
@@ -714,4 +740,238 @@ export async function readMemoryVersionAction(input: {
   if (!parsed.success) return { error: 'invalide' };
   const version = await readMemoryVersion(ctx, parsed.data);
   return version ? { ok: true, version } : { error: 'introuvable' };
+}
+
+// L'onglet « Ma fiche » (portrait/) : la personne connectée construit sa fiche, en corrige et en retire les lignes, et
+// répond aux agents qui lui sont proposés, sous la session du navigateur. Et, depuis l'accueil, elle répond aux
+// questions de Leon, écarte sa demande, écarte un brouillon de réponse, dit oui ou non à une relance, répond à une
+// préférence d'écriture proposée, ou demande une réponse à un mail que Leon avait jugé sans réponse à donner. Les siens
+// seulement : chaque fonction
+// appelée filtre sur elle, sous ses droits, et la ligne d'un autre est « introuvable ». Aucune erreur ne recopie une
+// valeur reçue.
+type FicheError = 'introuvable' | 'invalide';
+
+const FicheCorrectionSchema = z.object({ id: z.uuid(), champs: z.record(z.string(), z.unknown()) });
+const AgentAnswerSchema = z.object({ agent: z.enum(AGENTS), oui: z.boolean() });
+const PreferenceAnswerSchema = z.object({ id: z.uuid(), oui: z.boolean() });
+// Une réponse par question, nettoyée de ce que la base refuserait ; une réponse peut rester vide.
+const QuestionAnswersSchema = z.object({
+  id: z.uuid(),
+  reponses: z
+    .array(z.string().transform(clean).pipe(z.string().max(REPONSE_MAX_CHARS)))
+    .min(1)
+    .max(QUESTIONS_MAX),
+});
+// Ses indications : ce qu'elle veut répondre, ou ajouter à une relance.
+const IndicationsSchema = z.string().transform(clean).pipe(z.string().max(REPONSE_MAX_CHARS));
+const PrepareReplySchema = z.object({ id: z.uuid(), indications: IndicationsSchema });
+// Sa réponse à une relance.
+const RelanceAnswerSchema = z.object({
+  sourceId: z.uuid(),
+  message: z.string().min(1).max(200),
+  oui: z.boolean(),
+  indications: IndicationsSchema,
+});
+
+// « Construire ma fiche » : la construction part en file si l'écran la propose à la personne (screen.ts), et rien
+// d'autre ne la lance. `ok` faux : rien à construire, ou sa fiche est déjà faite.
+export async function buildFicheAction(): Promise<{ ok: boolean }> {
+  const ctx = await requireUserContext();
+  const ok = await requestFicheBuild(ctx);
+  if (ok) revalidatePath('/settings');
+  return { ok };
+}
+
+// `champs` : les seuls champs modifiables de la ligne, validés d'après son genre (fiche.ts) ; la valeur entière se
+// refait côté serveur.
+export async function correctFicheLineAction(input: {
+  id: string;
+  champs: Record<string, unknown>;
+}): Promise<{ ok: true } | { error: FicheError }> {
+  const ctx = await requireUserContext();
+  const parsed = FicheCorrectionSchema.safeParse(input);
+  if (!parsed.success) return { error: 'invalide' };
+  const result = await correctFields(ctx, parsed.data.id, parsed.data.champs);
+  if (result !== 'ok') return { error: result };
+  revalidatePath('/settings');
+  return { ok: true };
+}
+
+// Elle sort de la fiche, et une reconstruction ne la fait pas revenir.
+export async function retireFicheLineAction(
+  id: string,
+): Promise<{ ok: true } | { error: FicheError }> {
+  const ctx = await requireUserContext();
+  const parsed = z.uuid().safeParse(id);
+  if (!parsed.success) return { error: 'invalide' };
+  if (!(await retireLine(ctx, parsed.data))) return { error: 'introuvable' };
+  revalidatePath('/settings');
+  return { ok: true };
+}
+
+// L'interrupteur d'un agent, sur l'écran Agents : son oui ou son non s'enregistre, et remplace le précédent. Un agent
+// qui ne lui est pas proposé à ce moment-là est « introuvable ». Son oui à un agent en service (« Brouillons de
+// réponse », « Relances ») lui demande un premier passage (propositions.ts) ; les autres ne tournent pas encore.
+export async function answerAgentAction(input: {
+  agent: AgentId;
+  oui: boolean;
+}): Promise<{ ok: true } | { error: FicheError }> {
+  const ctx = await requireUserContext();
+  const parsed = AgentAnswerSchema.safeParse(input);
+  if (!parsed.success) return { error: 'invalide' };
+  if (!(await answerProposal(ctx, parsed.data.agent, parsed.data.oui)))
+    return { error: 'introuvable' };
+  revalidatePath('/agents');
+  return { ok: true };
+}
+
+// « Écarter », depuis le panneau de l'accueil, un brouillon de réponse prêt ou une demande de Leon : la ligne ne se montre
+// plus, et le brouillon que Leon avait déposé dans ses brouillons Gmail en est retiré (portrait/brouillon-depot.ts).
+// « Terminé », sur un mail que Leon a jugé sans réponse à donner, écarte sa ligne de même : il sort de la liste.
+// Celle d'un autre, ou déjà écartée, est « introuvable ». Rien n'est envoyé. `resteDansGmail` : Leon n'a pas pu le
+// retirer de sa boîte, et l'écran le lui dit.
+export async function discardBrouillonAction(
+  id: string,
+): Promise<{ ok: true; resteDansGmail: boolean } | { error: FicheError }> {
+  const ctx = await requireUserContext();
+  const parsed = z.uuid().safeParse(id);
+  if (!parsed.success) return { error: 'invalide' };
+  if (!(await discardBrouillon(ctx, parsed.data))) return { error: 'introuvable' };
+  const withdrawn = await withdrawBrouillon(ctx, parsed.data);
+  revalidatePath('/');
+  return { ok: true, resteDansGmail: !withdrawn };
+}
+
+// « Envoyer » un brouillon prêt et déposé dans Gmail, depuis le panneau de l'accueil, après sa confirmation : il part
+// de sa boîte (portrait/brouillon-depot.ts, sendBrouillon). « introuvable » : rien à envoyer d'ici (écarté, jamais
+// déposé, déjà envoyé) ; « bouge » : quelqu'un a écrit dans le fil depuis, rien n'est parti ; « echec » : Gmail n'a
+// rien envoyé. Dans ces deux cas, le brouillon reste dans ses brouillons Gmail.
+export async function sendBrouillonAction(
+  id: string,
+): Promise<{ ok: true } | { error: FicheError | 'bouge' | 'echec' }> {
+  const ctx = await requireUserContext();
+  const parsed = z.uuid().safeParse(id);
+  if (!parsed.success) return { error: 'invalide' };
+  const sent = await sendBrouillon(ctx, parsed.data);
+  if (sent !== 'envoye') return { error: sent };
+  revalidatePath('/');
+  return { ok: true };
+}
+
+// « Supprimer » le mail reçu, depuis le panneau de l'accueil, après sa confirmation : il part à la corbeille de sa
+// boîte Gmail (portrait/brouillon-depot.ts, trashMail), où il reste trente jours. Puis sa ligne s'écarte, comme par
+// « Écarter » : elle ne se montre plus, et le brouillon que Leon avait déposé quitte ses brouillons Gmail.
+// « introuvable » : rien à supprimer d'ici (la ligne d'une autre, déjà écartée, une relance, un fil Outlook) ;
+// « echec » : Gmail n'a rien mis à la corbeille. Dans ces deux cas rien ne change.
+export async function trashMailAction(
+  id: string,
+): Promise<{ ok: true; resteDansGmail: boolean } | { error: FicheError | 'echec' }> {
+  const ctx = await requireUserContext();
+  const parsed = z.uuid().safeParse(id);
+  if (!parsed.success) return { error: 'invalide' };
+  const trashed = await trashMail(ctx, parsed.data);
+  if (trashed !== 'supprime') return { error: trashed };
+  await discardBrouillon(ctx, parsed.data);
+  const withdrawn = await withdrawBrouillon(ctx, parsed.data);
+  revalidatePath('/');
+  return { ok: true, resteDansGmail: !withdrawn };
+}
+
+// Ses réponses aux questions de Leon, depuis le panneau de l'accueil : une par question, dans le même ordre, de
+// REPONSE_MAX_CHARS caractères au plus, vide quand elle ne sait pas ou ne veut pas en parler. Hors de ces bornes :
+// « invalide ». Une demande qui n'est pas à elle, déjà répondue, écartée, ou un autre nombre de réponses que de
+// questions : « introuvable ». Rien n'est écrit dans les deux cas. Ses réponses gardées, un passage est demandé à la
+// file : il écrira le brouillon (portrait/brouillons.ts). Rien n'est envoyé. Une panne de la base est « echec » : son
+// erreur citerait ses réponses (une erreur de base cite ses paramètres), elle ne remonte donc pas telle quelle.
+export async function answerQuestionsAction(input: {
+  id: string;
+  reponses: string[];
+}): Promise<{ ok: true } | { error: FicheError | 'echec' }> {
+  const ctx = await requireUserContext();
+  const parsed = QuestionAnswersSchema.safeParse(input);
+  if (!parsed.success) return { error: 'invalide' };
+  try {
+    if (!(await answerQuestions(ctx, parsed.data.id, parsed.data.reponses)))
+      return { error: 'introuvable' };
+  } catch (error) {
+    logError('brouillons.reponses', error, { userId: ctx.userId });
+    return { error: 'echec' };
+  }
+  await requestBrouillons(ctx);
+  revalidatePath('/');
+  return { ok: true };
+}
+
+// Sa réponse à une relance, depuis le panneau de l'accueil : « Oui », avec ses indications
+// (REPONSE_MAX_CHARS caractères au plus, vides quand elle n'en donne pas), ou « Non », qui ne garde pas d'indications.
+// Hors de ces bornes : « invalide ». Un mail qui n'attend plus de relance (à une autre, déjà traité, d'un fil qui a
+// bougé, hors de la fenêtre) : « introuvable » (portrait/brouillons.ts, answerRelance). Rien n'est écrit dans les deux
+// cas. Son oui gardé, un passage est demandé à la file : il écrira la relance ; `id`, sa ligne, sert à l'écarter
+// ensuite. Son non ne demande rien. Rien n'est envoyé. Une panne de la base est « echec » : son erreur citerait ses
+// indications.
+export async function answerRelanceAction(input: {
+  sourceId: string;
+  message: string;
+  oui: boolean;
+  indications: string;
+}): Promise<{ ok: true; id: string } | { error: FicheError | 'echec' }> {
+  const ctx = await requireUserContext();
+  const parsed = RelanceAnswerSchema.safeParse(input);
+  if (!parsed.success) return { error: 'invalide' };
+  const { sourceId, message, oui, indications } = parsed.data;
+  let id: string | null;
+  try {
+    id = await answerRelance(ctx, { sourceId, message }, oui ? indications : null);
+  } catch (error) {
+    logError('brouillons.relance', error, { userId: ctx.userId });
+    return { error: 'echec' };
+  }
+  if (!id) return { error: 'introuvable' };
+  if (oui) await requestBrouillons(ctx);
+  // Pas de revalidatePath : le panneau tient le mail (Leon écrit, avec `id`), qu'un accueil relu remplacerait par un
+  // autre, sous une autre clé, rangé à la fin du panneau.
+  return { ok: true, id };
+}
+
+// « Préparer une réponse » à un mail que Leon avait jugé sans réponse à donner, depuis l'accueil, avec ses indications
+// (REPONSE_MAX_CHARS caractères au plus, vides quand elle n'en donne pas) : sa ligne devient son oui
+// (portrait/sans-reponse.ts), et un passage est demandé à la file, qui fera le premier appel, sous le plafond du jour.
+// `id` : la ligne de son oui, qui remplace l'autre. Hors de ces bornes : « invalide ». Un mail qui n'est plus sans
+// réponse (à une autre, déjà demandé, écarté, d'un fil qui a bougé) : « introuvable ». Rien n'est écrit dans les deux
+// cas, et rien n'est envoyé. Une panne de la base est « echec » : son erreur citerait ses indications.
+export async function prepareReplyAction(input: {
+  id: string;
+  indications: string;
+}): Promise<{ ok: true; id: string } | { error: FicheError | 'echec' }> {
+  const ctx = await requireUserContext();
+  const parsed = PrepareReplySchema.safeParse(input);
+  if (!parsed.success) return { error: 'invalide' };
+  let id: string | null;
+  try {
+    id = await prepareReply(ctx, parsed.data.id, parsed.data.indications);
+  } catch (error) {
+    logError('brouillons.preparer', error, { userId: ctx.userId });
+    return { error: 'echec' };
+  }
+  if (!id) return { error: 'introuvable' };
+  await requestBrouillons(ctx);
+  // L'accueil relu la range dans « À vous », où Leon écrit.
+  revalidatePath('/');
+  return { ok: true, id };
+}
+
+// « Oui » ou « Non » à une préférence d'écriture que Leon lui propose, depuis le panneau de l'accueil : acceptée, elle
+// sert à ses brouillons suivants ; refusée, elle reste en base pour n'être jamais reproposée (portrait/preferences.ts).
+// Celle d'une autre, ou qui n'attend plus sa réponse (déjà répondue, retirée) : « introuvable ». Rien n'est envoyé.
+export async function answerPreferenceAction(input: {
+  id: string;
+  oui: boolean;
+}): Promise<{ ok: true } | { error: FicheError }> {
+  const ctx = await requireUserContext();
+  const parsed = PreferenceAnswerSchema.safeParse(input);
+  if (!parsed.success) return { error: 'invalide' };
+  if (!(await answerPreference(ctx, parsed.data.id, parsed.data.oui)))
+    return { error: 'introuvable' };
+  revalidatePath('/');
+  return { ok: true };
 }

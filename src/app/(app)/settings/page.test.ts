@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { isValidElement, type ReactElement, type ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { FicheSection } from '@/components/verre/reglages/fiche';
 import { IntegrationsSettings } from '@/components/verre/reglages/integrations';
 import { MemorySection } from '@/components/verre/reglages/memoire';
 import { SettingsTabs } from '@/components/verre/reglages/settings-tabs';
@@ -15,6 +16,7 @@ import {
   listMemoryThreads,
 } from '@/server/memory/memory-section';
 import { RESOURCE } from '@/server/oauth/metadata';
+import { readFicheScreen } from '@/server/portrait/screen';
 import SettingsPage from './page';
 
 // La page lit beaucoup de choses ; seul le partage des jetons entre jetons personnels, ordinateurs connectés et
@@ -25,6 +27,7 @@ vi.mock('@/server/auth/api-tokens', async (importOriginal) => ({
   listApiTokens: vi.fn(),
 }));
 vi.mock('@/server/auth/session', () => ({
+  hasPassword: vi.fn(async () => true),
   requireUserContext: vi.fn(async () => ({
     userId: 'u1',
     tenantId: 't1',
@@ -39,6 +42,13 @@ vi.mock('@/server/memory/memory-section', () => ({
   listMemoryLessons: vi.fn(async () => []),
   listMemoryNotes: vi.fn(async () => []),
   listMemoryRepos: vi.fn(async () => []),
+}));
+vi.mock('@/server/portrait/screen', () => ({
+  readFicheScreen: vi.fn(async () => ({
+    etat: 'sans-boite',
+    lines: [],
+    sources: {},
+  })),
 }));
 vi.mock('@/server/log', () => ({ logError: vi.fn() }));
 vi.mock('@/server/auth/members', () => ({
@@ -279,5 +289,35 @@ describe('page de Réglages : l’onglet Mémoire', () => {
     expect((await memoire())?.data).toBeNull();
     vi.mocked(listMemoryNotes).mockRejectedValueOnce(new Error('base absente'));
     expect((await memoire())?.data).toBeNull();
+  });
+});
+
+// Le sixième onglet : la fiche de la personne connectée, lue sous ses droits, et d'elle seule.
+describe('page de Réglages : l’onglet « Ma fiche »', () => {
+  const fiche = async () => {
+    const page = (await SettingsPage(PROPS)) as ReactElement;
+    const [tabs] = findAll(page, SettingsTabs);
+    const panels = tabs?.props.panels as Record<string, ReactNode>;
+    return findAll(panels.fiche, FicheSection)[0]?.props;
+  };
+
+  it('donne à l’onglet la fiche de la personne connectée, avec son état', async () => {
+    const screen = {
+      etat: 'a-construire' as const,
+      lines: [],
+      sources: {},
+    };
+    vi.mocked(readFicheScreen).mockResolvedValueOnce(screen);
+
+    expect((await fiche())?.data).toEqual(screen);
+    expect(readFicheScreen).toHaveBeenLastCalledWith(
+      expect.objectContaining({ userId: 'u1', tenantId: 't1' }),
+    );
+  });
+
+  it('une lecture qui échoue donne data null, pas une page cassée', async () => {
+    vi.mocked(readFicheScreen).mockRejectedValueOnce(new Error('base absente'));
+
+    expect((await fiche())?.data).toBeNull();
   });
 });

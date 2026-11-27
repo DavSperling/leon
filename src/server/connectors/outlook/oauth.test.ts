@@ -23,8 +23,10 @@ const CLIENT = {
   id: '11111111-2222-4333-8444-555555555555',
   secret: `s-${randomBytes(8).toString('hex')}`,
 };
-const TOKEN_URL = 'https://login.microsoftonline.com/organizations/oauth2/v2.0/token';
-const SCOPE = 'offline_access User.Read Mail.ReadWrite Calendars.ReadWrite';
+const TOKEN_URL = 'https://login.microsoftonline.com/common/oauth2/v2.0/token';
+const SCOPE =
+  'offline_access User.Read Mail.ReadWrite Mail.Send Calendars.ReadWrite MailboxSettings.Read';
+const GRAPH = 'https://graph.microsoft.com/';
 
 // Des jetons générés à l'exécution : aucun secret, même d'exemple, dans le dépôt.
 const ACCESS = `eyJ.${randomBytes(12).toString('hex')}`;
@@ -76,12 +78,12 @@ afterEach(() => {
 });
 
 describe('outlookOAuth : description', () => {
-  it('déclare les adresses Microsoft du locataire « organizations », les droits en lecture et PKCE', () => {
+  it('passe par l’appli Microsoft de Leon, comptes professionnels et personnels (« common »), tous les droits et PKCE', () => {
     expect(outlookOAuth).toMatchObject({
-      appKey: 'OUTLOOK',
-      authorizeUrl: 'https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize',
+      appKey: 'MICROSOFT',
+      authorizeUrl: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
       tokenUrl: TOKEN_URL,
-      scopes: ['offline_access', 'User.Read', 'Mail.ReadWrite', 'Calendars.ReadWrite'],
+      scopes: SCOPE.split(' '),
       pkce: true,
       clientAuth: 'body',
       preFields: [],
@@ -91,7 +93,7 @@ describe('outlookOAuth : description', () => {
     expect(outlookOAuth.tokenBody ?? 'form').toBe('form');
   });
 
-  it('ne demande que la lecture du courrier et de l’agenda, avec PKCE S256', () => {
+  it('demande tout le courrier et l’agenda, sans les règles de la boîte, avec le choix du compte et PKCE S256', () => {
     const url = new URL(authorizeUrl(outlookOAuth, CLIENT, pending));
 
     expect(`${url.origin}${url.pathname}`).toBe(outlookOAuth.authorizeUrl);
@@ -100,6 +102,7 @@ describe('outlookOAuth : description', () => {
       redirect_uri: redirectUri(outlookOAuth),
       response_type: 'code',
       response_mode: 'query',
+      prompt: 'select_account',
       state: 'etat-1',
       scope: SCOPE,
       code_challenge: createHash('sha256')
@@ -108,8 +111,10 @@ describe('outlookOAuth : description', () => {
       code_challenge_method: 'S256',
     });
     // Jamais prompt=consent : Microsoft bloque alors les utilisateurs même après l'accord de l'administrateur.
-    expect(url.searchParams.has('prompt')).toBe(false);
-    expect(redirectUri(outlookOAuth)).toMatch(/\/api\/v1\/connexions\/oauth\/outlook\/retour$/);
+    expect(url.searchParams.get('prompt')).not.toContain('consent');
+    // Jamais le droit des règles de la boîte, qui peuvent transférer le courrier.
+    expect(url.searchParams.get('scope')).not.toContain('MailboxSettings.ReadWrite');
+    expect(redirectUri(outlookOAuth)).toMatch(/\/api\/v1\/connexions\/oauth\/microsoft\/retour$/);
   });
 });
 
@@ -203,7 +208,7 @@ describe('outlookOAuth : accord de l’administrateur', () => {
     expect(isConsentError('invalid_grant', 'AADSTS650017: autre code')).toBe(false);
   });
 
-  it('donne le lien d’accord de l’administrateur, avec les droits déclarés dans l’inscription de l’appli', () => {
+  it('donne le lien d’accord de l’administrateur, pour les seuls droits d’Outlook et toute l’entreprise', () => {
     const link = new URL(consent?.url(CLIENT.id, redirectUri(outlookOAuth)) ?? '');
 
     expect(`${link.origin}${link.pathname}`).toBe(
@@ -211,17 +216,23 @@ describe('outlookOAuth : accord de l’administrateur', () => {
     );
     expect(Object.fromEntries(link.searchParams)).toEqual({
       client_id: CLIENT.id,
-      scope: 'https://graph.microsoft.com/.default',
+      scope: [
+        'offline_access',
+        ...SCOPE.split(' ')
+          .slice(1)
+          .map((name) => GRAPH + name),
+      ].join(' '),
       redirect_uri: redirectUri(outlookOAuth),
+      state: '/connections?outil=outlook',
     });
   });
 
-  it('met la page de départ dans `state`, que Microsoft rend au retour', () => {
+  it('met la page de départ et l’outil dans `state`, que Microsoft rend au retour', () => {
     const link = new URL(
       consent?.url(CLIENT.id, redirectUri(outlookOAuth), '/welcome/tools') ?? '',
     );
 
-    expect(link.searchParams.get('state')).toBe('/welcome/tools');
+    expect(link.searchParams.get('state')).toBe('/welcome/tools?outil=outlook');
   });
 
   it('signale à l’échange que l’administrateur doit donner son accord', async () => {
@@ -276,8 +287,8 @@ describe('outlookOAuth : accord de l’administrateur', () => {
   it('met le lien dans le catalogue seulement quand l’appli est configurée', () => {
     expect(catalogItem(outlookCatalog, outlookConnector).adminConsentUrl).toBeNull();
 
-    vi.stubEnv('LEON_OAUTH_OUTLOOK_ID', CLIENT.id);
-    vi.stubEnv('LEON_OAUTH_OUTLOOK_SECRET', CLIENT.secret);
+    vi.stubEnv('LEON_OAUTH_MICROSOFT_ID', CLIENT.id);
+    vi.stubEnv('LEON_OAUTH_MICROSOFT_SECRET', CLIENT.secret);
     const item = catalogItem(outlookCatalog, outlookConnector);
 
     expect(item.oauthReady).toBe(true);

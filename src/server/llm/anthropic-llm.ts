@@ -7,6 +7,7 @@ import {
   type AgentEvent,
   type AgentTool,
   type ChatMessage,
+  LLM_UNREACHABLE,
   type Llm,
   LlmError,
   type LlmStep,
@@ -100,7 +101,7 @@ function toLlmError(step: LlmStep, error: unknown): unknown {
   if (!(error instanceof AnthropicError)) return error;
   const status =
     error instanceof APIError && error.status !== undefined ? String(error.status) : 'aucun';
-  const failure = new LlmError('appel au modèle impossible');
+  const failure = new LlmError(LLM_UNREACHABLE);
   logError('llm.appel', failure, { step, status });
   return failure;
 }

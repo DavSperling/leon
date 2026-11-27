@@ -5,6 +5,7 @@ import {
   DeleteAccountSection,
   DeleteOrganizationSection,
 } from '@/components/verre/reglages/delete-account';
+import { FicheSection } from '@/components/verre/reglages/fiche';
 import { IntegrationsSettings } from '@/components/verre/reglages/integrations';
 import { MemorySection } from '@/components/verre/reglages/memoire';
 import { ProfileSettings } from '@/components/verre/reglages/profile';
@@ -15,7 +16,12 @@ import { COMPUTER_TOKEN_PREFIX, listApiTokens } from '@/server/auth/api-tokens';
 import { deletionInfo } from '@/server/auth/delete-account';
 import { canInvite, getMembership, listMembers, notesRefusedAt } from '@/server/auth/members';
 import { managersSeeAll } from '@/server/auth/organisation';
-import { getSession, requireUserContext, signedInRecently } from '@/server/auth/session';
+import {
+  getSession,
+  hasPassword,
+  requireUserContext,
+  signedInRecently,
+} from '@/server/auth/session';
 import { readSsoSetup } from '@/server/auth/sso';
 import { ABOUT_MAX_CHARS, readAbout } from '@/server/briefing/about';
 import { claudeCodeInstructions, installCommand } from '@/server/cli/install-command';
@@ -30,6 +36,7 @@ import {
   listMemoryThreads,
 } from '@/server/memory/memory-section';
 import { RESOURCE } from '@/server/oauth/metadata';
+import { readFicheScreen } from '@/server/portrait/screen';
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: await (await getTranslations('settings'))('title') };
@@ -66,6 +73,7 @@ export default async function SettingsPage({
     seeAll,
     recent,
     memory,
+    fiche,
   ] = await Promise.all([
     listApiTokens(ctx),
     listMembers(ctx),
@@ -98,8 +106,14 @@ export default async function SettingsPage({
         return null;
       },
     ),
+    // Sa fiche, lue sous ses droits. Comme la mémoire : une lecture qui échoue donne une erreur dans l'onglet.
+    readFicheScreen(ctx).catch((error) => {
+      logError('settings.fiche', error);
+      return null;
+    }),
   ]);
   const twoFactor = Boolean(session?.user.twoFactorEnabled);
+  const password = await hasPassword(ctx.userId);
   const live = allTokens
     .filter((token) => !token.revokedAt)
     .map(({ revokedAt: _, ...token }) => token);
@@ -136,7 +150,7 @@ export default async function SettingsPage({
                 about={about ?? ''}
                 aboutMax={ABOUT_MAX_CHARS}
               />
-              <DeleteAccountSection info={deletion} twoFactor={twoFactor} />
+              <DeleteAccountSection info={deletion} twoFactor={twoFactor} hasPassword={password} />
             </>
           ),
           securite: <SecuritySettings enabled={twoFactor} />,
@@ -164,12 +178,18 @@ export default async function SettingsPage({
               depots={depotsEquipe}
             >
               {deletion.isOwner && (
-                <DeleteOrganizationSection info={deletion} twoFactor={twoFactor} />
+                <DeleteOrganizationSection
+                  info={deletion}
+                  twoFactor={twoFactor}
+                  hasPassword={password}
+                />
               )}
             </WorkspaceSettings>
           ),
           // la section Mémoire du lot 13 (leçons, notes, fils, dépôts), cinquième groupe
           memoire: <MemorySection recent={recent} max={LESSON_MAX} data={memory} />,
+          // la fiche de la personne (portrait/), visible d'elle seule, sixième groupe
+          fiche: <FicheSection data={fiche} />,
         }}
       />
     </div>

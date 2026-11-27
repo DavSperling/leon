@@ -196,6 +196,10 @@ function runChild(command: string, args: string[], input: string, cwd?: string):
     child.on('error', fail);
     // 'close' attend la fermeture des sorties : un enfant détaché qui les aurait héritées le ferait attendre ici.
     child.on('close', (code) => done({ code, stdout, stderr, ms: performance.now() - started }));
+    // L'enfant a pu finir avant d'avoir lu son entrée : EPIPE n'est pas une erreur ici.
+    child.stdin.on('error', (error: NodeJS.ErrnoException) => {
+      if (error.code !== 'EPIPE') fail(error);
+    });
     child.stdin.end(input);
   });
 }

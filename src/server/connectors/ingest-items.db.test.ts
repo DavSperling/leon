@@ -7,7 +7,12 @@ import { withTenant } from '@/server/db/with-tenant';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
 import { adminPool } from '@/test/db';
 import { createTestTenant, seedConnection } from '@/test/fixtures';
-import { type ConnectionRef, ingestConnectorItems, removeConnectorItems } from './ingest-items';
+import {
+  type ConnectionRef,
+  ingestConnectorItems,
+  removeConnectorItems,
+  removeConnectorTurns,
+} from './ingest-items';
 import { type NormalizedItem, normalizeItem } from './normalize';
 import type { ConnectorItem, ConnectorTurn } from './types';
 
@@ -166,6 +171,57 @@ describe('ingestConnectorItems', () => {
       ['document', 'Le site plante au chargement.', 'external', false],
       ['participant', 'Je ne sais pas qui parle.', null, false],
       ['participant', 'Je regarde.', 'team', true],
+    ]);
+  });
+
+  // Les destinataires d'un courrier suivent le tour jusqu'à la base, où la fiche de la personne les lira ; un
+  // tour sans destinataires garde deux listes vides.
+  it('enregistre les destinataires « à » et « copie » de chaque tour', async () => {
+    const connection = await connectionOf(paul);
+    const externalId = `thread:${randomUUID()}`;
+    const recipients = { to: ['Julie@Acme.test', 'paul@client.test'], cc: ['zoe@acme.test'] };
+    const item = normalized(
+      connectorItem(externalId, [
+        { ...comment(1, 'Voici le devis.'), recipients },
+        comment(2, 'Sans destinataires.'),
+      ]),
+    );
+
+    await ingestConnectorItems(paul, connection, [item]);
+
+    const stored = await readTurns(paul, await sourceIdOf(paul, externalId));
+    expect(stored.map((t) => [t.text, t.recipientsTo, t.recipientsCc]).sort()).toEqual([
+      ['Sans destinataires.', [], []],
+      ['Voici le devis.', ['julie@acme.test', 'paul@client.test'], ['zoe@acme.test']],
+    ]);
+  });
+
+  // Le fait « envoyé par une machine ou en nombre » d'un courrier reçu suit le tour jusqu'à la base, où l'agent
+  // « Brouillons de réponse » le relira ; un tour dont l'outil ne dit rien reste nul. Un tour relevé avant (sans le
+  // fait) le garde nul quand la relève suivante le relit : l'ingestion ne réécrit pas un tour déjà là.
+  it('enregistre si un courrier reçu est un envoi automatique, nul quand l’outil ne le dit pas, même relu ensuite', async () => {
+    const connection = await connectionOf(paul);
+    const externalId = `thread:${randomUUID()}`;
+    const before = comment(3, 'Relevé avant.');
+    await ingestConnectorItems(paul, connection, [normalized(connectorItem(externalId, [before]))]);
+
+    await ingestConnectorItems(paul, connection, [
+      normalized(
+        connectorItem(externalId, [
+          { ...comment(1, 'Nos nouveautés.'), automated: true },
+          { ...comment(2, 'Un point ?'), automated: false },
+          { ...before, automated: true },
+          comment(4, 'Sans le fait.'),
+        ]),
+      ),
+    ]);
+
+    const stored = await readTurns(paul, await sourceIdOf(paul, externalId));
+    expect(stored.map((t) => [t.text, t.automated]).sort()).toEqual([
+      ['Nos nouveautés.', true],
+      ['Relevé avant.', null],
+      ['Sans le fait.', null],
+      ['Un point ?', false],
     ]);
   });
 
@@ -429,5 +485,73 @@ describe('ingestConnectorItems', () => {
     expect(await removeConnectorItems(paul, current, [externalId])).toBe(1);
 
     expect(await readSources(paul, sourceId)).toEqual([]);
+  });
+});
+
+// Migration 0095 : un message supprimé chez l'outil part de son fil ; un fil resté sans message part aussi. Les
+// identifiants de message portent leur canal : ils sont uniques dans tout l'outil, comme ceux de Teams.
+describe('removeConnectorTurns', () => {
+  const message = (id: string, text: string): ConnectorTurn => ({
+    ...comment(1, text),
+    externalId: `message:canal/${id}`,
+  });
+
+  it('retire les tours signalés, seulement dans les sources de la connexion, et un fil devenu vide', async () => {
+    const mine = { ...(await connectionOf(paul)), privateRaw: true };
+    const theirs = { ...(await connectionOf(marie)), privateRaw: true };
+    const [devis, merci, seul] = [randomUUID(), randomUUID(), randomUUID()];
+    const fil = `thread:${randomUUID()}`;
+    const filSeul = `thread:${randomUUID()}`;
+    await ingestConnectorItems(paul, mine, [
+      normalized(connectorItem(fil, [message(devis, 'Le devis.'), message(merci, 'Merci.')])),
+      normalized(connectorItem(filSeul, [message(seul, 'Un message seul.')])),
+    ]);
+    await ingestConnectorItems(marie, theirs, [
+      normalized(connectorItem(fil, [message(devis, 'Le devis.')])),
+    ]);
+    const filId = await sourceIdOf(paul, fil);
+    const seulId = await sourceIdOf(paul, filSeul);
+
+    const ids = [devis, seul, randomUUID()].map((id) => `message:canal/${id}`);
+    expect(await removeConnectorTurns(paul, mine, ids)).toBe(2);
+
+    // Rangé sous « racine#empreinte » : la racine suffit à le retrouver.
+    const left = (await readTurns(paul, filId)).map((turn) => turn.externalId);
+    expect(left).toHaveLength(1);
+    expect(left[0]).toMatch(new RegExp(`^message:canal/${merci}#[0-9a-f]{12}$`));
+    expect(await readSources(paul, seulId)).toEqual([]);
+    expect(await readTurns(marie, await sourceIdOf(marie, fil))).toHaveLength(1);
+  });
+
+  it('retrouve toutes les parts d’un message découpé', async () => {
+    const mine = { ...(await connectionOf(paul)), privateRaw: true };
+    const long = randomUUID();
+    const fil = `thread:${randomUUID()}`;
+    const paragraph = 'Un long paragraphe sur le devis, ses délais et son budget. '.repeat(400);
+    await ingestConnectorItems(paul, mine, [
+      normalized(connectorItem(fil, [message(long, paragraph), message(randomUUID(), 'Merci.')])),
+    ]);
+    const filId = await sourceIdOf(paul, fil);
+    const parts = (await readTurns(paul, filId)).filter((turn) => turn.externalId.includes(long));
+    expect(parts.length).toBeGreaterThan(1);
+
+    expect(await removeConnectorTurns(paul, mine, [`message:canal/${long}`])).toBe(parts.length);
+    expect(await readTurns(paul, filId)).toHaveLength(1);
+  });
+
+  it('ne retire rien pour une connexion d’un autre membre ni d’une autre organisation', async () => {
+    const mine = { ...(await connectionOf(paul)), privateRaw: true };
+    const theirs = { ...(await connectionOf(marie)), privateRaw: true };
+    const devis = randomUUID();
+    const id = `message:canal/${devis}`;
+    const fil = `thread:${randomUUID()}`;
+    await ingestConnectorItems(paul, mine, [
+      normalized(connectorItem(fil, [message(devis, 'Le devis.')])),
+    ]);
+
+    expect(await removeConnectorTurns(marie, mine, [id])).toBe(0);
+    expect(await removeConnectorTurns(marie, theirs, [id])).toBe(0);
+    expect(await removeConnectorTurns(zoe, mine, [id])).toBe(0);
+    expect(await readTurns(paul, await sourceIdOf(paul, fil))).toHaveLength(1);
   });
 });

@@ -361,6 +361,105 @@ describe('normalizeItem', () => {
     expect(result?.turns[0]?.authorEmail).toHaveLength(320);
   });
 
+  // Les destinataires d'un courrier sont donnés par le connecteur, « à » et « copie » : le socle n'en garde
+  // que des adresses, en minuscules, sans doublon, en nombre borné.
+  it('garde les destinataires en minuscules, sans espaces autour ni doublon dans une liste', () => {
+    const mail = {
+      ...body('Voici le devis.'),
+      recipients: {
+        to: [' Julie@Acme.test ', 'julie@acme.test', 'paul@client.test'],
+        cc: ['PAUL@client.test', 'zoe@acme.test', 'Zoe@Acme.TEST'],
+      },
+    };
+
+    const result = normalize(item([mail]));
+
+    expect(result?.turns[0]).toMatchObject({
+      recipientsTo: ['julie@acme.test', 'paul@client.test'],
+      recipientsCc: ['paul@client.test', 'zoe@acme.test'],
+    });
+  });
+
+  it('rend deux listes vides pour un tour sans destinataires', () => {
+    const result = normalize(item([body('Texte')]));
+
+    expect(result?.turns[0]).toMatchObject({ recipientsTo: [], recipientsCc: [] });
+  });
+
+  it('garde le fait « envoi automatique » d’un courrier, nul quand l’outil ne le dit pas', () => {
+    const result = normalize(
+      item([
+        { ...body('Nos nouveautés.'), automated: true },
+        { ...body('Un point ?'), automated: false },
+        body('Texte'),
+      ]),
+    );
+
+    expect(result?.turns.map((turn) => turn.automated)).toEqual([true, false, null]);
+  });
+
+  it('laisse de côté ce qui n’est pas une adresse, et une adresse de plus de 320 caractères', () => {
+    const tooLong = `${'a'.repeat(320)}@acme.test`;
+    const to = [
+      'Julie Martin <julie@acme.test>',
+      'Julie Martin',
+      '',
+      'julie@',
+      '@acme.test',
+      'ju lie@acme.test',
+      'ju\u0000lie@acme.test',
+      tooLong,
+      'paul@client.test',
+    ];
+
+    const result = normalize(item([{ ...body('Texte'), recipients: { to, cc: [tooLong] } }]));
+
+    expect(result?.turns[0]).toMatchObject({
+      recipientsTo: ['paul@client.test'],
+      recipientsCc: [],
+    });
+  });
+
+  it('garde une adresse aux signes peu courants : esperluette, signe égal, extension en « xn-- »', () => {
+    const to = [
+      'R&D@acme.test',
+      'bounce+julie=acme.test@envoi.example.com',
+      'contact@exemple.xn--p1ai',
+    ];
+
+    const result = normalize(item([{ ...body('Texte'), recipients: { to, cc: [] } }]));
+
+    expect(result?.turns[0]?.recipientsTo).toEqual([
+      'r&d@acme.test',
+      'bounce+julie=acme.test@envoi.example.com',
+      'contact@exemple.xn--p1ai',
+    ]);
+  });
+
+  it('garde 100 destinataires au plus par liste, les premiers', () => {
+    const many = Array.from({ length: 150 }, (_, index) => `p${index}@acme.test`);
+    const recipients = { to: many, cc: many.slice(0, 3) };
+
+    const result = normalize(item([{ ...body('Texte'), recipients }]));
+
+    expect(result?.turns[0]?.recipientsTo).toEqual(many.slice(0, 100));
+    expect(result?.turns[0]?.recipientsCc).toEqual(many.slice(0, 3));
+  });
+
+  it('répète les destinataires sur chaque morceau d’un tour trop long', () => {
+    const recipients = { to: ['julie@acme.test'], cc: ['paul@client.test'] };
+
+    const result = normalize(item([{ ...body(paragraphs(300).join('\n\n')), recipients }]));
+
+    expect(result?.turns.length).toBeGreaterThan(1);
+    for (const piece of result?.turns ?? []) {
+      expect(piece).toMatchObject({
+        recipientsTo: ['julie@acme.test'],
+        recipientsCc: ['paul@client.test'],
+      });
+    }
+  });
+
   it('refuse un identifiant de plus de 200 caractères et le journalise sans le reprendre', () => {
     const logged = vi.spyOn(console, 'error').mockImplementation(() => {});
     const externalId = `issue:${'z'.repeat(250)}`;

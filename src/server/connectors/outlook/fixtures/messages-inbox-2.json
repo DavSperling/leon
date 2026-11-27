@@ -1,5 +1,5 @@
 {
-  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users('00000000-0000-4000-8000-000000000001')/mailFolders('inbox')/messages(id,conversationId,subject,receivedDateTime,from,body,webLink)",
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#users('00000000-0000-4000-8000-000000000001')/mailFolders('inbox')/messages(id,conversationId,subject,receivedDateTime,from,toRecipients,ccRecipients,body,webLink)",
   "value": [
     {
       "@odata.etag": "W/\"CQAAABYAAAB4\"",
@@ -8,6 +8,10 @@
       "subject": "RE: RE: Devis site web",
       "receivedDateTime": "2026-10-13T16:20:00Z",
       "from": { "emailAddress": { "name": "Paul Lambert", "address": "paul.lambert@client.test" } },
+      "toRecipients": [
+        { "emailAddress": { "name": "Marie Durand", "address": "marie.durand@acme.test" } }
+      ],
+      "ccRecipients": [],
       "body": { "contentType": "text", "content": "Merci, bien reçu.\r\n\r\nPaul" },
       "webLink": "https://outlook.office365.com/owa/?ItemID=AAMkAGEx-inbox-4&exvsurl=1&viewmodel=ReadMessageItem"
     }

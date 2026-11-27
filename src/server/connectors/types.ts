@@ -22,6 +22,12 @@ export type ConnectorTurn = {
   // Une note que seule l'équipe voit (le client ne l'a pas lue). Un attribut du tour, pas une marque
   // dans le texte : le texte d'un client peut imiter n'importe quelle marque.
   internalNote?: boolean;
+  // Les destinataires d'un courrier, « à » et « copie » : des adresses seules, sans les noms (le minimum sur
+  // des tiers), jamais la copie cachée. Absent pour tout ce qui n'est pas un courrier.
+  recipients?: { to: string[]; cc: string[] };
+  // Un courrier reçu envoyé par une machine ou en nombre (lettre d'information, notification), lu dans ce que l'outil
+  // rend déjà (Gmail : gmail/map.ts). Absent quand l'outil ne le dit pas, et pour un mail envoyé.
+  automated?: boolean;
   text: string; // texte brut (HTML déjà passé par htmlToText)
   // ISO 8601. Tour document : updatedAt de l'élément (l'état décrit vaut à cette date ; un corps
   // modifié donne un tour daté de la modification). Commentaire ou prise de parole : sa propre date.
@@ -36,18 +42,43 @@ export type ConnectorItem = {
   updatedAt: string; // ISO 8601
   origin: Record<string, string>; // { repo: 'acme/leon' }, { workspace: 'Acme', project: 'Site' }
   turns: ConnectorTurn[]; // ordre chronologique
+  // Le lieu de l'élément chez l'outil (une conversation, un canal, une réunion de Teams) : la clé d'un lieu de
+  // `SyncPage.audiences`, donné dans la même page. L'élément n'existe alors qu'une fois dans l'organisation, quel que
+  // soit qui le relève, et n'est visible que de ce lieu (0097). Absent : une source par personne qui branche, à
+  // l'accès de sa connexion.
+  audience?: string;
 };
+
+// Qui voit un lieu chez l'outil, dit à chaque lecture du lieu : toute l'organisation Leon (`team`), ou ses membres,
+// par leur adresse et leur identifiant chez l'outil, que Leon retrouve parmi les membres de l'organisation. `since`
+// (ISO 8601) : le début de l'historique qu'un membre voit, quand l'outil le borne (ajouté sans l'historique).
+export type AudienceMember = { email: string | null; id: string | null; since?: string | null };
+export type Audience =
+  | { key: string; team: true }
+  | { key: string; team?: false; members: AudienceMember[] };
 
 // `depotsEquipe` (GitHub seulement, décision D) : les dépôts d'équipe de l'organisation, `github.com/owner/repo`
 // en minuscules. Absent vaut vide : rien n'est relevé.
-export type SyncState = { cursor: string | null; since: Date; depotsEquipe?: string[] };
+// `signaled` (Teams) : les lieux que Microsoft a signalés depuis le passage précédent (0098), à relire tout de suite.
+export type SyncState = {
+  cursor: string | null;
+  since: Date;
+  depotsEquipe?: string[];
+  signaled?: readonly string[];
+};
 // `removed` : les externalId d'éléments déjà relevés à retirer (un événement d'agenda devenu privé).
+// `removedTurns` : les externalId de tours à retirer, cherchés dans tous les éléments de l'outil et du créateur (un
+// message supprimé dans un fil) : seulement pour un outil dont l'identifiant de tour est unique hors de son élément
+// (message:<canal>/<id> de Teams). Un élément resté sans tour part aussi.
 // `depotsConfirmes` (GitHub) : les dépôts d'équipe que la connexion a pu lire à ce passage, même forme.
+// `audiences` : les lieux lus à ce passage et qui en est ; tout ce qui a déjà été relevé d'eux prend leur accès du jour.
 export type SyncPage = {
   items: ConnectorItem[];
   cursor: string;
   removed?: string[];
+  removedTurns?: string[];
   depotsConfirmes?: string[];
+  audiences?: Audience[];
 };
 
 // Les jetons rendus par l'éditeur ; `raw` est sa réponse privée de access_token, refresh_token et id_token.
@@ -106,6 +137,9 @@ export type Connector<Config> = {
   // Texte brut privé à celui qui branche, comme une conversation (boîte mail personnelle).
   // Absent : visible de l'équipe.
   privateRaw?: boolean;
+  // Chaque élément est visible des membres de son lieu chez l'outil (`ConnectorItem.audience`), comme dans l'outil :
+  // la connexion ne se partage pas.
+  memberAccess?: boolean;
   // `account` : le libellé affiché. `accountKey` : l'identifiant stable du compte (et de l'espace ou du
   // site), lu dans une réponse déjà demandée ; « Reconnecter » le compare. Absent quand l'outil n'en dit rien.
   verify(config: Config, http: ConnectorHttp): Promise<{ account: string; accountKey?: string }>;
@@ -114,8 +148,18 @@ export type Connector<Config> = {
   // Le bouton passe par Pipedream Connect (pipedream.ts) : `app` est le nom de l'appli chez Pipedream.
   // La configuration est alors PipedreamConfigSchema, et chaque requête passe par son proxy.
   pipedream?: { app: string };
+  // Microsoft Graph prévient Leon de chaque changement de ces ressources, et la relève suit tout de suite
+  // (microsoft-notifications.ts).
+  watch?: readonly GraphWatch[];
+  // Les mêmes, quand elles dépendent du compte (`accountKey` de la connexion) ou de ce que la relève a lu (son
+  // curseur) : les conversations d'une personne, les canaux de sa liste du jour.
+  watchFor?(accountKey: string | null, cursor: string | null): readonly GraphWatch[];
 };
 export type AnyConnector = Connector<Record<string, unknown>>;
+// `resource` : le chemin suivi, ex. « /me/mailFolders('inbox')/messages » ; `changeType` : « created », « updated »…
+// `onePerApp` : Microsoft n'accepte qu'un abonnement par appli à cette ressource (un canal) ; celui de la connexion
+// d'un collègue suffit.
+export type GraphWatch = { resource: string; changeType: string; onePerApp?: boolean };
 
 // La partie publique d'un connecteur, lue par l'interface (aucun code serveur).
 export type CatalogField = {

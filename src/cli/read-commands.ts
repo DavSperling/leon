@@ -9,6 +9,7 @@
 // - Un 404 (serveur plus ancien que la route) ou un 403 : un message fixe sur la sortie d'erreur, et le code 0 (C11).
 //   Un poste sans connexion, un serveur injoignable ou une autre réponse : un message fixe aussi, et 0, comme le bloc
 //   de démarrage (briefing.ts). Les messages ne citent ni le projet, ni l'adresse, ni la requête.
+// - `leon search` masque sa requête (maskSecrets) avant de l'envoyer : l'agent y met les mots de sa tâche (D40).
 // - Le projet et la branche se lisent comme au démarrage : le dossier d'où la commande est lancée (INIT_CWD sous pnpm).
 // shortcut: ni `outil` ni `session` ne partent, la commande ne sait pas quel outil la lance : le journal note `cli`, et
 // l'état du modèle relie la lecture à sa session par la date (thread-state-worker.ts). Les envoyer le jour où la
@@ -22,6 +23,7 @@ import {
   USAGES,
   type Usage,
 } from '../capture/api-contract';
+import { maskSecrets } from '../capture/mask-secrets';
 import { CODE_SESSION_KINDS } from '../capture/turn';
 import { briefingDirectory, currentBranch } from './briefing';
 import { factsConsent } from './consent';
@@ -91,7 +93,8 @@ async function bodyOf(
     return { branche: await branch() };
   }
   if (command === 'search') {
-    const requete = positionals.join(' ').trim();
+    // Les mots de la tâche partent masqués (D40, comme le message du rappel) ; la route les masque de nouveau (C11).
+    const requete = maskSecrets(positionals.join(' ')).trim();
     if (requete === '') throw new Error('leon search needs a query: leon search "<query>".');
     return { requete };
   }

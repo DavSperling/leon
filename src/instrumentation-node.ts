@@ -29,6 +29,14 @@ export async function startNodeInstrumentation() {
   }
   const { startBriefingWorker } = await import('@/server/briefing/worker');
   await startBriefingWorker({ llm });
+  // La fiche d'une personne (portrait/) : construite quand elle le demande dans ses réglages, jamais d'office. Sans
+  // modèle, ses lignes calculées s'écrivent quand même.
+  const { startFicheWorker } = await import('@/server/portrait/worker');
+  await startFicheWorker({ llm });
+  // L'agent « Brouillons de réponse » (portrait/brouillons.ts) : un passage quand la personne lui dit oui, puis à la
+  // fin de chaque relève de sa boîte. Sans modèle, chaque passage finit sans rien faire. Avant la relève, qui en demande.
+  const { startBrouillonsWorker } = await import('@/server/portrait/brouillons-worker');
+  await startBrouillonsWorker({ llm });
   // Le résumé des sessions (T23) : comme le point du matin, sans modèle chaque job finit sans rien faire.
   const { startResumeWorker } = await import('@/server/sessions/resume-worker');
   await startResumeWorker({ llm });

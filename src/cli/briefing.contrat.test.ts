@@ -160,6 +160,10 @@ function runCommand(input: string | null, env: Record<string, string> = {}) {
     child.on('close', (code) =>
       done({ code, stdout, stderr, seconds: (Date.now() - started) / 1000 }),
     );
+    // L'enfant a pu finir avant d'avoir lu son entrée : EPIPE n'est pas une erreur ici.
+    child.stdin.on('error', (error: NodeJS.ErrnoException) => {
+      if (error.code !== 'EPIPE') fail(error);
+    });
     if (input !== null) child.stdin.end(input);
   });
 }

@@ -1,12 +1,15 @@
 import { z } from 'zod';
+import { type GoogleConfig, GoogleConfigSchema, googleHttp, googleOAuth } from '../google';
 import { ConnectorHttpError } from '../http';
-import { type PipedreamConfig, PipedreamConfigSchema } from '../pipedream';
 import type { Connector, SyncPage } from '../types';
 import { BATCH_SIZE, gmailClient } from './client';
 import { threadsOf } from './map';
 
-// Gmail, par Pipedream Connect (pipedream.ts) : l'appli Google est celle de Pipedream, déjà validée pour
-// gmail.modify ; chaque requête passe par son proxy et coûte 1 crédit. Doc lue le 25/10/2026 :
+// Gmail par l'appli Google de Leon (google.ts) : tout le courrier (mail.google.com, envoi et suppression
+// définitive compris) et les réglages de base (gmail.settings.basic : filtres, signature, absence), jamais les
+// transferts ni la délégation (gmail.settings.sharing). Leon lit, et n'écrit que par ses agents (portrait/brouillon-depot.ts). Sans cette appli,
+// par Pipedream Connect (pipedream.ts) : l'appli Google de Pipedream, chaque requête par son proxy pour 1 crédit.
+// Doc lue le 25/10/2026 :
 //   https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/list (q, du plus
 //     récent au plus ancien, 500 au plus par page, nextPageToken ; spam et corbeille exclus par défaut)
 //   https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/get (format=full)
@@ -53,21 +56,25 @@ function readCursor(text: string | null, since: Date): Cursor {
   }
 }
 
-export const gmailConnector: Connector<PipedreamConfig> = {
+export const gmailConnector: Connector<GoogleConfig> = {
   id: 'gmail',
-  configSchema: PipedreamConfigSchema,
+  configSchema: GoogleConfigSchema,
   secretFields: [],
   hosts: () => ['gmail.googleapis.com'],
+  oauth: googleOAuth(
+    'https://mail.google.com/',
+    'https://www.googleapis.com/auth/gmail.settings.basic',
+  ),
   pipedream: { app: 'gmail' },
   privateRaw: true, // une boîte mail est personnelle
 
-  async verify(_config, http) {
-    const { emailAddress } = await gmailClient(http).profile();
+  async verify(config, http) {
+    const { emailAddress } = await gmailClient(googleHttp(config, http)).profile();
     return { account: emailAddress, accountKey: emailAddress.toLowerCase() };
   },
 
-  async *sync(_config, { cursor, since }, http): AsyncGenerator<SyncPage> {
-    const client = gmailClient(http);
+  async *sync(config, { cursor, since }, http): AsyncGenerator<SyncPage> {
+    const client = gmailClient(googleHttp(config, http));
     const { done, window: kept } = readCursor(cursor, since);
     let window = kept ?? { before: seconds(new Date()), pageToken: null, skip: 0 };
     const q = `after:${done - OVERLAP_S} before:${window.before} ${FILTER}`;

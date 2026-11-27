@@ -39,6 +39,7 @@ import { mondayCatalog } from './monday/catalog';
 import { notionCatalog } from './notion/catalog';
 import { redirectUri } from './oauth';
 import { oauthClient } from './oauth-env';
+import { onedriveCatalog } from './onedrive/catalog';
 import { outlookCatalog } from './outlook/catalog';
 import { pipedreamEnv } from './pipedream';
 import { pipedriveCatalog } from './pipedrive/catalog';
@@ -49,6 +50,7 @@ import { getConnector } from './registry';
 import { sentryCatalog } from './sentry/catalog';
 import { shortcutCatalog } from './shortcut/catalog';
 import { slackCatalog } from './slack/catalog';
+import { teamsCatalog, teamsChatsCatalog } from './teams/catalog';
 import { tldvCatalog } from './tldv/catalog';
 import { trelloCatalog } from './trello/catalog';
 import type { AnyConnector, CatalogEntry } from './types';
@@ -61,11 +63,12 @@ export type CatalogItem = Omit<CatalogEntry, 'keyAccepted' | 'en'> & {
   family: ProviderFamily;
   available: boolean; // le connecteur existe (sinon « bientôt »)
   privateRaw: boolean; // le texte lu reste privé à qui branche (boîte mail, Drive, Slack)
+  memberAccess: boolean; // chaque élément est visible des membres de son lieu chez l'outil (Teams), sans partage
   // Le connecteur a un bouton et son appli (ou Pipedream) est configurée sur ce serveur.
   oauthReady: boolean;
   keyAccepted: boolean; // la clé collée reste possible
   oauthPreFields: string[]; // champs non secrets à remplir avant le clic
-  // Lien d'accord de l'administrateur (Outlook). L'identifiant d'une appli n'est pas un secret ;
+  // Lien d'accord de l'administrateur (Outlook, OneDrive, Teams, Teams Chat). L'identifiant d'une appli n'est pas un secret ;
   // son secret ne sort jamais d'ici.
   adminConsentUrl: string | null;
 };
@@ -113,6 +116,9 @@ export const CATALOG_ENTRIES: Record<ProviderId, CatalogEntry> = {
   gmail: gmailCatalog,
   drive: driveCatalog,
   slack: slackCatalog,
+  onedrive: onedriveCatalog,
+  teams: teamsCatalog,
+  teamschats: teamsChatsCatalog,
 };
 
 // Les textes de l'entrée dans la langue demandée : l'anglais vient du bloc `en`, tout autre code garde
@@ -155,6 +161,7 @@ export function catalogItem(
     family: PROVIDER_FAMILIES[entry.id],
     available: connector !== null,
     privateRaw: connector?.privateRaw === true,
+    memberAccess: connector?.memberAccess === true,
     oauthReady: client !== null || (connector?.pipedream !== undefined && pipedreamEnv() !== null),
     keyAccepted: entry.keyAccepted ?? true,
     oauthPreFields: spec?.preFields ?? [],

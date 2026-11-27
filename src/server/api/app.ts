@@ -12,6 +12,7 @@ import { contextRoutes } from './context-routes';
 import { faitsRoutes } from './faits-routes';
 import { ingestRoutes } from './ingest-routes';
 import { mcpRoutes } from './mcp-routes';
+import { microsoftRoutes } from './microsoft-routes';
 import { notesRoutes } from './notes-routes';
 import { oauthRoutes } from './oauth-routes';
 import { readRoutes } from './read-routes';
@@ -46,5 +47,7 @@ app.route('/mcp', mcpRoutes);
 // L'inscription des clients OAuth : publique par nature, ni jeton ni session.
 app.route('/oauth', oauthRoutes);
 app.route('/v1/connexions/oauth', createOAuthRoutes({ getConnector }));
+// Les notifications de Microsoft Graph : publiques, le clientState de chacune en fait foi.
+app.route('/microsoft', microsoftRoutes);
 app.notFound((c) => c.json({ error: 'Introuvable' }, 404));
 app.onError(handleApiError);

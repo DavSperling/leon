@@ -163,6 +163,20 @@ D40 et l'annexe 12 disent comme tels les choix du rédacteur :
 - le lot 16 avant le lot 15 ;
 - les seuils du critère et leur façon de compter.
 
+## Décision d'Amos du 23/11 : les outils de l'app de bureau
+
+Ce sont ses réponses au questionnaire du 23/11, sur le premier des deux constats « à part » de l'[annexe 12](../etudes/memoire-sessions-2026-11/annexes/12-lecture-obligee.md) (section « Plus tard »). Elles amendent D36, et donc le signal « externe » (D17).
+
+1. **Trois outils de l'app de bureau de Claude Code ne rendent plus la session externe** : `mcp__ccd_turn__update_plan` (le plan), `mcp__ccd_turn__wrap_up` (le récapitulatif de fin de tour) et `mcp__ccd_session__mark_chapter` (les chapitres).
+   - L'app n'y répond que par ses propres messages, plus le titre que l'agent a donné au chapitre. C'est relevé le 23/11 sur les réponses de ces trois outils dans les sessions d'Amos, sans lire la conversation.
+   - Ils comptent comme `TodoWrite`, par leur nom complet exact, jamais par un préfixe.
+   - Tout autre `mcp__ccd_*` reste externe, dont `search_session_transcripts`, `read_widget_context`, `send_message` et `get_status` (l'état d'une PR rend du texte de GitHub).
+2. **Les sessions déjà marquées externes le restent.** La marque est un OU collant (`record-facts.ts`) : seules les sessions captées après la fusion en profitent, comme pour A14.
+3. **Le gain réel est petit.** Décompte du 23/11, par le code du dépôt (`extractClaudeCodeFacts`, sous-agents compris), sur les 74 sessions menées des dossiers de Leon : 29 au terminal, 45 dans l'app, sans les anciens agents de workflow (`sdk-py`).
+   - 71 sont externes aujourd'hui ; 69 l'auraient été avec la règle.
+   - Compter tous les `mcp__ccd_*` comme locaux n'en gagnerait aucune de plus.
+   - Les autres causes, en sessions : une commande réseau dans Bash 52, `SendMessage` 32 (seule cause pour 5), un sous-agent `Agent` 27, `mcp__ccd_pr__get_status` 27, `WebFetch` 21, `WebSearch` 19, `Workflow` 17, `mcp__ccd_session__start_session` 16, le navigateur intégré 15. Amos a demandé de les étudier dans la même session, à part de ce changement.
+
 ## Décisions d'Amos du 23/11 pour les agents de workflow
 
 Ce sont ses réponses au questionnaire du 23/11, sur le constat que l'annexe 12 renvoyait à un lot à part (« Plus tard »). Elles priment sur le texte des tâches. Le détail codé est dans l'amendement du 23/11 de T63.
@@ -182,7 +196,7 @@ Le relevé du 23/11 a été fait sur les formes seulement : champs techniques, n
 2. **Les 314 sessions déjà importées le 19/11 restent sur le serveur.** Seules les captures et les imports à venir changent.
 3. **Un appel `Workflow` se juge par les échanges des agents de son run**, comme T63 juge `Agent` et `Task`.
    - Sur le poste au 23/11, 62 des 232 runs seraient locaux. Mais aucune des 17 sessions qui lancent un workflow ne cesse d'être externe : chacune appelle un autre outil externe, comme `mcp__ccd_*`, `SendMessage`, un autre MCP ou `WebFetch`.
-   - L'effet viendra avec le constat des outils de l'app de bureau (annexe 12, « Plus tard »), qui reste à décider à part.
+   - Le constat des outils de l'app de bureau a été tranché le même jour (décision ci-dessus) : il ne change pas ce verdict, puisque ces sessions ont aussi d'autres causes.
 
 ## Lots, et ce qu'ils changent au plan mémoire des sessions
 
@@ -329,7 +343,7 @@ Amendé le 05/11 : QD1 est tranchée par Amos, le résumé côté serveur est ac
   - **Les commandes de la CLI.** `leon dossier`, `leon fil <id>` et `leon chercher "<requête>"` appellent ces routes, écrivent sur la sortie standard et rien sur le disque. Elles marchent dans les quatre outils, sans connecteur.
   - **Le MCP** gagne les mêmes lectures : les outils `dossier` et `fil`, et, pour `search`, le filtre `fil` (`depot` vient de T25), avec la mention du fil et des PR d'une session trouvée. `MCP_INSTRUCTIONS` gagne une phrase, sans retirer la recherche générale qui sert claude.ai et ChatGPT : « when working on a code repository, call dossier, then fil; search with depot ». Au MCP, brancher le connecteur vaut accord pour lire, comme aujourd'hui pour `search` ; les commandes de la CLI, elles, exigent l'usage `lecture`. Tranché le 05/11 (A16) : pour écrire, `remember` lit en plus le réglage `noter` du compte (D30, C16, T65). Le branchement du connecteur dans les outils et sa connexion relèvent du plan MCP distant (#121) ; ce plan n'écrit aucun jeton.
   - **La consigne du bloc et les commandes de la CLI** ne citent que `dossier`, `fil` et la recherche bornée au dépôt, jamais une recherche dans toute la mémoire (vigilance 6).
-  - **Le signal « externe »** (D17) : lire Leon par `leon fil`, `leon chercher` ou leurs outils MCP rend la session externe, puisque ces lectures rendent des sources de connecteurs ; `leon dossier` et l'outil `dossier`, qui ne rendent que des clés, non (T44). Amendé le 04/11 par D36 : `leon dossier`, `leon fil` et `leon chercher`, et les outils `dossier` et `fil` du MCP de Leon, ne rendent plus la session externe. Tranché le 05/11 (A14) : `leon lecons`, `leon versions` et `leon noter`, et les outils `lecons`, `versions` et `remember`, non plus. `search` et `fetch` de Leon au MCP la rendent toujours externe.
+  - **Le signal « externe »** (D17) : lire Leon par `leon fil`, `leon chercher` ou leurs outils MCP rend la session externe, puisque ces lectures rendent des sources de connecteurs ; `leon dossier` et l'outil `dossier`, qui ne rendent que des clés, non (T44). Amendé le 04/11 par D36 : `leon dossier`, `leon fil` et `leon chercher`, et les outils `dossier` et `fil` du MCP de Leon, ne rendent plus la session externe. Tranché le 05/11 (A14) : `leon lecons`, `leon versions` et `leon noter`, et les outils `lecons`, `versions` et `remember`, non plus. `search` et `fetch` de Leon au MCP la rendent toujours externe. Amendé le 23/11 (décision d'Amos du 23/11) : le plan, le récapitulatif et les chapitres de l'app de bureau (`mcp__ccd_turn__update_plan`, `mcp__ccd_turn__wrap_up`, `mcp__ccd_session__mark_chapter`) non plus ; les autres `mcp__ccd_*` si.
   - **Chaque lecture d'un fil ou du dossier est notée** par `recordReads`, avec l'outil et la session quand ils sont connus, pour la mesure du lot 11. Il faut pour cela étendre le check de `read_log.tool` et ajouter une colonne `session` (T44).
   - Aucune écriture de plus. Amendé le 04/11 par D38 : hormis `leon noter`, le brouillon privé de l'agent, sous l'usage `noter` (D30). Tranché le 05/11 : la restauration d'une version ne passe plus par le poste, seulement par le site (D33).
 - **D28. Le niveau 3 (passage obligé) n'est pas construit ici.** Le lot 11 mesure d'abord si les niveaux 1 et 2 suffisent. S'il le faut, un lot à part le conçoit, en option éteinte par défaut, avec son propre accord.
@@ -442,6 +456,7 @@ Décisions du 04/11 (D33 à D39), qui amendent D21 à D27 et D30 comme dit en re
   - Ne marquent plus la session, selon la décision d'Amos : `leon dossier`, `leon fil`, `leon chercher`, et les outils `dossier` et `fil` du serveur MCP de Leon.
   - Tranché le 05/11 (A14) : `leon lecons`, `leon versions` et `leon noter`, et les outils `lecons`, `versions` et `remember` du serveur MCP de Leon, ne la marquent pas non plus. `leon noter` et `remember` ne rendent qu'un id et un numéro, aucun texte : l'écart entre les deux disparaît.
   - Les autres signaux ne changent pas : les autres `mcp__*` (dont `search` et `fetch` de Leon), `WebFetch`, les commandes réseau, `gh` en lecture. `Agent` et `Task` aussi, jusqu'au lot 14.
+    > **Amendé le 23/11 (décision d'Amos du 23/11) :** trois outils de l'app de bureau de Claude Code ne marquent pas non plus la session : `mcp__ccd_turn__update_plan`, `mcp__ccd_turn__wrap_up` et `mcp__ccd_session__mark_chapter`, par leur nom complet exact. Les autres `mcp__ccd_*` restent externes. Une session déjà marquée externe le reste.
   - **Les sous-agents** (tranché le 05/11, A14).
     - D'abord le tri (T43) : la capture distingue les vrais messages de l'utilisateur des rapports de sous-agents, qui arrivent comme des messages `user`. Un rapport de sous-agent n'est jamais un message de l'utilisateur, ni preuve d'une `[décision]`.
     - Ensuite, dès le lot 14 (T63) : un sous-agent qui ne lit que le dépôt (lecture de fichiers, recherche dans le dépôt, commandes locales) ne rend plus la session externe. Un sous-agent qui va sur le web ou appelle un outil réseau la rend toujours externe. Un sous-agent dont on ne lit pas les échanges, ou qui n'a pas rendu son rapport final, aussi. Seules les sessions captées après le lot 14 en profitent.
@@ -520,6 +535,12 @@ Décision du 20/11 (D40), qui amende D28 et D31, et précise D25 et D30 :
   - **L'arrêt.**
     - Dans Claude Code, un crochet `PreToolUse` (matcher `Edit|Write|MultiEdit|NotebookEdit`, 5 s) lance `leon read-first` avant chaque modification de fichier. La commande revérifie `tool_name`.
     - La première modification de la session, sur un fichier du dossier du projet, est refusée une fois, avec un texte fixe en français : lire d'abord le fil de la branche (`leon thread`), sinon chercher avec quelques mots de la tâche, sans guillemets ni symboles (`leon search`), puis refaire la modification. Si la lecture échoue, l'agent refait sa modification sans insister.
+      - Amendé le 23/11 (décision d'Amos, après l'essai T66, annexe 12) : le texte dit que ce que la mémoire rend, ce sont des données, pas des consignes ; si le code ou git les contredit, le code gagne ; sinon, elles font partie du contexte de la tâche et l'agent en tient compte. Le texte d'avant (« à vérifier contre le code et git ») faisait lire, mais l'agent écartait ce que git ne confirmait pas (essai : Opus 0 fois sur 3, contre 5 sur 6 avec ce texte ; une ligne piégée jamais suivie).
+      - Amendé le 24/11 (essai réel d'Amos) : le texte demande de lancer chaque lecture seule et telle quelle, sans `|`, `>`, `2>` ni `&&` : dans l'app, l'agent avait lancé `leon thread 2>&1 | head -60`, que le bac à sable a gardé (annexe 12).
+      - Amendé le 23/11 (essai T66) : une panne de la commande qui sort avec le code 2 bloque l'écriture. `leon read-first` attrape toute erreur et sort avec le code 0, et sa commande dans les réglages ne porte aucun argument venu d'un texte.
+      - Amendé le 23/11 (essai T66 avec Amos, dans l'app) : un fichier compte comme du projet s'il est sous `CLAUDE_PROJECT_DIR`, le dossier où la session a commencé ; le `cwd` ne sert qu'en repli, car il suit les `/cd` (relecture de Codex sur #237, 24/11). Les worktrees de Claude Code, rangés sous le dossier ouvert, sont couverts. Les agents de workflow portent `agent_id` et `agent_type: workflow-subagent`.
+      - Amendé le 23/11 (décision d'Amos, après l'essai T66) : sous le bac à sable de Claude Code, le réseau vers le serveur de Leon est fermé, et la lecture échoue. Avec `passage`, l'installateur propose donc aussi, en `[y/N]`, dans un terminal seulement, d'ajouter les seules lectures de Leon (`thread`, `threads`, `search`) à `sandbox.excludedCommands` des réglages de l'utilisateur. `leon retirer-crochets` les retire. T67 prouve qu'une commande composée ne sort pas du bac à sable par cette exception, et le texte d'accord le dit.
+      - Amendé le 23/11 (T67, relecture de sécurité) : avec l'exception, l'installateur ajoute aussi `~/.leon` à `sandbox.filesystem.denyWrite`. Sinon, une session ouverte dans le dossier personnel pourrait réécrire le lanceur sous le bac à sable, puis le faire tourner hors de lui par une lecture exemptée. Le retrait l'enlève. L'exception n'est proposée que pour la forme installée du lanceur. Essayé le 23/11 par `claude -p` (annexe 12, « Réglé dans T67 ») : les commandes composées (`;`, `|`, `&&`, `$(…)`, accents graves), une redirection et un préfixe `LEON_URL=… LEON_TOKEN=…` restent dans le bac à sable ; sans `denyWrite`, une session ouverte dans le dossier personnel écrit dans `~/.leon`, et avec, elle ne le peut plus.
     - Le refus prend la forme JSON de la doc (`permissionDecision: "deny"`), avec le code 0. Le modèle en lit la raison.
   - **Rien n'est poussé.**
     - Le message ne recopie du poste que la commande Leon (`leonCommand`, bornée comme `commande` de C3). Il ne porte rien de la mémoire.
@@ -2199,7 +2220,7 @@ Effort : 0,5 j.
   2. sur les 18 passages des tâches mémoire, D a au moins 5 réponses justes de plus que C, et aucune de ces tâches n'a D à 0 sur 3 quand C est à 2 ou plus ;
   3. sur les 12 passages des tâches témoins, D a au plus une réponse juste de moins que C, et aucune de ces tâches n'a D à 0 sur 3 quand C est à 2 ou plus ;
   4. les tokens totaux des passages D ne dépassent pas 110 % de ceux des passages C.
-- **S'il passe** : l'option reste, éteinte par défaut, et la documentation du site la décrit (`documentation.tsx`, `documentation-markdown.ts`, `messages/en.json`, `messages/fr.json`).
+- **S'il passe** : l'option reste, éteinte par défaut, et la documentation du site la décrit (`documentation.tsx`, `documentation-markdown.ts`, `messages/en.json`, `messages/fr.json`). Amendé le 24/11 (décision d'Amos) : les pannes de `passage` et du bac à sable sont déjà dans la section « En cas de problème », puisque `leon setup` propose l'usage ; seule la description complète de l'option attend T68.
 - **S'il échoue** :
   - `passage` sort d'`OFFERED`, avec ses tests et le README ;
   - l'usage, la commande et le crochet restent dans le code, et dans le retrait ;

@@ -6,6 +6,7 @@ import { members } from '@/server/db/schema/auth';
 import { sources, turns } from '@/server/db/schema/memory';
 import { withTenant } from '@/server/db/with-tenant';
 import { enqueuePipelineStep } from '@/server/pipeline/queue';
+import { requestBrouillons } from '@/server/portrait/brouillons-queue';
 import { adminDb, adminPool } from '@/test/db';
 import { fakeConnector } from '@/test/fake-connector';
 import { collect, fakeFetch } from '@/test/fake-fetch';
@@ -23,6 +24,9 @@ import { runConnectorSync, SYNC_ITEMS_MAX, type SyncDeps } from './sync';
 import type { AnyConnector, ConnectorItem, SyncPage, SyncState } from './types';
 
 vi.mock('@/server/pipeline/queue');
+// La demande d'un passage des brouillons de réponse, à la fin de la relève d'une boîte : la file elle-même se teste à
+// part (portrait/brouillons-queue.db.test.ts).
+vi.mock('@/server/portrait/brouillons-queue');
 
 // Une organisation neuve par test (Paul y branche l'outil) : le connecteur factice rend toujours
 // les mêmes identifiants d'élément, et une source se retrouve par (organisation, créateur, outil,
@@ -43,6 +47,7 @@ afterAll(async () => {
 
 beforeEach(async () => {
   vi.mocked(enqueuePipelineStep).mockReset();
+  vi.mocked(requestBrouillons).mockReset();
   const team = await createTestTenant(['Paul']);
   tenantId = team.tenantId;
   [paul] = team.members as [TenantContext];
@@ -197,6 +202,54 @@ describe('runConnectorSync : un passage qui réussit', () => {
 
 // Audit n° 4 : une autre relève a repris la connexion en plein passage (réservation jugée
 // abandonnée) ; l'ancienne s'arrête sans rien écrire : ni curseur, ni fin de passage.
+describe('runConnectorSync : la fin de la relève d’une boîte', () => {
+  it.each(['gmail', 'outlook'] as const)(
+    'demande un passage des brouillons de réponse à qui a branché sa boîte %s, une fois la relève finie',
+    async (provider) => {
+      const id = await seedConnection(paul, { provider, nextSyncAt: DUE });
+      // La demande vient après la fin de la relève : la réservation est déjà rendue.
+      vi.mocked(requestBrouillons).mockImplementation(async () => {
+        expect((await readRow(id)).sync_lock_at).toBeNull();
+      });
+
+      expect(await run(id, fakeConnector({ items: 2, pageSize: 2 }))).toBe('ok');
+
+      expect(requestBrouillons).toHaveBeenCalledExactlyOnceWith(paul);
+    },
+  );
+
+  it('ne la demande pas tant qu’il reste à lire (la réponse à un mail lu peut manquer encore), puis même sans rien de neuf', async () => {
+    const id = await seedConnection(paul, { provider: 'gmail', nextSyncAt: DUE });
+    const connector = fakeConnector({ items: SYNC_ITEMS_MAX + 1, pageSize: 100 });
+
+    await run(id, connector);
+    expect(requestBrouillons).not.toHaveBeenCalled();
+    await makeDue(id);
+    await run(id, connector);
+    await makeDue(id);
+    await run(id, connector);
+
+    expect(requestBrouillons).toHaveBeenCalledTimes(2);
+  });
+
+  it('ne demande rien pour un autre outil, ni quand la relève échoue', async () => {
+    await run(await dueConnection(), fakeConnector({ items: 2, pageSize: 2 }));
+    await run(
+      await seedConnection(paul, { provider: 'crisp', nextSyncAt: DUE }),
+      fakeConnector({ items: 2, pageSize: 2 }),
+    );
+    const failing = await seedConnection(paul, { provider: 'gmail', nextSyncAt: DUE });
+    expect(
+      await run(
+        failing,
+        fakeConnector({ items: 2, pageSize: 1, failAt: { page: 2, status: 500 } }),
+      ),
+    ).toBe('error');
+
+    expect(requestBrouillons).not.toHaveBeenCalled();
+  });
+});
+
 describe('runConnectorSync : une réservation reprise', () => {
   it("s'arrête sans écrire quand une autre relève a repris la connexion", async () => {
     const id = await dueConnection();

@@ -34,6 +34,9 @@ const STEPS: Record<string, string> = {
   resume: 'Résumés de session',
   fil: 'États des fils',
   agenda: 'Rendez-vous de la semaine',
+  fiche: 'Fiches des personnes',
+  brouillon: 'Brouillons de réponse',
+  tri: 'Tri des mails',
 };
 
 type Day = AdminStats['parJour'][number];

@@ -9,12 +9,12 @@ import { users } from '@/server/db/schema/auth';
 import { sources } from '@/server/db/schema/memory';
 import { briefings } from '@/server/db/schema/search';
 import { type Tx, withTenant } from '@/server/db/with-tenant';
-import { type Llm, LlmError } from '@/server/llm/llm';
+import { isUnreachable, type Llm, LlmError } from '@/server/llm/llm';
 import { createReferenceFilter } from '@/server/llm/references';
 import { logError } from '@/server/log';
 import { recordReads } from '@/server/memory/read-log';
 import { textArray } from '@/server/search/filters-sql';
-import { readAbout } from './about';
+import { readAbout, readLocale } from './about';
 import { buildBriefingPrompt, renderBriefing, renderEmptyBriefing } from './briefing-prompt';
 import {
   BRIEFING_DAYS,
@@ -119,8 +119,13 @@ export async function refreshBriefing(
       await readAbout(ctx.userId),
       await readOnboardingMember(ctx),
       await readDismissed(ctx, project),
+      await readLocale(ctx.userId),
     );
-    const body = await writeBody(deps.llm, prompt);
+    const body = await writeBody(deps.llm, prompt).catch(async (error) => {
+      // Fournisseur injoignable : rien n'est payé, le créneau du jour est rendu (0091) et la file reprendra.
+      if (isUnreachable(error)) await db.execute(sql`select rendre_point(${ctx.userId})`);
+      throw error;
+    });
     markdown = renderBriefing({ project, preparedAt: now, body, references: prompt.references });
     // Toutes les sources fournies au modèle, citées ou non : le texte peut en tenir sans les citer.
     sourceIds = materialSourceIds(material);

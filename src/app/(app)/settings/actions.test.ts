@@ -8,36 +8,56 @@ import { createInvitationLink, setMemberPlacement, setNotesRefused } from '@/ser
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
 import {
   getSession,
+  getUserContext,
+  hasPassword,
   requireUserContext,
   signedInRecently,
   signOutCurrentUser,
 } from '@/server/auth/session';
-import { saveAbout } from '@/server/briefing/about';
+import { saveAbout, saveLocale } from '@/server/briefing/about';
 import { setDepotEquipe } from '@/server/connectors/github/depots-equipe';
 import { forgetPipedreamUser } from '@/server/connectors/pipedream';
 import { sendDeletionEmails } from '@/server/email/account-deleted';
 import { logError } from '@/server/log';
 import { correctLesson, retireLesson, writeLesson } from '@/server/memory/lessons';
 import { readMemoryVersion, restoreMemoryVersion } from '@/server/memory/memory-section';
+import { trashMail, withdrawBrouillon } from '@/server/portrait/brouillon-depot';
+import { answerQuestions, answerRelance, discardBrouillon } from '@/server/portrait/brouillons';
+import { requestBrouillons } from '@/server/portrait/brouillons-queue';
+import { correctFields, retireLine } from '@/server/portrait/fiche';
+import { answerPreference } from '@/server/portrait/preferences';
+import { answerProposal } from '@/server/portrait/propositions';
+import { prepareReply } from '@/server/portrait/sans-reponse';
+import { requestFicheBuild } from '@/server/portrait/screen';
 import fr from '../../../../messages/fr.json';
 import {
+  answerAgentAction,
+  answerPreferenceAction,
+  answerQuestionsAction,
+  answerRelanceAction,
+  buildFicheAction,
   changePasswordAction,
+  correctFicheLineAction,
   correctLessonAction,
   createInvitationAction,
   createTokenAction,
   deleteAccountAction,
   deleteOrganizationAction,
   disableTotpAction,
+  discardBrouillonAction,
   enableTotpAction,
+  prepareReplyAction,
   readMemoryVersionAction,
   regenerateBackupCodesAction,
   restoreMemoryVersionAction,
+  retireFicheLineAction,
   retireLessonAction,
   revokeTokenAction,
   setDepotEquipeAction,
   setLocaleAction,
   setMemberPlacementAction,
   setNotesOpenAction,
+  trashMailAction,
   updateAboutAction,
   updateProfileAction,
   verifyTotpSetupAction,
@@ -46,8 +66,10 @@ import {
 
 vi.mock('@/server/auth/session', () => ({
   requireUserContext: vi.fn(),
+  getUserContext: vi.fn(),
   getSession: vi.fn(),
   signedInRecently: vi.fn(),
+  hasPassword: vi.fn(),
   requestHeaders: vi.fn(async () => new Headers()),
   signOutCurrentUser: vi.fn(),
 }));
@@ -72,7 +94,11 @@ vi.mock('@/server/auth/members', () => ({
   setMemberPlacement: vi.fn(),
   setNotesRefused: vi.fn(),
 }));
-vi.mock('@/server/briefing/about', () => ({ ABOUT_MAX_CHARS: 500, saveAbout: vi.fn() }));
+vi.mock('@/server/briefing/about', () => ({
+  ABOUT_MAX_CHARS: 500,
+  saveAbout: vi.fn(),
+  saveLocale: vi.fn(async () => {}),
+}));
 // La vraie classe est dans un module qui ouvre la base : la copie suffit à `instanceof`, puisque les actions et le
 // test lisent la même.
 vi.mock('@/server/auth/delete-account', () => ({
@@ -94,6 +120,21 @@ vi.mock('@/server/memory/memory-section', () => ({
   readMemoryVersion: vi.fn(),
   restoreMemoryVersion: vi.fn(),
 }));
+vi.mock('@/server/portrait/brouillon-depot', () => ({
+  trashMail: vi.fn(),
+  withdrawBrouillon: vi.fn(),
+}));
+vi.mock('@/server/portrait/brouillons', () => ({
+  answerQuestions: vi.fn(),
+  answerRelance: vi.fn(),
+  discardBrouillon: vi.fn(),
+}));
+vi.mock('@/server/portrait/brouillons-queue', () => ({ requestBrouillons: vi.fn() }));
+vi.mock('@/server/portrait/fiche', () => ({ correctFields: vi.fn(), retireLine: vi.fn() }));
+vi.mock('@/server/portrait/preferences', () => ({ answerPreference: vi.fn() }));
+vi.mock('@/server/portrait/propositions', () => ({ answerProposal: vi.fn() }));
+vi.mock('@/server/portrait/sans-reponse', () => ({ prepareReply: vi.fn() }));
+vi.mock('@/server/portrait/screen', () => ({ requestFicheBuild: vi.fn() }));
 vi.mock('@/server/connectors/pipedream', () => ({ forgetPipedreamUser: vi.fn() }));
 vi.mock('@/server/email/account-deleted', () => ({
   RESEND_BATCH_MAX: 100,
@@ -120,6 +161,7 @@ beforeEach(() => {
     user: { email: 'amos@example.com', twoFactorEnabled: false },
   } as never);
   vi.mocked(authAttemptAllowed).mockResolvedValue(true);
+  vi.mocked(hasPassword).mockResolvedValue(true);
   // clearAllMocks garde les refus programmés par un test précédent.
   vi.mocked(auth.api.verifyPassword).mockResolvedValue({ status: true });
   vi.mocked(auth.api.verifyTOTP).mockResolvedValue(undefined as never);
@@ -243,11 +285,36 @@ describe('setLocaleAction', () => {
       expect.objectContaining({ httpOnly: true }),
     );
     expect(revalidatePath).toHaveBeenCalledWith('/', 'layout');
+    // personne n'est connecté (le site, la connexion) : rien ne s'écrit en base
+    expect(saveLocale).not.toHaveBeenCalled();
 
     vi.clearAllMocks();
     await setLocaleAction(localeForm('de'));
     expect(cookies).not.toHaveBeenCalled();
     expect(setCookie).not.toHaveBeenCalled();
+    expect(saveLocale).not.toHaveBeenCalled();
+  });
+
+  it('connectée, garde aussi la langue avec son compte : elle la retrouve à chaque connexion', async () => {
+    vi.mocked(getUserContext).mockResolvedValue(ctx);
+
+    await setLocaleAction(localeForm('fr'));
+
+    expect(saveLocale).toHaveBeenCalledWith(ctx, 'fr');
+    expect(setCookie).toHaveBeenCalledWith('leon-locale', 'fr', expect.anything());
+  });
+
+  it('une base en panne ne refuse pas le choix : le cookie le tient, et la panne est notée', async () => {
+    vi.mocked(getUserContext).mockResolvedValue(ctx);
+    vi.mocked(saveLocale).mockRejectedValueOnce(new Error('base injoignable'));
+
+    await expect(setLocaleAction(localeForm('en'))).resolves.toBeUndefined();
+
+    expect(setCookie).toHaveBeenCalledWith('leon-locale', 'en', expect.anything());
+    expect(logError).toHaveBeenCalledWith('langue.enregistrer', expect.any(Error), {
+      userId: ctx.userId,
+    });
+    expect(revalidatePath).toHaveBeenCalledWith('/', 'layout');
   });
 });
 
@@ -588,6 +655,16 @@ describe.each([
       user: { email: 'amos@example.com', twoFactorEnabled: true },
     } as never);
 
+  it('supprime un compte sans mot de passe connecté depuis moins d’une heure, sans demander de mot de passe', async () => {
+    vi.mocked(hasPassword).mockResolvedValue(false);
+    vi.mocked(signedInRecently).mockResolvedValue(true);
+
+    await expect(run({ password: '' })).rejects.toThrow(`NEXT_REDIRECT ${redirectTo}`);
+
+    expect(auth.api.verifyPassword).not.toHaveBeenCalled();
+    expect(deletion()).toHaveBeenCalledWith(...callArgs);
+  });
+
   it.each([
     [
       'un mot mal tapé',
@@ -618,6 +695,16 @@ describe.each([
         return run();
       },
       fr.security.tooManyAttempts,
+    ],
+    // Audit du 26/11, n° 6 : un compte Google, Microsoft ou SSO n'a pas de mot de passe à donner.
+    [
+      'un compte sans mot de passe connecté depuis plus d’une heure',
+      () => {
+        vi.mocked(hasPassword).mockResolvedValue(false);
+        vi.mocked(signedInRecently).mockResolvedValue(false);
+        return run({ password: '' });
+      },
+      fr.deleteAccount.reconnect,
     ],
   ])('refuse %s, sans rien supprimer', async (_label, attempt, error) => {
     await expect(attempt()).resolves.toEqual({ error });
@@ -1042,5 +1129,478 @@ describe('setNotesOpenAction', () => {
 
     await expect(setNotesOpenAction(false)).rejects.toThrow('NEXT_REDIRECT /sign-in');
     expect(setNotesRefused).not.toHaveBeenCalled();
+  });
+});
+
+describe('les actions de l’onglet « Ma fiche »', () => {
+  const LIGNE = '0b9f2c7e-2d4c-4f6a-9a51-6a1e2f3b4c60';
+
+  beforeEach(() => {
+    // Ni corriger, ni retirer, ni répondre, ni écarter n'exigent une connexion récente : la fiche n'est lue que par elle.
+    vi.mocked(signedInRecently).mockResolvedValue(false);
+  });
+
+  it('construire : la demande part pour la personne connectée, et elle seule', async () => {
+    vi.mocked(requestFicheBuild).mockResolvedValue(true);
+
+    await expect(buildFicheAction()).resolves.toEqual({ ok: true });
+
+    expect(requestFicheBuild).toHaveBeenCalledExactlyOnceWith(ctx);
+    expect(revalidatePath).toHaveBeenCalledWith('/settings');
+  });
+
+  it('construire : rien à construire, ou une fiche déjà faite, rend ok: false', async () => {
+    vi.mocked(requestFicheBuild).mockResolvedValue(false);
+
+    await expect(buildFicheAction()).resolves.toEqual({ ok: false });
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it('corriger : les champs modifiables de sa ligne, que le serveur complète et valide', async () => {
+    vi.mocked(correctFields).mockResolvedValue('ok');
+    const champs = { titre: 'Chiffrer les devis', detail: '' };
+
+    await expect(correctFicheLineAction({ id: LIGNE, champs })).resolves.toEqual({ ok: true });
+
+    expect(correctFields).toHaveBeenCalledExactlyOnceWith(ctx, LIGNE, champs);
+    expect(revalidatePath).toHaveBeenCalledWith('/settings');
+  });
+
+  it('corriger : la ligne d’un autre est introuvable, un champ refusé est invalide, rien n’est relu', async () => {
+    vi.mocked(correctFields).mockResolvedValueOnce('introuvable').mockResolvedValueOnce('invalide');
+    const input = { id: LIGNE, champs: { texte: 'Responsable des devis.' } };
+
+    await expect(correctFicheLineAction(input)).resolves.toEqual({ error: 'introuvable' });
+    await expect(correctFicheLineAction(input)).resolves.toEqual({ error: 'invalide' });
+
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [{ id: 'pas-un-id', champs: {} }],
+    [{ id: LIGNE }],
+    [{ id: LIGNE, champs: 'texte' }],
+    [{ id: LIGNE, champs: null }],
+    [null],
+  ])('corriger %j : invalide, sans rien lire ni écrire', async (input) => {
+    await expect(correctFicheLineAction(input as never)).resolves.toEqual({ error: 'invalide' });
+    expect(correctFields).not.toHaveBeenCalled();
+  });
+
+  it('retirer : sa ligne sort de sa fiche ; celle d’un autre, ou déjà retirée, est introuvable', async () => {
+    vi.mocked(retireLine).mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+
+    await expect(retireFicheLineAction(LIGNE)).resolves.toEqual({ ok: true });
+    expect(revalidatePath).toHaveBeenCalledTimes(1);
+    await expect(retireFicheLineAction(LIGNE)).resolves.toEqual({ error: 'introuvable' });
+
+    expect(vi.mocked(retireLine).mock.calls).toEqual([
+      [ctx, LIGNE],
+      [ctx, LIGNE],
+    ]);
+    expect(revalidatePath).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([['pas-un-id'], [null], [{ id: LIGNE }]])(
+    'retirer %j : invalide, rien n’est retiré',
+    async (id) => {
+      await expect(retireFicheLineAction(id as never)).resolves.toEqual({ error: 'invalide' });
+      expect(retireLine).not.toHaveBeenCalled();
+    },
+  );
+
+  it('répondre : son oui ou son non à un agent proposé s’enregistre pour la personne connectée, et elle seule', async () => {
+    vi.mocked(answerProposal).mockResolvedValue(true);
+
+    await expect(answerAgentAction({ agent: 'relance', oui: true })).resolves.toEqual({ ok: true });
+    await expect(answerAgentAction({ agent: 'relance', oui: false })).resolves.toEqual({
+      ok: true,
+    });
+
+    expect(vi.mocked(answerProposal).mock.calls).toEqual([
+      [ctx, 'relance', true],
+      [ctx, 'relance', false],
+    ]);
+    expect(revalidatePath).toHaveBeenCalledWith('/agents');
+  });
+
+  it('répondre : un agent qui ne lui est pas proposé à ce moment-là est introuvable, rien n’est relu', async () => {
+    vi.mocked(answerProposal).mockResolvedValue(false);
+
+    await expect(answerAgentAction({ agent: 'suite-reunion', oui: true })).resolves.toEqual({
+      error: 'introuvable',
+    });
+
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [{ agent: 'agent-inconnu', oui: true }],
+    [{ agent: 'relance', oui: 'oui' }],
+    [{ agent: 'relance', oui: null }],
+    [{ agent: 'relance' }],
+    [{ oui: true }],
+    [{ agent: ['relance'], oui: true }],
+    ['relance'],
+    [null],
+  ])('répondre %j : invalide, sans rien lire ni écrire', async (input) => {
+    await expect(answerAgentAction(input as never)).resolves.toEqual({ error: 'invalide' });
+    expect(answerProposal).not.toHaveBeenCalled();
+  });
+
+  it('écarter : son brouillon ne se montre plus et quitte Gmail ; celui d’un autre, ou déjà écarté, est introuvable', async () => {
+    vi.mocked(discardBrouillon).mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+    vi.mocked(withdrawBrouillon).mockResolvedValueOnce(true);
+
+    await expect(discardBrouillonAction(LIGNE)).resolves.toEqual({
+      ok: true,
+      resteDansGmail: false,
+    });
+    // L'accueil est relu : c'est lui qui montre les brouillons, plus les réglages.
+    expect(vi.mocked(revalidatePath).mock.calls).toEqual([['/']]);
+    await expect(discardBrouillonAction(LIGNE)).resolves.toEqual({ error: 'introuvable' });
+
+    expect(vi.mocked(discardBrouillon).mock.calls).toEqual([
+      [ctx, LIGNE],
+      [ctx, LIGNE],
+    ]);
+    // Rien n'est retiré de sa boîte pour un brouillon qui n'a pas été écarté.
+    expect(vi.mocked(withdrawBrouillon).mock.calls).toEqual([[ctx, LIGNE]]);
+    expect(revalidatePath).toHaveBeenCalledTimes(1);
+  });
+
+  it('écarter : quand Leon n’a pas pu le retirer de Gmail, le brouillon est écarté et l’écran le saura', async () => {
+    vi.mocked(discardBrouillon).mockResolvedValueOnce(true);
+    vi.mocked(withdrawBrouillon).mockResolvedValueOnce(false);
+
+    await expect(discardBrouillonAction(LIGNE)).resolves.toEqual({
+      ok: true,
+      resteDansGmail: true,
+    });
+    expect(revalidatePath).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([['pas-un-id'], [null], [{ id: LIGNE }]])(
+    'écarter %j : invalide, rien n’est écarté',
+    async (id) => {
+      await expect(discardBrouillonAction(id as never)).resolves.toEqual({ error: 'invalide' });
+      expect(discardBrouillon).not.toHaveBeenCalled();
+      expect(withdrawBrouillon).not.toHaveBeenCalled();
+    },
+  );
+
+  it('supprimer : le mail part à la corbeille de Gmail, puis sa ligne s’écarte et le brouillon déposé par Leon quitte Gmail', async () => {
+    vi.mocked(trashMail).mockResolvedValueOnce('supprime');
+    vi.mocked(discardBrouillon).mockResolvedValueOnce(true);
+    vi.mocked(withdrawBrouillon).mockResolvedValueOnce(true);
+
+    await expect(trashMailAction(LIGNE)).resolves.toEqual({ ok: true, resteDansGmail: false });
+
+    expect(vi.mocked(trashMail).mock.calls).toEqual([[ctx, LIGNE]]);
+    expect(vi.mocked(discardBrouillon).mock.calls).toEqual([[ctx, LIGNE]]);
+    expect(vi.mocked(withdrawBrouillon).mock.calls).toEqual([[ctx, LIGNE]]);
+    expect(vi.mocked(revalidatePath).mock.calls).toEqual([['/']]);
+  });
+
+  it.each(['introuvable', 'echec'] as const)(
+    'supprimer : %s, rien ne s’écarte et rien n’est relu',
+    async (refus) => {
+      vi.mocked(trashMail).mockResolvedValueOnce(refus);
+
+      await expect(trashMailAction(LIGNE)).resolves.toEqual({ error: refus });
+
+      expect(discardBrouillon).not.toHaveBeenCalled();
+      expect(withdrawBrouillon).not.toHaveBeenCalled();
+      expect(revalidatePath).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([['pas-un-id'], [null], [{ id: LIGNE }]])(
+    'supprimer %j : invalide, rien ne part à la corbeille',
+    async (id) => {
+      await expect(trashMailAction(id as never)).resolves.toEqual({ error: 'invalide' });
+      expect(trashMail).not.toHaveBeenCalled();
+    },
+  );
+
+  it('ses réponses aux questions de Leon : gardées pour la personne connectée, nettoyées, puis un passage est demandé', async () => {
+    vi.mocked(answerQuestions).mockResolvedValue(true);
+
+    await expect(
+      answerQuestionsAction({ id: LIGNE, reponses: ['  Oui, à 10 h.\n', '', 'Mar\u0000di'] }),
+    ).resolves.toEqual({ ok: true });
+
+    // Une réponse peut rester vide ; les blancs autour et l'octet nul que la base refuserait s'en vont.
+    expect(vi.mocked(answerQuestions).mock.calls).toEqual([
+      [ctx, LIGNE, ['Oui, à 10 h.', '', 'Mardi']],
+    ]);
+    expect(vi.mocked(requestBrouillons).mock.calls).toEqual([[ctx]]);
+    expect(revalidatePath).toHaveBeenCalledWith('/');
+  });
+
+  it('ses réponses : la demande d’une autre, déjà répondue, écartée, ou un autre nombre de réponses que de questions, est introuvable, et aucun passage n’est demandé', async () => {
+    // Chacune de ces gardes est tenue par answerQuestions, sous ses droits (brouillons.db.test.ts) : elle rend false.
+    vi.mocked(answerQuestions).mockResolvedValue(false);
+
+    await expect(answerQuestionsAction({ id: LIGNE, reponses: ['Oui.'] })).resolves.toEqual({
+      error: 'introuvable',
+    });
+
+    expect(answerQuestions).toHaveBeenCalledWith(ctx, LIGNE, ['Oui.']);
+    expect(requestBrouillons).not.toHaveBeenCalled();
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  // Le message d'une erreur de requête porte ses paramètres, donc ses réponses : il passe par logError, qui le masque.
+  it('ses réponses : une panne de la base est un échec, journalisé sans ses réponses, et aucun passage n’est demandé', async () => {
+    const failure = new Error('Failed query: update "brouillons" … params: Oui, à 10 h.');
+    vi.mocked(answerQuestions).mockRejectedValue(failure);
+
+    await expect(answerQuestionsAction({ id: LIGNE, reponses: ['Oui, à 10 h.'] })).resolves.toEqual(
+      { error: 'echec' },
+    );
+
+    expect(logError).toHaveBeenCalledExactlyOnceWith('brouillons.reponses', failure, {
+      userId: ctx.userId,
+    });
+    expect(requestBrouillons).not.toHaveBeenCalled();
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it('ses réponses : mille caractères passent, une réponse plus longue non', async () => {
+    vi.mocked(answerQuestions).mockResolvedValue(true);
+
+    await expect(
+      answerQuestionsAction({ id: LIGNE, reponses: ['x'.repeat(1000)] }),
+    ).resolves.toEqual({ ok: true });
+    await expect(
+      answerQuestionsAction({ id: LIGNE, reponses: ['Oui.', 'x'.repeat(1001)] }),
+    ).resolves.toEqual({ error: 'invalide' });
+
+    expect(answerQuestions).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    [{ id: 'pas-un-id', reponses: ['Oui.'] }],
+    [{ id: LIGNE, reponses: [] }],
+    [{ id: LIGNE, reponses: ['Un.', 'Deux.', 'Trois.', 'Quatre.'] }],
+    [{ id: LIGNE, reponses: 'Oui.' }],
+    [{ id: LIGNE, reponses: ['Oui.', null] }],
+    [{ id: LIGNE, reponses: [{ texte: 'Oui.' }] }],
+    [{ id: LIGNE }],
+    [{ reponses: ['Oui.'] }],
+    [LIGNE],
+    [null],
+  ])('ses réponses %j : invalide, sans rien lire ni écrire', async (input) => {
+    await expect(answerQuestionsAction(input as never)).resolves.toEqual({ error: 'invalide' });
+    expect(answerQuestions).not.toHaveBeenCalled();
+    expect(requestBrouillons).not.toHaveBeenCalled();
+  });
+
+  it('sans session du navigateur, rien ne se construit, ne se corrige, ne se retire, ne se répond ni ne s’écarte : la connexion', async () => {
+    vi.mocked(requireUserContext).mockRejectedValue(new Error('NEXT_REDIRECT /sign-in'));
+
+    await expect(buildFicheAction()).rejects.toThrow('NEXT_REDIRECT /sign-in');
+    await expect(correctFicheLineAction({ id: LIGNE, champs: {} })).rejects.toThrow(
+      'NEXT_REDIRECT /sign-in',
+    );
+    await expect(retireFicheLineAction(LIGNE)).rejects.toThrow('NEXT_REDIRECT /sign-in');
+    await expect(answerAgentAction({ agent: 'relance', oui: true })).rejects.toThrow(
+      'NEXT_REDIRECT /sign-in',
+    );
+    await expect(discardBrouillonAction(LIGNE)).rejects.toThrow('NEXT_REDIRECT /sign-in');
+    await expect(answerQuestionsAction({ id: LIGNE, reponses: ['Oui.'] })).rejects.toThrow(
+      'NEXT_REDIRECT /sign-in',
+    );
+    await expect(trashMailAction(LIGNE)).rejects.toThrow('NEXT_REDIRECT /sign-in');
+    await expect(answerPreferenceAction({ id: LIGNE, oui: true })).rejects.toThrow(
+      'NEXT_REDIRECT /sign-in',
+    );
+    await expect(
+      answerRelanceAction({ sourceId: LIGNE, message: 'message:1', oui: true, indications: '' }),
+    ).rejects.toThrow('NEXT_REDIRECT /sign-in');
+    await expect(prepareReplyAction({ id: LIGNE, indications: '' })).rejects.toThrow(
+      'NEXT_REDIRECT /sign-in',
+    );
+
+    expect(requestFicheBuild).not.toHaveBeenCalled();
+    expect(correctFields).not.toHaveBeenCalled();
+    expect(retireLine).not.toHaveBeenCalled();
+    expect(answerProposal).not.toHaveBeenCalled();
+    expect(discardBrouillon).not.toHaveBeenCalled();
+    expect(answerQuestions).not.toHaveBeenCalled();
+    expect(trashMail).not.toHaveBeenCalled();
+    expect(answerPreference).not.toHaveBeenCalled();
+    expect(answerRelance).not.toHaveBeenCalled();
+    expect(prepareReply).not.toHaveBeenCalled();
+    expect(requestBrouillons).not.toHaveBeenCalled();
+  });
+
+  it('« Oui » ou « Non » à une préférence d’écriture proposée : sa réponse s’enregistre pour la personne connectée, et l’accueil est relu', async () => {
+    vi.mocked(answerPreference).mockResolvedValue(true);
+
+    await expect(answerPreferenceAction({ id: LIGNE, oui: true })).resolves.toEqual({ ok: true });
+    await expect(answerPreferenceAction({ id: LIGNE, oui: false })).resolves.toEqual({ ok: true });
+
+    expect(vi.mocked(answerPreference).mock.calls).toEqual([
+      [ctx, LIGNE, true],
+      [ctx, LIGNE, false],
+    ]);
+    expect(vi.mocked(revalidatePath).mock.calls).toEqual([['/'], ['/']]);
+    // Elle ne demande aucun passage : rien n'est à écrire pour elle.
+    expect(requestBrouillons).not.toHaveBeenCalled();
+  });
+
+  it('une préférence d’une autre, déjà répondue ou retirée, est introuvable : rien n’est relu', async () => {
+    // Chacune de ces gardes est tenue par answerPreference, sous ses droits (preferences.db.test.ts) : elle rend false.
+    vi.mocked(answerPreference).mockResolvedValue(false);
+
+    await expect(answerPreferenceAction({ id: LIGNE, oui: true })).resolves.toEqual({
+      error: 'introuvable',
+    });
+
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [{ id: 'pas-un-id', oui: true }],
+    [{ id: LIGNE, oui: 'oui' }],
+    [{ id: LIGNE, oui: null }],
+    [{ id: LIGNE }],
+    [{ oui: true }],
+    [LIGNE],
+    [null],
+  ])('sa réponse à une préférence %j : invalide, sans rien lire ni écrire', async (input) => {
+    await expect(answerPreferenceAction(input as never)).resolves.toEqual({ error: 'invalide' });
+    expect(answerPreference).not.toHaveBeenCalled();
+  });
+
+  const MAIL = { sourceId: '0b9f2c7e-2d4c-4f6a-9a51-6a1e2f3b4c61', message: 'message:18c2f0a' };
+
+  it('« Oui » à une relance : gardé pour la personne connectée, avec ses indications nettoyées, puis un passage est demandé', async () => {
+    vi.mocked(answerRelance).mockResolvedValue(LIGNE);
+
+    await expect(
+      answerRelanceAction({ ...MAIL, oui: true, indications: '  Rappelez-lui,\u0000 jeudi.\n' }),
+    ).resolves.toEqual({ ok: true, id: LIGNE });
+
+    expect(vi.mocked(answerRelance).mock.calls).toEqual([[ctx, MAIL, 'Rappelez-lui, jeudi.']]);
+    expect(vi.mocked(requestBrouillons).mock.calls).toEqual([[ctx]]);
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it('« Non » à une relance ne garde pas d’indications et ne demande aucun passage', async () => {
+    vi.mocked(answerRelance).mockResolvedValue(LIGNE);
+
+    await expect(
+      answerRelanceAction({ ...MAIL, oui: false, indications: 'Oubliée.' }),
+    ).resolves.toEqual({ ok: true, id: LIGNE });
+
+    expect(vi.mocked(answerRelance).mock.calls).toEqual([[ctx, MAIL, null]]);
+    expect(requestBrouillons).not.toHaveBeenCalled();
+  });
+
+  it('une relance qui n’attend plus est introuvable ; une panne est un échec, journalisé sans ses indications', async () => {
+    // Chacune de ces gardes est tenue par answerRelance, sous ses droits (brouillons.db.test.ts) : elle rend null.
+    vi.mocked(answerRelance).mockResolvedValue(null);
+    for (const oui of [true, false])
+      await expect(answerRelanceAction({ ...MAIL, oui, indications: '' })).resolves.toEqual({
+        error: 'introuvable',
+      });
+    const failure = new Error('Failed query: insert into "brouillons" … params: Rappelez-lui.');
+    vi.mocked(answerRelance).mockRejectedValue(failure);
+    await expect(
+      answerRelanceAction({ ...MAIL, oui: true, indications: 'Rappelez-lui.' }),
+    ).resolves.toEqual({ error: 'echec' });
+
+    expect(logError).toHaveBeenCalledExactlyOnceWith('brouillons.relance', failure, {
+      userId: ctx.userId,
+    });
+    expect(requestBrouillons).not.toHaveBeenCalled();
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it('ses indications à une relance : mille caractères passent, pas plus', async () => {
+    vi.mocked(answerRelance).mockResolvedValue(LIGNE);
+
+    await expect(
+      answerRelanceAction({ ...MAIL, oui: true, indications: 'x'.repeat(1000) }),
+    ).resolves.toEqual({ ok: true, id: LIGNE });
+    await expect(
+      answerRelanceAction({ ...MAIL, oui: true, indications: 'x'.repeat(1001) }),
+    ).resolves.toEqual({ error: 'invalide' });
+
+    expect(answerRelance).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    [{ ...MAIL, sourceId: 'pas-un-id', oui: true, indications: '' }],
+    [{ ...MAIL, message: '', oui: true, indications: '' }],
+    [{ ...MAIL, message: 'x'.repeat(201), oui: true, indications: '' }],
+    [{ ...MAIL, oui: 'oui', indications: '' }],
+    [{ ...MAIL, indications: '' }],
+    [{ ...MAIL, oui: true }],
+    [{ ...MAIL, oui: true, indications: null }],
+    [{ sourceId: MAIL.sourceId, oui: true, indications: '' }],
+    [MAIL.sourceId],
+    [null],
+  ])('sa réponse à une relance %j : invalide, sans rien lire ni écrire', async (input) => {
+    await expect(answerRelanceAction(input as never)).resolves.toEqual({ error: 'invalide' });
+    expect(answerRelance).not.toHaveBeenCalled();
+    expect(requestBrouillons).not.toHaveBeenCalled();
+  });
+
+  const OUI = '0b9f2c7e-2d4c-4f6a-9a51-6a1e2f3b4c62';
+
+  it('« Préparer une réponse » à un mail jugé sans réponse : son oui gardé pour la personne connectée, avec ses indications nettoyées, un passage demandé, et l’accueil relu', async () => {
+    vi.mocked(prepareReply).mockResolvedValue(OUI);
+
+    await expect(
+      prepareReplyAction({ id: LIGNE, indications: '  Remerciez-la,\u0000 à lundi.\n' }),
+    ).resolves.toEqual({ ok: true, id: OUI });
+    await expect(prepareReplyAction({ id: LIGNE, indications: '' })).resolves.toEqual({
+      ok: true,
+      id: OUI,
+    });
+
+    expect(vi.mocked(prepareReply).mock.calls).toEqual([
+      [ctx, LIGNE, 'Remerciez-la, à lundi.'],
+      [ctx, LIGNE, ''],
+    ]);
+    expect(vi.mocked(requestBrouillons).mock.calls).toEqual([[ctx], [ctx]]);
+    expect(vi.mocked(revalidatePath).mock.calls).toEqual([['/'], ['/']]);
+  });
+
+  it('un mail qui n’est plus sans réponse est introuvable ; une panne est un échec, journalisé sans ses indications', async () => {
+    // Chacune de ces gardes est tenue par prepareReply, sous ses droits (sans-reponse.db.test.ts) : elle rend null.
+    vi.mocked(prepareReply).mockResolvedValue(null);
+    await expect(prepareReplyAction({ id: LIGNE, indications: '' })).resolves.toEqual({
+      error: 'introuvable',
+    });
+    const failure = new Error('Failed query: insert into "brouillons" … params: Remerciez-la.');
+    vi.mocked(prepareReply).mockRejectedValue(failure);
+    await expect(prepareReplyAction({ id: LIGNE, indications: 'Remerciez-la.' })).resolves.toEqual({
+      error: 'echec',
+    });
+
+    expect(logError).toHaveBeenCalledExactlyOnceWith('brouillons.preparer', failure, {
+      userId: ctx.userId,
+    });
+    expect(requestBrouillons).not.toHaveBeenCalled();
+    expect(revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [{ id: 'pas-un-id', indications: '' }],
+    [{ id: LIGNE, indications: 'x'.repeat(1001) }],
+    [{ id: LIGNE, indications: null }],
+    [{ id: LIGNE }],
+    [{ indications: '' }],
+    [LIGNE],
+    [null],
+  ])('« Préparer une réponse » %j : invalide, sans rien lire ni écrire', async (input) => {
+    await expect(prepareReplyAction(input as never)).resolves.toEqual({ error: 'invalide' });
+    expect(prepareReply).not.toHaveBeenCalled();
+    expect(requestBrouillons).not.toHaveBeenCalled();
   });
 });

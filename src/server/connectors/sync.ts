@@ -7,6 +7,8 @@ import { depotsEquipe } from '@/server/db/schema/connections';
 import { withTenant } from '@/server/db/with-tenant';
 import { logError, safeErrorSummary } from '@/server/log';
 import { getBoss } from '@/server/pipeline/queue';
+import { requestBrouillons } from '@/server/portrait/brouillons-queue';
+import { MAIL_KINDS } from '@/server/portrait/sent-mails';
 import {
   claimConnection,
   finishSync,
@@ -16,7 +18,8 @@ import {
   UnreadableSecretError,
 } from './connections';
 import { ConnectorAuthError, ConnectorHttpError } from './http';
-import { ingestConnectorItems, removeConnectorItems } from './ingest-items';
+import { ingestConnectorItems, removeConnectorItems, removeConnectorTurns } from './ingest-items';
+import { keepNotified, takeSignaled } from './microsoft-notifications';
 import { normalizeItem } from './normalize';
 import { ensureFreshTokens, OAuthRefusedError } from './oauth';
 import { connectorHttp } from './pipedream';
@@ -30,6 +33,7 @@ export type SyncDeps = {
   getConnector: (id: ProviderId) => AnyConnector | null;
   fetchImpl?: typeof fetch; // tests
   sleep?: (ms: number) => Promise<void>; // tests
+  publicUrl?: string; // tests : l'adresse de Leon que Microsoft appelle
 };
 export type SyncResult = 'skipped' | 'ok' | 'auth_error' | 'error';
 
@@ -81,6 +85,7 @@ async function readPages(
   connection: LoadedConnection,
   deps: SyncDeps,
   ready: Ready,
+  signaled: string[],
 ): Promise<Again> {
   const { connector, config } = ready;
   const http = connectorHttp(connection.provider, connector, config, deps);
@@ -88,14 +93,19 @@ async function readPages(
     cursor: connection.cursor,
     since: connection.since,
     ...(connection.provider === 'github' && { depotsEquipe: await teamRepos(ctx) }),
+    ...(signaled.length > 0 && { signaled }),
   };
   let read = 0;
   try {
     for await (const page of connector.sync(config, state, http)) {
       const items = page.items.flatMap((item) => normalizeItem(item, connection.provider) ?? []);
-      if (items.length > 0)
-        await ingestConnectorItems(ctx, { ...connection, privateRaw: connector.privateRaw }, items);
+      const audiences = page.audiences ?? [];
+      if (items.length > 0 || audiences.length > 0) {
+        const ref = { ...connection, privateRaw: connector.privateRaw };
+        await ingestConnectorItems(ctx, ref, items, audiences);
+      }
       if (page.removed?.length) await removeConnectorItems(ctx, connection, page.removed);
+      if (page.removedTurns?.length) await removeConnectorTurns(ctx, connection, page.removedTurns);
       const { id, lockedAt } = connection;
       const { cursor, depotsConfirmes } = page;
       if (!(await saveSyncProgress(ctx, id, lockedAt, cursor, items.length, depotsConfirmes)))
@@ -103,7 +113,8 @@ async function readPages(
       read += page.items.length;
       if (read >= SYNC_ITEMS_MAX) return 'soon';
     }
-    return connector.pipedream ? 'office' : 'later';
+    // Par Pipedream, chaque requête coûte un crédit : la relève se fait aux heures de bureau.
+    return config.authMode === 'pipedream' ? 'office' : 'later';
   } finally {
     // T12 : l'ingestion écrit avec l'accès de l'organisation, selon la liste lue au début. À la fin du passage, même
     // en erreur, les sources GitHub de l'organisation reprennent l'accès que donne la liste du moment (0048).
@@ -141,8 +152,11 @@ async function readWithRenewal(
   deps: SyncDeps,
   ready: Ready,
 ): Promise<Again> {
+  // Teams : les lieux que Microsoft a signalés (0098), pris une fois pour les deux essais ; la lecture les garde dans
+  // son curseur dès sa première page.
+  const signaled = await takeSignaled(ctx, connection);
   try {
-    return await readPages(ctx, connection, deps, ready);
+    return await readPages(ctx, connection, deps, ready, signaled);
   } catch (error) {
     const { refreshToken } = connection.config;
     const renewable =
@@ -157,7 +171,7 @@ async function readWithRenewal(
   });
   const renewed = prepare({ ...connection, config }, deps);
   if ('message' in renewed) throw new ConnectorHttpError(null, renewed.message);
-  return readPages(ctx, connection, deps, renewed);
+  return readPages(ctx, connection, deps, renewed, signaled);
 }
 
 // Audit 5 n° 2 : une connexion OAuth enregistrée sans `accountKey` se reconnaît au libellé, et ne se
@@ -248,7 +262,15 @@ export async function runConnectorSync(job: ConnectorSyncJob, deps: SyncDeps): P
   }
   if (again === 'lost') return 'skipped';
   await rememberAccountKey(ctx, fresh, deps, ready);
+  // Les abonnements par lesquels Microsoft prévient Leon dès que quelque chose arrive, sous la même réservation.
+  await keepNotified(ctx, fresh, ready.connector, deps);
   await finishSync(ctx, connection.id, connection.lockedAt, { kind: 'ok', again });
+  // La relève d'une boîte a pu apporter un mail qui attend une réponse : un passage de l'agent « Brouillons de
+  // réponse » pour qui l'a branchée, si elle lui a dit oui. Pas tant qu'il reste à lire (« soon ») : Outlook lit la
+  // boîte de réception avant les éléments envoyés, et un mail auquel elle a déjà répondu passerait pour le dernier de
+  // son fil tant que sa réponse n'est pas relevée.
+  if (again !== 'soon' && MAIL_KINDS.some((kind) => kind === connection.provider))
+    await requestBrouillons(ctx);
   return 'ok';
 }
 

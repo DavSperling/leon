@@ -142,3 +142,56 @@ describe('buildAboutPrompt', () => {
     expect(content.indexOf('GitHub')).toBeLessThan(content.indexOf('LIN-4'));
   });
 });
+
+describe('buildAboutPrompt : la langue', () => {
+  const SOURCES =
+    "- Dans la langue de la majorité de ses sources, en anglais si elle n'est pas claire.";
+  // Des sources en hébreu : sans langue choisie, le texte les suivrait.
+  const hebrew = material({
+    sources: [
+      {
+        source: source('g-1', { title: 'חידוש האסימון' }),
+        turns: [
+          {
+            role: 'participant',
+            authorName: 'Alice',
+            ts: new Date('2026-10-19T13:00:00.000Z'),
+            text: 'אני מתקנת את חידוש האסימון של השירות.',
+          },
+        ],
+      },
+    ],
+  });
+
+  it('sans langue choisie pour son compte, rien ne change : la langue de ses sources, et aucune ligne en tête', () => {
+    const prompt = buildAboutPrompt(hebrew, null, SPACE);
+
+    expect(buildAboutPrompt(hebrew, null, SPACE, null)).toEqual(prompt);
+    expect(prompt.system).toContain(SOURCES);
+    expect(userContent(prompt).startsWith(`${DATA_GUARD_LINE}\n`)).toBe(true);
+  });
+
+  it('la langue choisie pour son compte l’emporte sur celle de ses sources', () => {
+    const without = buildAboutPrompt(hebrew, null, SPACE);
+    const french = buildAboutPrompt(hebrew, null, SPACE, 'fr');
+
+    // en tête du message, avant la ligne de garde : une consigne, pas une donnée
+    expect(userContent(french)).toBe(
+      `Écris ta réponse en français : c'est la langue de son compte.\n${userContent(without)}`,
+    );
+    expect(
+      userContent(buildAboutPrompt(hebrew, null, SPACE, 'en')).startsWith(
+        `Écris ta réponse en anglais : c'est la langue de son compte.\n${DATA_GUARD_LINE}\n`,
+      ),
+    ).toBe(true);
+    // et le système ne dit plus de suivre ses sources : cette seule règle change
+    const account = french.system.split('\n').filter((line) => !without.system.includes(line));
+    expect(account).toHaveLength(1);
+    expect(account[0]).toMatch(
+      /^- Dans la langue que le message t'indique en tête, même quand ses sources sont dans une autre/,
+    );
+    expect(french.system.replace(account[0] ?? '', SOURCES)).toBe(without.system);
+    // la langue est dite dans le message : le système reste le même pour tous les comptes qui en ont choisi une
+    expect(buildAboutPrompt(hebrew, null, SPACE, 'en').system).toBe(french.system);
+  });
+});

@@ -77,7 +77,7 @@ Décidé avec la session « Authentification rapide multi-fournisseurs » (branc
 
 ### Étape 1 « About you » / « Vous »
 
-- **Langue** en tête (English | Français). Le choix s'applique tout de suite à l'écran. Il s'enregistre comme celui de Réglages (cookie `leon-locale`, voir `setLocaleAction`).
+- **Langue** en tête (English | Français). Le choix s'applique tout de suite à l'écran. Il s'enregistre comme celui de Réglages (cookie `leon-locale` et, pour une personne connectée, son compte : voir `setLocaleAction`).
 - **Créateur :**
   - le nom de l'entreprise, seulement s'il arrive par Google, Microsoft ou GitHub sans espace ;
   - le service, puis le poste ;

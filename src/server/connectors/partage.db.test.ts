@@ -224,6 +224,15 @@ describe('partager une connexion (0056)', () => {
     expect(await partageOf(ben, github.id)).toBeNull();
   });
 
+  it.each(['teams', 'teamschats'] as const)(
+    '%s ne se partage pas : ses membres décident, comme dans Teams (0097)',
+    async (provider) => {
+      const id = await seedConnection(ben, { provider });
+      expect(await shareConnection(await fresh(ben), id, 'moi')).toBe(false);
+      expect(await partageOf(ben, id)).toBeNull();
+    },
+  );
+
   it("un outil rebranché ne garde pas l'accès de l'ancienne connexion", async () => {
     // Ben ouvre sa boîte mail à l'équipe, la débranche, puis la rebranche sans rien choisir : privée à lui.
     const before: ConnectionRef = {

@@ -5,8 +5,8 @@ import type { ConnectorItem, ConnectorTurn } from '../types';
 import { pageText, plainText } from './blocks';
 import { type Api, fetchComments, fetchUser, type NotionPage } from './client';
 
-// D'une page Notion à un élément : son corps, puis ses commentaires. Une ligne de base garde en tête de son texte ses
-// propriétés utiles et remplies, lues dans la page que rend la recherche.
+// D'une page Notion à un élément : son corps, puis ses commentaires. Une ligne de base garde aussi ses propriétés
+// utiles et remplies, lues dans la page que rend la recherche, dans un tour à part placé avant le corps.
 
 type Author = ConnectorTurn['author'];
 type Authors = (userId: string | undefined) => Promise<Author>;
@@ -121,12 +121,17 @@ export async function pageToItem(
   // Une ligne sans corps se garde pour ses propriétés si elle a un titre : une ligne vide, laissée par un clic sur
   // « Nouveau », ne garde rien.
   const line = body !== '' || titleOf(page) !== '' ? await propertiesLine(page, authors) : '';
-  const text = [line, body].filter((part) => part !== '').join('\n');
 
+  // Les propriétés dans leur propre tour : un tour stocké porte l'empreinte de son texte (normalize.ts), et un statut
+  // qui change ne doit pas recopier tout le corps dans un nouveau tour.
   const turns: ConnectorTurn[] = [];
-  if (text !== '') {
+  for (const [externalId, text] of [
+    ['proprietes', line],
+    ['body', body],
+  ] as const) {
+    if (text === '') continue;
     turns.push({
-      externalId: 'body',
+      externalId,
       role: 'document',
       author: await authors(page.created_by?.id ?? page.last_edited_by?.id),
       text,

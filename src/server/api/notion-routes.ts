@@ -8,9 +8,9 @@ import { db } from '@/server/db/client';
 import { logError } from '@/server/log';
 
 // Le point d'entrée des alertes de Notion (webhooks) : public, ni session ni jeton. Seule la signature d'une alerte la
-// fait compter ; elle rend alors dues les connexions Notion de son espace (notifications_notion, 0100) et leur relève
-// est mise en file. Rien du contenu n'est lu ici : la relève, par la recherche des pages modifiées, lit le nouveau. La
-// relève du quart d'heure reste le filet.
+// fait compter ; elle avance alors la relève des connexions Notion de son espace, au plus tôt une minute après le
+// début de leur dernière relève (notifications_notion, 0100), et la file est relancée. Rien du contenu n'est lu ici :
+// la relève, par la recherche des pages modifiées, lit le nouveau. La relève du quart d'heure reste le filet.
 //
 // Doc lue le 27/11/2026 :
 //   https://developers.notion.com/reference/webhooks : l'abonnement se déclare dans l'onglet Webhooks de la connexion,

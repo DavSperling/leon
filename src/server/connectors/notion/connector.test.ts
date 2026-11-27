@@ -265,33 +265,41 @@ describe('sync : premier passage', () => {
     expect(item.title).toBe('Compte rendu client Acme');
     expect(item.origin).toEqual({ parent: 'data_source_id:7e45a1c2-90b3-4d68-8f2e-1a6c3d5b9e04' });
     expect(item.turns.map((turn) => [turn.externalId, turn.role, turn.ts])).toEqual([
+      ['proprietes', 'document', '2026-10-07T16:42:00.000Z'],
       ['body', 'document', '2026-10-07T16:42:00.000Z'],
       ['comment:4e8b2d96-1a50-4c73-9f08-6b3a7d1c5e23', 'participant', '2026-10-07T16:50:00.000Z'],
       ['comment:7c1e0a52-9d34-4b86-a1f7-5e2d8c403b21', 'participant', '2026-10-07T17:05:00.000Z'],
     ]);
-    expect(item.turns[0]?.author).toEqual({ name: 'Paul Martin', email: 'paul@acme.test' });
-    expect(item.turns[1]).toMatchObject({
+    expect(item.turns[1]?.author).toEqual({ name: 'Paul Martin', email: 'paul@acme.test' });
+    expect(item.turns[2]).toMatchObject({
       author: { name: 'Paul Martin', email: 'paul@acme.test' },
       text: 'Je prépare l’environnement de démonstration.',
     });
-    expect(item.turns[2]).toMatchObject({
+    expect(item.turns[3]).toMatchObject({
       author: { name: 'Marie Durand', email: 'marie@acme.test' },
       text: 'On valide la démonstration pour le 28.',
     });
   });
 
-  it('met en tête du texte d’une ligne de base ses propriétés utiles et remplies, en une ligne', async () => {
+  it('range les propriétés utiles et remplies d’une ligne de base dans leur propre tour, le corps à part', async () => {
     const { items } = await run(wholeWorkspace());
 
     // Marie n'a que son identifiant dans la propriété : son nom vient des auteurs du passage. Le titre, la
-    // sélection vide, le texte long, la relation et le lien n'y sont pas.
-    expect(itemOf(items, ID.db).turns[0]?.text).toBe(
-      [
-        'Statut : En cours · Responsable : Paul Martin, Marie Durand · Échéance : 2026-12-03 · Priorité : Haute · Étiquettes : Démo, Client · Fait : [ ] · Budget (k€) : 12 · Note : Relancer après la démo',
+    // sélection vide, le texte long, la relation et le lien n'y sont pas. Un statut qui change ne touche que ce
+    // tour : le corps garde le même texte, donc le même tour rangé.
+    const [properties, body] = itemOf(items, ID.db).turns;
+    expect(properties).toMatchObject({
+      externalId: 'proprietes',
+      author: { name: 'Paul Martin', email: 'paul@acme.test' },
+      text: 'Statut : En cours · Responsable : Paul Martin, Marie Durand · Échéance : 2026-12-03 · Priorité : Haute · Étiquettes : Démo, Client · Fait : [ ] · Budget (k€) : 12 · Note : Relancer après la démo',
+    });
+    expect(body).toMatchObject({
+      externalId: 'body',
+      text: [
         'Acme veut une démonstration avant la fin du mois.',
         'Budget confirmé : 12 000 euros.',
       ].join('\n'),
-    );
+    });
   });
 
   it('garde une ligne de base sans corps pour son titre et ses propriétés, pas une ligne vide sans titre', async () => {
@@ -318,8 +326,13 @@ describe('sync : premier passage', () => {
       ]),
     ]);
 
-    expect(items.map((item) => [item.title, item.turns.map((turn) => turn.text)])).toEqual([
-      ['Préparer la démo', ['Statut : À faire · Échéance : 2026-12-01 → 2026-12-05 · Fait : [x]']],
+    expect(
+      items.map((item) => [item.title, item.turns.map((turn) => [turn.externalId, turn.text])]),
+    ).toEqual([
+      [
+        'Préparer la démo',
+        [['proprietes', 'Statut : À faire · Échéance : 2026-12-01 → 2026-12-05 · Fait : [x]']],
+      ],
     ]);
   });
 
@@ -401,6 +414,26 @@ describe('sync : curseur', () => {
 
     const last = pages.at(-1);
     expect(JSON.parse(last?.cursor ?? 'null').ids).toHaveLength(12);
+  });
+
+  it('relit au passage suivant les pages d’une minute pas encore close', async () => {
+    // Notion date à la minute : une deuxième modification dans la minute de notre lecture garde la même date.
+    const minute = new Date(Math.floor(Date.now() / 60_000) * 60_000).toISOString();
+    const page = stubPage(1, minute);
+    const routes = (text: string) => [
+      search({ results: [page], next_cursor: null, has_more: false }),
+      user(ID.marie, userMarie),
+      children(page.id, paragraph(text)),
+      comments(page.id, commentsEmpty),
+    ];
+
+    const first = await run(routes('Premier jet'));
+    const cursor = first.pages.at(-1)?.cursor ?? null;
+    expect(JSON.parse(cursor ?? 'null')).toEqual({ at: minute, ids: [] });
+
+    const second = await run(routes('Premier jet, corrigé'), { cursor });
+    expect(second.items.map((item) => item.turns[0]?.text)).toEqual(['Premier jet, corrigé']);
+    expect(JSON.parse(second.pages.at(-1)?.cursor ?? 'null')).toEqual({ at: minute, ids: [] });
   });
 });
 
@@ -508,7 +541,7 @@ describe('sync : lectures qui répondent mal', () => {
     ).toHaveLength(1);
   });
 
-  it('sans le droit de lire les commentaires (403), la page sort avec son seul corps', async () => {
+  it('sans le droit de lire les commentaires (403), la page sort avec ses propriétés et son corps', async () => {
     const routes = wholeWorkspace().map((route) =>
       route.url instanceof RegExp && route.url.test(`/v1/comments?block_id=${ID.db}`)
         ? comments(ID.db, undefined, refused(403, 'restricted_resource'))
@@ -516,7 +549,10 @@ describe('sync : lectures qui répondent mal', () => {
     );
     const { items } = await run(routes);
 
-    expect(itemOf(items, ID.db).turns.map((turn) => turn.externalId)).toEqual(['body']);
+    expect(itemOf(items, ID.db).turns.map((turn) => turn.externalId)).toEqual([
+      'proprietes',
+      'body',
+    ]);
   });
 
   it('sans le droit de lire les personnes (403), l’auteur est inconnu, le commentaire garde le nom affiché', async () => {
@@ -528,9 +564,12 @@ describe('sync : lectures qui répondent mal', () => {
     const { items } = await run(routes);
 
     const turns = itemOf(items, ID.db).turns;
-    expect(turns[0]?.author).toEqual({ name: null, email: null });
-    expect(turns[1]?.author).toEqual({ name: 'Paul Martin', email: null });
-    expect(turns[2]?.author).toEqual({ name: 'Marie Durand', email: null });
+    expect(turns.map((turn) => turn.author)).toEqual([
+      { name: null, email: null },
+      { name: null, email: null },
+      { name: 'Paul Martin', email: null },
+      { name: 'Marie Durand', email: null },
+    ]);
   });
 
   it('saute une page retirée entre la recherche et sa lecture (404) et garde la suivante', async () => {

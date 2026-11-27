@@ -139,6 +139,43 @@ describe('POST /api/notion/webhooks : événements', () => {
     expect(enqueueDueSyncs).toHaveBeenCalledTimes(1);
   });
 
+  it('pendant une rafale, pas plus d’une relève par minute, sans repousser une relève déjà demandée plus tôt', async () => {
+    const idle = await connection(`${workspace}:${randomUUID()}`);
+    const running = await connection(`${workspace}:${randomUUID()}`);
+    const asked = await connection(`${workspace}:espace`);
+    await adminPool.query(
+      `update connections set last_sync_started_at = now() - interval '20 minutes' where id = $1`,
+      [idle],
+    );
+    // Une relève commencée il y a dix secondes, partie de l'échéance qui l'a déclenchée.
+    await adminPool.query(
+      `update connections set last_sync_started_at = now() - interval '10 seconds',
+         next_sync_at = now() - interval '70 seconds' where id = $1`,
+      [running],
+    );
+    // Pareil, et une autre relève déjà demandée trente secondes après ce début.
+    await adminPool.query(
+      `update connections set last_sync_started_at = now() - interval '10 seconds',
+         next_sync_at = now() + interval '20 seconds' where id = $1`,
+      [asked],
+    );
+    const afterStart = async (id: string) => {
+      const { rows } = await adminPool.query<{ seconds: number }>(
+        `select extract(epoch from next_sync_at - last_sync_started_at)::float8 as seconds
+           from connections where id = $1`,
+        [id],
+      );
+      return rows[0]?.seconds;
+    };
+    const body = event(workspace);
+
+    expect((await post(body, sign(body))).status).toBe(200);
+
+    expect(await due(idle)).toBe(true);
+    expect(await afterStart(running)).toBe(60);
+    expect(await afterStart(asked)).toBe(30);
+  });
+
   it('compare l’espace exactement : ni un autre espace, ni un préfixe, ni une clé sans espace, ni un autre outil', async () => {
     const others = [
       await connection(`${randomUUID()}:espace`),

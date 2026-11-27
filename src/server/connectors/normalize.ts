@@ -4,7 +4,7 @@ import { maskSecrets } from '@/capture/mask-secrets';
 import { prepareTurnText } from '@/capture/prepare-turn-text';
 import type { AuthorSide, ProviderId } from '@/capture/turn';
 import { logError } from '@/server/log';
-import type { ConnectorItem, ConnectorTurn } from './types';
+import type { Audience, AudienceMember, ConnectorItem, ConnectorTurn } from './types';
 
 // Ce que le socle fait du texte des outils avant de l'ingérer : HTML en texte, découpe, masquage,
 // identifiants de tours qui changent avec le texte.
@@ -426,5 +426,26 @@ export function normalizeItem(item: ConnectorItem, provider: ProviderId): Normal
     updatedAt: updatedAt.toISOString(),
     origin: cleanOrigin(item.origin),
     turns,
+    ...(item.audience === undefined ? {} : { audience: clean(item.audience) }),
   };
+}
+
+// Les membres d'un lieu comme la base les compare (0097) : une adresse en minuscules (illisible : sans adresse), un
+// identifiant nettoyé, un début d'historique lisible (sinon tout l'historique). Un membre sans adresse ni identifiant
+// ne se retrouve pas : il part. Un lieu à la clé trop longue est refusé.
+export function normalizeAudience(audience: Audience, provider: ProviderId): Audience | null {
+  const key = clean(audience.key);
+  if (key === '' || key.length > ID_MAX) {
+    logError('connector.audience_refused', new Error('Clé de lieu illisible'), { provider });
+    return null;
+  }
+  if (audience.team === true) return { key, team: true };
+  const members = audience.members.flatMap((member): AudienceMember[] => {
+    const email = AddressSchema.safeParse(member.email ?? '').data ?? null;
+    const raw = member.id === null ? '' : clean(member.id).trim();
+    const id = raw !== '' && raw.length <= ID_MAX ? raw : null;
+    const since = member.since ? (validDate(member.since)?.toISOString() ?? null) : null;
+    return email || id ? [{ email, id, since }] : [];
+  });
+  return { key, members };
 }

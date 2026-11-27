@@ -42,7 +42,20 @@ export type ConnectorItem = {
   updatedAt: string; // ISO 8601
   origin: Record<string, string>; // { repo: 'acme/leon' }, { workspace: 'Acme', project: 'Site' }
   turns: ConnectorTurn[]; // ordre chronologique
+  // Le lieu de l'élément chez l'outil (une conversation, un canal, une réunion de Teams) : la clé d'un lieu de
+  // `SyncPage.audiences`, donné dans la même page. L'élément n'existe alors qu'une fois dans l'organisation, quel que
+  // soit qui le relève, et n'est visible que de ce lieu (0097). Absent : une source par personne qui branche, à
+  // l'accès de sa connexion.
+  audience?: string;
 };
+
+// Qui voit un lieu chez l'outil, dit à chaque lecture du lieu : toute l'organisation Leon (`team`), ou ses membres,
+// par leur adresse et leur identifiant chez l'outil, que Leon retrouve parmi les membres de l'organisation. `since`
+// (ISO 8601) : le début de l'historique qu'un membre voit, quand l'outil le borne (ajouté sans l'historique).
+export type AudienceMember = { email: string | null; id: string | null; since?: string | null };
+export type Audience =
+  | { key: string; team: true }
+  | { key: string; team?: false; members: AudienceMember[] };
 
 // `depotsEquipe` (GitHub seulement, décision D) : les dépôts d'équipe de l'organisation, `github.com/owner/repo`
 // en minuscules. Absent vaut vide : rien n'est relevé.
@@ -52,12 +65,14 @@ export type SyncState = { cursor: string | null; since: Date; depotsEquipe?: str
 // message supprimé dans un fil) : seulement pour un outil dont l'identifiant de tour est unique hors de son élément
 // (message:<canal>/<id> de Teams). Un élément resté sans tour part aussi.
 // `depotsConfirmes` (GitHub) : les dépôts d'équipe que la connexion a pu lire à ce passage, même forme.
+// `audiences` : les lieux lus à ce passage et qui en est ; tout ce qui a déjà été relevé d'eux prend leur accès du jour.
 export type SyncPage = {
   items: ConnectorItem[];
   cursor: string;
   removed?: string[];
   removedTurns?: string[];
   depotsConfirmes?: string[];
+  audiences?: Audience[];
 };
 
 // Les jetons rendus par l'éditeur ; `raw` est sa réponse privée de access_token, refresh_token et id_token.
@@ -116,6 +131,9 @@ export type Connector<Config> = {
   // Texte brut privé à celui qui branche, comme une conversation (boîte mail personnelle).
   // Absent : visible de l'équipe.
   privateRaw?: boolean;
+  // Chaque élément est visible des membres de son lieu chez l'outil (`ConnectorItem.audience`), comme dans l'outil :
+  // la connexion ne se partage pas.
+  memberAccess?: boolean;
   // `account` : le libellé affiché. `accountKey` : l'identifiant stable du compte (et de l'espace ou du
   // site), lu dans une réponse déjà demandée ; « Reconnecter » le compare. Absent quand l'outil n'en dit rien.
   verify(config: Config, http: ConnectorHttp): Promise<{ account: string; accountKey?: string }>;

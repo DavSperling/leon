@@ -1,6 +1,7 @@
 import { z } from 'zod';
+import { logError } from '@/server/log';
 import { ConnectorAuthError, ConnectorHttpError } from '../http';
-import type { ConnectorItem, SyncPage } from '../types';
+import type { Audience, ConnectorItem, SyncPage } from '../types';
 
 // La règle de Microsoft (https://learn.microsoft.com/en-us/graph/api/resources/teams-api-overview, « Polling
 // requirements », lue le 05/11/2026) : une appli qui interroge une ressource pour voir si elle a changé ne peut le faire
@@ -8,10 +9,12 @@ import type { ConnectorItem, SyncPage } from '../types';
 // des API Microsoft. La relève de Leon repasse toutes les 15 minutes : c'est ce module qui tient la règle. La liste
 // des lieux (équipes et canaux, ou conversations) et chaque lieu sont lus au plus une fois par 24 h ; entre deux, un
 // passage ne fait aucune requête. Une lecture coupée par la limite d'un passage reprend à sa page suivante : c'est la
-// même lecture, pas une nouvelle interrogation.
+// même lecture, pas une nouvelle interrogation. La liste du jour dit aussi qui est dans chaque lieu (0097) : tout ce
+// qui en a été relevé prend l'accès de ses membres du jour, une fois par jour, même sans message nouveau.
 
 export const DAY = 86_400_000;
 const MARGIN = 5 * 60_000; // l'écart d'horloge entre Leon et Microsoft
+const AUDIENCES_PER_PAGE = 50; // lieux alignés par transaction
 
 // Un canal (`parent` : son équipe) ou une conversation.
 const PlaceSchema = z.object({
@@ -30,7 +33,9 @@ const CursorSchema = z.object({
 
 export type Place = z.infer<typeof PlaceSchema>;
 type Cursor = z.infer<typeof CursorSchema>;
-export type Step = { items: ConnectorItem[]; removedTurns: string[] };
+export type Step = { items: ConnectorItem[]; removedTurns: string[]; audiences?: Audience[] };
+// Les lieux du jour, et qui est dans chacun (les réunions disent les leurs à la lecture, une par transcription).
+export type Listing = { places: Place[]; audiences: Audience[] };
 // Une page lue, et l'adresse de la suivante (null : le lieu est lu jusqu'au bout).
 export type Reader = (
   place: Place,
@@ -58,23 +63,29 @@ export const gone = (error: unknown) =>
 export async function* daily(
   text: string | null,
   since: Date,
-  list: () => Promise<Place[]>,
+  list: () => Promise<Listing>,
   read: Reader,
 ): AsyncGenerator<SyncPage> {
   const now = Date.now();
   const stamp = new Date(now).toISOString();
   const recent = (at: string | null | undefined) => at != null && now - Date.parse(at) < DAY;
   let state = readCursor(text);
-  const page = ({ items, removedTurns }: Step): SyncPage => ({
+  const page = ({ items, removedTurns, audiences }: Step): SyncPage => ({
     items,
     cursor: JSON.stringify(state),
     ...(removedTurns.length > 0 ? { removedTurns } : {}),
+    ...(audiences?.length ? { audiences } : {}),
   });
 
-  // Un lieu quitté sort de la liste : il n'est plus lu.
+  // Un lieu quitté sort de la liste : il n'est plus lu. Qui est dans chaque lieu passe par paquets, une transaction
+  // chacun ; la liste ne compte comme faite qu'après le dernier : un passage coupé avant la refait.
   if (!recent(state.listedAt)) {
-    const places = await list();
+    const { places, audiences } = await list();
     const keys = new Set(places.map((place) => place.key));
+    for (let at = 0; at < audiences.length; at += AUDIENCES_PER_PAGE) {
+      const batch = audiences.slice(at, at + AUDIENCES_PER_PAGE);
+      yield page({ items: [], removedTurns: [], audiences: batch });
+    }
     state = {
       listedAt: stamp,
       places,
@@ -107,7 +118,9 @@ export async function* daily(
       }
     } catch (error) {
       if (!gone(error)) throw error;
-      state = done(); // relu demain, ou retiré de la liste du jour
+      // Relu demain, ou retiré de la liste du jour. Le journal ne dit que le refus, rien du lieu.
+      logError('teams.place_skipped', error);
+      state = done();
       yield page({ items: [], removedTurns: [] });
     }
   }

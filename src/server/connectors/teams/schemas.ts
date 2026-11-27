@@ -15,24 +15,40 @@ export const MeSchema = z.object({
   userPrincipalName: z.string().nullish(),
 });
 
+// Une équipe de la personne (joinedTeams), ou une équipe à laquelle elle est liée (associatedTeams : aussi l'équipe qui
+// héberge un canal partagé dont elle est membre, dans une autre entreprise comprise).
 const JoinedTeamSchema = z.object({ id: z.string(), displayName: z.string().nullish() });
 export const JoinedTeamsSchema = listOf(JoinedTeamSchema);
 
 // « public », « private » ou « hiddenMembership ». Absent ou inconnu : traité comme privé.
 export const TeamSchema = z.object({ visibility: z.string().nullish() });
 
-// « standard », « private » ou « shared » (avec Prefer: include-unknown-enum-members).
+// « standard », « private » ou « shared » (avec Prefer: include-unknown-enum-members). `@odata.id` (allChannels) : son
+// adresse, qui nomme l'équipe qui l'héberge ; un canal partagé avec l'équipe peut venir d'une autre.
 const ChannelSchema = z.object({
+  '@odata.id': z.string().nullish(),
   id: z.string(),
   displayName: z.string().nullish(),
   membershipType: z.string().nullish(),
 });
 export const ChannelsSchema = listOf(ChannelSchema);
 
+// Un membre d'une conversation ou d'un canal (aadUserConversationMember). `visibleHistoryStartDateTime` : le début de
+// l'historique qu'il voit dans une conversation (« 0001-01-01T00:00:00Z » : tout).
+const MemberSchema = z.object({
+  displayName: z.string().nullish(),
+  email: z.string().nullish(),
+  userId: z.string().nullish(),
+  visibleHistoryStartDateTime: z.string().nullish(),
+});
+export const MembersSchema = listOf(MemberSchema);
+
+// `chatType` : « oneOnOne », « group » ou « meeting ». `members` ($expand) : 25 au plus.
 const ChatSchema = z.object({
   id: z.string(),
   topic: z.string().nullish(),
-  members: z.array(z.object({ displayName: z.string().nullish() })).nullish(),
+  chatType: z.string().nullish(),
+  members: z.array(MemberSchema).nullish(),
 });
 export const ChatsSchema = listOf(ChatSchema);
 
@@ -88,6 +104,7 @@ export const TranscriptsSchema = listOf(TranscriptSchema);
 export type Me = z.infer<typeof MeSchema>;
 export type Channel = z.infer<typeof ChannelSchema>;
 export type Chat = z.infer<typeof ChatSchema>;
+export type Member = z.infer<typeof MemberSchema>;
 export type Message = z.infer<typeof MessageSchema>;
 export type Root = z.infer<typeof RootSchema>;
 export type Event = z.infer<typeof EventSchema>;

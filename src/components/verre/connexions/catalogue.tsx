@@ -127,16 +127,18 @@ export function Catalogue({
     const fixable = card.reconnect && canConnect && (!canReconnect(conn) || p.oauthReady);
     const ink = fixable && !inkGiven;
     if (ink) inkGiven = true;
-    const scope = scopeOf(conn, p.privateRaw);
+    const scope = scopeOf(conn, p.privateRaw, p.memberAccess);
     const caption =
       card.caption === 'scope'
         ? scope === 'equipe'
           ? t('team')
-          : scope === 'moi'
-            ? conn.isCreator
-              ? t('onlyYou')
-              : t('onlyName', { name: conn.createdBy.name })
-            : scopeLabel(scope)
+          : scope === 'membres'
+            ? t('members')
+            : scope === 'moi'
+              ? conn.isCreator
+                ? t('onlyYou')
+                : t('onlyName', { name: conn.createdBy.name })
+              : scopeLabel(scope)
         : t(
             card.caption === 'paused'
               ? 'statusPaused'

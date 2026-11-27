@@ -26,8 +26,9 @@ const TEAM = 'fbe2bf47-16c8-47cf-b4a5-4b9b187c508b';
 const PRIVATE_TEAM = '02bd9fd6-8f93-4758-87c3-1fb73740a315';
 const GENERAL = '19:4a95f7d8db4c4e7fae857bcebe0623e6@thread.tacv2';
 const DEVIS = '19:7d8f2b0c9e3a4f1b8c6d5e4f3a2b1c0d@thread.tacv2';
-const MESSAGES = (channel: string) =>
-  `${GRAPH}/teams/${TEAM}/channels/${encodeURIComponent(channel)}/messages`;
+const IN = (team: string, channel: string) =>
+  `${GRAPH}/teams/${team}/channels/${encodeURIComponent(channel)}`;
+const MESSAGES = (channel: string, team = TEAM) => `${IN(team, channel)}/messages`;
 const GROUP = '19:2a247d5dadc24f408d009e4ae84502cf@thread.v2';
 const ONE =
   '19:8ea0e38b-efb3-4757-924a-5f94061cf8c2_ef1c916a-3135-4417-ba27-8eb7bd084193@unq.gbl.spaces';
@@ -66,32 +67,28 @@ async function run(connector: AnyConnector, routes: FakeRoute[], cursor: string 
   return { pages, calls, paths: calls.map((call) => call.url.split('?')[0]) };
 }
 
-// Une équipe publique (un canal standard, un privé, un partagé) et une équipe privée.
+// Une équipe publique (ses canaux standard) et une équipe privée encore sans canal ; aucune autre équipe associée.
+const TEAMS = {
+  value: [
+    { id: TEAM, displayName: 'Atelier Lebrun', isArchived: false },
+    { id: PRIVATE_TEAM, displayName: 'Direction', isArchived: false },
+  ],
+};
 const listing = (channels = [GENERAL]): FakeRoute[] => [
+  { url: `${GRAPH}/me/joinedTeams`, json: TEAMS },
+  { url: `${GRAPH}/me/teamwork/associatedTeams`, json: TEAMS },
   {
-    url: `${GRAPH}/me/joinedTeams`,
+    url: `${GRAPH}/teams/${TEAM}/allChannels`,
     json: {
-      value: [
-        { id: TEAM, displayName: 'Atelier Lebrun', isArchived: false },
-        { id: PRIVATE_TEAM, displayName: 'Direction', isArchived: false },
-      ],
+      value: channels.map((id) => ({
+        id,
+        displayName: id === GENERAL ? 'Général' : 'Devis',
+        membershipType: 'standard',
+      })),
     },
   },
   { url: `${GRAPH}/teams/${TEAM}`, json: { visibility: 'public' } },
-  {
-    url: `${GRAPH}/teams/${TEAM}/channels`,
-    json: {
-      value: [
-        ...channels.map((id) => ({
-          id,
-          displayName: id === GENERAL ? 'Général' : 'Devis',
-          membershipType: 'standard',
-        })),
-        { id: '19:paie@thread.tacv2', displayName: 'Paie', membershipType: 'private' },
-        { id: '19:client@thread.tacv2', displayName: 'Client', membershipType: 'shared' },
-      ],
-    },
-  },
+  { url: `${GRAPH}/teams/${PRIVATE_TEAM}/allChannels`, json: { value: [] } },
   { url: `${GRAPH}/teams/${PRIVATE_TEAM}`, json: { visibility: 'private' } },
 ];
 
@@ -172,6 +169,7 @@ describe('Teams et Teams Chat : configuration', () => {
       'User.Read',
       'Team.ReadBasic.All',
       'Channel.ReadBasic.All',
+      'ChannelMember.Read.All',
       'ChannelMessage.Read.All',
       'ChannelMessage.Send',
     ]);
@@ -205,12 +203,15 @@ describe('Teams et Teams Chat : configuration', () => {
     },
   );
 
-  it('garde les canaux visibles de l’équipe, les conversations et les transcriptions privées à qui branche', () => {
-    expect(teamsConnector.privateRaw).toBeUndefined();
-    expect(teamsChatsConnector.privateRaw).toBe(true);
+  it('rend chaque canal, conversation ou transcription visible de ses membres, sans partage de la connexion', () => {
+    expect(teamsConnector.memberAccess).toBe(true);
+    expect(teamsChatsConnector.memberAccess).toBe(true);
     const catalog = listCatalog('fr');
-    expect(catalog.find((item) => item.id === 'teams')?.warning).toContain('toute l’équipe');
-    expect(catalog.find((item) => item.id === 'teamschats')?.warning).toContain('vos managers');
+    for (const id of ['teams', 'teamschats']) {
+      const item = catalog.find((entry) => entry.id === id);
+      expect(item?.memberAccess).toBe(true);
+      expect(item?.warning).toContain('Comme dans Teams');
+    }
   });
 
   it('nomme le compte d’après /me', async () => {
@@ -229,22 +230,26 @@ describe('Teams et Teams Chat : configuration', () => {
 });
 
 describe('teamsConnector.sync : premier passage', () => {
-  it('ne lit que les canaux standard des équipes publiques', async () => {
-    const { paths, calls } = await run(teamsConnector, firstPass());
+  it('lit les équipes, leurs canaux et leur visibilité, puis chaque canal', async () => {
+    const { paths, calls, pages } = await run(teamsConnector, firstPass());
 
     expect(paths).toEqual([
       `${GRAPH}/me/joinedTeams`,
+      `${GRAPH}/me/teamwork/associatedTeams`,
+      `${GRAPH}/teams/${TEAM}/allChannels`,
       `${GRAPH}/teams/${TEAM}`,
-      `${GRAPH}/teams/${TEAM}/channels`,
+      `${GRAPH}/teams/${PRIVATE_TEAM}/allChannels`,
       `${GRAPH}/teams/${PRIVATE_TEAM}`,
       MESSAGES(GENERAL),
       REPLIES_NEXT.split('?')[0],
     ]);
-    expect(param(calls[1]?.url, '$select')).toBe('visibility');
     expect(calls[2]?.headers.prefer).toBe('include-unknown-enum-members');
-    expect(param(calls[4]?.url, '$top')).toBe('50');
-    expect(param(calls[4]?.url, '$expand')).toBe('replies');
-    expect(calls[5]?.url).toBe(REPLIES_NEXT);
+    expect(param(calls[3]?.url, '$select')).toBe('visibility');
+    expect(param(calls[6]?.url, '$top')).toBe('50');
+    expect(param(calls[6]?.url, '$expand')).toBe('replies');
+    expect(calls[7]?.url).toBe(REPLIES_NEXT);
+    // Le canal standard d'une équipe publique : toute l'équipe, sans lire ses membres.
+    expect(pages.flatMap((page) => page.audiences ?? [])).toEqual([{ key: GENERAL, team: true }]);
   });
 
   it('fait un fil par message de canal, avec ses réponses dans l’ordre, et retire les messages supprimés', async () => {
@@ -261,6 +266,7 @@ describe('teamsConnector.sync : premier passage', () => {
       url: 'https://teams.microsoft.com/l/message/x/1760430000000',
       updatedAt: '2026-10-14T08:36:40.000Z',
       origin: { team: 'Atelier Lebrun', channel: 'Général' },
+      audience: GENERAL,
     });
     expect(devis?.turns.map((turn) => [turn.externalId, turn.author.name, turn.text])).toEqual([
       [`message:${GENERAL}/1760430000000`, 'Robin Kline', 'Le devis Dubois part demain.'],
@@ -346,11 +352,14 @@ describe('teamsConnector.sync : une lecture par jour au plus', () => {
 
     const { paths, pages } = await run(
       teamsConnector,
-      [{ url: `${GRAPH}/me/joinedTeams`, json: { value: [] } }],
+      [
+        { url: `${GRAPH}/me/joinedTeams`, json: { value: [] } },
+        { url: `${GRAPH}/me/teamwork/associatedTeams`, json: { value: [] } },
+      ],
       first.pages.at(-1)?.cursor,
     );
 
-    expect(paths).toEqual([`${GRAPH}/me/joinedTeams`]);
+    expect(paths).toEqual([`${GRAPH}/me/joinedTeams`, `${GRAPH}/me/teamwork/associatedTeams`]);
     expect(cursorOf(pages)).toMatchObject({ places: [], read: {} });
   });
 
@@ -386,6 +395,158 @@ describe('teamsConnector.sync : une lecture par jour au plus', () => {
   });
 });
 
+describe('teamsConnector.sync : canaux privés et partagés, et qui en est membre', () => {
+  const HOST = '6f1c2b8e-0d4a-4c3b-9e5f-7a8b9c0d1e2f'; // l'équipe d'une autre entreprise
+  const PAIE = '19:paie@thread.tacv2';
+  const DIRECTION = '19:direction@thread.tacv2';
+  const PARTAGE = '19:partage@thread.tacv2';
+  const COMMANDES = '19:commandes@thread.tacv2';
+  const AUTRE = '19:autre@thread.tacv2';
+  const MEMBERS = (team: string, channel: string) => `${IN(team, channel)}/allMembers`;
+  // L'adresse d'un canal dans allChannels, qui nomme l'équipe qui l'héberge (exemple de la doc).
+  const at = (team: string, channel: string) =>
+    `https://graph.microsoft.com/v1.0/tenants/b3246f44-b4gb-4627-96c6-25b18fa2c910/teams/${team}/channels/${channel}`;
+  const channel = (id: string, name: string, type: string, host = TEAM) => ({
+    '@odata.id': at(host, id),
+    id,
+    displayName: name,
+    membershipType: type,
+  });
+  const marie = { displayName: 'Marie Durand', email: 'marie@acme.test', userId: 'u-marie' };
+  const paul = { displayName: 'Paul Lambert', email: 'Paul@Acme.test', userId: 'u-paul' };
+  const lea = { displayName: 'Léa Roux', email: 'lea@fournisseur.test', userId: 'u-lea' };
+  const empty = { value: [] };
+
+  const routes = (paie: FakeRoute = { url: MEMBERS(TEAM, PAIE), json: { value: [marie] } }) => [
+    { url: `${GRAPH}/me/joinedTeams`, json: TEAMS },
+    {
+      url: `${GRAPH}/me/teamwork/associatedTeams`,
+      json: { value: [...TEAMS.value, { id: HOST, displayName: 'Fournisseur' }] },
+    },
+    {
+      url: `${GRAPH}/teams/${TEAM}/allChannels`,
+      json: {
+        value: [
+          channel(GENERAL, 'Général', 'standard'),
+          channel(PAIE, 'Paie', 'private'),
+          channel(PARTAGE, 'Livraisons', 'shared', HOST), // partagé avec l'équipe par l'autre entreprise
+        ],
+      },
+    },
+    { url: `${GRAPH}/teams/${TEAM}`, json: { visibility: 'public' } },
+    paie,
+    { url: MEMBERS(HOST, PARTAGE), json: { value: [marie, paul, lea] } },
+    {
+      url: `${GRAPH}/teams/${PRIVATE_TEAM}/allChannels`,
+      json: { value: [channel(DIRECTION, 'Général', 'standard', PRIVATE_TEAM)] },
+    },
+    { url: `${GRAPH}/teams/${PRIVATE_TEAM}`, json: { visibility: 'private' } },
+    { url: MEMBERS(PRIVATE_TEAM, DIRECTION), json: { value: [marie, paul] } },
+    {
+      url: `${GRAPH}/teams/${HOST}/allChannels`,
+      json: {
+        value: [
+          channel(PARTAGE, 'Livraisons', 'shared', HOST), // déjà vu par l'équipe
+          channel(AUTRE, 'Interne', 'standard', HOST), // pas un canal partagé : jamais lu
+          channel(COMMANDES, 'Commandes', 'shared', HOST), // la personne en est membre directe
+        ],
+      },
+    },
+    { url: MEMBERS(HOST, COMMANDES), json: { value: [paul, lea] } },
+    { url: MESSAGES(GENERAL), json: empty },
+    { url: MESSAGES(PAIE), json: empty },
+    { url: MESSAGES(PARTAGE, HOST), json: empty },
+    { url: MESSAGES(DIRECTION, PRIVATE_TEAM), json: empty },
+    { url: MESSAGES(COMMANDES, HOST), json: empty },
+  ];
+
+  it('lit les canaux privés et partagés, et ceux qu’une autre entreprise partage, dans l’équipe qui les héberge', async () => {
+    const { paths, pages } = await run(teamsConnector, routes());
+
+    expect(paths).toEqual([
+      `${GRAPH}/me/joinedTeams`,
+      `${GRAPH}/me/teamwork/associatedTeams`,
+      `${GRAPH}/teams/${TEAM}/allChannels`,
+      `${GRAPH}/teams/${TEAM}`,
+      MEMBERS(TEAM, PAIE),
+      MEMBERS(HOST, PARTAGE),
+      `${GRAPH}/teams/${PRIVATE_TEAM}/allChannels`,
+      `${GRAPH}/teams/${PRIVATE_TEAM}`,
+      MEMBERS(PRIVATE_TEAM, DIRECTION),
+      `${GRAPH}/teams/${HOST}/allChannels`,
+      MEMBERS(HOST, COMMANDES),
+      MESSAGES(GENERAL),
+      MESSAGES(PAIE),
+      MESSAGES(PARTAGE, HOST),
+      MESSAGES(DIRECTION, PRIVATE_TEAM),
+      MESSAGES(COMMANDES, HOST),
+    ]);
+    expect(cursorOf(pages).places).toEqual([
+      {
+        key: GENERAL,
+        parent: TEAM,
+        name: 'Général',
+        origin: { team: 'Atelier Lebrun', channel: 'Général' },
+      },
+      {
+        key: PAIE,
+        parent: TEAM,
+        name: 'Paie',
+        origin: { team: 'Atelier Lebrun', channel: 'Paie' },
+      },
+      { key: PARTAGE, parent: HOST, name: 'Livraisons', origin: { channel: 'Livraisons' } },
+      {
+        key: DIRECTION,
+        parent: PRIVATE_TEAM,
+        name: 'Général',
+        origin: { team: 'Direction', channel: 'Général' },
+      },
+      {
+        key: COMMANDES,
+        parent: HOST,
+        name: 'Commandes',
+        origin: { team: 'Fournisseur', channel: 'Commandes' },
+      },
+    ]);
+  });
+
+  it('dit qui est membre de chaque canal, sauf le canal standard d’une équipe publique, à toute l’équipe', async () => {
+    const { pages } = await run(teamsConnector, routes());
+
+    const who = (...people: (typeof marie)[]) =>
+      people.map((person) => ({ email: person.email, id: person.userId, since: null }));
+    expect(pages.flatMap((page) => page.audiences ?? [])).toEqual([
+      { key: GENERAL, team: true },
+      { key: PAIE, members: who(marie) },
+      { key: PARTAGE, members: who(marie, paul, lea) },
+      { key: DIRECTION, members: who(marie, paul) },
+      { key: COMMANDES, members: who(paul, lea) },
+    ]);
+    // Qui est dans chaque lieu passe avant tout message : une page sans élément.
+    expect(pages[0]?.items).toEqual([]);
+  });
+
+  it('passe un canal dont Microsoft refuse les membres, et lit les autres', async () => {
+    const refused = {
+      url: MEMBERS(TEAM, PAIE),
+      status: 403,
+      json: { error: { code: 'Forbidden' } },
+    };
+    const { paths, pages } = await run(
+      teamsConnector,
+      routes(refused).filter((route) => route.url !== MESSAGES(PAIE)),
+    );
+
+    expect(paths).not.toContain(MESSAGES(PAIE));
+    expect(pages.flatMap((page) => page.audiences ?? []).map((a) => a.key)).toEqual([
+      GENERAL,
+      PARTAGE,
+      DIRECTION,
+      COMMANDES,
+    ]);
+  });
+});
+
 describe('teamsChatsConnector.sync', () => {
   const chats: FakeRoute = {
     url: `${GRAPH}/me/chats`,
@@ -396,7 +557,10 @@ describe('teamsChatsConnector.sync', () => {
           id: ONE,
           topic: null,
           chatType: 'oneOnOne',
-          members: [{ displayName: 'Marie Durand' }, { displayName: 'Paul Lambert' }],
+          members: [
+            { displayName: 'Marie Durand', email: 'marie@acme.test', userId: 'u-marie' },
+            { displayName: 'Paul Lambert', email: 'paul@acme.test', userId: 'u-paul' },
+          ],
         },
       ],
     },
@@ -411,8 +575,29 @@ describe('teamsChatsConnector.sync', () => {
       }),
     ],
   };
+  // Les membres d'une conversation de groupe, avec le début de l'historique de chacun (Paul, ajouté sans le passé).
+  const groupMembers: FakeRoute = {
+    url: `${GRAPH}/chats/${encodeURIComponent(GROUP)}/members`,
+    json: {
+      value: [
+        {
+          displayName: 'Marie Durand',
+          email: 'marie@acme.test',
+          userId: 'u-marie',
+          visibleHistoryStartDateTime: '0001-01-01T00:00:00Z',
+        },
+        {
+          displayName: 'Paul Lambert',
+          email: 'paul@acme.test',
+          userId: 'u-paul',
+          visibleHistoryStartDateTime: '2026-10-13T00:00:00Z',
+        },
+      ],
+    },
+  };
   const routes = (): FakeRoute[] => [
     chats,
+    groupMembers,
     { url: CHAT(GROUP), json: groupPage },
     {
       url: CHAT(ONE),
@@ -424,11 +609,50 @@ describe('teamsChatsConnector.sync', () => {
   it('lit chaque conversation par le filtre sur la date de modification, depuis la période choisie', async () => {
     const { calls, paths } = await run(teamsChatsConnector, routes());
 
-    expect(paths).toEqual([`${GRAPH}/me/chats`, CHAT(GROUP), CHAT(ONE), CALENDAR]);
+    expect(paths).toEqual([
+      `${GRAPH}/me/chats`,
+      groupMembers.url,
+      CHAT(GROUP),
+      CHAT(ONE),
+      CALENDAR,
+    ]);
     expect(param(calls[0]?.url, '$expand')).toBe('members');
-    expect(param(calls[1]?.url, '$orderby')).toBe('lastModifiedDateTime desc');
-    expect(param(calls[1]?.url, '$filter')).toBe('lastModifiedDateTime gt 2026-10-01T00:00:00Z');
-    expect(param(calls[1]?.url, '$top')).toBe('50');
+    expect(param(calls[2]?.url, '$orderby')).toBe('lastModifiedDateTime desc');
+    expect(param(calls[2]?.url, '$filter')).toBe('lastModifiedDateTime gt 2026-10-01T00:00:00Z');
+    expect(param(calls[2]?.url, '$top')).toBe('50');
+  });
+
+  it('dit qui est dans chaque conversation : les membres lus avec la liste pour un tête-à-tête, à part sinon', async () => {
+    const { pages } = await run(teamsChatsConnector, routes());
+
+    expect(pages.flatMap((page) => page.audiences ?? [])).toEqual([
+      {
+        key: GROUP,
+        members: [
+          { email: 'marie@acme.test', id: 'u-marie', since: '0001-01-01T00:00:00Z' },
+          { email: 'paul@acme.test', id: 'u-paul', since: '2026-10-13T00:00:00Z' },
+        ],
+      },
+      {
+        key: ONE,
+        members: [
+          { email: 'marie@acme.test', id: 'u-marie', since: null },
+          { email: 'paul@acme.test', id: 'u-paul', since: null },
+        ],
+      },
+    ]);
+  });
+
+  it('passe une conversation dont Microsoft refuse les membres, et lit les autres', async () => {
+    const { paths, pages } = await run(teamsChatsConnector, [
+      chats,
+      { ...groupMembers, status: 403, json: { error: { code: 'Forbidden' } } },
+      { url: CHAT(ONE), json: { value: [] } },
+      { url: CALENDAR, json: { value: [] } },
+    ]);
+
+    expect(paths).not.toContain(CHAT(GROUP));
+    expect(pages.flatMap((page) => page.audiences ?? []).map((a) => a.key)).toEqual([ONE]);
   });
 
   it('fait un élément par conversation et par jour, et retire les messages supprimés', async () => {
@@ -445,6 +669,7 @@ describe('teamsChatsConnector.sync', () => {
       url: null,
       origin: { chat: 'Chantier Dubois' },
     });
+    expect(items.map((item) => item.audience)).toEqual([GROUP, GROUP, ONE]);
     expect(items[1]?.turns[0]?.externalId).toBe(`message:${GROUP}/1760436000000`);
     expect(pages.flatMap((page) => page.removedTurns ?? [])).toEqual([
       `message:${GROUP}/1760435000000`,
@@ -462,6 +687,7 @@ describe('teamsChatsConnector.sync', () => {
       teamsChatsConnector,
       [
         chats,
+        groupMembers,
         { url: CHAT(GROUP), json: { value: [] } },
         { url: CHAT(ONE), json: { value: [] } },
         { url: CALENDAR, json: { value: [] } },
@@ -469,9 +695,9 @@ describe('teamsChatsConnector.sync', () => {
       cursor,
     );
 
-    expect(param(calls[1]?.url, '$filter')).toBe('lastModifiedDateTime gt 2026-10-15T07:55:00Z');
+    expect(param(calls[2]?.url, '$filter')).toBe('lastModifiedDateTime gt 2026-10-15T07:55:00Z');
     // L'agenda repart un jour plus tôt : une transcription prête après la lecture de la veille.
-    expect(param(calls[3]?.url, 'startDateTime')).toBe('2026-10-14T07:55:00Z');
+    expect(param(calls[4]?.url, 'startDateTime')).toBe('2026-10-14T07:55:00Z');
   });
 });
 
@@ -561,9 +787,20 @@ describe('teamsChatsConnector.sync : transcriptions des réunions', () => {
             ts: '2026-10-14T10:02:03.004Z',
           },
         ],
+        audience: `transcript:${TRANSCRIPT}`,
       },
     ]);
     for (const item of items) expect(normalizeItem(item, 'teamschats')).not.toBeNull();
+    // Une transcription est visible des invités de la réunion : l'organisateur et les participants.
+    expect(pages.flatMap((page) => page.audiences ?? [])).toEqual([
+      {
+        key: `transcript:${TRANSCRIPT}`,
+        members: [
+          { email: 'marie@acme.test', id: null },
+          { email: 'robin@acme.test', id: null },
+        ],
+      },
+    ]);
   });
 
   it('passe les réunions annulées, hors Teams ou privées, et ne lit qu’une fois le lien d’une série', async () => {

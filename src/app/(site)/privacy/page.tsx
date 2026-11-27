@@ -162,28 +162,35 @@ const SECTIONS: LegalSection[] = [
         </List>
         <p>
           If you connect Teams or Teams Chat, Leon also asks now for full access to what each one
-          covers. Teams: read your teams, their channels and their messages, and post in channels.
-          Teams Chat: read, write and send messages in your chats, read and change your calendar,
-          and read and manage your Teams meetings, with their transcripts, recordings and other
-          meeting content. Teams and Teams Chat work only with a work or school account, once your
-          organization’s Microsoft administrator has approved Leon; meeting transcripts also need
-          your administrator to let apps read them.
+          covers. Teams: read your teams, their channels, their members and their messages, and post
+          in channels. Teams Chat: read, write and send messages in your chats, read and change your
+          calendar, and read and manage your Teams meetings, with their transcripts, recordings and
+          other meeting content. Teams and Teams Chat work only with a work or school account, once
+          your organization’s Microsoft administrator has approved Leon; meeting transcripts also
+          need your administrator to let apps read them.
         </p>
         <p>
-          Today, from Teams, Leon imports the messages of the standard channels of public teams.
-          From Teams Chat, it imports your one-on-one, group and meeting chats, and the transcripts
-          of the Teams meetings in your calendar, except meetings marked personal, private or
-          confidential; it checks Teams for new content at most once a day, as Microsoft requires.
-          Leon does not send, change or delete anything in your Microsoft account. We will update
-          this policy before it does. Microsoft alerts Leon as soon as email arrives, you send email
-          or your calendar changes, so that Leon imports it right away; these alerts contain no
-          content.
+          Today, from Teams, Leon imports the messages of your teams’ channels, including private
+          channels and channels shared with other organizations. From Teams Chat, it imports your
+          one-on-one, group and meeting chats, and the transcripts of the Teams meetings in your
+          calendar, except meetings marked personal, private or confidential. It also reads who is a
+          member of each channel and chat and who was invited to each meeting, to decide which
+          colleagues can see them, and keeps only which members of your Leon workspace are among
+          them. It checks Teams for new content at most once a day, as Microsoft requires. Leon does
+          not send, change or delete anything in your Microsoft account. We will update this policy
+          before it does. Microsoft alerts Leon as soon as email arrives, you send email or your
+          calendar changes, so that Leon imports it right away; these alerts contain no content.
         </p>
         <p>
           Leon uses this data in the same way and within the same limits as data from Google,
-          described above: only to provide its features to you, private to you in Leon, never sold,
-          never used for advertising or to train AI models. The one exception is Teams channel
-          messages: as in Teams, everyone in your Leon workspace can read them.
+          described above: only to provide its features, never sold, never used for advertising or
+          to train AI models. Your Outlook mail and calendar are private to you in Leon. Teams keeps
+          its own permissions: as in Teams, a chat, a channel or a meeting transcript can be read in
+          Leon by the colleagues in your Leon workspace who are its members or were invited to the
+          meeting, even if they have not connected Teams, and, on the Leon website, by the managers
+          above them; the standard channels of public teams, by everyone in your Leon workspace.
+          People from outside your organization in a shared channel or chat see nothing in Leon, but
+          their messages are imported.
         </p>
         <p>
           You can disconnect Outlook, OneDrive, Teams or Teams Chat at any time in Leon. With a
@@ -247,7 +254,9 @@ const SECTIONS: LegalSection[] = [
           Inside your organization, Leon applies the access rules described on our{' '}
           <A href="/security">Security page</A>: what a shared connection brings in is visible to
           the team, while your email, Google Drive, OneDrive and Slack are visible only to you and,
-          on the Leon website, to the managers above you.
+          on the Leon website, to the managers above you. Teams chats, channels and meeting
+          transcripts are visible, as in Teams, to the colleagues who are their members, and, on the
+          Leon website, to the managers above them.
         </p>
         <p>These service providers process data for us, only to run Leon:</p>
         <List>

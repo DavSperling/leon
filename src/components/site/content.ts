@@ -442,7 +442,7 @@ export const TEAMS: Team[] = [
       },
       {
         title: 'Des règles de confidentialité claires',
-        text: 'Par défaut, ce que lisent les outils branchés est partagé avec l’équipe, sauf une boîte mail, Google Drive, OneDrive, Slack et les conversations Teams. Les discussions de chacun avec Leon restent à lui ; ses conversations d’IA, ses sessions de code et ses notes peuvent être lues par lui et, sur le site de Leon, par ses managers en remontant.',
+        text: 'Par défaut, ce que lisent les outils branchés est partagé avec l’équipe, sauf une boîte mail, Google Drive, OneDrive et Slack ; Teams garde ses droits : une conversation ou un canal est visible de ses membres. Les discussions de chacun avec Leon restent à lui ; ses conversations d’IA, ses sessions de code et ses notes peuvent être lues par lui et, sur le site de Leon, par ses managers en remontant.',
       },
     ],
     demo: DEMOS[2] as Demo,
@@ -645,7 +645,7 @@ export const NOT_YET = [
   { title: 'SOC 2 et ISO 27001', text: 'Leon n’a aucune des deux certifications à ce jour.' },
   {
     title: 'Les droits de chaque outil, repris tels quels',
-    text: 'Pour l’instant, ce que lit une connexion est visible par défaut de toute l’équipe, sauf une boîte mail (Outlook, Gmail), Google Drive, OneDrive / SharePoint, Slack et les conversations Teams, qui peuvent être lus par qui les branche et, sur le site de Leon, par ses managers en remontant.',
+    text: 'Pour l’instant, ce que lit une connexion est visible par défaut de toute l’équipe, sauf une boîte mail (Outlook, Gmail), Google Drive, OneDrive / SharePoint et Slack, qui peuvent être lus par qui les branche et, sur le site de Leon, par ses managers en remontant. Teams est le premier outil dont Leon reprend les droits : une conversation, un canal ou une réunion est visible des collègues qui en sont membres.',
   },
   { title: 'L’export des données', text: 'Pas encore d’export des données d’un espace.' },
 ] as const;
@@ -686,7 +686,7 @@ export const FAQ = [
   },
   {
     q: 'Qui voit quoi ?',
-    a: 'Par défaut, ce que lit une connexion est visible de toute l’équipe, comme dans un outil partagé, sauf une boîte mail (Outlook, Gmail), Google Drive, OneDrive / SharePoint, Slack et les conversations Teams, qui peuvent être lus par qui les branche et, sur le site de Leon, par ses managers en remontant. Les conversations captées avec vos assistants d’IA, vos sessions de code et vos notes peuvent être lues par vous et, sur le site de Leon, par vos managers en remontant ; vos discussions avec Leon, par vous seul. Un propriétaire ou un administrateur choisit le manager de chacun : un administrateur peut donc se nommer manager de quelqu’un, ou placer un invité sous lui, et lire alors ce que cette personne ne partage pas.',
+    a: 'Par défaut, ce que lit une connexion est visible de toute l’équipe, comme dans un outil partagé, sauf une boîte mail (Outlook, Gmail), Google Drive, OneDrive / SharePoint et Slack, qui peuvent être lus par qui les branche et, sur le site de Leon, par ses managers en remontant. Teams garde ses droits : une conversation, un canal ou une réunion est visible des collègues qui en sont membres, même s’ils n’ont pas branché Teams, et, sur le site de Leon, de leurs managers en remontant ; un canal standard d’une équipe publique, de toute l’équipe. Les conversations captées avec vos assistants d’IA, vos sessions de code et vos notes peuvent être lues par vous et, sur le site de Leon, par vos managers en remontant ; vos discussions avec Leon, par vous seul. Un propriétaire ou un administrateur choisit le manager de chacun : un administrateur peut donc se nommer manager de quelqu’un, ou placer un invité sous lui, et lire alors ce que cette personne ne partage pas.',
   },
   {
     q: 'Et quand Leon ne sait pas ?',
@@ -767,7 +767,7 @@ export const READS: Record<ProviderId, string> = {
   outlook:
     'La boîte de réception, les éléments envoyés et l’agenda. Votre admin Microsoft accepte Leon une fois pour l’entreprise.',
   teams:
-    'Les messages des canaux standard des équipes publiques, une fois par jour. Votre admin Microsoft accepte Leon une fois pour l’entreprise.',
+    'Les messages des canaux de vos équipes, privés et partagés compris, une fois par jour. Votre admin Microsoft accepte Leon une fois pour l’entreprise.',
   teamschats:
     'Vos conversations Teams et les transcriptions des réunions Teams de votre agenda, une fois par jour. Votre admin Microsoft accepte Leon une fois pour l’entreprise.',
   slack:
@@ -1170,7 +1170,7 @@ const TEAMS_EN: Team[] = [
       },
       {
         title: 'Clear privacy rules',
-        text: 'By default, content from connections is visible to the team, except email, Google Drive, OneDrive, Slack and Teams chats. Each person’s chats with Leon stay theirs; their AI conversations, coding sessions and notes can be read by them and, on the Leon website, by the managers above them.',
+        text: 'By default, content from connections is visible to the team, except email, Google Drive, OneDrive and Slack; Teams keeps its own permissions: a chat or channel is visible to its members. Each person’s chats with Leon stay theirs; their AI conversations, coding sessions and notes can be read by them and, on the Leon website, by the managers above them.',
       },
     ],
     demo: DEMOS_EN[2] as Demo,
@@ -1342,7 +1342,7 @@ const NOT_YET_EN: Twin<typeof NOT_YET> = [
   { title: 'SOC 2 and ISO 27001', text: 'Leon holds neither certification today.' },
   {
     title: 'Mirroring each tool’s own permissions',
-    text: 'For now a connection’s content is shared with the whole team by default, except email (Outlook, Gmail), Google Drive, OneDrive / SharePoint, Slack and Teams chats, which can be read by whoever connects them and, on the Leon website, by the managers above them.',
+    text: 'For now a connection’s content is shared with the whole team by default, except email (Outlook, Gmail), Google Drive, OneDrive / SharePoint and Slack, which can be read by whoever connects them and, on the Leon website, by the managers above them. Teams is the first tool whose permissions Leon carries over: a chat, channel or meeting is visible to the colleagues who are members of it.',
   },
   { title: 'Data export', text: 'No export of a workspace’s data yet.' },
 ];
@@ -1381,7 +1381,7 @@ const FAQ_EN: Twin<typeof FAQ> = [
   },
   {
     q: 'Who can see what?',
-    a: 'By default, content from a connection is shared with the whole team, as in a shared tool, except email (Outlook, Gmail), Google Drive, OneDrive / SharePoint, Slack and Teams chats, which can be read by whoever connects them and, on the Leon website, by the managers above them. AI assistant conversations, coding sessions and notes can be read by their author and, on the Leon website, by the managers above them; chats with Leon, by their author only. An owner or an admin chooses each person’s manager: an admin can therefore make themselves someone’s manager, or place someone they invite under them, and then read what that person doesn’t share.',
+    a: 'By default, content from a connection is shared with the whole team, as in a shared tool, except email (Outlook, Gmail), Google Drive, OneDrive / SharePoint and Slack, which can be read by whoever connects them and, on the Leon website, by the managers above them. Teams keeps its own permissions: a chat, channel or meeting is visible to the colleagues who are members of it, even if they haven’t connected Teams, and, on the Leon website, to the managers above them; a standard channel of a public team, to the whole team. AI assistant conversations, coding sessions and notes can be read by their author and, on the Leon website, by the managers above them; chats with Leon, by their author only. An owner or an admin chooses each person’s manager: an admin can therefore make themselves someone’s manager, or place someone they invite under them, and then read what that person doesn’t share.',
   },
   {
     q: 'What happens when Leon doesn’t know?',
@@ -1454,7 +1454,7 @@ const READS_EN: Record<ProviderId, string> = {
   outlook:
     'Inbox, sent items and calendar. Your Microsoft admin approves Leon once for the company.',
   teams:
-    'Messages from the standard channels of public teams, once a day. Your Microsoft admin approves Leon once for the company.',
+    'Messages from the channels of your teams, private and shared ones included, once a day. Your Microsoft admin approves Leon once for the company.',
   teamschats:
     'Your Teams chats and the transcripts of the Teams meetings in your calendar, once a day. Your Microsoft admin approves Leon once for the company.',
   slack:

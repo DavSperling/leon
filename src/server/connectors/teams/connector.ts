@@ -1,15 +1,26 @@
 import { z } from 'zod';
+import { logError } from '@/server/log';
 import { ConnectorAuthError, type ConnectorHttp } from '../http';
-import type { Connector, ConnectorItem } from '../types';
+import type { Audience, Connector, ConnectorItem } from '../types';
 import { type TeamsClient, teamsClient } from './client';
-import { DAY, daily, gone, type Place, type Reader } from './daily';
-import { changedAt, chatDays, deletedTurns, threadItem, transcriptItem } from './map';
+import { DAY, daily, gone, type Listing, type Place, type Reader } from './daily';
+import {
+  changedAt,
+  chatDays,
+  deletedTurns,
+  memberOf,
+  threadItem,
+  transcriptAudience,
+  transcriptItem,
+} from './map';
 import { teamsChatsOAuth, teamsOAuth } from './oauth';
-import type { Event, Root } from './schemas';
+import type { Channel, Event, Root } from './schemas';
 
-// Deux outils, parce que la règle de visibilité de Leon se fixe par outil (`privateRaw`) : « Teams », les canaux
-// d'équipe, visibles de toute l'équipe Leon ; « Teams Chat », les conversations privées de la personne et les
-// transcriptions de ses réunions, privées à qui branche, comme Outlook. Doc lue le 05/11/2026 :
+// Deux outils : « Teams », les canaux des équipes ; « Teams Chat », les conversations de la personne et les
+// transcriptions de ses réunions. Dans les deux, chaque canal, conversation ou réunion est visible dans Leon des
+// collègues qui en sont membres, comme dans Teams, même s'ils n'ont pas branché Teams, et n'y existe qu'une fois
+// (0097, choix de David du 27/11/2026) ; un canal standard d'une équipe publique, de toute l'équipe. La liste du jour
+// dit qui est dans chaque lieu (daily.ts). Doc lue le 05/11/2026 :
 //   https://learn.microsoft.com/en-us/graph/api/user-list-joinedteams (seuls id, displayName… sont remplis : la
 //     visibilité de l'équipe se lit par https://learn.microsoft.com/en-us/graph/api/team-get)
 //   https://learn.microsoft.com/en-us/graph/api/channel-list (« les membres ne voient pas les canaux privés ou partagés
@@ -35,15 +46,25 @@ import type { Event, Root } from './schemas';
 //     encodé ; une liste d'une réunion)
 //   https://learn.microsoft.com/en-us/graph/api/resources/event (isOnlineMeeting, onlineMeeting.joinUrl,
 //     onlineMeetingProvider « teamsForBusiness »)
+// Et le 27/11/2026, pour les canaux privés et partagés et les membres :
+//   https://learn.microsoft.com/en-us/graph/api/associatedteaminfo-list (/me/teamwork/associatedTeams, Team.ReadBasic.All :
+//     les équipes de la personne et celles qui hébergent un canal partagé dont elle est membre directe)
+//   https://learn.microsoft.com/en-us/graph/api/team-list-allchannels (les canaux de l'équipe et ceux partagés avec
+//     elle ; `@odata.id` nomme l'équipe qui héberge le canal ; « pour un canal partagé d'une autre entreprise, retirer
+//     /tenants/{id} de l'adresse » : Leon écrit ses adresses sans)
+//   https://learn.microsoft.com/en-us/graph/api/channel-list-allmembers (tous types de canaux, membres indirects d'un
+//     canal partagé compris, d'autres entreprises aussi ; ChannelMember.Read.All en délégué)
+//   https://learn.microsoft.com/en-us/graph/api/chat-list (« $expand=members rend 25 membres au plus »)
+//   https://learn.microsoft.com/en-us/graph/api/chat-list-members (visibleHistoryStartDateTime de chaque membre)
 //
 // Écarts à la demande, d'après la doc :
 //   - Pas de lecture en delta. La page de Graph sur le delta des messages de canal a été supprimée en 09/2024 (il ne
 //     reste que celui de chats/getAllMessages, en droits d'application seulement) ; aucun delta n'existe pour une
 //     conversation en droits délégués. Les canaux se lisent par la liste, triée du fil le plus récemment animé au
 //     moins récent, jusqu'au premier fil inchangé ; les conversations par le filtre sur lastModifiedDateTime.
-//   - Seuls les canaux standard des équipes publiques sont lus. Le contenu des canaux devient visible de toute
-//     l'équipe Leon : une équipe privée, un canal privé ou partagé (où peuvent se trouver des personnes d'une autre
-//     entreprise) ne sont lisibles chez Microsoft que de leurs membres, et ne sont pas relevés.
+//   - Un canal partagé hébergé dans une autre entreprise se lit avec le jeton de la personne, de notre annuaire : la doc
+//     ne dit pas si cela suffit (seuls les droits d'application exigent l'annuaire hôte). Un canal, une équipe ou une
+//     conversation refusés sont passés, le journal ne dit que le refus.
 //   - Une fois par jour et par lieu au plus (daily.ts) : plus souvent, il faudrait des abonnements de Graph, qui
 //     demandent une adresse publique en https pour les recevoir.
 //   - Les transcriptions : getAllTranscripts (toutes les réunions d'un coup) n'existe qu'en droits d'application, et
@@ -57,8 +78,10 @@ import type { Event, Root } from './schemas';
 // $expand=members passe sur /me/chats ; la forme exacte de la réponse au filtre JoinWebUrl (la doc dit une liste, un
 // de ses exemples montre un objet seul) ; qu'un invité qui n'organise pas la réunion retrouve la réunion par son
 // lien ; le format sans nom des transcriptions (gardé d'un bloc s'il n'est pas en WebVTT).
-// shortcut: un fil de canal supprimé en entier, ou une conversation quittée, restent dans Leon ; une équipe devenue
-// privée garde visible ce qui a été lu avant. Les retirer demande de comparer la liste du jour à celle de la veille.
+// Non vérifié non plus : qu'allMembers rende `email` et `userId` pour un membre d'une autre entreprise ; qu'un canal
+// partagé d'une autre entreprise se lise ; la forme de `@odata.id` hors de l'exemple de la doc.
+// shortcut: un fil de canal supprimé en entier, ou une conversation quittée, restent dans Leon (visibles de leurs
+// membres du dernier jour où quelqu'un les a lus). Les retirer demande de comparer la liste du jour à celle de la veille.
 
 const ConfigSchema = z.object({
   authMode: z.literal('oauth'),
@@ -79,19 +102,59 @@ async function verify(config: Config, http: ConnectorHttp) {
   return { account: address || 'Teams account', ...key };
 }
 
-// Les canaux standard des équipes publiques de la personne.
-async function channelPlaces(client: TeamsClient): Promise<Place[]> {
-  const places: Place[] = [];
-  for (const team of await client.teams()) {
-    if ((await client.visibility(team.id)) !== 'public') continue;
-    for (const channel of await client.channels(team.id)) {
-      if (channel.membershipType !== 'standard') continue;
+// Une lecture refusée (403) ou disparue (404) : passée, le journal ne dit que le refus.
+async function unlessGone<T>(read: () => Promise<T>): Promise<T | null> {
+  try {
+    return await read();
+  } catch (error) {
+    if (!gone(error)) throw error;
+    logError('teams.place_skipped', error);
+    return null;
+  }
+}
+
+// L'équipe qui héberge un canal, lue dans son adresse (…/teams/{id}/channels/{id}) : un canal partagé avec l'équipe
+// peut venir d'une autre, d'une autre entreprise comprise.
+const hostOf = (channel: Channel): string | null =>
+  /\/teams\/([^/]+)\/channels\//.exec(channel['@odata.id'] ?? '')?.[1] ?? null;
+
+// Les canaux que la personne lit, et qui est dans chacun : un canal standard d'une équipe publique, toute
+// l'organisation ; un canal d'une équipe privée, un canal privé ou partagé, ses membres. D'une équipe qui ne fait
+// qu'héberger un canal partagé dont la personne est membre, seuls les canaux partagés.
+async function channelListing(client: TeamsClient): Promise<Listing> {
+  const joined = await client.teams();
+  const mine = new Set(joined.map((team) => team.id));
+  const hosts = ((await unlessGone(() => client.associatedTeams())) ?? []).filter(
+    (team) => !mine.has(team.id),
+  );
+  const listing: Listing = { places: [], audiences: [] };
+  const seen = new Set<string>();
+  for (const team of [...joined, ...hosts]) {
+    const channels = await unlessGone(() => client.allChannels(team.id));
+    if (!channels) continue;
+    const open =
+      mine.has(team.id) && (await unlessGone(() => client.visibility(team.id))) === 'public';
+    for (const channel of channels) {
+      const host = hostOf(channel) ?? team.id;
+      const type = channel.membershipType;
+      if (seen.has(channel.id) || (!mine.has(team.id) && type !== 'shared')) continue;
+      const everyone = open && host === team.id && type === 'standard';
+      const members = everyone
+        ? []
+        : await unlessGone(() => client.channelMembers(host, channel.id));
+      if (!members) continue;
+      seen.add(channel.id);
       const name = channel.displayName ?? '';
-      const origin = { team: team.displayName ?? '', channel: name };
-      places.push({ key: channel.id, parent: team.id, name, origin });
+      const origin: Record<string, string> =
+        host === team.id ? { team: team.displayName ?? '', channel: name } : { channel: name };
+      const audience: Audience = everyone
+        ? { key: channel.id, team: true }
+        : { key: channel.id, members: members.map(memberOf) };
+      listing.places.push({ key: channel.id, parent: host, name, origin });
+      listing.audiences.push(audience);
     }
   }
-  return places;
+  return listing;
 }
 
 // Les réponses au-delà de la première page dépliée.
@@ -135,14 +198,23 @@ const threads = (client: TeamsClient): Reader =>
 // conversation n'a cette clé (les leurs commencent par « 19: »).
 const MEETINGS: Place = { key: 'reunions', parent: null, name: 'Réunions Teams', origin: {} };
 
-const chatPlaces = async (client: TeamsClient): Promise<Place[]> => [
-  ...(await client.chats()).map((chat) => {
-    const members = (chat.members ?? []).flatMap((member) => member.displayName || []);
-    const name = chat.topic?.trim() || members.join(', ') || 'Conversation Teams';
-    return { key: chat.id, parent: null, name, origin: { chat: name } };
-  }),
-  MEETINGS,
-];
+// Les conversations de la personne, et qui est dans chacune. La liste ne rend que 25 membres par conversation, sans le
+// début de leur historique : ils se lisent à part, sauf à deux (chacun y voit tout).
+async function chatListing(client: TeamsClient): Promise<Listing> {
+  const listing: Listing = { places: [], audiences: [] };
+  for (const chat of await client.chats()) {
+    const listed = chat.members ?? [];
+    const members =
+      chat.chatType === 'oneOnOne' ? listed : await unlessGone(() => client.chatMembers(chat.id));
+    if (!members) continue;
+    const names = listed.flatMap((member) => member.displayName || []);
+    const name = chat.topic?.trim() || names.join(', ') || 'Conversation Teams';
+    listing.places.push({ key: chat.id, parent: null, name, origin: { chat: name } });
+    listing.audiences.push({ key: chat.id, members: members.map(memberOf) });
+  }
+  listing.places.push(MEETINGS);
+  return listing;
+}
 
 const chatPages = (client: TeamsClient): Reader =>
   async function* (place, link, after) {
@@ -168,24 +240,27 @@ async function transcriptText(client: TeamsClient, meetingId: string, id: string
   }
 }
 
-// Les transcriptions d'une réunion faites depuis `start`. Une réunion fermée à la personne, expirée, ou dont
-// l'administrateur n'a pas ouvert les transcriptions à Graph (403), est passée : les autres sont lues.
+// Les transcriptions d'une réunion faites depuis `start`, et qui les voit. Une réunion fermée à la personne, expirée,
+// ou dont l'administrateur n'a pas ouvert les transcriptions à Graph (403), est passée : les autres sont lues.
 async function transcriptsOf(client: TeamsClient, event: Event, joinUrl: string, start: Date) {
-  const items: ConnectorItem[] = [];
+  const read = { items: [] as ConnectorItem[], audiences: [] as Audience[] };
   try {
     const meetingId = await client.meetingId(joinUrl);
-    if (meetingId === null) return items;
+    if (meetingId === null) return read;
     for (const transcript of await client.transcripts(meetingId)) {
       // Une série garde les transcriptions de toutes ses occurrences : les plus anciennes sont déjà lues.
       if (Date.parse(transcript.createdDateTime) < start.getTime()) continue;
       const content = await transcriptText(client, meetingId, transcript.id);
       const item = transcriptItem(event, transcript, content);
-      if (item) items.push(item);
+      if (!item) continue;
+      read.items.push(item);
+      read.audiences.push(transcriptAudience(event, transcript));
     }
   } catch (error) {
     if (!gone(error)) throw error;
+    logError('teams.place_skipped', error);
   }
-  return items;
+  return read;
 }
 
 const isTeamsMeeting = (event: Event) =>
@@ -202,15 +277,17 @@ const meetingPages = (client: TeamsClient): Reader =>
     let next = link;
     do {
       const page = await client.events(next, start, new Date());
-      const items: ConnectorItem[] = [];
+      const step = { items: [] as ConnectorItem[], audiences: [] as Audience[] };
       for (const event of page.value) {
         const joinUrl = event.onlineMeeting?.joinUrl;
         if (!joinUrl || read.has(joinUrl) || !isTeamsMeeting(event)) continue;
         read.add(joinUrl);
-        items.push(...(await transcriptsOf(client, event, joinUrl, start)));
+        const meeting = await transcriptsOf(client, event, joinUrl, start);
+        step.items.push(...meeting.items);
+        step.audiences.push(...meeting.audiences);
       }
       next = page['@odata.nextLink'] ?? null;
-      yield { items, removedTurns: [], next };
+      yield { ...step, removedTurns: [], next };
     } while (next);
   };
 
@@ -228,10 +305,11 @@ export const teamsConnector: Connector<Config> = {
   hosts: () => ['graph.microsoft.com'],
   minIntervalMs: MIN_INTERVAL_MS,
   oauth: teamsOAuth,
+  memberAccess: true,
   verify,
   sync(config, { cursor, since }, http) {
     const client = teamsClient(config, http);
-    return daily(cursor, since, () => channelPlaces(client), threads(client));
+    return daily(cursor, since, () => channelListing(client), threads(client));
   },
 };
 
@@ -242,10 +320,11 @@ export const teamsChatsConnector: Connector<Config> = {
   hosts: () => ['graph.microsoft.com'],
   minIntervalMs: MIN_INTERVAL_MS,
   oauth: teamsChatsOAuth,
-  privateRaw: true, // les conversations privées de la personne et les transcriptions de ses réunions
+  privateRaw: true, // un élément sans lieu resterait à qui branche ; tous en ont un
+  memberAccess: true,
   verify,
   sync(config, { cursor, since }, http) {
     const client = teamsClient(config, http);
-    return daily(cursor, since, () => chatPlaces(client), chatsAndMeetings(client));
+    return daily(cursor, since, () => chatListing(client), chatsAndMeetings(client));
   },
 };

@@ -97,8 +97,11 @@ async function readPages(
   try {
     for await (const page of connector.sync(config, state, http)) {
       const items = page.items.flatMap((item) => normalizeItem(item, connection.provider) ?? []);
-      if (items.length > 0)
-        await ingestConnectorItems(ctx, { ...connection, privateRaw: connector.privateRaw }, items);
+      const audiences = page.audiences ?? [];
+      if (items.length > 0 || audiences.length > 0) {
+        const ref = { ...connection, privateRaw: connector.privateRaw };
+        await ingestConnectorItems(ctx, ref, items, audiences);
+      }
       if (page.removed?.length) await removeConnectorItems(ctx, connection, page.removed);
       if (page.removedTurns?.length) await removeConnectorTurns(ctx, connection, page.removedTurns);
       const { id, lockedAt } = connection;

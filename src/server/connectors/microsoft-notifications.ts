@@ -9,6 +9,7 @@ import { logError } from '@/server/log';
 import { textArray } from '@/server/search/filters-sql';
 import type { LoadedConnection } from './connections';
 import { ConnectorAuthError, type ConnectorHttp, ConnectorHttpError } from './http';
+import { clean } from './normalize';
 import { ensureFreshTokens } from './oauth';
 import { connectorHttp } from './pipedream';
 import { changedPlace } from './teams/daily';
@@ -299,8 +300,12 @@ export async function markNotified(list: MicrosoftNotification[]): Promise<numbe
       : [],
   );
   if (lot.length === 0) return 0;
+  // jsonb refuse le caractère nul et un demi-codet seul : retirés, pour qu'un lot forgé ne fasse pas répondre 500.
+  const json = JSON.stringify(lot, (_, value) =>
+    typeof value === 'string' ? clean(value) : value,
+  );
   const { rows } = await db.execute<{ connection_id: string }>(
-    sql`select connection_id from notifications_microsoft(${JSON.stringify(lot)}::jsonb)`,
+    sql`select connection_id from notifications_microsoft(${json}::jsonb)`,
   );
   return rows.length;
 }

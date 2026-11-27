@@ -398,6 +398,14 @@ describe('markNotified et takeSignaled : où Teams a changé (0098)', () => {
     expect(await takeSignaled(paulBis, chats)).toEqual([]);
   });
 
+  it('un lot forgé, au caractère nul ou au demi-codet seul, est ignoré sans erreur de la base', async () => {
+    // jsonb refuse les deux : sans nettoyage, l'adresse publique répondrait 500 à qui les envoie.
+    const forged = { subscriptionId: 'a\u0000', clientState: '\u0000\ud800' };
+    await expect(
+      markNotified([{ ...forged, resource: "chats('%00')/messages('1')" }]),
+    ).resolves.toBe(0);
+  });
+
   it('des notifications perdues font tout relire, et renouveler l’abonnement', async () => {
     const chats = await connectionOf(paul, 'teamschats', inMinutes(60));
     await seedSubscription(chats.id, '/users/compte-1/chats/getAllMessages', abo('perdues'), false);

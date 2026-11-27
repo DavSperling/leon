@@ -72,7 +72,7 @@ export const notionRoutes = new Hono().post(
           JSON.stringify({
             verification_token: verification.data.verification_token,
             a_faire:
-              'à recopier dans Notion › Verify et dans Railway sous LEON_NOTION_WEBHOOK_TOKEN, puis redéployer',
+              'à poser sur Railway sous LEON_NOTION_WEBHOOK_TOKEN, redéployer, puis seulement cliquer Notion › Verify',
           }),
         );
       } else {

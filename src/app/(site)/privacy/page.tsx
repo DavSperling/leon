@@ -137,21 +137,34 @@ const SECTIONS: LegalSection[] = [
     body: (
       <>
         <p>
-          If you connect Outlook, Leon asks Microsoft for full access to your mail and calendar. It
-          asks for these permissions now so that you will not need to approve again when Leon starts
-          acting for you: read, write, send and delete email, read and change your calendar, and
-          read your mailbox settings, such as time zone and working hours. Leon does not ask to
-          change your mailbox settings or rules, so it cannot forward your email. With a work or
-          school account, your organization’s Microsoft administrator approves Leon once for the
-          whole organization.
+          If you connect a Microsoft account, Leon asks Microsoft for full access, and only to the
+          services you connect. It asks for these permissions now so that you will not need to
+          approve again when Leon starts acting for you. With a work or school account, your
+          organization’s Microsoft administrator approves Leon once for the whole organization.
         </p>
+        <List>
+          <li>
+            <strong>Outlook:</strong> read, write, send and delete email, read and change your
+            calendar, and read your mailbox settings, such as time zone and working hours. Leon does
+            not ask to change your mailbox settings or rules, so it cannot forward your email.
+            Today, Leon imports the email in your inbox and sent items, with details such as sender,
+            recipients, subject and date, and your calendar events, except those marked personal,
+            private or confidential.
+          </li>
+          <li>
+            <strong>OneDrive and SharePoint:</strong> read, create, edit and delete the files you
+            can open, in your OneDrive and in the SharePoint sites you can access. Today, Leon only
+            reads the PDF, Word, Excel, PowerPoint and text files of up to 10 MB in your OneDrive
+            and in the document libraries of those sites, with their content and details, such as
+            name, site, last editor and date. With a personal account, which has no SharePoint
+            sites, it reads only your OneDrive.
+          </li>
+        </List>
         <p>
-          Today, Leon imports the email in your inbox and sent items, with details such as sender,
-          recipients, subject and date, and your calendar events, except those marked personal,
-          private or confidential. It does not send, change or delete anything in your Microsoft
-          account. We will update this policy before it does. Microsoft alerts Leon as soon as email
-          arrives, you send email or your calendar changes, so that Leon imports it right away;
-          these alerts contain no content.
+          Leon does not send, change or delete anything in your Microsoft account. We will update
+          this policy before it does. Microsoft alerts Leon as soon as email arrives, you send email
+          or your calendar changes, so that Leon imports it right away; these alerts contain no
+          content.
         </p>
         <p>
           Leon uses this data in the same way and within the same limits as data from Google,
@@ -159,8 +172,8 @@ const SECTIONS: LegalSection[] = [
           never used for advertising or to train AI models.
         </p>
         <p>
-          You can disconnect Outlook at any time in Leon. With a personal account, you can also
-          remove Leon’s access from your{' '}
+          You can disconnect Outlook or OneDrive at any time in Leon. With a personal account, you
+          can also remove Leon’s access from your{' '}
           <A href="https://account.live.com/consent/Manage">Microsoft account</A>; with a work or
           school account, your Microsoft administrator can remove it for the whole organization.
         </p>
@@ -219,8 +232,8 @@ const SECTIONS: LegalSection[] = [
         <p>
           Inside your organization, Leon applies the access rules described on our{' '}
           <A href="/security">Security page</A>: what a shared connection brings in is visible to
-          the team, while your email, Google Drive and Slack are visible only to you and, on the
-          Leon website, to the managers above you.
+          the team, while your email, Google Drive, OneDrive and Slack are visible only to you and,
+          on the Leon website, to the managers above you.
         </p>
         <p>These service providers process data for us, only to run Leon:</p>
         <List>

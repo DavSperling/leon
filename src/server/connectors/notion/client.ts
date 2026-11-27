@@ -143,3 +143,43 @@ export function fetchComments(api: Api, pageId: string): Promise<NotionComment[]
     ),
   );
 }
+
+// --- Les écritures de la discussion ---------------------------------------------------------------------------------
+// Leon ne crée une page qu'après le clic de l'utilisateur (discussion/ticket-actions.ts) ; la création ne se rejoue
+// jamais (`once`) : une réponse perdue ne doit pas doubler la page. Doc lue le 27/11/2026 :
+//   https://developers.notion.com/reference/post-search (filter { property: "object", value: "data_source" } ; un
+//     résultat complet porte title et properties, un résultat partiel seulement id et properties)
+//   https://developers.notion.com/guides/get-started/upgrade-guide-2025-09-03 (une page entre dans une base par son
+//     parent data_source_id)
+//   https://developers.notion.com/reference/post-page (propriétés désignées par leur nom ou leur identifiant ;
+//     children : 100 blocs au plus ; la page rendue porte url ; il faut la capacité « insérer du contenu »)
+//   https://developers.notion.com/reference/request-limits (2 000 caractères par text.content, 100 éléments par
+//     tableau de blocs)
+
+const DataSource = z.object({
+  object: z.string(),
+  id: z.string(),
+  title: RichText.nullish(),
+  properties: z.record(z.string(), z.object({ id: z.string(), type: z.string() })).nullish(),
+});
+export type NotionDataSource = z.infer<typeof DataSource>;
+
+// shortcut: la première page de résultats seulement (100), déjà filtrée par le nom ; à paginer si une base manque.
+export function searchDataSources(api: Api, query: string) {
+  const body = {
+    query,
+    filter: { property: 'object', value: 'data_source' },
+    page_size: PAGE_SIZE,
+  };
+  return api.http.json(
+    authed(api, { url: `${BASE}/search`, method: 'POST', body }),
+    list(DataSource),
+  );
+}
+
+export function createPage(api: Api, body: Record<string, unknown>) {
+  return api.http.json(
+    authed(api, { url: `${BASE}/pages`, method: 'POST', body, once: true }),
+    z.object({ url: z.string() }),
+  );
+}

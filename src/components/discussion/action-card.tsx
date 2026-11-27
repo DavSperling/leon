@@ -1,16 +1,17 @@
 'use client';
 
-import { ExternalLink, GitBranch, TriangleAlert } from 'lucide-react';
+import { ExternalLink, GitBranch, SquarePlus, TriangleAlert } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { decideActionAction } from '@/app/(app)/discussions/actions';
 import { Button } from '@/components/verre';
-import { type ActionView, actionName, actionWarnings } from '@/lib/actions';
+import { type ActionView, actionName, actionTool, actionWarnings } from '@/lib/actions';
+import { PROVIDER_LABELS } from '@/lib/providers';
 
 // Une action que Leon a proposée pendant sa réponse (lot 7 de la spec GitHub) : ce qu'elle fera exactement (le dépôt,
 // les valeurs, le diff d'un fichier), et les deux boutons. Rien n'est fait avant le clic ; la confirmation l'exécute
-// avec le compte GitHub de l'utilisateur, puis la carte montre le résultat. Une action déjà décidée (autre onglet,
-// page rechargée) s'affiche telle qu'elle est.
+// avec le compte de l'utilisateur sur l'outil (GitHub, Linear, Trello ou Notion), puis la carte montre le résultat.
+// Une action déjà décidée (autre onglet, page rechargée) s'affiche telle qu'elle est.
 
 type Decision = 'confirmer' | 'annuler';
 
@@ -18,6 +19,10 @@ type Decision = 'confirmer' | 'annuler';
 const DETAILS = [
   'asked',
   'title',
+  'project',
+  'priority',
+  'assignee',
+  'due',
   'current',
   'name',
   'state',
@@ -33,7 +38,7 @@ const DETAILS = [
   'failed',
   'lines',
 ] as const;
-const TRANSLATED = ['state', 'method', 'event', 'draft', 'failed'];
+const TRANSLATED = ['state', 'method', 'event', 'draft', 'failed', 'priority'];
 const LISTS = ['reviewers', 'labels', 'assignees']; // séparées par « , » dans les paramètres
 const DIFF_TONE = { '+': 'text-success', '-': 'text-destructive' } as const;
 
@@ -44,6 +49,8 @@ export function ActionCard({ action }: { action: ActionView }) {
   const [lost, setLost] = useState(false);
   const { kind, params } = view;
   const name = actionName(kind);
+  const tool = PROVIDER_LABELS[actionTool(kind)];
+  const Icon = actionTool(kind) === 'github' ? GitBranch : SquarePlus;
 
   async function decide(decision: Decision) {
     setPending(decision);
@@ -62,7 +69,9 @@ export function ActionCard({ action }: { action: ActionView }) {
         : view.status === 'faite'
           ? t('done')
           : view.status === 'echouee'
-            ? t(`errors.${view.result.error ?? 'echec'}`)
+            ? actionTool(kind) === 'github'
+              ? t(`errors.${view.result.error ?? 'echec'}`)
+              : t(`toolErrors.${view.result.error ?? 'echec'}`, { tool })
             : view.status === 'annulee'
               ? t('cancelled')
               : t('expired');
@@ -88,7 +97,7 @@ export function ActionCard({ action }: { action: ActionView }) {
       className="mt-3 rounded-field bg-glass-3 px-4 py-3 shadow-[inset_0_0_0_1px_var(--line)]"
     >
       <p className="flex gap-2.5 text-ui text-fg">
-        <GitBranch aria-hidden="true" className="mt-[2px] size-4 shrink-0 text-accent" />
+        <Icon aria-hidden="true" className="mt-[2px] size-4 shrink-0 text-accent" />
         <span className="break-words">{t(`kinds.${name}`, shown)}</span>
       </p>
       {details.length > 0 && (
@@ -136,7 +145,7 @@ export function ActionCard({ action }: { action: ActionView }) {
           <Button
             size="sm"
             variant="primary"
-            icon={GitBranch}
+            icon={Icon}
             loading={pending === 'confirmer'}
             disabled={pending === 'annuler'}
             onClick={() => decide('confirmer')}
@@ -165,7 +174,7 @@ export function ActionCard({ action }: { action: ActionView }) {
               rel="noreferrer"
               className="inline-flex items-center gap-1 text-accent underline-offset-2 hover:underline"
             >
-              {t('open')}
+              {t('open', { tool })}
               <ExternalLink aria-hidden="true" className="size-3.5" />
             </a>
           </>

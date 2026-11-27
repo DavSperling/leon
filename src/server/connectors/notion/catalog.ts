@@ -13,7 +13,7 @@ export const notionCatalog: CatalogEntry = {
   keyHelp:
     'Dans Notion, en tant que propriétaire de l’espace : portail des développeurs (app.notion.com/developers/connections) › nouvelle connexion interne › onglet Configuration, pour copier le secret ; puis, sur chaque page voulue, menu … › Ajouter des connexions.',
   oauthHelp:
-    'Notion vous fait choisir les pages à partager avec Leon : seules celles-là sont lues, avec leurs commentaires. L’accès permet aussi d’y écrire ; Leon ne s’en sert pas encore.',
+    'Notion vous fait choisir les pages à partager avec Leon : seules celles-là sont lues, avec leurs commentaires. Leon n’y crée une page que quand vous le confirmez d’un clic dans une discussion.',
   docsUrl: 'https://developers.notion.com/guides/get-started/authorization',
   triedForReal: false,
   warning:
@@ -28,7 +28,7 @@ export const notionCatalog: CatalogEntry = {
     keyHelp:
       'In Notion, as workspace owner: developer portal (app.notion.com/developers/connections) › new internal connection › Configuration tab, to copy the secret; then, on each page you want, … menu › Add connections.',
     oauthHelp:
-      'Notion has you choose the pages to share with Leon: only those are read, with their comments. The access also allows writing to them; Leon doesn’t use it yet.',
+      'Notion has you choose the pages to share with Leon: only those are read, with their comments. Leon creates a page there only when you confirm it with a click in a discussion.',
     warning: 'Only pages shared with the connection are read, with their unresolved comments.',
   },
 };

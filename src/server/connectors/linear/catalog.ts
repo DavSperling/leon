@@ -14,7 +14,7 @@ export const linearCatalog: CatalogEntry = {
   ],
   keyHelp: 'Dans Linear : Réglages › Compte › Sécurité et accès › Clés d’API personnelles.',
   oauthHelp:
-    'Linear vous demande d’autoriser Leon sur votre espace. Leon lit vos tickets ; l’accès permet aussi d’écrire, Leon ne s’en sert pas encore.',
+    'Linear vous demande d’autoriser Leon sur votre espace. Leon lit vos tickets ; il n’en crée un que quand vous le confirmez d’un clic dans une discussion.',
   docsUrl: 'https://linear.app/docs/api-and-webhooks',
   triedForReal: false,
   en: {
@@ -26,6 +26,6 @@ export const linearCatalog: CatalogEntry = {
     },
     keyHelp: 'In Linear: Settings › Account › Security & access › Personal API keys.',
     oauthHelp:
-      'Linear asks you to authorize Leon on your workspace. Leon reads your issues; the access also allows writing, but Leon doesn’t use it yet.',
+      'Linear asks you to authorize Leon on your workspace. Leon reads your issues; it creates one only when you confirm it with a click in a discussion.',
   },
 };

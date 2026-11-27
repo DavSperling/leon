@@ -16,7 +16,7 @@ export const linearOAuth: OAuthSpec = {
   appKey: 'LINEAR',
   authorizeUrl: 'https://linear.app/oauth/authorize',
   tokenUrl: 'https://api.linear.app/oauth/token',
-  scopes: ['read', 'write'], // write : Leon n'écrit pas encore, l'accès est demandé d'avance
+  scopes: ['read', 'write'], // write : Leon crée un ticket, seulement après le clic de l'utilisateur (discussion/ticket-actions.ts)
   scopeSeparator: ',',
   pkce: true,
   clientAuth: 'body',

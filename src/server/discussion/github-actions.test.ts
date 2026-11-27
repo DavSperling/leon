@@ -35,6 +35,21 @@ const GOOD: Record<string, string> = {
   lines: '12',
   asked: 'Peux-tu fusionner la PR 7 ?',
   default: 'oui',
+  // Linear, Trello et Notion (ticket-actions.ts).
+  team: 'Engineering',
+  teamId: '5b8c1d2e-3f40-4a5b-8c6d-7e8f9a0b1c2d',
+  project: 'Refonte',
+  projectId: '0f1e2d3c-4b5a-4968-8776-655443322110',
+  priority: 'haute',
+  assignee: 'alice@example.com',
+  assigneeId: 'A1B2C3D4-E5F6-4A7B-8C9D-0E1F2A3B4C5D',
+  board: 'Support Acme',
+  list: 'À faire',
+  listId: '5f2b3c4d5e6f7a8b9c0d11a1',
+  due: '2026-12-04',
+  database: 'Tâches',
+  dataSourceId: '1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f',
+  titleProperty: 'title',
 };
 const BAD: Record<string, string[]> = {
   repo: ['acme', 'a/b/c', 'acme/leon?x', ''],
@@ -74,6 +89,31 @@ const BAD: Record<string, string[]> = {
     'a\ud83db',
   ],
   default: ['yes', 'true', 'Oui', ''],
+  team: ['', 'a\nb', 'x'.repeat(257), 'a\u202Eb'],
+  project: ['', 'a\r\nb'],
+  board: ['', 'a\u2067b'],
+  list: ['', 'x'.repeat(257)],
+  database: ['', 'a\nb'],
+  teamId: ['ENG', '', 'gggggggg-3f40-4a5b-8c6d-7e8f9a0b1c2d', '5b8c1d2e3f404a5b8c6d7e8f9a0b1c2d'],
+  projectId: ['x', '', '../5b8c1d2e-3f40-4a5b-8c6d-7e8f9a0b1c2d'],
+  assigneeId: ['alice@example.com', ''],
+  dataSourceId: ['abc', '', '1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f/x'],
+  listId: ['abc', '', 'g'.repeat(24), '5f2b3c4d5e6f7a8b9c0d11a1/x', 'a'.repeat(25)],
+  titleProperty: ['', 'x'.repeat(101), 'a\nb', 'a\u202Eb'],
+  priority: ['urgent', 'Haute', '', '1'],
+  assignee: [
+    'alice',
+    'a b@x.fr',
+    'alice@',
+    '@x.fr',
+    'a@b',
+    'a\n@x.fr',
+    `${'x'.repeat(250)}@x.fr`,
+    'a,b@x.fr',
+    'a@x.fr\u202E',
+  ],
+  // Une date réelle, sans heure : ni le 30 février, ni le 13e mois.
+  due: ['2026-02-30', '2026-13-01', '26-12-04', '2026-12-4', '', '2026-12-04T10:00', 'demain'],
 };
 
 describe('validParams', () => {
@@ -219,7 +259,9 @@ describe('askedOf', () => {
 
 describe('SPECS', () => {
   it('a un outil par action, propre à GitHub, et aucun qui supprime ou lance autre chose que ce qui est permis', () => {
-    expect(Object.keys(SPECS).sort()).toEqual([...ACTION_KINDS].sort());
+    // Les créations dans Linear, Trello et Notion ont leur propre table (ticket-actions.ts).
+    const github = ACTION_KINDS.filter((kind) => kind.startsWith('github.'));
+    expect(Object.keys(SPECS).sort()).toEqual([...github].sort());
     const tools = Object.values(SPECS).map((spec) => spec.tool);
 
     expect(new Set(tools).size).toBe(tools.length);

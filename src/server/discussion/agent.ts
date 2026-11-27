@@ -13,6 +13,7 @@ import { createReferenceFilter, referencedNumbers } from '@/server/llm/reference
 import { logError } from '@/server/log';
 import { buildDiscussionMessages, DISCUSSION_SYSTEM } from './discussion-prompt';
 import { saveReply, startReply } from './discussions';
+import { myTicketProviders, type TicketProvider } from './ticket-actions';
 import {
   createSourceNumbering,
   DISCUSSION_MAX_STEPS,
@@ -103,12 +104,15 @@ async function* runReply(
   embedder: Embedder | null,
 ): AsyncGenerator<DiscussionEvent> {
   let turn: Awaited<ReturnType<typeof startReply>>;
+  let tickets: TicketProvider[];
   try {
     // Le plafond du jour (daily-cap.ts), avant toute écriture : la question n'est pas gardée, la page la lui rend.
     if (!(await reserveCall(ctx.userId, 'discussion'))) {
       yield { type: 'plafond' };
       return;
     }
+    // Avant la question : une panne ici ne laisse rien d'écrit.
+    tickets = await myTicketProviders(ctx);
     turn = await startReply(ctx, discussionId, message);
   } catch (error) {
     logError('discussion.indisponible', error, { etape: 'question' });
@@ -133,6 +137,7 @@ async function* runReply(
     discussionId,
     onAction: (action) => proposed.push(action),
     asked: message,
+    tickets,
   });
   const filter = createReferenceFilter(numbering);
 

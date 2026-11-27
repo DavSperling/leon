@@ -100,6 +100,21 @@ export function trelloClient(credentials: { apiKey: string; token: string }, htt
         },
         Card,
       ),
+
+    // Les écritures de la discussion, après le clic de l'utilisateur (discussion/ticket-actions.ts). La création ne
+    // se rejoue jamais (`once`) : une réponse perdue ne doit pas doubler la carte. Doc lue le 27/11/2026 :
+    //   https://developer.atlassian.com/cloud/trello/rest/api-group-boards/ (les listes d'un tableau ; filter : all,
+    //     closed, none ou open, d'après la spec https://dac-static.atlassian.com/cloud/trello/swagger.v3.json)
+    //   https://developer.atlassian.com/cloud/trello/rest/api-group-cards/ (POST /cards : idList obligatoire, name,
+    //     desc, due ; les paramètres peuvent passer dans un corps JSON ; la carte rendue porte shortUrl)
+    // Les listes ouvertes seulement : lists() lit aussi les archivées, pour la relève.
+    openLists: (boardId: string) =>
+      get(`/boards/${boardId}/lists`, { filter: 'open', fields: 'name' }, z.array(List)),
+    createCard: (card: { idList: string; name: string; desc: string; due?: string }) =>
+      http.json(
+        { url: `${API}/cards`, method: 'POST', headers, body: card, once: true },
+        z.object({ shortUrl: z.string() }),
+      ),
   };
 }
 

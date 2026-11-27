@@ -634,7 +634,10 @@
         "creer_ticket": "Create an issue in {repo}.",
         "modifier_ticket": "Edit issue #{number} of {repo}.",
         "relancer_execution": "Re-run workflow run #{run} of {repo}.",
-        "annuler_execution": "Cancel workflow run #{run} of {repo}."
+        "annuler_execution": "Cancel workflow run #{run} of {repo}.",
+        "linear_creer_ticket": "Create an issue in the Linear team {team}.",
+        "trello_creer_carte": "Create a card in the list {list} of the Trello board {board}.",
+        "notion_creer_page": "Create a page in the Notion database {database}."
       },
       "confirm": {
         "creer_branche": "Create branch",
@@ -650,7 +653,10 @@
         "creer_ticket": "Create issue",
         "modifier_ticket": "Edit issue",
         "relancer_execution": "Re-run",
-        "annuler_execution": "Cancel run"
+        "annuler_execution": "Cancel run",
+        "linear_creer_ticket": "Create issue",
+        "trello_creer_carte": "Create card",
+        "notion_creer_page": "Create page"
       },
       "details": {
         "asked": "Your request",
@@ -670,7 +676,11 @@
         "failed": "Failed jobs only",
         "lines": "Lines deleted",
         "body": "Text",
-        "diff": "Changes"
+        "diff": "Changes",
+        "project": "Project",
+        "priority": "Priority",
+        "assignee": "Assignee",
+        "due": "Due date"
       },
       "values": {
         "open": "Open",
@@ -683,7 +693,11 @@
         "COMMENT": "Comment",
         "oui": "Yes",
         "non": "No",
-        "none": "None"
+        "none": "None",
+        "urgente": "Urgent",
+        "haute": "High",
+        "moyenne": "Medium",
+        "basse": "Low"
       },
       "rerunWarning": "Re-running a workflow can run code and deploy.",
       "defaultBranchWarning": "Writes straight to the default branch, with no PR.",
@@ -694,7 +708,7 @@
       "waiting": "Nothing happens until you confirm.",
       "running": "In progress…",
       "done": "Done.",
-      "open": "View on GitHub",
+      "open": "View on {tool}",
       "cancelled": "Cancelled: nothing was done.",
       "expired": "Expired: ask Leon again to start from the current state.",
       "lost": "Your choice couldn’t be saved. Try again.",
@@ -707,6 +721,16 @@
         "conflit": "Conflict: the item changed since the proposal, or the action is no longer possible. Ask Leon again.",
         "refus": "GitHub refused the action (a repository rule, or a value it doesn’t accept).",
         "incertain": "GitHub didn’t answer in time: the action may have gone through. Check on GitHub before asking again."
+      },
+      "toolErrors": {
+        "droits": "{tool} refused to write: reconnect {tool} in Connections and allow writing.",
+        "existe": "This already exists in {tool}.",
+        "introuvable": "{tool} can no longer find the team, list or database.",
+        "connexion": "Reconnect your {tool} connection in Connections.",
+        "echec": "{tool} couldn’t do this. Check on {tool} before asking again.",
+        "conflit": "Conflict: the item changed in {tool} since the proposal. Ask Leon again.",
+        "refus": "{tool} refused the action (a value it doesn’t accept).",
+        "incertain": "{tool} didn’t answer in time: the action may have gone through. Check on {tool} before asking again."
       }
     },
     "visibleTo": "Visible to",

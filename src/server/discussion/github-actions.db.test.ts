@@ -7,8 +7,9 @@ import { DATA_GUARD_LINE } from '@/server/llm/prompt-guard';
 import { adminPool } from '@/test/db';
 import { type FakeRoute, fakeFetch } from '@/test/fake-fetch';
 import { dropTeams, newTeam } from '@/test/seed-indexed';
+import { decideAction } from './decide-action';
 import { createDiscussion, getDiscussion, saveReply } from './discussions';
-import { actionTools, askedOf, decideAction } from './github-actions';
+import { actionTools, askedOf } from './github-actions';
 import { proposeAction } from './proposed-actions';
 
 // Toutes les écritures GitHub confirmées d'un clic (lots 7 à 10 de la spec GitHub), sur de vraies lignes : chaque

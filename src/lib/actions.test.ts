@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { ACTION_KEYS, ACTION_KINDS, actionWarnings, parseActionView } from './actions';
+import {
+  ACTION_KEYS,
+  ACTION_KINDS,
+  actionName,
+  actionTool,
+  actionWarnings,
+  parseActionView,
+} from './actions';
 import { parseDiscussionEvent } from './discussion-events';
 
 const action = {
@@ -122,6 +129,17 @@ describe('ACTION_KEYS', () => {
       const all = [...required, ...optional];
       expect(new Set(all).size).toBe(all.length);
     }
+  });
+});
+
+// Le nom est la clé des textes de la carte : sans préfixe pour GitHub, avec son outil pour les autres, un par action.
+describe('actionName et actionTool', () => {
+  it('distinguent les créations de ticket de GitHub et de Linear', () => {
+    expect(actionName('github.creer_ticket')).toBe('creer_ticket');
+    expect(actionName('linear.creer_ticket')).toBe('linear_creer_ticket');
+    expect(actionTool('github.creer_ticket')).toBe('github');
+    expect(actionTool('notion.creer_page')).toBe('notion');
+    expect(new Set(ACTION_KINDS.map(actionName)).size).toBe(ACTION_KINDS.length);
   });
 });
 

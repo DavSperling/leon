@@ -10,7 +10,7 @@ import { isUnreachable, type Llm, LlmError } from '@/server/llm/llm';
 import { logError } from '@/server/log';
 import { epochToDate, textArray } from '@/server/search/filters-sql';
 import type { AgentId } from './agents';
-import { depositBrouillon, withdrawRelances } from './brouillon-depot';
+import { depositBrouillon, withdrawStale } from './brouillon-depot';
 import {
   BROUILLON_MAX_CHARS,
   type BrouillonAnswer,
@@ -72,8 +72,8 @@ import {
 // mesuré). Le tri qui précède le premier appel lit le fil seul, 2 000 jetons au plus, et écrit une ligne : moins de
 // 0,05 centime avec Haiku (estimé de même). Il ne compte pas sous le plafond, qui reste celui des appels du brouillon :
 // l'appel réservé est rendu quand le tri dit « sans réponse ». Le dépôt dans Gmail suit le même plafond : un brouillon
-// écrit, un dépôt au plus, de deux requêtes, donc 40 crédits Pipedream par personne et par jour au plus ; et une relance
-// déposée en coûte un de plus si son fil bouge avant qu'elle l'envoie (withdrawRelances).
+// écrit, un dépôt au plus, de deux requêtes, donc 40 crédits Pipedream par personne et par jour au plus ; et un
+// brouillon déposé en coûte un de plus s'il devient inutile avant qu'elle l'envoie (withdrawStale).
 export const BROUILLONS_DAILY_CAP = 20;
 const DAY_MS = 24 * 60 * 60 * 1000;
 // Borne le texte ET la réflexion du modèle (llm.ts) : un brouillon de 6 000 caractères en prend environ 2 000, le reste
@@ -114,7 +114,7 @@ function restingMails(ctx: TenantContext, now: Date): string[] {
     .map((key) => key.slice(mine.length));
 }
 
-// Un passage : en tête, sans modèle, ses relances déposées dont le fil a bougé quittent Gmail (withdrawRelances : il ne
+// Un passage : en tête, sans modèle, ses brouillons déposés devenus inutiles quittent Gmail (withdrawStale : il ne
 // fait que défaire ce que Leon a écrit, quel que soit l'agent auquel elle dit oui), et ses réponses envoyées aux
 // brouillons de Leon se comparent à eux (preferences.ts) ; puis les brouillons qu'elle attend (elle a répondu aux
 // questions de Leon, le second appel ; ou dit « Oui » à une relance, son premier appel, avec ses indications),
@@ -139,8 +139,8 @@ export async function writeBrouillons(
   deps: { llm: Llm; now?: Date; fetchImpl?: typeof fetch }, // fetchImpl : tests
 ): Promise<number> {
   if (await accountIsGone(ctx.userId)) return 0;
-  // D'abord, sans modèle et quel que soit le plafond : ses relances déposées dont le fil a bougé quittent Gmail.
-  await withdrawRelances(ctx, deps);
+  // D'abord, sans modèle et quel que soit le plafond : ses brouillons déposés devenus inutiles quittent Gmail.
+  await withdrawStale(ctx, deps);
   const lines = await readFiche(ctx);
   const proposals = await readProposals(ctx, lines);
   const oui = (agent: AgentId) => proposals.some((one) => one.agent === agent && one.oui);

@@ -13,17 +13,17 @@ import { brouillons } from '@/server/db/schema/portrait';
 import { withTenant } from '@/server/db/with-tenant';
 import { logError } from '@/server/log';
 import { hasBlank } from './brouillon-prompt';
-import { MESSAGE, ownAddresses, SENT_MAIL_DAYS } from './sent-mails';
+import { MESSAGE, ownAddresses, SENT_MAIL_DAYS, TEAM } from './sent-mails';
 import { relanceRecipients } from './unanswered-mails';
 
 // Le dépôt d'un brouillon dans les brouillons Gmail de la personne, en réponse dans le fil, juste après qu'un passage
 // l'a écrit (brouillons.ts) : la réponse à un mail reçu (« Brouillons de réponse ») comme la relance de son mail resté
-// sans réponse (« Relances », 0089). Puis son retrait : quand elle l'écarte dans Leon (withdrawBrouillon) ; pour une
-// relance, aussi au passage qui suit le moment où son fil a bougé, quand elle ne l'a ni envoyée ni écartée
-// (withdrawRelances). Ce sont les seules écritures de Leon dans une boîte : un brouillon de plus, puis ce même
-// brouillon de moins, ou ce brouillon envoyé quand elle clique « Envoyer » et le confirme (sendBrouillon) ; et le mail
-// reçu mis à la corbeille quand elle clique « Supprimer » et le confirme (trashMail). Rien d'autre n'y est envoyé,
-// supprimé ni modifié.
+// sans réponse (« Relances », 0089). Puis son retrait : quand elle l'écarte dans Leon (withdrawBrouillon) ; et, quand
+// elle ne l'a ni envoyé ni écarté, au passage qui suit le moment où il devient inutile : le fil d'une relance a bougé,
+// ou elle a répondu elle-même au mail reçu (withdrawStale). Ce sont les seules écritures de Leon dans une boîte : un
+// brouillon de plus, puis ce même brouillon de moins, ou ce brouillon envoyé quand elle clique « Envoyer » et le
+// confirme (sendBrouillon) ; et le mail reçu mis à la corbeille quand elle clique « Supprimer » et le confirme
+// (trashMail). Rien d'autre n'y est envoyé, supprimé ni modifié.
 //
 // Un brouillon est déposé si, et seulement si :
 // - il est complet : son texte ne porte aucun blanc entre crochets (hasBlank). Un brouillon incomplet reste dans Leon
@@ -314,20 +314,25 @@ export async function withdrawBrouillon(
   }
 }
 
-// Retire de Gmail ses relances devenues inutiles, au début de chaque passage de l'agent (brouillons.ts), sans appel au
-// modèle et quel que soit le plafond du jour : déposées par Leon, ni envoyées ni écartées, et dont le fil a bougé
-// depuis son mail (dans la base relevée par Leon, son message relancé n'est plus le dernier du fil : un destinataire a
-// répondu, ou elle a récrit). Une relance restée dans Gmail après une réponse pourrait partir sans raison. Une requête
-// par relance, deleteDraft de l'identifiant que Leon a déposé et de lui seul, puis Leon l'oublie ; un brouillon qui n'y
-// est plus (elle l'a envoyé ou supprimé) compte comme retiré. Sa boîte débranchée ou en pause : rien n'est tenté. Un
-// échec est journalisé sans rien de capté, et n'arrête ni les suivantes ni le passage.
-// shortcut: une relance dont le retrait échoue garde son identifiant, et le passage suivant le retente (une requête par
-// passage tant qu'il échoue) ; à borner si les journaux en montrent qui durent.
+// Retire de Gmail ses brouillons devenus inutiles, au début de chaque passage de l'agent (brouillons.ts), sans appel au
+// modèle et quel que soit le plafond du jour : déposés par Leon, ni envoyés ni écartés, et inutiles d'après la base
+// relevée par Leon :
+// - une relance, dès que son fil a bougé depuis son mail (son message relancé n'est plus le dernier du fil : un
+//   destinataire a répondu, ou elle a récrit). Restée dans Gmail après une réponse, elle pourrait partir sans raison ;
+// - une réponse, dès qu'elle a répondu elle-même, sans lui : un de ses mails envoyés dans le fil après le mail reçu, à
+//   son auteur, en « à » ou en copie (comme la réponse que lit preferences.ts). Restée dans Gmail, elle pourrait partir
+//   en double. Un autre mail de l'auteur, ou son transfert à un collègue, ne la rend pas inutile : elle reste dans
+//   Gmail, où elle a pu la retoucher.
+// Une requête par brouillon, deleteDraft de l'identifiant que Leon a déposé et de lui seul, puis Leon l'oublie ; un
+// brouillon qui n'y est plus (elle l'a envoyé ou supprimé) compte comme retiré. Sa boîte débranchée ou en pause : rien
+// n'est tenté. Un échec est journalisé sans rien de capté, et n'arrête ni les suivants ni le passage.
+// shortcut: un brouillon dont le retrait échoue garde son identifiant, et le passage suivant le retente (une requête
+// par passage tant qu'il échoue) ; à borner si les journaux en montrent qui durent.
 // shortcut: le passage ne tourne que pour qui dit oui à l'un des agents (requestBrouillons) : après son non aux deux,
-// une relance déposée reste dans Gmail même si le fil bouge ; à retirer aussi à la relève si cela se voit.
-// shortcut: un brouillon de réponse déposé dans un fil qui a bougé (elle a répondu depuis Gmail sans lui, on lui a
-// récrit) reste dans Gmail, même défaut ; à retirer de même si de vraies boîtes le montrent.
-export async function withdrawRelances(ctx: TenantContext, deps: Deps = {}): Promise<void> {
+// un brouillon déposé reste dans Gmail même devenu inutile ; à retirer aussi à la relève si cela se voit.
+// shortcut: une réponse courte d'elle (« bien reçu, je reviens vers vous ») retire aussi le brouillon, même retouché
+// dans Gmail pour plus tard ; à relire chez Gmail (a-t-il changé depuis le dépôt ?) si des personnes le regrettent.
+export async function withdrawStale(ctx: TenantContext, deps: Deps = {}): Promise<void> {
   const { rows } = await withTenant(ctx, (tx) =>
     tx.execute<{ id: string; brouillonGmail: string; connectionId: string | null }>(sql`
       select b.id, b.brouillon_gmail as "brouillonGmail", s.connection_id as "connectionId"
@@ -340,9 +345,16 @@ export async function withdrawRelances(ctx: TenantContext, deps: Deps = {}): Pro
         order by t.ts desc, substring(t.external_id from ${MESSAGE}) desc
         limit 1
       ) l
-      where b.tenant_id = ${ctx.tenantId} and b.user_id = ${ctx.userId} and b.sorte = 'relance'
+      where b.tenant_id = ${ctx.tenantId} and b.user_id = ${ctx.userId}
         and b.brouillon_gmail is not null and b.envoye_le is null and b.ecarte_le is null
-        and l.message is distinct from b.message`),
+        and l.message is distinct from b.message
+        and (b.sorte = 'relance' or exists (
+          select 1 from turns m
+          join turns t on t.tenant_id = m.tenant_id and t.source_id = m.source_id
+          where m.tenant_id = b.tenant_id and m.source_id = b.source_id
+            and substring(m.external_id from ${MESSAGE}) = b.message
+            and t.author_side = ${TEAM} and t.ts > m.ts
+            and lower(m.author_email) = any(t.recipients_to || t.recipients_cc)))`),
   );
   for (const row of rows) {
     try {
@@ -362,7 +374,7 @@ export async function withdrawRelances(ctx: TenantContext, deps: Deps = {}): Pro
           ),
       );
     } catch (error) {
-      logError('brouillons.relance_withdraw_failed', error, {
+      logError('brouillons.stale_withdraw_failed', error, {
         userId: ctx.userId,
         brouillonId: row.id,
       });

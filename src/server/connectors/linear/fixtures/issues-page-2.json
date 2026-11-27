@@ -9,6 +9,8 @@
           "description": "Comparer trois hébergeurs européens.",
           "url": "https://linear.app/acme/issue/LEO-9/choisir-l-hebergeur",
           "updatedAt": "2026-10-12T10:00:00.000Z",
+          "priority": 4,
+          "dueDate": null,
           "creator": {
             "name": "David Martin",
             "email": "david@acme.test"
@@ -18,6 +20,17 @@
           },
           "project": {
             "name": "Site vitrine"
+          },
+          "state": {
+            "name": "Terminé"
+          },
+          "assignee": null,
+          "cycle": {
+            "number": 3,
+            "name": "Lancement"
+          },
+          "labels": {
+            "nodes": []
           },
           "comments": {
             "nodes": [

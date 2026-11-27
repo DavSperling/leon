@@ -9,6 +9,8 @@
           "description": "Il faut décider du plan avant la fin du mois.\n\n## Contexte\n\n- 12 personnes utilisent l'outil\n- le plan actuel limite l'historique",
           "url": "https://linear.app/acme/issue/LEO-12/passer-au-plan-business",
           "updatedAt": "2026-10-14T16:20:00.000Z",
+          "priority": 2,
+          "dueDate": "2026-12-03",
           "creator": {
             "name": "Marie Durand",
             "email": "marie@acme.test"
@@ -18,6 +20,19 @@
           },
           "project": {
             "name": "Site vitrine"
+          },
+          "state": {
+            "name": "En cours"
+          },
+          "assignee": {
+            "name": "David Martin"
+          },
+          "cycle": {
+            "number": 12,
+            "name": null
+          },
+          "labels": {
+            "nodes": [{ "name": "bug" }, { "name": "facturation" }]
           },
           "comments": {
             "nodes": [
@@ -49,11 +64,21 @@
           "description": null,
           "url": "https://linear.app/acme/issue/LEO-11/corriger-la-faute-dans-le-pied-de-page",
           "updatedAt": "2026-10-14T08:00:00.000Z",
+          "priority": 0,
+          "dueDate": null,
           "creator": null,
           "team": {
             "name": "Produit"
           },
           "project": null,
+          "state": {
+            "name": "Backlog"
+          },
+          "assignee": null,
+          "cycle": null,
+          "labels": {
+            "nodes": []
+          },
           "comments": {
             "nodes": []
           }

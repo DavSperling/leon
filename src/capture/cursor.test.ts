@@ -110,8 +110,8 @@ describe('extractCursorFacts', () => {
       commits: [],
       fichiers: ['src/capture/cursor.ts', 'src/capture/turn.ts', 'README.md'],
       commandes: [
-        { texte: 'git checkout', erreur: false },
-        { texte: 'pnpm vitest', erreur: false },
+        { texte: 'git checkout', erreur: false, suite: false },
+        { texte: 'pnpm vitest', erreur: false, suite: false },
       ],
       taches: [
         { texte: 'Ouvrir la PR', etat: 'a_faire' },
@@ -222,6 +222,6 @@ describe('extractCursorFacts', () => {
       FILE,
       RACINE,
     );
-    expect(faits.commandes).toEqual([{ texte: 'psql', erreur: false }]);
+    expect(faits.commandes).toEqual([{ texte: 'psql', erreur: false, suite: false }]);
   });
 });

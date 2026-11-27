@@ -1,11 +1,14 @@
 import { isAbsolute, relative, resolve, sep } from 'node:path';
 import { z } from 'zod';
 import {
+  COMMANDES_AGENTS_MAX,
   COMMANDES_MAX,
   COMMITS_MAX,
   FICHIERS_MAX,
+  OUTILS_EN_ERREUR_MAX,
   PRS_MAX,
   PrSchema,
+  READ_FIRST_MARK,
   type SessionFacts,
   TACHES_MAX,
   TEXTE_MAX,
@@ -198,6 +201,19 @@ const WORD = new RegExp(String.raw`(?:\[secret masqué\]|${QUOTED}|\S)+`, 'g');
 // WORD a pris un à un), une substitution « $( » ou « ` ». Le mot qui le suit peut être un morceau du secret.
 const unclosed = (word: string) =>
   /\$\(|`/.test(word) || /["'\\]/.test(word.replace(QUOTED_PARTS, ''));
+
+// Une commande qui en enchaîne plusieurs (D39 amendé le 27/11) : son statut n'est pas celui de la commande que garde
+// reduceCommand. Prudente, dans le doute vrai : un guillemet resté ouvert, un saut de ligne, « ; », un « | » hors de la
+// redirection « >| », un « & » hors des redirections (« 2>&1 », « <&3 », « &> »). Une chaîne retirée laisse une lettre :
+// « a >"x"& b » ne devient pas la redirection « >& ».
+// shortcut: une substitution sans opérateur (« $(a) », « <(a) ») n'est pas une suite ; la compter si une commande faite
+// d'une seule substitution, dont le statut est le sien, gêne le rêve.
+const CHAIN = /[\n;]|(?<!>)\||(?<![<>])&(?!>)/;
+type Commande = { texte: string; erreur: boolean; suite: boolean };
+export function isChainedCommand(command: string): boolean {
+  const rest = command.replaceAll('\u0000', '').trim().replace(QUOTED_PARTS, 'x');
+  return /["']/.test(rest) || CHAIN.test(rest);
+}
 
 function parseLine(raw: string): Line | null {
   let json: unknown;
@@ -402,8 +418,9 @@ export type FactsRecord = {
   created: Pr[];
   commits: Set<string>;
   files: Set<string>;
-  commands: SessionFacts['commandes'];
+  commands: Commande[];
   tasks: Map<string, Tache>;
+  toolErrors: Map<string, number>; // nom réduit (reduceToolName) → nombre d'échecs
 };
 
 export const newFactsRecord = (): FactsRecord => ({
@@ -412,7 +429,14 @@ export const newFactsRecord = (): FactsRecord => ({
   files: new Set(),
   commands: [],
   tasks: new Map(),
+  toolErrors: new Map(),
 });
+
+// Un outil qui n'est pas une commande a échoué : son nom réduit, jamais son message.
+export function recordToolError(record: FactsRecord, name: string): void {
+  const outil = reduceToolName(name);
+  record.toolErrors.set(outil, (record.toolErrors.get(outil) ?? 0) + 1);
+}
 
 // Une commande de shell et ce qu'elle a écrit : la commande réduite (reduceCommand), les SHA d'un `git commit`, les PR
 // d'un `gh pr create` réussi.
@@ -423,7 +447,8 @@ export function recordCommand(
   error: boolean,
 ): void {
   const texte = reduceCommand(command);
-  if (texte !== '') record.commands.push({ texte, erreur: error });
+  if (texte !== '')
+    record.commands.push({ texte, erreur: error, suite: isChainedCommand(command) });
   // « git commit && git push » peut échouer après le commit : la sortie compte malgré l'erreur.
   if (GIT_COMMIT.test(command)) {
     for (const [, sha] of output.matchAll(COMMIT_LINE)) if (sha) record.commits.add(sha);
@@ -464,8 +489,11 @@ function recordResult(
     if (bash.success) recordCommand(record, bash.data.command, output, error);
     return;
   }
-  // Les autres outils n'ont rien changé s'ils ont échoué.
-  if (error) return;
+  // Les autres outils n'ont rien changé s'ils ont échoué. L'arrêt de la lecture obligée n'est pas un échec (D40).
+  if (error) {
+    if (!(FILE_TOOLS.has(name) && output.includes(READ_FIRST_MARK))) recordToolError(record, name);
+    return;
+  }
   if (FILE_TOOLS.has(name)) {
     const file = FilePathSchema.safeParse(input);
     const path = file.success ? (file.data.file_path ?? file.data.notebook_path) : undefined;
@@ -498,19 +526,115 @@ function recordResult(
   }
 }
 
+// Les blocs d'outils ne se lisent que sur les messages `user` et `assistant` : les lignes `api-request-blob` en
+// recopient (annexe 08), et chaque copie compterait une seconde fois la commande, l'erreur et la PR.
+const messageBlocks = (line: Line): unknown[] =>
+  (line.type === 'user' || line.type === 'assistant') && Array.isArray(line.message?.content)
+    ? line.message.content
+    : [];
+
+// Un bloc tool_result relevé avec son appel ; rend vrai pour un résultat en erreur.
+function recordResultBlock(
+  record: FactsRecord,
+  block: unknown,
+  calls: ReadonlyMap<string, Call>,
+  root: string | null,
+): boolean {
+  const result = ToolResultSchema.safeParse(block);
+  if (!result.success) return false;
+  const error = result.data.is_error === true;
+  const call = calls.get(result.data.tool_use_id);
+  if (call) recordResult(record, call, resultText(result.data.content), error, root);
+  return error;
+}
+
+// Ce que les faits gardent d'un sous-agent ou d'un agent de workflow (T58, décision d'Amos du 27/11) : ses commandes
+// réduites et ses outils en erreur, jamais ses fichiers, ses tâches, ses commits ni ses PR.
+export type AgentActions = {
+  debut: string | null; // l'heure de sa première ligne horodatée
+  commandes: Commande[];
+  outils: ReadonlyMap<string, number>;
+};
+export const COMMANDES_PAR_AGENT = 20;
+
+// Le relevé d'un fichier d'agent de Claude Code, par la mécanique de la tête sur un relevé neuf. Toutes ses lignes
+// portent isSidechain : rien n'est sauté.
+export function extractAgentActions(content: string): AgentActions {
+  const calls = new Map<string, Call>();
+  const record = newFactsRecord();
+  let debut: string | null = null;
+  for (const raw of content.split('\n')) {
+    const line = parseLine(raw);
+    if (!line) continue;
+    debut ??= line.timestamp ?? null;
+    for (const block of messageBlocks(line)) {
+      const call = ToolUseSchema.safeParse(block);
+      if (call.success) calls.set(call.data.id, call.data);
+      recordResultBlock(record, block, calls, null);
+    }
+  }
+  return {
+    debut,
+    commandes: record.commands.slice(-COMMANDES_PAR_AGENT),
+    outils: record.toolErrors,
+  };
+}
+
+// Les commandes des agents d'une session et les outils en erreur, tête comprise. Les agents se rangent par leur première
+// heure (sans heure, en dernier, dans l'ordre reçu), gardent chacun leurs 20 dernières commandes, puis les 100 dernières
+// entrées restent : celles des plus récents, numérotés de 1 à k. Les outils : les 20 plus fréquents, à égalité par nom.
+export function buildAgentCommands(
+  agents: readonly AgentActions[],
+  head: ReadonlyMap<string, number>,
+): Pick<SessionFacts, 'commandes_agents' | 'outils_en_erreur'> {
+  // Une heure absente ou illisible passe en dernier ; sort est stable, l'ordre reçu départage.
+  const time = ({ debut }: AgentActions) => {
+    const instant = Date.parse(debut ?? '');
+    return Number.isNaN(instant) ? Number.POSITIVE_INFINITY : instant;
+  };
+  const entries = agents
+    .filter((agent) => agent.commandes.length > 0)
+    .sort((a, b) => {
+      const [x, y] = [time(a), time(b)];
+      return x === y ? 0 : x - y;
+    })
+    .flatMap((agent, index) =>
+      agent.commandes.slice(-COMMANDES_PAR_AGENT).map((command) => ({ index, command })),
+    )
+    .slice(-COMMANDES_AGENTS_MAX);
+  const first = entries[0]?.index ?? 0;
+  const commandes = entries.map(({ index, command }) => ({ agent: index - first + 1, ...command }));
+
+  const counts = new Map(head);
+  for (const { outils } of agents) {
+    for (const [outil, nombre] of outils) counts.set(outil, (counts.get(outil) ?? 0) + nombre);
+  }
+  const outils = [...counts]
+    .sort(([a, x], [b, y]) => y - x || (a < b ? -1 : a > b ? 1 : 0))
+    .slice(0, OUTILS_EN_ERREUR_MAX)
+    .map(([outil, nombre]) => ({ outil, nombre }));
+  // Un champ vide est absent : ni liste vide ni clé nulle.
+  return {
+    ...(outils.length > 0 && { outils_en_erreur: outils }),
+    ...(commandes.length > 0 && { commandes_agents: commandes }),
+  };
+}
+
 // Les gestes d'une session Claude Code, à partir de son JSONL. `root` est la racine du dépôt (chemin absolu) :
 // les fichiers écrits ailleurs sont retirés ; null, hors de tout dépôt, aucun fichier. Les sous-agents
 // (`isSidechain`) ne sont pas la session. `leonMcp` : le serveur `leon` de la configuration de Claude Code est celui de
-// la connexion (leon-mcp.ts) ; faux, tout outil MCP compte. `subagents` : les échanges des sous-agents (T63), qui ne
-// décident que de `externe` ; un appel Agent ou Task absent de la table rend la session externe. `workflows` : les
-// appels Workflow dont le run est local ; tout autre appel Workflow rend la session externe, comme celui d'un sous-agent
-// (isExternalCall).
+// la connexion (leon-mcp.ts) ; faux, tout outil MCP compte. `subagents` : les échanges des sous-agents (T63), qui
+// décident de `externe` ; un appel Agent ou Task absent de la table rend la session externe ; chacun est relevé une fois
+// pour `commandes_agents` (extractAgentActions). `workflows` : les appels Workflow dont le run est local ; tout autre
+// appel Workflow rend la session externe, comme celui d'un sous-agent (isExternalCall). `workflowAgents` : les relevés
+// des agents de ses runs, faits par la CLI à la lecture (loadWorkflowRuns).
 export function extractClaudeCodeFacts(
   content: string,
   root: string | null,
   leonMcp = false,
   subagents?: Subagents,
   workflows?: Workflows,
+  workflowAgents: readonly AgentActions[] = [],
 ): SessionFacts {
   const visited = new Set<string>();
   const calls = new Map<string, Call>();
@@ -538,11 +662,7 @@ export function extractClaudeCodeFacts(
       });
       if (pr.success) links.push(pr.data);
     }
-    // Les blocs d'outils ne se lisent que sur les messages `user` et `assistant` : les lignes `api-request-blob` en
-    // recopient (annexe 08), et chaque copie compterait une seconde fois la commande, l'erreur et la PR.
-    const isMessage = line.type === 'user' || line.type === 'assistant';
-    const blocks = isMessage && Array.isArray(line.message?.content) ? line.message.content : [];
-    for (const block of blocks) {
+    for (const block of messageBlocks(line)) {
       const call = ToolUseSchema.safeParse(block);
       if (call.success) {
         calls.set(call.data.id, call.data);
@@ -551,13 +671,7 @@ export function extractClaudeCodeFacts(
             ? !workflows?.has(call.data.id)
             : isExternalAnyCall(call.data, leonMcp, subagents, visited);
       }
-      const result = ToolResultSchema.safeParse(block);
-      if (!result.success) continue;
-      const error = result.data.is_error === true;
-      if (error) errors++;
-      const resultCall = calls.get(result.data.tool_use_id);
-      if (resultCall)
-        recordResult(record, resultCall, resultText(result.data.content), error, root);
+      if (recordResultBlock(record, block, calls, root)) errors++;
     }
   }
 
@@ -569,11 +683,13 @@ export function extractClaudeCodeFacts(
     echanges: parseClaudeCodeSession(content)?.turns.filter(isTypedTurn).length ?? 0,
     start,
     end,
+    agents: [...(subagents?.values() ?? [])].map(extractAgentActions).concat(workflowAgents),
   });
 }
 
 // Les faits d'une session (C1), bornés, à partir de ce que son lecteur a relevé. `links` : les PR que l'outil écrit
-// lui-même (pr-link de Claude Code), avant celles de gh pr create.
+// lui-même (pr-link de Claude Code), avant celles de gh pr create. `agents` : les relevés de ses sous-agents et agents de
+// workflow (buildAgentCommands).
 export function buildFacts(
   record: FactsRecord,
   session: {
@@ -584,6 +700,7 @@ export function buildFacts(
     echanges: number;
     start: string | null;
     end: string | null;
+    agents?: readonly AgentActions[];
   },
 ): SessionFacts {
   // Les lignes pr-link d'abord, puis les URL de gh pr create : une PR n'y figure qu'une fois, et garde
@@ -610,6 +727,7 @@ export function buildFacts(
       .slice(0, TACHES_MAX)
       .map((task) => ({ texte: factText(task.texte, TEXTE_MAX), etat: task.etat })),
     erreurs: session.errors,
+    ...buildAgentCommands(session.agents ?? [], record.toolErrors),
     externe: session.external,
     echanges: session.echanges,
     debut: session.start,

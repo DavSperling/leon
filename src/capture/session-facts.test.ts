@@ -1,7 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { READ_FIRST_MARK } from './api-contract';
 import {
+  type AgentActions,
+  buildAgentCommands,
+  extractAgentActions,
   extractClaudeCodeFacts,
+  isChainedCommand,
   isExternalWorkflowAgent,
   recheckCommand,
   reduceToolName,
@@ -45,24 +50,25 @@ describe('extractClaudeCodeFacts', () => {
         'docs/essai.ipynb',
       ],
       commandes: [
-        { texte: 'git checkout', erreur: false },
-        { texte: 'mysql', erreur: true },
-        { texte: 'sshpass', erreur: false },
-        { texte: 'curl', erreur: false },
-        { texte: 'redis-cli', erreur: false },
-        { texte: 'psql', erreur: false },
-        { texte: 'pnpm vitest', erreur: false },
-        { texte: 'npx', erreur: false },
-        { texte: 'git add', erreur: false },
-        { texte: 'git push', erreur: false },
-        { texte: 'gh pr', erreur: false },
-        { texte: 'gh pr', erreur: false },
+        { texte: 'git checkout', erreur: false, suite: false },
+        { texte: 'mysql', erreur: true, suite: false },
+        { texte: 'sshpass', erreur: false, suite: false },
+        { texte: 'curl', erreur: false, suite: false },
+        { texte: 'redis-cli', erreur: false, suite: false },
+        { texte: 'psql', erreur: false, suite: false },
+        { texte: 'pnpm vitest', erreur: false, suite: false },
+        { texte: 'npx', erreur: false, suite: false },
+        { texte: 'git add', erreur: false, suite: true },
+        { texte: 'git push', erreur: false, suite: false },
+        { texte: 'gh pr', erreur: false, suite: false },
+        { texte: 'gh pr', erreur: false, suite: false },
       ],
       taches: [
         { texte: 'Brancher la route', etat: 'en_cours' },
         { texte: 'Écrire le schéma des faits', etat: 'fait' },
       ],
       erreurs: 2,
+      outils_en_erreur: [{ outil: 'Edit', nombre: 1 }],
       externe: true,
       echanges: 3,
       debut: '2026-11-02T14:00:00.000Z',
@@ -114,7 +120,7 @@ describe('extractClaudeCodeFacts', () => {
       const contenu = [appel('b1', 'Bash', { command }), resultat('b1', '')].join('\n');
       const faits = extractClaudeCodeFacts(contenu, RACINE);
 
-      expect(faits.commandes).toEqual([{ texte, erreur: false }]);
+      expect(faits.commandes).toMatchObject([{ texte, erreur: false }]);
       expect(JSON.stringify(faits)).not.toContain('S3cret');
     },
   );
@@ -128,7 +134,7 @@ describe('extractClaudeCodeFacts', () => {
     const contenu = [appel('b1', 'Bash', { command }), resultat('b1', '')].join('\n');
     const faits = extractClaudeCodeFacts(contenu, RACINE);
 
-    expect(faits.commandes).toEqual([{ texte, erreur: false }]);
+    expect(faits.commandes).toEqual([{ texte, erreur: false, suite: false }]);
     expect(JSON.stringify(faits)).not.toContain('S3cret');
   });
 
@@ -188,7 +194,7 @@ describe('extractClaudeCodeFacts', () => {
     it('une commande en erreur n’est rangée qu’une fois, et l’erreur comptée une fois', () => {
       const faits = extractClaudeCodeFacts(sessionAvecCopies('pnpm test', 'boom', true), RACINE);
 
-      expect(faits.commandes).toEqual([{ texte: 'pnpm test', erreur: true }]);
+      expect(faits.commandes).toEqual([{ texte: 'pnpm test', erreur: true, suite: false }]);
       expect(faits.erreurs).toBe(1);
     });
 
@@ -199,7 +205,7 @@ describe('extractClaudeCodeFacts', () => {
         RACINE,
       );
 
-      expect(faits.commandes).toEqual([{ texte: 'gh pr', erreur: false }]);
+      expect(faits.commandes).toEqual([{ texte: 'gh pr', erreur: false, suite: false }]);
       expect(faits.prs).toEqual([{ repo: 'o/r', numero: 12, par: 'gh-pr-create' }]);
     });
   });
@@ -224,7 +230,7 @@ describe('extractClaudeCodeFacts', () => {
       'Clé [secret masqué]',
     ]);
     // Un exécutable hors de [A-Za-z0-9._+-]{1,40} ne garde que le texte fixe.
-    expect(faits.commandes).toEqual([{ texte: '[commande]', erreur: false }]);
+    expect(faits.commandes).toEqual([{ texte: '[commande]', erreur: false, suite: false }]);
     expect(JSON.stringify(faits)).not.toMatch(/\\u(?:d[89a-f]|0000)/i);
   });
 
@@ -235,7 +241,7 @@ describe('extractClaudeCodeFacts', () => {
       RACINE,
     );
 
-    expect(faits.commandes).toEqual([{ texte: 'npx', erreur: false }]);
+    expect(faits.commandes).toEqual([{ texte: 'npx', erreur: false, suite: false }]);
     expect(JSON.stringify(faits)).not.toContain('sk-ant-faux');
   });
 
@@ -765,7 +771,7 @@ describe('extractClaudeCodeFacts', () => {
     ].join('\n');
 
     expect(extractClaudeCodeFacts(contenu, RACINE).commandes).toEqual([
-      { texte: 'git status', erreur: false },
+      { texte: 'git status', erreur: false, suite: false },
     ]);
   });
 
@@ -846,5 +852,330 @@ describe('reduceToolName', () => {
     ['', '[outil]'],
   ])('%s donne %s', (name, expected) => {
     expect(reduceToolName(name)).toBe(expected);
+  });
+});
+
+// T58 amendé le 27/11 : la suite, les outils en erreur et les commandes des agents. Fixtures inventées.
+describe('isChainedCommand (la suite, D39 amendé le 27/11)', () => {
+  it.each([
+    'pnpm test:db',
+    'pnpm test 2>&1',
+    'pnpm test > out.txt 2>&1',
+    'pnpm test &> out.txt',
+    'pnpm test &>> out.txt',
+    'cmd >| f',
+    'cmd <&3 >&-',
+    'git commit -m "a; b"',
+    'git commit -m "a && b | c"',
+    "git commit -m 'a; b'",
+    "echo $'a\\';b'",
+    'find . -exec rm {} \\;',
+    'pnpm test \\\n  --run',
+    '  pnpm test\n',
+    'echo "$(a; b)"',
+    'a >\\&b',
+  ])('« %s » n’est pas une suite', (command) => {
+    expect(isChainedCommand(command)).toBe(false);
+  });
+
+  it.each([
+    'pnpm test:db; echo fini',
+    'cd x && pnpm test',
+    'pnpm test 2>&1 | tail',
+    'a || b',
+    'a | b',
+    'a |& b',
+    'sleep 5 &',
+    'a 2>&1 &',
+    'a&b',
+    'pnpm test\necho fini',
+    'cat <<EOF\nx\nEOF',
+    'echo $(a; b)',
+    'echo `a | b`',
+    'git commit -m "a',
+    "echo 'a",
+    'git commit -m "a" && git push',
+    // Une chaîne retirée ne colle pas un « & » à un « > » : « a >"x" & b » lance b en fond.
+    'a >"x"& b',
+    'a\\>&b',
+    'curl https://x.example/?a=1&b=2',
+    'pnpm test\u0000; echo fini',
+  ])('« %s » est une suite', (command) => {
+    expect(isChainedCommand(command)).toBe(true);
+  });
+
+  it('recordCommand pose suite sur la commande brute, avant la réduction', () => {
+    const contenu = [
+      appel('b1', 'Bash', { command: 'cd x && pnpm test' }),
+      resultat('b1', ''),
+      appel('b2', 'Bash', { command: 'git commit -m "a; b"' }),
+      resultat('b2', ''),
+    ].join('\n');
+
+    expect(extractClaudeCodeFacts(contenu, RACINE).commandes).toEqual([
+      { texte: 'cd', erreur: false, suite: true },
+      { texte: 'git commit', erreur: false, suite: false },
+    ]);
+  });
+});
+
+const enErreur = (id: string, content: string, extra = {}) =>
+  JSON.stringify({
+    type: 'user',
+    message: { content: [{ type: 'tool_result', tool_use_id: id, content, is_error: true }] },
+    ...extra,
+  });
+
+describe('outils_en_erreur', () => {
+  it('relève un outil MCP en erreur sous le nom de son serveur, sans message, sortie ni argument', () => {
+    const contenu = [
+      appel('m1', 'mcp__linear__get_issue', { id: 'argument-temoin' }),
+      enErreur('m1', 'Issue not found: message-temoin'),
+      appel('b1', 'Bash', { command: 'pnpm test' }),
+      enErreur('b1', 'sortie-temoin'),
+    ].join('\n');
+    const faits = extractClaudeCodeFacts(contenu, RACINE);
+
+    expect(faits.outils_en_erreur).toEqual([{ outil: 'mcp:linear', nombre: 1 }]);
+    expect(faits.commandes).toEqual([{ texte: 'pnpm test', erreur: true, suite: false }]);
+    expect(faits.erreurs).toBe(2);
+    expect(JSON.stringify(faits)).not.toMatch(/temoin|get_issue/);
+    expect(SessionFactsSchema.safeParse(faits).success).toBe(true);
+  });
+
+  it('ne compte pas un Edit arrêté par la lecture obligée (D40) ; erreurs compte les deux', () => {
+    const contenu = [
+      appel('e1', 'Edit', { file_path: `${RACINE}/a.ts` }),
+      enErreur('e1', `PreToolUse:Edit hook denied this tool: ${READ_FIRST_MARK} Avant…`),
+      appel('e2', 'Edit', { file_path: `${RACINE}/b.ts` }),
+      enErreur('e2', 'String to replace not found in file.'),
+    ].join('\n');
+    const faits = extractClaudeCodeFacts(contenu, RACINE);
+
+    expect(faits.outils_en_erreur).toEqual([{ outil: 'Edit', nombre: 1 }]);
+    expect(faits.erreurs).toBe(2);
+  });
+
+  it('garde les 20 plus fréquents, à égalité par ordre alphabétique', () => {
+    const noms = Array.from({ length: 25 }, (_, i) => `t${String(i).padStart(2, '0')}`);
+    const echecs = noms.flatMap((nom, i) => (i >= 20 ? [nom, nom] : [nom]));
+    const contenu = echecs
+      .flatMap((nom, i) => [appel(`o${i}`, nom, {}), enErreur(`o${i}`, 'x')])
+      .join('\n');
+    const faits = extractClaudeCodeFacts(contenu, RACINE);
+
+    expect(faits.outils_en_erreur).toEqual([
+      ...noms.slice(20).map((outil) => ({ outil, nombre: 2 })),
+      ...noms.slice(0, 15).map((outil) => ({ outil, nombre: 1 })),
+    ]);
+    expect(SessionFactsSchema.safeParse(faits).success).toBe(true);
+  });
+
+  it('sans outil en erreur, la clé est absente', () => {
+    const contenu = [appel('r1', 'Read', {}), resultat('r1', 'ok')].join('\n');
+    expect(extractClaudeCodeFacts(contenu, RACINE)).not.toHaveProperty('outils_en_erreur');
+  });
+});
+
+describe('commandes_agents (décision d’Amos du 27/11)', () => {
+  const SA = { isSidechain: true, agentId: 'a1b2c3d4e5f6a7b8c' };
+  const heure = (s: number) => `2026-11-27T10:00:${String(s).padStart(2, '0')}.000Z`;
+  const consigne = (s: number | null) =>
+    JSON.stringify({
+      type: 'user',
+      ...SA,
+      ...(s !== null && { timestamp: heure(s) }),
+      message: { content: 'Consigne.' },
+    });
+  const rapport = JSON.stringify({
+    type: 'assistant',
+    ...SA,
+    message: { content: [{ type: 'text', text: 'Rapport.' }], stop_reason: 'end_turn' },
+  });
+  const commande = (id: string, command: string, sortie = '', erreur = false) => [
+    appel(id, 'Bash', { command }, SA),
+    erreur ? enErreur(id, sortie, SA) : resultat(id, sortie, SA),
+  ];
+  const sousAgent = (debut: number | null, ...lignes: string[]) =>
+    [consigne(debut), ...lignes, rapport].join('\n');
+  const session = [appel('a1', 'Agent', { prompt: 'Cherche.' }), resultat('a1', 'Rapport.')].join(
+    '\n',
+  );
+  const faitsAvec = (subagents: Map<string, string>, contenu = session) =>
+    extractClaudeCodeFacts(contenu, RACINE, false, subagents);
+
+  it('les commandes Bash d’un sous-agent de fixture arrivent avec agent 1 ; la tête ne change pas', () => {
+    const dossier = 'claude-code-sous-agents/55555555-5555-4555-8555-555555555555';
+    const subagents = new Map([
+      ['toolu_01Depot', fixture(`${dossier}/subagents/agent-a1b2c3d4e5f6a7b8c`)],
+      ['toolu_01Petit', fixture(`${dossier}/subagents/agent-b9c8d7e6f5a4b3c2d`)],
+    ]);
+    const sans = extractClaudeCodeFacts(fixture(dossier), RACINE);
+    const { commandes_agents, ...tete } = extractClaudeCodeFacts(
+      fixture(dossier),
+      RACINE,
+      false,
+      subagents,
+    );
+
+    expect(commandes_agents).toEqual([
+      { agent: 1, texte: 'pnpm test', erreur: false, suite: false },
+    ]);
+    expect(tete).toEqual({ ...sans, externe: false });
+  });
+
+  it('un sous-agent qui écrit, tient ses tâches, commite et crée une PR n’ajoute rien de tout ça à la tête', () => {
+    const agent = sousAgent(
+      1,
+      appel('w1', 'Write', { file_path: `${RACINE}/src/sous-agent.ts` }, SA),
+      resultat('w1', 'ok', SA),
+      appel('t1', 'TodoWrite', { todos: [{ content: 'x', status: 'pending' }] }, SA),
+      resultat('t1', 'ok', SA),
+      ...commande('c1', 'git commit -m x', '[main 9f9f9f9] x'),
+      ...commande('p1', 'gh pr create --fill', 'https://github.com/o/r/pull/7'),
+      ...commande('f1', 'pnpm test && pnpm lint', 'sortie-temoin', true),
+    );
+    const faits = faitsAvec(new Map([['a1', agent]]));
+
+    expect(faits).toMatchObject({
+      fichiers: [],
+      taches: [],
+      commits: [],
+      prs: [],
+      commandes: [],
+      erreurs: 0,
+      externe: false,
+    });
+    expect(faits.commandes_agents).toEqual([
+      { agent: 1, texte: 'git commit', erreur: false, suite: false },
+      { agent: 1, texte: 'gh pr', erreur: false, suite: false },
+      { agent: 1, texte: 'pnpm test', erreur: true, suite: true },
+    ]);
+    expect(JSON.stringify(faits)).not.toMatch(/9f9f9f9|pull\/7|temoin|sous-agent\.ts/);
+    expect(SessionFactsSchema.safeParse(faits).success).toBe(true);
+  });
+
+  it('un agent de 40 commandes garde ses 20 dernières, dans l’ordre de son fichier', () => {
+    const lignes = Array.from({ length: 40 }, (_, i) => commande(`c${i}`, `c${i} -v`)).flat();
+    const faits = faitsAvec(new Map([['a1', sousAgent(1, ...lignes)]]));
+
+    expect(faits.commandes_agents?.map(({ texte }) => texte)).toEqual(
+      Array.from({ length: 20 }, (_, i) => `c${i + 20}`),
+    );
+  });
+
+  it('8 agents de 20 en gardent 100, les plus récents, numérotés par l’heure de leur première ligne', () => {
+    // L'ordre de lecture n'est pas celui des heures ; l'agent sans heure passe en dernier.
+    const debuts = [3, 7, 1, null, 5, 2, 8, 4];
+    const agents: AgentActions[] = debuts.map((debut, n) => ({
+      debut: debut === null ? null : heure(debut),
+      commandes: Array.from({ length: 20 }, (_, i) => ({
+        texte: `a${n}-${i}`,
+        erreur: false,
+        suite: false,
+      })),
+      outils: new Map(),
+    }));
+    const { commandes_agents = [] } = buildAgentCommands(agents, new Map());
+
+    expect(commandes_agents).toHaveLength(100);
+    // Rangés par heure : 2 (1), 5 (2), 0 (3), 7 (4), 4 (5), 1 (7), 6 (8), puis 3 (sans heure) ; les 5 derniers restent.
+    const premiers = commandes_agents.filter((_, i) => i % 20 === 0);
+    expect(premiers.map(({ agent, texte }) => [agent, texte])).toEqual([
+      [1, 'a7-0'],
+      [2, 'a4-0'],
+      [3, 'a1-0'],
+      [4, 'a6-0'],
+      [5, 'a3-0'],
+    ]);
+    // Les entrées d'un même agent se suivent.
+    expect(commandes_agents.map(({ agent }) => agent)).toEqual(
+      [1, 2, 3, 4, 5].flatMap((agent) => Array(20).fill(agent)),
+    );
+  });
+
+  it('les heures se comparent en instants, quel que soit leur décalage', () => {
+    const agent = (debut: string, texte: string): AgentActions => ({
+      debut,
+      commandes: [{ texte, erreur: false, suite: false }],
+      outils: new Map(),
+    });
+    const { commandes_agents } = buildAgentCommands(
+      [agent('2026-11-27T11:30:00+02:00', 'tard'), agent('2026-11-27T10:00:00Z', 'tot')],
+      new Map(),
+    );
+
+    expect(commandes_agents?.map(({ texte }) => texte)).toEqual(['tard', 'tot']);
+  });
+
+  it.each([
+    ['sans table', undefined],
+    [
+      'des agents qui n’ont rien lancé',
+      new Map([['a1', sousAgent(1, appel('r1', 'Read', {}, SA))]]),
+    ],
+  ])('sans commande d’agent (%s), la clé est absente', (_cas, subagents) => {
+    const faits = extractClaudeCodeFacts(session, RACINE, false, subagents);
+    expect(faits).not.toHaveProperty('commandes_agents');
+    expect(faits).not.toHaveProperty('outils_en_erreur');
+  });
+
+  it('un outil en erreur chez un agent s’additionne à celui de la tête', () => {
+    const contenu = [session, appel('m1', 'mcp__linear__get_issue', {}), enErreur('m1', 'x')].join(
+      '\n',
+    );
+    const agent = sousAgent(
+      1,
+      appel('m2', 'mcp__linear__list_issues', {}, SA),
+      enErreur('m2', 'x', SA),
+      appel('r1', 'Read', {}, SA),
+      enErreur('r1', 'x', SA),
+    );
+    const faits = faitsAvec(new Map([['a1', agent]]), contenu);
+
+    expect(faits.outils_en_erreur).toEqual([
+      { outil: 'mcp:linear', nombre: 2 },
+      { outil: 'Read', nombre: 1 },
+    ]);
+    expect(faits.erreurs).toBe(1);
+    expect(faits).not.toHaveProperty('commandes_agents');
+  });
+
+  it('un même agent, son appel écrit deux fois et ses blocs recopiés, n’est relevé qu’une fois', () => {
+    const copie = JSON.stringify({
+      type: 'api-request-blob',
+      message: {
+        role: 'assistant',
+        content: [{ type: 'tool_use', id: 'c1', name: 'Bash', input: { command: 'pnpm test' } }],
+      },
+    });
+    const agent = sousAgent(1, ...commande('c1', 'pnpm test'), copie);
+    const faits = faitsAvec(new Map([['a1', agent]]), [session, session].join('\n'));
+
+    expect(faits.commandes_agents).toEqual([
+      { agent: 1, texte: 'pnpm test', erreur: false, suite: false },
+    ]);
+  });
+
+  it('extractAgentActions lit un agent de workflow (sans isSidechain à sauter) ; ses relevés passent en paramètre', () => {
+    const agent = [
+      JSON.stringify({ type: 'user', timestamp: heure(9), message: { content: 'Consigne.' } }),
+      ...commande('c1', 'pnpm typecheck'),
+      appel('so', 'StructuredOutput', { verdict: 'ok' }, SA),
+      enErreur('so', 'x', SA),
+    ].join('\n');
+    const releve = extractAgentActions(agent);
+
+    expect(releve.debut).toBe(heure(9));
+    expect(releve.commandes).toEqual([{ texte: 'pnpm typecheck', erreur: false, suite: false }]);
+    const workflow = appel('w1', 'Workflow', { script: 'x' });
+    const faits = extractClaudeCodeFacts(workflow, RACINE, false, undefined, new Set(['w1']), [
+      releve,
+    ]);
+    expect(faits.commandes_agents).toEqual([
+      { agent: 1, texte: 'pnpm typecheck', erreur: false, suite: false },
+    ]);
+    expect(faits.outils_en_erreur).toEqual([{ outil: 'StructuredOutput', nombre: 1 }]);
+    expect(faits.externe).toBe(false);
   });
 });

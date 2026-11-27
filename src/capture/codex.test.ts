@@ -300,10 +300,10 @@ describe('extractCodexFacts', () => {
       commits: ['1a2b3c4'],
       fichiers: ['src/capture/codex.ts', 'src/capture/turn.ts'],
       commandes: [
-        { texte: 'git checkout', erreur: false },
-        { texte: 'pnpm vitest', erreur: true },
-        { texte: 'git add', erreur: false },
-        { texte: 'gh pr', erreur: false },
+        { texte: 'git checkout', erreur: false, suite: false },
+        { texte: 'pnpm vitest', erreur: true, suite: false },
+        { texte: 'git add', erreur: false, suite: true },
+        { texte: 'gh pr', erreur: false, suite: false },
       ],
       taches: [
         { texte: 'Écrire le lecteur', etat: 'en_cours' },
@@ -325,7 +325,7 @@ describe('extractCodexFacts', () => {
     expect(faits).toMatchObject({
       branche: null,
       fichiers: [],
-      commandes: [{ texte: 'ls', erreur: false }],
+      commandes: [{ texte: 'ls', erreur: false, suite: false }],
       externe: true,
       echanges: 1,
     });
@@ -342,7 +342,7 @@ describe('extractCodexFacts', () => {
     const faits = extractCodexFacts(fixture('rollout-history-base'), RACINE);
 
     expect(faits).toMatchObject({
-      commandes: [{ texte: 'leon', erreur: false }],
+      commandes: [{ texte: 'leon', erreur: false, suite: false }],
       externe: true,
       echanges: 1,
       debut: '2026-11-06T11:00:00.000Z',
@@ -457,7 +457,7 @@ describe('extractCodexFacts', () => {
       session(commande('pnpm dev'), commande('pnpm dev', { source: 'unified_exec_interaction' })),
       RACINE,
     );
-    expect(faits.commandes).toEqual([{ texte: 'pnpm dev', erreur: false }]);
+    expect(faits.commandes).toEqual([{ texte: 'pnpm dev', erreur: false, suite: false }]);
   });
 
   it('un fichier hors du dépôt ou un changement en échec ne compte pas ; un déplacement garde les deux chemins', () => {
@@ -506,7 +506,7 @@ describe('extractCodexFacts', () => {
 
   it('masque un secret dans une commande et ne garde que l’exécutable', () => {
     const faits = extractCodexFacts(session(commande('PGPASSWORD=s3cret psql -h db')), RACINE);
-    expect(faits.commandes).toEqual([{ texte: 'psql', erreur: false }]);
+    expect(faits.commandes).toEqual([{ texte: 'psql', erreur: false, suite: false }]);
   });
 
   describe('à l’ancien format (repli sur le texte des appels)', () => {
@@ -561,8 +561,8 @@ describe('extractCodexFacts', () => {
       expect(faits).toMatchObject({
         branche: 'main',
         commandes: [
-          { texte: 'git status', erreur: false },
-          { texte: 'pnpm test', erreur: true },
+          { texte: 'git status', erreur: false, suite: false },
+          { texte: 'pnpm test', erreur: true, suite: false },
         ],
         fichiers: ['src/x.ts'],
         erreurs: 1,
@@ -745,8 +745,8 @@ describe('Codex 0.159.0 (annexe 09)', () => {
     it('la fixture : le sous-agent du web la rend externe ; deux sous-agents qui lisent le dépôt, non', () => {
       expect(extractCodexFacts(SESSION, ESSAI, null, false, FIXTURE)).toMatchObject({
         commandes: [
-          { texte: 'ls', erreur: true },
-          { texte: 'pnpm test', erreur: false },
+          { texte: 'ls', erreur: true, suite: false },
+          { texte: 'pnpm test', erreur: false, suite: false },
         ],
         erreurs: 1,
         externe: true,

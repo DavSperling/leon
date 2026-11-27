@@ -169,9 +169,9 @@ describe('extractAntigravityFacts', () => {
       commits: ['5e6f7a8'],
       fichiers: ['src/capture/antigravity.ts'],
       commandes: [
-        { texte: 'git checkout', erreur: false },
-        { texte: 'pnpm vitest', erreur: true },
-        { texte: 'git commit', erreur: false },
+        { texte: 'git checkout', erreur: false, suite: false },
+        { texte: 'pnpm vitest', erreur: true, suite: false },
+        { texte: 'git commit', erreur: false, suite: false },
       ],
       taches: [],
       erreurs: 1,
@@ -246,8 +246,8 @@ describe('extractAntigravityFacts', () => {
       RACINE,
     );
     expect(faits.commandes).toEqual([
-      { texte: 'pnpm test', erreur: true },
-      { texte: 'git status', erreur: false },
+      { texte: 'pnpm test', erreur: true, suite: false },
+      { texte: 'git status', erreur: false, suite: false },
     ]);
     expect(faits.erreurs).toBe(1);
   });
@@ -354,9 +354,9 @@ describe('Antigravity 2.31.0 (annexe 11)', () => {
       commits: ['9a8b7c6'],
       fichiers: [],
       commandes: [
-        { texte: 'ls', erreur: false }, // échoue, mais l'appli ne l'écrit plus : DONE
-        { texte: 'git commit', erreur: false },
-        { texte: 'rm', erreur: true }, // refusée : ERROR
+        { texte: 'ls', erreur: false, suite: false }, // échoue, mais l'appli ne l'écrit plus : DONE
+        { texte: 'git commit', erreur: false, suite: false },
+        { texte: 'rm', erreur: true, suite: false }, // refusée : ERROR
       ],
       taches: [],
       erreurs: 1,
@@ -387,10 +387,10 @@ describe('Antigravity 2.31.0 (annexe 11)', () => {
     );
 
     expect(faits.commandes).toEqual([
-      { texte: 'pnpm test', erreur: true },
-      { texte: 'pnpm lint', erreur: true },
-      { texte: 'gh pr', erreur: false },
-      { texte: 'git status', erreur: false }, // sans étape de résultat
+      { texte: 'pnpm test', erreur: true, suite: false },
+      { texte: 'pnpm lint', erreur: true, suite: false },
+      { texte: 'gh pr', erreur: false, suite: false },
+      { texte: 'git status', erreur: false, suite: false }, // sans étape de résultat
     ]);
     expect(faits.erreurs).toBe(2);
     expect(faits.prs).toEqual([{ repo: 'demo/essai', numero: 12, par: 'gh-pr-create' }]);
@@ -408,8 +408,8 @@ describe('Antigravity 2.31.0 (annexe 11)', () => {
     );
 
     expect(faits.commandes).toEqual([
-      { texte: 'pnpm test', erreur: false },
-      { texte: 'pnpm lint', erreur: true },
+      { texte: 'pnpm test', erreur: false, suite: false },
+      { texte: 'pnpm lint', erreur: true, suite: false },
     ]);
   });
 
@@ -455,8 +455,8 @@ describe('Antigravity 2.31.0 (annexe 11)', () => {
     const blocs = extractAntigravityBackstage(contenu, FICHIER, ESSAI, sousAgents({}));
 
     expect(faits.commandes).toEqual([
-      { texte: 'pnpm test', erreur: false },
-      { texte: 'pnpm lint', erreur: true },
+      { texte: 'pnpm test', erreur: false, suite: false },
+      { texte: 'pnpm lint', erreur: true, suite: false },
     ]);
     expect(faits.erreurs).toBe(1);
     expect(blocs.map((bloc) => bloc.role === 'appel_outil' && [bloc.id, bloc.statut])).toEqual([
@@ -1243,7 +1243,7 @@ describe('les valeurs des args entre guillemets (transcript.jsonl)', () => {
     const faits = extractAntigravityFacts(SESSION_CITEE, COURT, ESSAI, null, SA);
 
     expect(faits.fichiers).toEqual(['src/a.ts']);
-    expect(faits.commandes).toEqual([{ texte: 'pnpm test', erreur: false }]);
+    expect(faits.commandes).toEqual([{ texte: 'pnpm test', erreur: false, suite: false }]);
     expect(faits.externe).toBe(false);
   });
 
@@ -1330,7 +1330,7 @@ describe('les valeurs des args entre guillemets (transcript.jsonl)', () => {
     const MESSAGE = '"Trouvé : print(\\"a\\nb\\")"';
 
     expect(extractAntigravityFacts(contenu, FICHIER, ESSAI).commandes).toEqual([
-      { texte: '[commande]', erreur: false },
+      { texte: '[commande]', erreur: false, suite: false },
     ]);
     expect(
       extractAntigravityBackstage(contenu, FICHIER, ESSAI, sousAgents({})).find(

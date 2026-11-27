@@ -147,14 +147,17 @@ describe('POST /api/linear/webhooks', () => {
     expect(enqueueDueSyncs).not.toHaveBeenCalled();
   });
 
-  it('une alerte de plus d’une minute (un rejeu), ou datée de l’avenir : 401', async () => {
+  // Un nouvel essai de Linear (1 min, 1 h, 6 h) peut garder l'horodatage du premier envoi : des refus répétés
+  // pourraient faire désactiver le webhook. La relève du quart d'heure rattrape l'alerte.
+  it('une alerte de plus d’une minute (un rejeu, un nouvel essai), ou datée de l’avenir : 200, sans rien faire', async () => {
     const id = await linearConnection(paul);
 
     const late = await send(alert({ webhookTimestamp: Date.now() - 61_000 }));
     const early = await send(alert({ webhookTimestamp: Date.now() + 61_000 }));
 
-    expect([late.status, early.status]).toEqual([401, 401]);
+    expect([late.status, early.status]).toEqual([200, 200]);
     expect(await dueOf(id)).toBe(false);
+    expect(enqueueDueSyncs).not.toHaveBeenCalled();
   });
 
   it('une organisation inconnue ou absente : 200, sans rien faire', async () => {

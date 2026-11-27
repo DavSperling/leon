@@ -17,15 +17,15 @@ import { logError } from '@/server/log';
 //     crée un pour chaque organisation qui l'autorise ; Linear-Signature = HMAC-SHA256 en hexadécimal du corps brut,
 //     fait avec le secret de signature, à vérifier sur ce corps et non sur un JSON réécrit ; puis Linear-Delivery,
 //     Linear-Event et Linear-Timestamp ; la charge porte action, type, data, url et webhookTimestamp (en
-//     millisecondes, à refuser au-delà d'une minute contre le rejeu), et organizationId dans l'exemple (absent du
-//     tableau des champs) ; Linear attend un 200 en moins de 5 secondes, sinon il réessaie trois fois (après 1 min,
-//     1 h et 6 h) et peut désactiver une adresse qui ne répond plus.
+//     millisecondes ; la doc conseille d'écarter une alerte de plus d'une minute, contre le rejeu), et organizationId
+//     dans l'exemple (absent du tableau des champs) ; Linear attend un 200 en moins de 5 secondes, sinon il réessaie
+//     trois fois (après 1 min, 1 h et 6 h) et peut désactiver une adresse qui ne répond plus.
 //   https://linear.app/developers/oauth-2-0-authentication : le secret de signature des webhooks a son propre « Rotate
 //     secret », effectif tout de suite.
 //
 // Non vérifié (aucun essai réel) : que chaque alerte porte organizationId (sans lui, rien n'est réveillé et la relève
-// du quart d'heure reste le filet) ; que webhookTimestamp soit refait à chaque nouvel essai (sinon les nouveaux essais
-// sont refusés) ; qu'un membre sans droit d'administrateur qui autorise l'appli crée bien le webhook de son
+// du quart d'heure reste le filet) ; que webhookTimestamp soit refait à chaque nouvel essai (sinon ces essais sont
+// ignorés, et la relève du quart d'heure les rattrape) ; qu'un membre sans droit d'administrateur qui autorise l'appli crée bien le webhook de son
 // organisation ; la taille maximale d'une alerte.
 
 // Une alerte porte l'élément entier, et ses valeurs d'avant pour une modification (data, updatedFrom).
@@ -76,9 +76,11 @@ export const linearRoutes = new Hono().post(
     const parsed = AlertSchema.safeParse(readJson(body));
     if (!parsed.success) return c.json({ error: 'Invalid request' }, 400);
     const { webhookTimestamp, organizationId } = parsed.data;
-    if (Math.abs(Date.now() - webhookTimestamp) > MAX_AGE_MS)
-      return c.json({ error: 'Expired' }, 401);
-    if (!organizationId) return c.body(null, 200);
+    // Plus d'une minute (un rejeu, ou un nouvel essai qui garde l'horodatage du premier envoi), ou sans organisation :
+    // 200 sans rien faire, car des refus répétés peuvent faire désactiver le webhook. La relève du quart d'heure
+    // rattrape l'alerte perdue.
+    if (Math.abs(Date.now() - webhookTimestamp) > MAX_AGE_MS || !organizationId)
+      return c.body(null, 200);
     const { rows } = await db.execute<{ connection_id: string }>(
       sql`select connection_id from notifications_linear(${organizationId})`,
     );

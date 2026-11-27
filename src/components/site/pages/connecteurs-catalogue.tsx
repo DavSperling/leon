@@ -37,6 +37,8 @@ const OAUTH = new Set<ProviderId>([
   'outlook',
   'productboard',
   'slack',
+  'teams',
+  'teamschats',
 ]);
 
 const FAMILY_OF = new Map<ProviderId, ProviderFamily>(

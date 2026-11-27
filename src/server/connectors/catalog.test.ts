@@ -40,8 +40,8 @@ function catalogProblems(entry: Omit<CatalogEntry, 'en'>, connector: AnyConnecto
 describe('listCatalog', () => {
   const items = listCatalog();
 
-  it('rend les 43 outils, une fois chacun', () => {
-    expect(items).toHaveLength(43);
+  it('rend les 45 outils, une fois chacun', () => {
+    expect(items).toHaveLength(45);
     expect(items.map((item) => item.id).sort()).toEqual([...PROVIDER_IDS].sort());
   });
 
@@ -97,7 +97,7 @@ describe('listCatalog', () => {
       'Plain',
       'Zendesk',
     ]);
-    expect(labelsOf('mails')).toEqual(['Gmail', 'Outlook', 'Slack']);
+    expect(labelsOf('mails')).toEqual(['Gmail', 'Outlook', 'Slack', 'Teams', 'Teams Chat']);
   });
 
   it('sert les textes dans la langue de l’interface, sans jamais envoyer le bloc en', () => {

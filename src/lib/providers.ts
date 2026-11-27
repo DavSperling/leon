@@ -1,6 +1,6 @@
 import { PROVIDER_IDS, type ProviderId, type SourceKind } from '@/capture/turn';
 
-// Libellés et familles des 43 outils branchables. Données pures : lues par l'interface et les libellés.
+// Libellés et familles des 45 outils branchables. Données pures : lues par l'interface et les libellés.
 
 export const PROVIDER_FAMILIES_ORDER = [
   'dev',
@@ -75,6 +75,8 @@ export const PROVIDER_LABELS: Record<ProviderId, string> = {
   drive: 'Google Drive',
   slack: 'Slack',
   onedrive: 'OneDrive / SharePoint',
+  teams: 'Teams',
+  teamschats: 'Teams Chat',
 };
 
 export const PROVIDER_FAMILIES: Record<ProviderId, ProviderFamily> = {
@@ -121,6 +123,8 @@ export const PROVIDER_FAMILIES: Record<ProviderId, ProviderFamily> = {
   drive: 'projet',
   slack: 'mails',
   onedrive: 'projet',
+  teams: 'mails',
+  teamschats: 'mails',
 };
 
 // Ce qu'un manager peut suivre chez les gens sous lui (écran « Mon équipe ») : chaque famille d'outils, et les documents

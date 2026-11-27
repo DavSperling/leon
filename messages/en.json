@@ -250,7 +250,7 @@
     "groupMembers": "Members",
     "following": "What you follow",
     "seeAll": "Also see their private items",
-    "seeAllHelp": "When this is on, you also read what {name} doesn’t share: emails, Slack and private documents, here and in search; AI conversations, coding sessions and notes, in search only. Their Leon discussions stay private.",
+    "seeAllHelp": "When this is on, you also read what {name} doesn’t share: emails, Slack, Teams chats and private documents, here and in search; AI conversations, coding sessions and notes, in search only. Their Leon discussions stay private.",
     "documents": "Documents",
     "followFailed": "Your choice was not saved. Try again.",
     "activity": "Recent activity",
@@ -1531,7 +1531,7 @@
       "noSource": "no source",
       "rule3Title": "Leon sees what you see. Nothing more.",
       "rule3Mark": "Nothing more.",
-      "rule3Lead": "Every answer is built only from what the person asking can open. Your email, Slack, Drive and AI conversations can be read by you and, on the Leon website, by the managers above you.",
+      "rule3Lead": "Every answer is built only from what the person asking can open. Your email, Slack, Teams chats, Drive and AI conversations can be read by you and, on the Leon website, by the managers above you.",
       "rightsGroup": "Who is asking",
       "askedBy": "Asked by {name}",
       "connTitle": "{count} connectors. Nothing to migrate.",
@@ -1591,7 +1591,7 @@
         },
         "microsoft": {
           "title": "Microsoft 365",
-          "text": "Teams. Outlook mail and calendar, OneDrive and SharePoint are already supported."
+          "text": "Outlook mail and calendar, OneDrive, SharePoint, and Teams with its meeting transcripts, are already supported."
         },
         "files": {
           "title": "Images and scanned PDFs",
@@ -1682,7 +1682,7 @@
         },
         "microsoft": {
           "title": "Microsoft 365",
-          "text": "Teams."
+          "text": "Outlook, OneDrive, SharePoint and Teams are already supported."
         },
         "files": {
           "title": "Images and scanned PDFs",
@@ -1740,14 +1740,14 @@
       "notYetLead": "We would rather you read it here than discover it later.",
       "ctaTitle": "Start with one tool and check the permissions yourself.",
       "ctaText": "Create a workspace, connect a tool, and see exactly what is shared with the team and what isn’t.",
-      "whoLead": "Every item is one or the other. Email, Google Drive, OneDrive and Slack can be read by whoever connects them and, on the Leon website, by the managers above them.",
+      "whoLead": "Every item is one or the other. Email, Google Drive, OneDrive, Slack and Teams chats can be read by whoever connects them and, on the Leon website, by the managers above them.",
       "teamRows": {
         "docs": "Tickets and docs",
         "meetings": "Meeting transcripts and CRM notes",
         "support": "Support conversations and shared inboxes"
       },
       "youRows": {
-        "mail": "Your email, Google Drive, OneDrive and Slack",
+        "mail": "Your email, Google Drive, OneDrive, Slack and Teams chats",
         "ai": "Your AI conversations and coding sessions",
         "chats": "Your chats with Leon and the notes you save"
       },

@@ -70,6 +70,8 @@ export const PROVIDER_IDS = [
   'drive',
   'slack',
   'onedrive',
+  'teams',
+  'teamschats',
 ] as const;
 export type ProviderId = (typeof PROVIDER_IDS)[number];
 // Les types d'outils, ceux que le filtre `outil` de la recherche connaît.

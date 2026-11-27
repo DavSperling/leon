@@ -39,12 +39,13 @@ import { productboardConnector } from './productboard/connector';
 import { sentryConnector } from './sentry/connector';
 import { shortcutConnector } from './shortcut/connector';
 import { slackConnector } from './slack/connector';
+import { teamsChatsConnector, teamsConnector } from './teams/connector';
 import { tldvConnector } from './tldv/connector';
 import { trelloConnector } from './trello/connector';
 import type { AnyConnector } from './types';
 import { zendeskConnector } from './zendesk/connector';
 
-// Les 43 connecteurs, un par outil. Un bouchon (null) apparaît « bientôt » dans l'interface.
+// Les 45 connecteurs, un par outil. Un bouchon (null) apparaît « bientôt » dans l'interface.
 export const CONNECTORS: Record<ProviderId, AnyConnector | null> = {
   github: githubConnector,
   notion: notionConnector,
@@ -89,6 +90,8 @@ export const CONNECTORS: Record<ProviderId, AnyConnector | null> = {
   drive: driveConnector,
   slack: slackConnector,
   onedrive: onedriveConnector,
+  teams: teamsConnector,
+  teamschats: teamsChatsConnector,
 };
 
 export function getConnector(id: ProviderId): AnyConnector | null {

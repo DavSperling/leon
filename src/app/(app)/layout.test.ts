@@ -1,8 +1,10 @@
 import { redirect } from 'next/navigation';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { type OnboardingMember, readOnboardingMember } from '@/server/auth/onboarding';
-import { requireUserContext } from '@/server/auth/session';
+import { getSession, requireUserContext } from '@/server/auth/session';
 import { getViewerProfile } from '@/server/auth/viewer';
+import { saveLocale } from '@/server/briefing/about';
+import { logError } from '@/server/log';
 import { channelHealth } from '@/server/memory/sources';
 import { readSidebar } from '@/server/shell/shell';
 import AppLayout from './layout';
@@ -10,6 +12,16 @@ import AppLayout from './layout';
 vi.mock('@/server/auth/session', () => ({
   ONBOARDING_PATH: '/welcome',
   requireUserContext: vi.fn(),
+  getSession: vi.fn(),
+}));
+vi.mock('@/server/briefing/about', () => ({ saveLocale: vi.fn(async () => {}) }));
+vi.mock('@/server/log', () => ({ logError: vi.fn() }));
+// Le cookie de langue de ce navigateur : absent, sauf dit autrement.
+const jar = vi.hoisted(() => new Map<string, string>());
+vi.mock('next/headers', () => ({
+  cookies: async () => ({
+    get: (name: string) => (jar.has(name) ? { name, value: jar.get(name) } : undefined),
+  }),
 }));
 vi.mock('@/server/auth/onboarding', () => ({ readOnboardingMember: vi.fn() }));
 vi.mock('@/server/auth/viewer', () => ({ getViewerProfile: vi.fn() }));
@@ -34,7 +46,9 @@ const member = (onboardedAt: Date | null) => ({ onboardedAt }) as OnboardingMemb
 
 beforeEach(() => {
   vi.clearAllMocks();
+  jar.clear();
   vi.mocked(requireUserContext).mockResolvedValue(CTX);
+  vi.mocked(getSession).mockResolvedValue({ user: { locale: null } } as never);
   vi.mocked(getViewerProfile).mockResolvedValue({
     organizationName: 'Acme',
     userName: 'Ana',
@@ -99,5 +113,50 @@ describe('layout de l’application', () => {
     await AppLayout({ children: null });
 
     expect(redirect).not.toHaveBeenCalled();
+  });
+});
+
+// Une langue choisie avant qu'elle ne se garde avec le compte (0094) ne vit que dans le cookie de ce navigateur.
+describe('la langue déjà choisie dans ce navigateur', () => {
+  beforeEach(() => {
+    vi.mocked(readOnboardingMember).mockResolvedValue(member(new Date()));
+  });
+
+  it('son compte la reprend quand il n’en a aucune', async () => {
+    jar.set('leon-locale', 'fr');
+
+    await AppLayout({ children: null });
+
+    expect(saveLocale).toHaveBeenCalledWith(CTX, 'fr');
+  });
+
+  it('rien ne s’écrit sans cookie, avec un cookie inconnu, ni quand le compte a déjà sa langue', async () => {
+    await AppLayout({ children: null });
+    jar.set('leon-locale', 'de');
+    await AppLayout({ children: null });
+    jar.set('leon-locale', 'fr');
+    vi.mocked(getSession).mockResolvedValue({ user: { locale: 'en' } } as never);
+    await AppLayout({ children: null });
+
+    expect(saveLocale).not.toHaveBeenCalled();
+  });
+
+  it('une base en panne n’empêche pas d’afficher l’appli : la panne est notée', async () => {
+    jar.set('leon-locale', 'fr');
+    vi.mocked(saveLocale).mockRejectedValueOnce(new Error('base injoignable'));
+
+    await AppLayout({ children: null });
+
+    expect(logError).toHaveBeenCalledWith('langue.reprise', expect.any(Error), { userId: 'u1' });
+    expect(getViewerProfile).toHaveBeenCalledWith(CTX);
+  });
+
+  it('rien ne s’écrit avant la redirection vers l’onboarding', async () => {
+    jar.set('leon-locale', 'fr');
+    vi.mocked(readOnboardingMember).mockResolvedValue(member(null));
+
+    await expect(AppLayout({ children: null })).rejects.toThrow('NEXT_REDIRECT /welcome');
+
+    expect(saveLocale).not.toHaveBeenCalled();
   });
 });

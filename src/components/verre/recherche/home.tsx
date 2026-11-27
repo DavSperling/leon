@@ -31,14 +31,14 @@ import {
 import { HOME_TITLE_ID } from '@/components/verre/discussions/about-suggestion-card';
 import { type PanelSource, useSourcePanel } from '@/components/verre/discussions/preview';
 import { Logo } from '@/components/verre/shell/brand';
-import { type BriefingLine, type BriefingSection, briefingFact } from '@/lib/briefing-view';
+import type { BriefingLine, BriefingSection } from '@/lib/briefing-view';
 import { type DayPart, dayPart } from '@/lib/day-part';
 import { DISCUSSION_MESSAGE_MAX_CHARS, type SourceVisibility } from '@/lib/discussion-events';
 import { QUERY_MAX_CHARS } from '@/lib/search-limits';
 import { cn, nb, useMinWidth } from '@/lib/verre';
 
-// L'Accueil : le bonjour et le fait du jour, le champ où l'on demande, puis le point du matin quand la personne en a
-// un (page.tsx pose à côté les questions à essayer et les discussions récentes).
+// L'Accueil : le bonjour, le champ où l'on demande, puis le point du matin quand la personne en a un (page.tsx pose à
+// côté les questions à essayer et les discussions récentes).
 
 const noSubscription = () => () => {};
 
@@ -61,14 +61,11 @@ function Line({
   line,
   sources,
   open,
-  fact,
   className,
 }: {
   line: BriefingLine;
   sources: Map<number, BriefingSourceView>;
   open: (source: PanelSource) => void;
-  /** Le fait du jour et sa ligne dans le point : pointer l'un trace le trait sous l'autre (group/home, page.tsx). */
-  fact?: boolean;
   className?: string;
 }) {
   const tv = useTranslations('discussionView');
@@ -85,11 +82,9 @@ function Line({
   // le dernier mot reste avec ses numéros : un numéro ne passe jamais seul à la ligne
   const cut = line.text.lastIndexOf(' ') + 1;
   // une ligne qui n'ouvre rien reste de l'encre : pas de trait à tracer
-  const stroke = (edge: string) =>
-    first && cn('hl', edge, fact && 'group-has-[[data-fact]:hover]/home:[--sweep:1]');
+  const stroke = (edge: string) => first && cn('hl', edge);
   return (
     <div
-      data-fact={fact || undefined}
       className={cn(
         'relative -mx-3 rounded-item px-3 py-1.5 text-lead leading-[1.55] max-shell:py-2.5',
         first && `hl-pass hl-${toneOf(first.n)}`,
@@ -139,23 +134,16 @@ function Line({
 const byNumber = (sources: BriefingSourceView[]) =>
   new Map(sources.map((source) => [source.n, source]));
 
-/**
- * « Bonjour, Claire. » à l'heure de la personne : le serveur ne la connaît pas, le navigateur corrige au montage.
- * Dessous, le fait du jour quand le point en a un (briefingFact) : sa phrase, discrète, et son numéro.
- */
+/** « Bonjour, Claire. » à l'heure de la personne : le serveur ne la connaît pas, le navigateur corrige au montage. */
 export function Greeting({
   name,
   serverPart,
-  fact,
-  sources = [],
   centered = false,
   brand = false,
   titleId = HOME_TITLE_ID,
 }: {
   name: string | null;
   serverPart: DayPart;
-  fact?: BriefingLine | null;
-  sources?: BriefingSourceView[];
   centered?: boolean;
   brand?: boolean;
   titleId?: string;
@@ -166,7 +154,6 @@ export function Greeting({
     () => dayPart(new Date().getHours()),
     () => serverPart,
   );
-  const panel = useSourcePanel();
   return (
     <header className={centered ? 'text-center' : undefined}>
       <h1
@@ -180,19 +167,6 @@ export function Greeting({
         {brand && <Logo className="size-8 max-sm:size-6" />}
         {name ? t(`greeting.${part}`, { name }) : t(`greetingAnon.${part}`)}
       </h1>
-      {fact && (
-        <>
-          <Line
-            line={fact}
-            sources={byNumber(sources)}
-            open={panel.open}
-            fact
-            // des mots discrets sur un trait de surligneur passeraient sous 4,5:1 : pointés, ils prennent l'encre
-            className="mt-1 inline-block max-w-[calc(100%+24px)] align-top text-muted transition-colors duration-150 group-has-[[data-fact]:hover]/home:text-fg has-[:focus-visible]:text-fg"
-          />
-          {panel.panel}
-        </>
-      )}
     </header>
   );
 }
@@ -327,7 +301,6 @@ export function BriefingSheet({
   const router = useRouter();
   const panel = useSourcePanel();
   const byN = byNumber(sources);
-  const fact = briefingFact(sections);
   // les lignes retirées sur cette page, par leur texte : « undo » le temps d'annuler, puis « gone »
   const [removed, setRemoved] = useState<ReadonlyMap<string, 'undo' | 'gone'>>(new Map());
   const timers = useRef(new Map<string, ReturnType<typeof setTimeout>>());
@@ -354,7 +327,7 @@ export function BriefingSheet({
     if (document.activeElement?.closest('[data-undo]'))
       document.getElementById(HOME_TITLE_ID)?.focus();
     mark(text, 'gone');
-    // le fait du jour sous le bonjour, ou le point entier vidé, suivent : le serveur relit le point sans cette ligne
+    // le point entier vidé suit : le serveur relit le point sans cette ligne
     router.refresh();
   };
   const dismiss = async (text: string) => {
@@ -496,13 +469,7 @@ export function BriefingSheet({
                         key={`${index}-${line.text}`}
                         className="group/line relative"
                       >
-                        <Line
-                          line={line}
-                          sources={byN}
-                          open={panel.open}
-                          fact={line === fact}
-                          className="pr-11"
-                        />
+                        <Line line={line} sources={byN} open={panel.open} className="pr-11" />
                         <IconButton
                           icon={X}
                           label={t('briefing.dismiss')}

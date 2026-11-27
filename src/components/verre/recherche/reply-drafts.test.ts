@@ -817,7 +817,7 @@ describe('ReplyDrafts : ses mails que Leon a jugés sans réponse à donner', ()
     );
   });
 
-  it('leur panneau : son titre, la place du mail montré, un seul mail à la fois, « Mail suivant »', () => {
+  it('leur panneau : son titre, la place du mail montré, un seul mail à la fois, « Mail suivant » et « Terminé »', () => {
     const html = openQuiet([MERCI, TODA]);
 
     expect(html).toContain('<h2>Sans réponse attendue</h2>');
@@ -827,10 +827,16 @@ describe('ReplyDrafts : ses mails que Leon a jugés sans réponse à donner', ()
     expect(count(html, '<div hidden="">')).toBe(1);
     expect(html.indexOf('<div hidden="">')).toBeLessThan(html.indexOf('אבי מזרחי'));
     expect(count(html, 'data-autofocus')).toBe(1);
-    expect(buttons(html.split('<footer>')[1] ?? '')).toEqual(['Mail suivant']);
+    // « Terminé » fait partir le mail montré, qu'il rappelle : sans ce geste, les mails vus s'empileraient.
+    const foot = html.split('<footer>')[1] ?? '';
+    expect(buttons(foot)).toEqual(['Mail suivant', 'Terminé']);
+    expect(foot).toMatch(
+      new RegExp(`<button [^>]*aria-describedby="sans-reponse-${MERCI.id}"[^>]*>Terminé</button>`),
+    );
     // Le panneau de la pile, lui, ne les reçoit pas.
     expect(openQuiet([MERCI], 'en')).toContain('<h2>No reply needed</h2>');
     expect(buttons(openQuiet([MERCI]).split('<footer>')[1] ?? '')).toEqual(['Terminé']);
+    expect(buttons(openQuiet([MERCI], 'en').split('<footer>')[1] ?? '')).toEqual(['Done']);
   });
 });
 

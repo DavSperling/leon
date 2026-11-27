@@ -9,8 +9,9 @@ import { MESSAGE } from './sent-mails';
 import { WAITING_DAYS } from './waiting-mails';
 
 // Les mails qu'elle a reçus et que Leon a jugés sans réponse à donner (brouillons.ts), pour l'entrée « n'attendent pas
-// votre réponse » de l'accueil : elle les voit, et pour chacun peut demander quand même une réponse (prepareReply) ou
-// le supprimer (brouillon-depot.ts, trashMail). Rien ne se lit que la ligne : ni texte, ni question, ni indications,
+// votre réponse » de l'accueil : elle les voit, et pour chacun peut demander quand même une réponse (prepareReply), le
+// supprimer (brouillon-depot.ts, trashMail), ou dire qu'elle l'a vu (« Terminé » : sa ligne s'écarte, discardBrouillon,
+// et il sort de la liste). Rien ne se lit que la ligne : ni texte, ni question, ni indications,
 // de sorte « reponse » (le non à une relance a les mêmes champs vides), pas écartée. Peu importe ce qui a posé ce
 // verdict. Aucun appel au modèle pour la liste. Tout se lit et s'écrit sous withTenant de la personne.
 

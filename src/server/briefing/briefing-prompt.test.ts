@@ -587,4 +587,38 @@ describe('buildBriefingPrompt : la langue', () => {
       ),
     ).toBe(true);
   });
+
+  it('la langue choisie pour son compte l’emporte sur celle de ses sessions et de ce qu’il reçoit', () => {
+    const base = material();
+    const hebrew = material({
+      sessions: base.sessions.map((session) => ({
+        ...session,
+        turns: session.turns.map((turn) =>
+          turn.role === 'user'
+            ? { ...turn, text: 'תבדוק בבקשה את הלוגים ותגיד לי מה נכשל בעבודה' }
+            : turn,
+        ),
+      })),
+    });
+    // sans langue choisie : celle de ses sessions, comme avant
+    expect(
+      userContent(buildBriefingPrompt(hebrew, NOW)).startsWith(
+        "Écris ta réponse en hébreu : c'est la langue de ses sessions.\n",
+      ),
+    ).toBe(true);
+
+    const french = buildBriefingPrompt(hebrew, NOW, null, null, [], 'fr');
+    expect(
+      userContent(french).startsWith(
+        "Écris ta réponse en français : c'est la langue de son compte.\n",
+      ),
+    ).toBe(true);
+    expect(
+      userContent(buildBriefingPrompt(hebrew, NOW, null, null, [], 'en')).startsWith(
+        "Écris ta réponse en anglais : c'est la langue de son compte.\n",
+      ),
+    ).toBe(true);
+    // et le système dit de tout dire dans cette langue, même ce qui est écrit dans une autre
+    expect(french.system).toMatch(/même quand ses sessions et les éléments sont dans une autre/);
+  });
 });

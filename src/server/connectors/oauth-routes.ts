@@ -10,6 +10,7 @@ import {
   fieldsFromForm,
   isOAuthReturnPath,
   type OAuthReturnPath,
+  readAdminConsentState,
   SINCE_VALUES,
 } from '@/lib/connection-form';
 import { PROVIDER_LABELS } from '@/lib/providers';
@@ -505,17 +506,17 @@ async function returnHandler(c: Context, deps: OAuthRoutesDeps): Promise<Respons
   const cookie = getCookie(c, OAUTH_COOKIE);
   deleteCookie(c, OAUTH_COOKIE, { path: OAUTH_COOKIE_PATH });
   const pending = cookie ? openPending(cookie, (deps.now ?? Date.now)()) : null;
-  const provider = pending?.provider ?? asProviderId(app);
+  // Le retour du lien d'accord de l'administrateur n'a pas de cookie : sa page de départ et son outil sont dans
+  // `state` (une appli Microsoft sert plusieurs outils).
+  const consent =
+    c.req.query('admin_consent') === undefined ? null : readAdminConsentState(c.req.query('state'));
+  const provider = pending?.provider ?? consent?.tool ?? asProviderId(app);
   const outcome = await finishReturn(c, deps, app, pending, provider);
   if (typeof outcome === 'object' && outcome.next) return c.redirect(outcome.next, 302);
   const tool: Record<string, string> = provider ? { outil: provider } : {};
   const params: Record<string, string> =
     typeof outcome === 'object' ? { branche: provider ?? '' } : { erreur: outcome, ...tool };
-  // Le retour du lien d'accord de l'administrateur n'a pas de cookie : sa page de départ est dans `state`.
-  const landing =
-    c.req.query('admin_consent') === undefined
-      ? pending?.returnTo
-      : returnPage({ retour: c.req.query('state') ?? '' });
+  const landing = consent ? consent.returnTo : pending?.returnTo;
   return c.redirect(pageUrl(landing ?? '/connections', params), 302);
 }
 

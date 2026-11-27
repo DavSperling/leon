@@ -18,7 +18,7 @@ export const OAUTH_APP_KEYS = [
   'BASECAMP',
   'MIRO',
   'PRODUCTBOARD',
-  'OUTLOOK',
+  'MICROSOFT',
   'GOOGLE',
 ] as const;
 export type OAuthAppKey = (typeof OAUTH_APP_KEYS)[number];
@@ -44,7 +44,7 @@ const PAIRS: Record<OAuthAppKey, () => Pair> = {
     process.env.LEON_OAUTH_PRODUCTBOARD_ID,
     process.env.LEON_OAUTH_PRODUCTBOARD_SECRET,
   ],
-  OUTLOOK: () => [process.env.LEON_OAUTH_OUTLOOK_ID, process.env.LEON_OAUTH_OUTLOOK_SECRET],
+  MICROSOFT: () => [process.env.LEON_OAUTH_MICROSOFT_ID, process.env.LEON_OAUTH_MICROSOFT_SECRET],
   GOOGLE: () => [process.env.LEON_OAUTH_GOOGLE_ID, process.env.LEON_OAUTH_GOOGLE_SECRET],
 };
 

@@ -1,81 +1,18 @@
-import type { OAuthSpec } from '../types';
+import { microsoftOAuth } from '../microsoft';
 
-// Le bouton « Se connecter avec Outlook » : Microsoft Graph, comptes professionnels ou scolaires
-// seulement (locataire « organizations »). Doc lue le 15/10/2026 :
-//   https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow
-//     adresse d'autorisation https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize,
-//     adresse de jeton .../organizations/oauth2/v2.0/token ; formulaire, client_id et client_secret
-//     avec les paramètres (le Basic est accepté aussi) ; PKCE « recommandé pour tous les types
-//     d'appli » (S256 ou plain) ; response_mode=query par défaut pour un code ; jeton d'accès d'environ
-//     1 h (expires_in 3599 à 3736) ; jeton de rafraîchissement sans durée fixe, remplacé à chaque
-//     renouvellement (« jetez l'ancien ») et rendu seulement avec offline_access.
-//   https://learn.microsoft.com/en-us/graph/auth-v2-user (droits Graph : noms courts, Mail.Read ;
-//     scope « obligatoire » à l'échange et facultatif au renouvellement).
-//   https://learn.microsoft.com/en-us/entra/identity-platform/v2-admin-consent (adresse
-//     https://login.microsoftonline.com/{locataire}/v2.0/adminconsent, « organizations » admis,
-//     « common » à éviter ; retour : admin_consent=True&tenant=…, ou error=…&admin_consent=True).
-//   https://learn.microsoft.com/en-us/entra/identity-platform/reference-error-codes
-//     (AADSTS90094 : accord de l'administrateur requis ; AADSTS90095 : même chose avec le circuit
-//     de demande d'accord ; AADSTS65001 : ni l'utilisateur ni l'administrateur n'ont donné leur
-//     accord ; AADSTS65004 : l'utilisateur a refusé, ce n'est pas un défaut d'accord).
+// Le bouton « Se connecter avec Outlook » : l'appli Microsoft de Leon (microsoft.ts), comptes professionnels et
+// personnels (outlook.com, hotmail.fr : choix de David du 27/11/2026). Tout le courrier et l'agenda sont demandés
+// d'avance ; aujourd'hui Leon ne lit que la boîte de réception, les éléments envoyés et l'agenda.
 //
-//   https://learn.microsoft.com/en-us/graph/permissions-reference, relu le 23/10/2026 : écriture
-//     demandée d'avance, Mail.ReadWrite (« Does not include permission to send mail », jamais
-//     Mail.Send) et Calendars.ReadWrite, qui remplacent Mail.Read et Calendars.Read (ils les
-//     contiennent) ; ni l'un ni l'autre n'exige en lui-même l'accord de l'administrateur. Les deux
-//     permettent aussi de supprimer : à Leon de s'en garder.
-//
-// Écarts au plan, d'après la doc :
-//   - `scope` est envoyé aussi à l'échange du code (le plan ne le prévoyait qu'au renouvellement) : la
-//     doc de Graph le dit obligatoire, celle d'Entra facultatif ; le même texte aux deux endroits ne
-//     coûte rien, et au renouvellement il garantit un nouveau jeton de rafraîchissement.
-//   - `response_mode=query` est écrit en toutes lettres : la doc le recommande (c'est le défaut).
-//   - Jamais `prompt=consent` : un retour de la communauté Microsoft dit qu'il bloque les utilisateurs
-//     ordinaires même après l'accord de l'administrateur (non confirmé par la doc officielle).
-//   - `toConfig` ne lit pas /v1.0/me : `verify` le fait pour le nom du compte, et rien d'autre n'est
-//     à retenir (`setupHosts` vide).
-//
-// Non vérifié, sans appel réel : que Microsoft rende toujours `refresh_token` au renouvellement ;
-// l'écran exact que voit un utilisateur dont l'entreprise exige l'accord de l'administrateur (page
-// de Microsoft sans retour vers Leon, AADSTS90094 : le lien d'accord est donc aussi montré avant le
-// bouton) ; que l'adresse d'accord accepte « /.default » avec les seuls droits déclarés dans
-// l'inscription de l'appli (ceux de SCOPES, en « Autorisations déléguées »).
-
-// Leon n'écrit pas encore : l'accès est demandé d'avance.
-const SCOPES = ['offline_access', 'User.Read', 'Mail.ReadWrite', 'Calendars.ReadWrite'];
-
-// AADSTS suivi d'un code qui ne continue pas : AADSTS650011 n'est pas AADSTS65001.
-const ADMIN_CONSENT_CODES = /AADSTS(?:90094|90095|65001)(?!\d)/;
-
-export const outlookOAuth: OAuthSpec = {
-  appKey: 'OUTLOOK',
-  authorizeUrl: 'https://login.microsoftonline.com/organizations/oauth2/v2.0/authorize',
-  tokenUrl: 'https://login.microsoftonline.com/organizations/oauth2/v2.0/token',
-  scopes: SCOPES,
-  pkce: true,
-  clientAuth: 'body',
-  extraAuthorizeParams: { response_mode: 'query' },
-  extraTokenParams: {
-    code: { scope: SCOPES.join(' ') },
-    refresh: { scope: SCOPES.join(' ') },
-  },
-  preFields: [],
-  setupHosts: [],
-
-  // L'administrateur Microsoft de l'entreprise doit donner son accord une fois pour toute l'entreprise.
-  adminConsent: {
-    isConsentError: ({ error, description }) =>
-      error === 'consent_required' || ADMIN_CONSENT_CODES.test(description ?? ''),
-    // Microsoft rend `state` au retour, accord donné ou refusé.
-    url: (clientId, redirectUri, returnTo) =>
-      `https://login.microsoftonline.com/organizations/v2.0/adminconsent?${new URLSearchParams({
-        client_id: clientId,
-        scope: 'https://graph.microsoft.com/.default',
-        redirect_uri: redirectUri,
-        ...(returnTo && { state: returnTo }),
-      }).toString()}`,
-  },
-
-  // Outlook n'a rien de plus à retenir que les jetons.
-  toConfig: async () => ({}),
-};
+// https://learn.microsoft.com/en-us/graph/permissions-reference, relu le 27/11/2026 : Mail.ReadWrite (« Does not
+// include permission to send mail »), Mail.Send, Calendars.ReadWrite et MailboxSettings.Read n'exigent pas en
+// eux-mêmes l'accord de l'administrateur (le réglage par défaut des annuaires le réclame quand même, voir
+// microsoft.ts) et sont « available for consent in personal Microsoft accounts ». MailboxSettings.ReadWrite
+// (réponse d'absence) n'est pas demandé : c'est aussi le droit des règles de la boîte, qui peuvent transférer le
+// courrier (mailfolder-post-messagerules, `forwardTo`), et Leon ne demande pas le transfert.
+export const outlookOAuth = microsoftOAuth('outlook', 'common', [
+  'Mail.ReadWrite',
+  'Mail.Send',
+  'Calendars.ReadWrite',
+  'MailboxSettings.Read',
+]);

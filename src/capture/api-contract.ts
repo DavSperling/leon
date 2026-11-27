@@ -69,6 +69,10 @@ export const FICHIERS_MAX = 50;
 export const COMMANDES_MAX = 30;
 export const TACHES_MAX = 20;
 export const TEXTE_MAX = 200;
+export const OUTILS_EN_ERREUR_MAX = 20;
+export const COMMANDES_AGENTS_MAX = 100;
+// La longueur d'un nom d'outil réduit (C10) : `mcp:` et 56 caractères de serveur au plus ; aussi celle des coulisses.
+export const COULISSE_OUTIL_MAX = 60;
 
 export const PrSchema = z
   .object({
@@ -87,7 +91,16 @@ export const SessionFactsSchema = z
     commits: z.array(z.string().regex(/^[0-9a-f]{7,40}$/)).max(COMMITS_MAX),
     fichiers: z.array(z.string()).max(FICHIERS_MAX), // relatifs au dépôt
     commandes: z
-      .array(z.object({ texte: z.string().max(TEXTE_MAX), erreur: z.boolean() }).strict())
+      .array(
+        z
+          .object({
+            texte: z.string().max(TEXTE_MAX),
+            erreur: z.boolean(),
+            // vrai : la commande en enchaîne plusieurs, son statut n'est pas celui de la commande gardée (T58)
+            suite: z.boolean().optional(),
+          })
+          .strict(),
+      )
       .max(COMMANDES_MAX),
     taches: z
       .array(
@@ -100,6 +113,33 @@ export const SessionFactsSchema = z
       )
       .max(TACHES_MAX),
     erreurs: z.number().int().nonnegative(), // erreurs d'outils
+    // Pour le rêve (T58), facultatifs : un fait d'avant, ou d'une CLI ancienne, reste valide. Un champ vide est absent.
+    // Les outils qui ne sont pas des commandes et ont fini en erreur : le nom réduit (C10) et le nombre, jamais le message.
+    outils_en_erreur: z
+      .array(
+        z
+          .object({
+            outil: z.string().min(1).max(COULISSE_OUTIL_MAX),
+            nombre: z.number().int().min(1),
+          })
+          .strict(),
+      )
+      .max(OUTILS_EN_ERREUR_MAX)
+      .optional(),
+    // Les commandes réduites des sous-agents et des agents de workflow ; `agent` n'a de sens que dans la session.
+    commandes_agents: z
+      .array(
+        z
+          .object({
+            agent: z.number().int().min(1).max(COMMANDES_AGENTS_MAX),
+            texte: z.string().max(TEXTE_MAX),
+            erreur: z.boolean(),
+            suite: z.boolean(),
+          })
+          .strict(),
+      )
+      .max(COMMANDES_AGENTS_MAX)
+      .optional(),
     // a lu du web, du MCP, une commande réseau, ou un sous-agent qui sort du dépôt ou n'a pas fini (T63 amendé le
     // 17/11 : Claude Code, Codex et Antigravity ; chez Cursor, tout sous-agent, faute de pouvoir lire le sien)
     externe: z.boolean(),
@@ -289,7 +329,6 @@ export type UsagesRequest = z.infer<typeof UsagesRequestSchema>;
 // 65 535 paramètres d'un insert. Un serveur ancien répond 404.
 export const COULISSES_BODY_MAX_BYTES = 256 * 1024;
 export const COULISSES_BLOCS_MAX = 2000;
-export const COULISSE_OUTIL_MAX = 60;
 const Bloc = {
   id: z.string().regex(/^[A-Za-z0-9_.:-]{1,200}$/),
   ts: z.iso.datetime({ offset: true }),

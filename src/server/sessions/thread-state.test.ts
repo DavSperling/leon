@@ -219,6 +219,23 @@ describe('condenseFil', () => {
     ).toBe(`- [décision] On livre vendredi (de: connecteur; source: ${meeting.id})`);
   });
 
+  it('les champs du rêve (T58) n’entrent jamais dans l’état du fil, session externe ou non', () => {
+    const reve = {
+      outils_en_erreur: [{ outil: 'mcp:serveur-rare', nombre: 3 }],
+      commandes_agents: [{ agent: 1, texte: 'git pushall', erreur: true, suite: false }],
+    };
+    for (const externe of [false, true]) {
+      const { texte } = condenseFil({
+        sessions: [session({ faits: facts({ externe, ...reve }) })],
+        sources: [],
+      });
+
+      expect(texte).toContain('<faits branche="amos/fil"');
+      expect(texte).not.toContain('serveur-rare');
+      expect(texte).not.toContain('pushall');
+    }
+  });
+
   it('une session externe n’apporte que ses clés', () => {
     const typed = turn({ text: 'Récit de la session externe.' });
     const external = session({

@@ -32,18 +32,29 @@ function stateLine(issue: LinearIssue): string {
     .join(' · ');
 }
 
-// Le corps est la ligne d'état puis la description : un ticket qui n'a qu'un titre garde sa ligne d'état.
+// La ligne d'état a son propre tour : un tour change d'identifiant avec son texte, et un changement d'état ne recopie
+// donc pas la description. Un ticket qui n'a qu'un titre garde sa ligne d'état.
 export function issueToItem(issue: LinearIssue): ConnectorItem | null {
   const turns: ConnectorTurn[] = [];
-  const body = [stateLine(issue), issue.description?.trim()].filter(Boolean).join('\n\n');
-  // Le corps vaut à la date de la dernière modification du ticket.
-  if (body) {
-    const { creator, updatedAt } = issue;
+  const { creator, updatedAt } = issue;
+  const state = stateLine(issue);
+  const description = issue.description?.trim();
+  // L'état et la description valent à la date de la dernière modification du ticket.
+  if (state) {
+    turns.push({
+      externalId: 'etat',
+      role: 'document',
+      author: author(creator),
+      text: state,
+      ts: updatedAt,
+    });
+  }
+  if (description) {
     turns.push({
       externalId: 'body',
       role: 'document',
       author: author(creator),
-      text: body,
+      text: description,
       ts: updatedAt,
     });
   }

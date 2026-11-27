@@ -67,6 +67,24 @@ async function dueOf(connectionId: string): Promise<boolean | null | undefined> 
   return rows[0]?.due;
 }
 
+// La dernière relève a commencé il y a `ago` secondes, et l'échéance tombe `due` secondes après ce début.
+async function lastSync(connectionId: string, ago: number, due: number) {
+  await adminPool.query(
+    `update connections set last_sync_started_at = now() - make_interval(secs => $2),
+       next_sync_at = now() - make_interval(secs => $2) + make_interval(secs => $3) where id = $1`,
+    [connectionId, ago, due],
+  );
+}
+
+// L'échéance, en secondes après le début de la dernière relève.
+async function dueAfterStart(connectionId: string): Promise<number | undefined> {
+  const { rows } = await adminPool.query<{ seconds: number }>(
+    'select extract(epoch from next_sync_at - last_sync_started_at)::float8 as seconds from connections where id = $1',
+    [connectionId],
+  );
+  return rows[0]?.seconds;
+}
+
 const sign = (body: string, secret = SECRET) =>
   createHmac('sha256', secret).update(body).digest('hex');
 
@@ -102,7 +120,7 @@ describe('POST /api/linear/webhooks', () => {
     const mine = await linearConnection(paul);
     const colleague = await linearConnection(lina);
     const otherOrganisation = await linearConnection(paul, { accountKey: `v:${randomUUID()}` });
-    // Une clé personnelle n'a pas d'accountKey : relevée au quart d'heure, comme avant.
+    // Une connexion par clé ne garde pas d'accountKey (connections/actions.ts) : relevée au quart d'heure, comme avant.
     const byKey = await seedConnection(paul, { provider: 'linear', nextSyncAt: LATER });
 
     const response = await send(alert());
@@ -113,6 +131,35 @@ describe('POST /api/linear/webhooks', () => {
     expect(await dueOf(otherOrganisation)).toBe(false);
     expect(await dueOf(byKey)).toBe(false);
     expect(enqueueDueSyncs).toHaveBeenCalledTimes(1);
+  });
+
+  it('une alerte sans relève dans la dernière minute rend la connexion due tout de suite', async () => {
+    const id = await linearConnection(paul);
+    await lastSync(id, 120, 15 * 60); // finie, la suivante au quart d'heure
+
+    await send(alert());
+
+    expect(await dueOf(id)).toBe(true);
+  });
+
+  // Une rafale d'alertes ne relance pas la relève à chaque ticket : au plus une par minute.
+  it('une alerte 10 s après le début d’une relève donne une échéance une minute après ce début', async () => {
+    const id = await linearConnection(paul);
+    await lastSync(id, 10, -1); // en cours : l'échéance qui l'a lancée est passée
+
+    await send(alert());
+
+    expect(await dueAfterStart(id)).toBe(60);
+    expect(await dueOf(id)).toBe(false);
+  });
+
+  it('une échéance plus proche, demandée depuis le début de la relève, reste', async () => {
+    const id = await linearConnection(paul);
+    await lastSync(id, 10, 5); // « Synchroniser maintenant » 5 s après le début
+
+    await send(alert());
+
+    expect(await dueAfterStart(id)).toBe(5);
   });
 
   it('compare la partie organisation de l’accountKey exactement : ni préfixe, ni partie utilisateur', async () => {

@@ -9,8 +9,9 @@ import { logError } from '@/server/log';
 
 // Le point d'entrée des alertes de Linear (webhooks) : public, ni session ni jeton. Seule la signature du corps brut,
 // faite avec le secret de l'appli OAuth « Leon », fait compter une alerte. Elle rend dues les connexions Linear de son
-// organisation (notifications_linear, 0099) et met leur relève en file, rien de plus : la relève lit le nouveau comme
-// d'habitude, le contenu de l'alerte n'est jamais lu. Une connexion par clé personnelle n'a pas d'alerte.
+// organisation, au plus une relève par minute (notifications_linear, 0099), et met leur relève en file, rien de plus :
+// la relève lit le nouveau comme d'habitude, le contenu de l'alerte n'est jamais lu. Une connexion par clé personnelle
+// n'a pas d'alerte : elle ne garde pas l'organisation de son compte (voir 0099).
 //
 // Doc lue le 27/11/2026 :
 //   https://linear.app/developers/webhooks : une appli OAuth règle ses webhooks dans sa configuration, et Linear en
@@ -25,8 +26,8 @@ import { logError } from '@/server/log';
 //
 // Non vérifié (aucun essai réel) : que chaque alerte porte organizationId (sans lui, rien n'est réveillé et la relève
 // du quart d'heure reste le filet) ; que webhookTimestamp soit refait à chaque nouvel essai (sinon ces essais sont
-// ignorés, et la relève du quart d'heure les rattrape) ; qu'un membre sans droit d'administrateur qui autorise l'appli crée bien le webhook de son
-// organisation ; la taille maximale d'une alerte.
+// ignorés, et la relève du quart d'heure les rattrape) ; qu'un membre sans droit d'administrateur qui autorise l'appli
+// crée bien le webhook de son organisation ; la taille maximale d'une alerte.
 
 // Une alerte porte l'élément entier, et ses valeurs d'avant pour une modification (data, updatedFrom).
 const WEBHOOK_MAX_BYTES = 1024 * 1024;

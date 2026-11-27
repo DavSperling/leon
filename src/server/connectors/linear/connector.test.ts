@@ -224,12 +224,18 @@ describe('linearConnector : premier passage', () => {
       origin: { team: 'Produit', project: 'Site vitrine' },
       turns: [
         {
+          externalId: 'etat',
+          role: 'document',
+          author: { name: 'Marie Durand', email: 'marie@acme.test' },
+          text: 'État : En cours · Assigné : David Martin · Priorité : Haute · Labels : bug, facturation · Cycle : 12 · Échéance : 2026-12-03',
+          ts: TOP_ISSUES, // l'état et le corps valent à la date de la dernière modification du ticket
+        },
+        {
           externalId: 'body',
           role: 'document',
           author: { name: 'Marie Durand', email: 'marie@acme.test' },
-          // L'essentiel du ticket en tête, puis sa description.
-          text: `État : En cours · Assigné : David Martin · Priorité : Haute · Labels : bug, facturation · Cycle : 12 · Échéance : 2026-12-03\n\n${issue?.description}`,
-          ts: TOP_ISSUES, // le corps vaut à la date de la dernière modification du ticket
+          text: issue?.description ?? '',
+          ts: TOP_ISSUES,
         },
         {
           externalId: 'comment:c1d3e4f5-0000-4000-8000-000000000001',
@@ -259,7 +265,7 @@ describe('linearConnector : premier passage', () => {
     ]);
     expect(first?.items[1]?.turns).toEqual([
       {
-        externalId: 'body',
+        externalId: 'etat',
         role: 'document',
         author: { name: null, email: null },
         text: 'État : Backlog',
@@ -271,9 +277,30 @@ describe('linearConnector : premier passage', () => {
   it('écrit la priorité en français et le nom du cycle, faute de quoi son numéro', async () => {
     const pages = await sync(twoPagesThenUpdates()).pages;
 
-    expect(pages[1]?.items[0]?.turns[0]?.text).toBe(
-      'État : Terminé · Priorité : Basse · Cycle : Lancement\n\nComparer trois hébergeurs européens.',
-    );
+    expect(
+      pages[1]?.items[0]?.turns.slice(0, 2).map(({ externalId, text }) => [externalId, text]),
+    ).toEqual([
+      ['etat', 'État : Terminé · Priorité : Basse · Cycle : Lancement'],
+      ['body', 'Comparer trois hébergeurs européens.'],
+    ]);
+  });
+
+  it('ne recopie pas la description quand seul l’état du ticket change', async () => {
+    const moved = structuredClone(issuesPage1);
+    const node = moved.data.issues.nodes[0];
+    if (!node) throw new Error('fixture vide');
+    node.state.name = 'Terminé';
+    const turnIds = async (page: typeof issuesPage1) => {
+      const { pages } = sync([graphql({ json: page }), ...twoPagesThenUpdates().slice(1)]);
+      const item = (await pages)[0]?.items[0];
+      return item ? normalizeItem(item, 'linear')?.turns.map((turn) => turn.externalId) : undefined;
+    };
+
+    const before = await turnIds(issuesPage1);
+    const after = await turnIds(moved);
+
+    // Un tour change d'identifiant avec son texte : seul celui de l'état est nouveau.
+    expect(after?.filter((id) => !before?.includes(id))).toEqual([expect.stringMatching(/^etat#/)]);
   });
 
   it('compte dans le curseur la date d’une mise à jour de projet sans texte', async () => {

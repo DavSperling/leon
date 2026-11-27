@@ -445,6 +445,32 @@ describe('readHomeBrouillons : ce que l’agent « Brouillons de réponse » a p
     expect(demande?.source.mailText).toContain('> Je vous l’envoie.');
   });
 
+  it('le texte montré n’a ni renvoi d’image ni adresse de lien illisible ; la base garde le mail tel quel', async () => {
+    const [julie] = await people();
+    await answered(julie);
+    const { sourceId } = await asked(julie, 'Devis 2027', 2);
+    const raw = [
+      '[cid:image001.png@01DB2C3D.4E5F6A70]',
+      'Bonjour Julie,',
+      `Le détail est sur notre site<https://filtre.exemple.test/securelink/?key=${'x'.repeat(300)}>.`,
+      'Léa <lea@client.exemple.test<mailto:lea@client.exemple.test>>',
+    ].join('\n');
+    await adminPool.query('update turns set text = $2 where source_id = $1', [sourceId, raw]);
+
+    const [demande] = (await readHomeBrouillons(julie)).demandes;
+
+    expect(demande?.source.mailText).toBe(
+      'Bonjour Julie,\nLe détail est sur notre site.\nLéa <lea@client.exemple.test>',
+    );
+    expect(demande?.source.extrait).toBe(
+      'Bonjour Julie, Le détail est sur notre site. Léa <lea@client.exemple.test>',
+    );
+    const { rows } = await adminPool.query('select text from turns where source_id = $1', [
+      sourceId,
+    ]);
+    expect(rows.every((row) => row.text === raw)).toBe(true);
+  });
+
   it('une demande posée avant les choix garde ses questions, sans choix à proposer', async () => {
     const [julie] = await people();
     await answered(julie);

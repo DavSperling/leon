@@ -10,7 +10,7 @@ import type { AgentId } from './agents';
 import { type Demande, HOME_MAX, type ReadyBrouillon, readShown } from './brouillons';
 import { type FicheLine, readFiche } from './fiche';
 import { readLastMessages } from './mail-text';
-import { excerptOf } from './own-text';
+import { excerptOf, shownText } from './own-text';
 import { type ProposedPreference, readProposedPreferences } from './preferences';
 import { type AgentState, readAgentStates, readProposals } from './propositions';
 import { enqueueFicheBuild, ficheBuildCompleted, ficheBuildPending } from './queue';
@@ -151,14 +151,18 @@ export type HomeSansReponse = Omit<SansReponse, 'sourceId'> & {
   source: HomeSource;
 };
 
-// Un fil relu sous ses droits, avec le texte de son dernier message : ce que l'accueil en montre.
-const homeSource = (source: FicheSource, mailText: string | null): HomeSource => ({
-  title: source.title,
-  url: source.url,
-  kind: source.kind,
-  mailText,
-  extrait: mailText === null ? null : excerptOf(mailText),
-});
+// Un fil relu sous ses droits, avec le texte de son dernier message : ce que l'accueil en montre, sans les renvois
+// d'images ni les adresses de liens illisibles que le logiciel de l'expéditeur y a laissés (shownText).
+const homeSource = (source: FicheSource, mail: string | null): HomeSource => {
+  const mailText = mail === null ? null : shownText(mail);
+  return {
+    title: source.title,
+    url: source.url,
+    kind: source.kind,
+    mailText,
+    extrait: mailText === null ? null : excerptOf(mailText),
+  };
+};
 
 // Elle a dit oui à cet agent : sa réponse enregistrée, une ligne. Sans ce oui, ses mails sans réponse (« Relances ») ne
 // se lisent pas : une lecture de sa boîte à chaque chargement de l'accueil, pour rien, chez toutes les personnes qui

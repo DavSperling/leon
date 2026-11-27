@@ -4,11 +4,12 @@ import { withTenant } from '@/server/db/with-tenant';
 import { textArray } from '@/server/search/filters-sql';
 import { MESSAGE, PART } from './sent-mails';
 
-// Ce que « Voir le mail » montre sur l'accueil : le texte du dernier message de chaque fil, tel quel, un mail coupé en
-// plusieurs tours recollé dans l'ordre de ses morceaux (comme withMessages, waiting-mails.ts). Le mail reçu pour une
-// réponse, son propre mail pour une relance : c'est le dernier du fil, sinon la ligne ne serait pas sur l'accueil.
-// Lu sous ses droits (withTenant) : un fil qu'elle ne voit pas ne rend rien. Rien ne part au modèle : c'est elle qui
-// lit. Coupé à MAIL_TEXT_CHARS, la fin n'est pas montrée (« Ouvrir dans Gmail » la donne).
+// Ce que « Voir le mail » montre sur l'accueil : le texte du dernier message de chaque fil, tel qu'il est gardé, un mail
+// coupé en plusieurs tours recollé dans l'ordre de ses morceaux (comme withMessages, waiting-mails.ts). L'accueil en
+// retire ensuite ce qui ne se lit pas (own-text.ts, shownText). Le mail reçu pour une réponse, son propre mail pour une
+// relance : c'est le dernier du fil, sinon la ligne ne serait pas sur l'accueil. Lu sous ses droits (withTenant) : un
+// fil qu'elle ne voit pas ne rend rien. Rien ne part au modèle : c'est elle qui lit. Coupé à MAIL_TEXT_CHARS, la fin
+// n'est pas montrée (« Ouvrir dans Gmail » la donne).
 export const MAIL_TEXT_CHARS = 20_000;
 
 export async function readLastMessages(

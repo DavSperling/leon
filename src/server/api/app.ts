@@ -19,6 +19,7 @@ import { readRoutes } from './read-routes';
 import { reminderRoutes } from './reminder-routes';
 import type { ApiEnv } from './require-api-token';
 import { sessionRoutes } from './session-routes';
+import { createTrelloRoutes } from './trello-routes';
 
 export const app = new Hono<ApiEnv>().basePath('/api');
 
@@ -49,5 +50,7 @@ app.route('/oauth', oauthRoutes);
 app.route('/v1/connexions/oauth', createOAuthRoutes({ getConnector }));
 // Les notifications de Microsoft Graph : publiques, le clientState de chacune en fait foi.
 app.route('/microsoft', microsoftRoutes);
+// Les alertes de Trello : publiques, la signature de chacune en fait foi.
+app.route('/trello', createTrelloRoutes());
 app.notFound((c) => c.json({ error: 'Introuvable' }, 404));
 app.onError(handleApiError);

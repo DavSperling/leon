@@ -5,6 +5,26 @@
   "url": "https://trello.com/c/AbCd1234/12-refaire-la-page-daccueil",
   "shortUrl": "https://trello.com/c/AbCd1234",
   "idList": "5f2b3c4d5e6f7a8b9c0d11a2",
+  "due": "2026-10-31T16:00:00.000Z",
+  "dueComplete": false,
+  "labels": [
+    {
+      "id": "5f2b3c4d5e6f7a8b9c0d4a01",
+      "idBoard": "5f2b3c4d5e6f7a8b9c0d00a1",
+      "name": "Urgent",
+      "color": "red"
+    },
+    {
+      "id": "5f2b3c4d5e6f7a8b9c0d4a02",
+      "idBoard": "5f2b3c4d5e6f7a8b9c0d00a1",
+      "name": "",
+      "color": "green"
+    }
+  ],
+  "members": [
+    { "id": "5f2b3c4d5e6f7a8b9c0d1e2f", "fullName": "Marie Durand" },
+    { "id": "5f2b3c4d5e6f7a8b9c0d2a3b", "fullName": "Paul Martin" }
+  ],
   "actions": [
     {
       "id": "6710f0000000000000000007",

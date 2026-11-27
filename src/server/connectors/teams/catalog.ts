@@ -32,13 +32,13 @@ export const teamsChatsCatalog: CatalogEntry = {
   docsUrl: 'https://learn.microsoft.com/en-us/graph/permissions-reference',
   triedForReal: false,
   warning:
-    'Comme dans Teams, chaque conversation est visible des collègues qui y participent, même s’ils n’ont pas branché Teams Chat, et chaque transcription, des collègues invités à la réunion ; sur le site de Leon, aussi de leurs managers en remontant. Les réunions personnelles, privées ou confidentielles ne sont pas lues. Microsoft prévient Leon de chaque nouveau message et de chaque transcription d’une réunion que vous organisez : ils arrivent dans Leon en quelques minutes ; les transcriptions des réunions auxquelles on vous invite, en un jour au plus.',
+    'Comme dans Teams, chaque conversation est visible des collègues qui y participent, même s’ils n’ont pas branché Teams Chat, et chaque transcription, des collègues invités à la réunion ; sur le site de Leon, aussi de leurs managers en remontant. La transcription d’une réunion personnelle, privée ou confidentielle n’est pas lue ; sa conversation l’est, comme les autres. Microsoft prévient Leon de chaque nouveau message et de chaque transcription d’une réunion que vous organisez : ils arrivent dans Leon en quelques minutes ; les transcriptions des réunions auxquelles on vous invite, en un jour au plus.',
   en: {
     fields: {},
     keyHelp: '',
     oauthHelp:
       'Microsoft asks you to allow Leon access to your Teams chats (read them and post in them), your calendar, and your Teams meetings with their transcripts and recordings. Leon asks for these permissions up front so it won’t need to ask you again later; today it reads your chats (one-on-one, group, and meeting chats) and the transcripts of the Teams meetings in your calendar, and posts nothing. Teams connects with a work account: your company’s Microsoft admin must first have approved Leon, once for the whole company; without that, Microsoft refuses the connection. For transcripts, the admin must also have opened their access to apps.',
     warning:
-      'As in Teams, each chat is visible to the colleagues in it, even if they haven’t connected Teams Chat, and each transcript, to the colleagues invited to the meeting; on the Leon website, also to the managers above them. Personal, private, or confidential meetings are not read. Microsoft alerts Leon to every new message and every transcript of a meeting you organize: they reach Leon within minutes; transcripts of meetings you’re invited to, within a day.',
+      'As in Teams, each chat is visible to the colleagues in it, even if they haven’t connected Teams Chat, and each transcript, to the colleagues invited to the meeting; on the Leon website, also to the managers above them. The transcript of a personal, private, or confidential meeting is not read; its chat is, like any other. Microsoft alerts Leon to every new message and every transcript of a meeting you organize: they reach Leon within minutes; transcripts of meetings you’re invited to, within a day.',
   },
 };

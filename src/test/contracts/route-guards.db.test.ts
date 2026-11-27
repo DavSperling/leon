@@ -31,6 +31,10 @@ const PUBLIC = [
   /^\/api\/v1\/connexions\/oauth\//,
   /^\/api\/oauth\/(clients|jeton)$/, // liste fermée : une route OAuth de plus se garde, ou s'ajoute ici à la main
   /^\/api\/microsoft\/notifications$/,
+  // Les alertes de Notion (POST /api/notion/webhooks) arrivent sans jeton ni session : seule leur signature, le HMAC
+  // du corps avec LEON_NOTION_WEBHOOK_TOKEN, les fait compter (401 sinon), et elles ne font que rendre des connexions
+  // dues. La demande de vérification d'un abonnement n'est que journalisée. Ses cas : notion-routes.db.test.ts.
+  /^\/api\/notion\/webhooks$/,
 ];
 
 const isPublic = (path: string) => PUBLIC.some((pattern) => pattern.test(path));

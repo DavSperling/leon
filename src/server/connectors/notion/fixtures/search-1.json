@@ -45,7 +45,89 @@
         "database_id": "b83c0f17-2d4a-4e96-a751-6c9e8d0f3a05"
       },
       "properties": {
-        "Statut": { "id": "q%3Fk1", "type": "select", "select": { "name": "En cours" } },
+        "Statut": {
+          "id": "q%3Fk1",
+          "type": "status",
+          "status": {
+            "id": "c4d2a1e0-0001-4000-8000-000000000001",
+            "name": "En cours",
+            "color": "blue"
+          }
+        },
+        "Responsable": {
+          "id": "r%3Ab2",
+          "type": "people",
+          "people": [
+            {
+              "object": "user",
+              "id": "9b0d6e24-1c73-4f58-a2e9-480c5d17f622",
+              "name": "Paul Martin",
+              "avatar_url": null,
+              "type": "person",
+              "person": { "email": "paul@acme.test" }
+            },
+            { "object": "user", "id": "3f8e2c71-5a04-4b9d-8c16-72d0a9e45b11" }
+          ]
+        },
+        "Échéance": {
+          "id": "d%3Ac3",
+          "type": "date",
+          "date": { "start": "2026-12-03", "end": null, "time_zone": null }
+        },
+        "Priorité": {
+          "id": "p%3Ad4",
+          "type": "select",
+          "select": {
+            "id": "c4d2a1e0-0002-4000-8000-000000000002",
+            "name": "Haute",
+            "color": "red"
+          }
+        },
+        "Étiquettes": {
+          "id": "t%3Ae5",
+          "type": "multi_select",
+          "multi_select": [
+            { "id": "c4d2a1e0-0003-4000-8000-000000000003", "name": "Démo", "color": "green" },
+            { "id": "c4d2a1e0-0004-4000-8000-000000000004", "name": "Client", "color": "gray" }
+          ]
+        },
+        "Fait": { "id": "f%3Af6", "type": "checkbox", "checkbox": false },
+        "Budget (k€)": { "id": "b%3Ag7", "type": "number", "number": 12 },
+        "Note": {
+          "id": "n%3Ah8",
+          "type": "rich_text",
+          "rich_text": [
+            {
+              "type": "text",
+              "text": { "content": "Relancer après la démo", "link": null },
+              "plain_text": "Relancer après la démo",
+              "href": null
+            }
+          ]
+        },
+        "Contexte": {
+          "id": "x%3Ai9",
+          "type": "rich_text",
+          "rich_text": [
+            {
+              "type": "text",
+              "text": {
+                "content": "Acme a d'abord demandé une démonstration en septembre, puis l'a repoussée deux fois à cause d'un changement d'équipe.",
+                "link": null
+              },
+              "plain_text": "Acme a d'abord demandé une démonstration en septembre, puis l'a repoussée deux fois à cause d'un changement d'équipe.",
+              "href": null
+            }
+          ]
+        },
+        "Secteur": { "id": "s%3Aj0", "type": "select", "select": null },
+        "Projet": {
+          "id": "j%3Ak1",
+          "type": "relation",
+          "relation": [{ "id": "f60b9a38-4c15-4e72-b0d3-83a7e1c95d06" }],
+          "has_more": false
+        },
+        "Lien": { "id": "l%3Al2", "type": "url", "url": "https://acme.test/demo" },
         "Nom": {
           "id": "title",
           "type": "title",

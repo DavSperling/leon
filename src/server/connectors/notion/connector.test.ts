@@ -280,6 +280,49 @@ describe('sync : premier passage', () => {
     });
   });
 
+  it('met en tête du texte d’une ligne de base ses propriétés utiles et remplies, en une ligne', async () => {
+    const { items } = await run(wholeWorkspace());
+
+    // Marie n'a que son identifiant dans la propriété : son nom vient des auteurs du passage. Le titre, la
+    // sélection vide, le texte long, la relation et le lien n'y sont pas.
+    expect(itemOf(items, ID.db).turns[0]?.text).toBe(
+      [
+        'Statut : En cours · Responsable : Paul Martin, Marie Durand · Échéance : 2026-12-03 · Priorité : Haute · Étiquettes : Démo, Client · Fait : [ ] · Budget (k€) : 12 · Note : Relancer après la démo',
+        'Acme veut une démonstration avant la fin du mois.',
+        'Budget confirmé : 12 000 euros.',
+      ].join('\n'),
+    );
+  });
+
+  it('garde une ligne de base sans corps pour son titre et ses propriétés, pas une ligne vide sans titre', async () => {
+    const row = (index: number, title: string) => ({
+      ...stubPage(index, '2026-10-03T09:15:00.000Z'),
+      parent: { type: 'data_source_id', data_source_id: '7e45a1c2-90b3-4d68-8f2e-1a6c3d5b9e04' },
+      properties: {
+        Nom: { id: 'title', type: 'title', title: title === '' ? [] : [{ plain_text: title }] },
+        Statut: { id: 's', type: 'status', status: { name: 'À faire' } },
+        Échéance: { id: 'd', type: 'date', date: { start: '2026-12-01', end: '2026-12-05' } },
+        Fait: { id: 'f', type: 'checkbox', checkbox: true },
+        Responsable: { id: 'r', type: 'people', people: [] },
+      },
+    });
+    const named = row(1, 'Préparer la démo');
+    const untitled = row(2, '');
+    const noBlocks = { object: 'list', results: [], next_cursor: null, has_more: false };
+    const { items } = await run([
+      search({ results: [named, untitled], next_cursor: null, has_more: false }),
+      user(ID.marie, userMarie),
+      ...[named, untitled].flatMap((page) => [
+        children(page.id, noBlocks),
+        comments(page.id, commentsEmpty),
+      ]),
+    ]);
+
+    expect(items.map((item) => [item.title, item.turns.map((turn) => turn.text)])).toEqual([
+      ['Préparer la démo', ['Statut : À faire · Échéance : 2026-12-01 → 2026-12-05 · Fait : [x]']],
+    ]);
+  });
+
   it('ne demande chaque personne qu’une fois pour tout le passage', async () => {
     const { calls } = await run(wholeWorkspace());
 

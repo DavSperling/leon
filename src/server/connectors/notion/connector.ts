@@ -16,6 +16,9 @@ import { notionOAuth } from './oauth';
 //   https://developers.notion.com/reference/block (types de blocs)
 //   https://developers.notion.com/reference/request-limits (3 requêtes par seconde en moyenne)
 //   https://developers.notion.com/reference/capabilities et .../guides/get-started/authorization
+// Doc lue le 27/11/2026 : https://developers.notion.com/reference/page-property-values (la valeur de chaque type
+//   de propriété, null ou [] quand elle est vide ; une personne peut n'avoir que son identifiant ; 25 personnes au
+//   plus par propriété dans la page).
 //
 // Choix. La recherche n'a pas de filtre « modifié depuis » : on la lit de la plus récente à la plus
 // ancienne et on s'arrête à la première page antérieure au curseur (ou à since), puis on rend les
@@ -32,7 +35,14 @@ import { notionOAuth } from './oauth';
 // informations des utilisateurs » (403) : pas de commentaires, auteur inconnu (le commentaire garde
 // le nom affiché que Notion donne).
 //
-// Non lu : les propriétés des lignes de base de données ; les commentaires résolus (la doc : seuls
+// Une ligne de base garde en tête de son texte, en une ligne, ses propriétés remplies de type statut, sélection,
+// sélection multiple, personnes (leurs noms), date, case à cocher, nombre et texte court (map.ts) ; une ligne sans
+// corps mais avec un titre et des propriétés est gardée.
+//
+// Notion prévient aussi Leon d'un changement (webhooks) : l'alerte rend la connexion due tout de suite, et ce passage
+// lit le nouveau (src/server/api/notion-routes.ts, migration 0100).
+//
+// Non lu : les autres propriétés des lignes de base ; les commentaires résolus (la doc : seuls
 // les non résolus sont rendus) et ceux d'un passage précis (ils sont sur le bloc, pas sur la page) ;
 // les blocs de réunion (meeting_notes) autrement que par leurs enfants ; les blocs synchronisés.
 // Non vérifié : un jeton d'accès personnel (la doc dit qu'il agit au nom de son créateur, sans
@@ -40,7 +50,8 @@ import { notionOAuth } from './oauth';
 // curseur le prévoit) ; une page modifiée deux fois dans la même minute, de part et d'autre de
 // notre lecture, garde sa première version jusqu'à la modification suivante ; un résultat
 // de recherche partiel (seulement id) sans la capacité « Lire le contenu » : il est refusé par le
-// schéma, « Unexpected response » ; un essai en réel.
+// schéma, « Unexpected response » ; que la recherche rende le nom des personnes d'une propriété (sinon, une requête
+// par personne et par passage, comme pour les auteurs) ; un essai en réel.
 
 // Deux façons de se brancher : la clé collée (`token`), ou le bouton (`accessToken` et ce que
 // `notionOAuth.toConfig` rend). Une connexion sans `authMode` est à clé. Les jetons du bouton

@@ -101,21 +101,26 @@ export function WeekCalendar({
               {rendezVous.length === 0 ? t('emptyWeek') : t('restOfWeek')}
             </p>
           ) : (
-            <ul>
+            // une seule colonne de libellés, à la largeur du plus long (« Aujourd’hui 18:00 ») : il ne passe plus
+            // sous le titre, et les titres restent alignés d'une ligne à l'autre
+            <ul className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3">
               {next.map((r) => (
-                <li key={`${r.sourceId}-${r.debut}-${r.titre}`}>
+                <li
+                  key={`${r.sourceId}-${r.debut}-${r.titre}`}
+                  className="col-span-full grid grid-cols-subgrid"
+                >
                   <button
                     type="button"
                     onClick={() => setOpenDay(r.debut.slice(0, 10))}
-                    className="flex min-h-11 w-full items-center gap-3 rounded-item px-2 py-1.5 text-left text-ui transition-colors duration-150 hover:bg-hover active:bg-n-150"
+                    className="col-span-full grid min-h-11 w-full grid-cols-subgrid items-center rounded-item px-2 py-1.5 text-left text-ui transition-colors duration-150 hover:bg-hover active:bg-n-150"
                   >
-                    <span className="w-[5.25rem] shrink-0 whitespace-nowrap text-label text-muted tabular-nums first-letter:uppercase">
+                    <span className="min-w-[5.25rem] whitespace-nowrap text-label text-muted tabular-nums first-letter:uppercase">
                       {r.debut.startsWith(today)
                         ? t('today')
                         : short.format(asDate(r.debut.slice(0, 10)))}{' '}
                       {hourOf(r.debut) ?? ''}
                     </span>
-                    <span className="min-w-0 flex-1 truncate font-medium text-fg">{r.titre}</span>
+                    <span className="min-w-0 truncate font-medium text-fg">{r.titre}</span>
                   </button>
                 </li>
               ))}

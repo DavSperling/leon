@@ -72,6 +72,8 @@ describe('le zip des sources pour Mozilla', () => {
       'package.json',
       'pnpm-lock.yaml',
       'pnpm-workspace.yaml',
+      // Vite transforme src/capture avec le tsconfig de la racine.
+      'tsconfig.json',
     ]) {
       expect(included(file), file).toBe(true);
     }

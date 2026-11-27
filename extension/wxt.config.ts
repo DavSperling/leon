@@ -21,6 +21,8 @@ export default defineConfig({
     // entier : WXT le copie tout dans le paquet (resolve-config.mjs:66), rien de neuf ne part chez Mozilla.
     // De src/capture, seuls les fichiers que l'extension importe : le reste sert à la CLI et au serveur.
     // zip-sources.test.ts suit les imports et échoue si la construction lit un fichier qui n'est pas ici.
+    // Le tsconfig.json de la racine part aussi : Vite transforme chaque fichier avec le tsconfig le plus proche,
+    // donc celui-là pour src/capture. Sans lui, la reconstruction de Mozilla pourrait un jour différer.
     // shortcut: WXT ramasse ce qui est sur le disque, suivi par Git ou non, donc un .ts, .html ou .css non suivi
     // part encore ; construire les zips envoyés à Mozilla depuis une copie propre (git archive).
     sourcesRoot: fileURLToPath(new URL('..', import.meta.url)),
@@ -32,6 +34,7 @@ export default defineConfig({
       'package.json',
       'pnpm-lock.yaml',
       'pnpm-workspace.yaml',
+      'tsconfig.json',
     ],
     // memory-store.ts ne sert qu'aux tests.
     excludeSources: ['**/fixtures/**', 'extension/lib/memory-store.ts'],

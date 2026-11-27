@@ -21,6 +21,8 @@ describe('manifestFor', () => {
       description: '__MSG_extDescription__',
       default_locale: 'en',
       incognito: 'not_allowed',
+      // Une permission de plus se voit à l'installation et repasse en relecture : elle ne s'ajoute pas par mégarde.
+      permissions: ['storage', 'alarms'],
     });
     expect(manifest.host_permissions).toEqual([
       'https://claude.ai/*',

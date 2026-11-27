@@ -64,6 +64,46 @@ export function ownText(mail: string): { text: string; signature: string | null 
   };
 }
 
+// Le texte d'un mail tel que l'accueil le montre (« Voir le mail », et l'extrait de la carte) : celui que gardent les
+// connecteurs, sans ce que le logiciel de l'expéditeur y a laissé et qui ne se lit pas. Un mail écrit en HTML porte une
+// version en texte brut faite par ce logiciel (Outlook surtout) : chaque image y devient « [cid:…] », chaque lien
+// « mot<adresse> », chaque adresse mail « adresse<mailto:adresse> ». Partent : les renvois d'images (et le lien d'une
+// image liée) ; l'adresse entre chevrons qui répète le mot d'avant ; et celle qui est trop longue pour se lire (lien de
+// suivi, lien réécrit par un filtre de sécurité : plusieurs lignes de signes au milieu d'une signature), dont le mot
+// reste. Un lien court sous un mot, une adresse qu'un nom ne dit pas, une adresse écrite en clair : tels quels. Une
+// ligne vidée disparaît. Rien ne change en base ni dans ce que lit le modèle, et « Ouvrir dans Gmail » donne l'original.
+// shortcut: une adresse coupée par la limite du texte lu (MAIL_TEXT_CHARS) n'a plus son chevron fermant et reste ; à
+// retirer aussi si de vrais mails le montrent.
+export const LINK_MAX_CHARS = 100;
+// Un identifiant d'image est court : sa longueur bornée garde la lecture linéaire sur un texte piégé.
+const IMAGE = /\[cid:[^\]\s]{1,200}\](?:[ \t]*<https?:\/\/[^<>\s]+>)?/gi;
+const TARGET = /[ \t]?<((?:https?:\/\/|mailto:)[^<>\s]+)>/gi;
+// Le mot collé au chevron : « www.exemple.fr » dans « (voir www.exemple.fr<…>) ».
+const WORD = /[^\s<>()[\]"']*$/;
+// Une adresse sans ce qui ne change pas ce qu'elle désigne : sa casse, son protocole, « www. », sa barre finale.
+const bare = (address: string) =>
+  address
+    .toLowerCase()
+    .replace(/^(?:mailto:|https?:\/\/)/, '')
+    .replace(/^www\./, '')
+    .replace(/\/$/, '');
+
+export function shownText(mail: string): string {
+  return mail
+    .split('\n')
+    .flatMap((line) => {
+      const shown = line
+        .replace(IMAGE, '')
+        .replace(TARGET, (found, target: string, at: number, whole: string) => {
+          if (target.length > LINK_MAX_CHARS) return '';
+          const word = WORD.exec(whole.slice(Math.max(0, at - target.length - 8), at))?.[0] ?? '';
+          return bare(word) === bare(target) ? '' : found;
+        });
+      return shown !== line && shown.trim() === '' ? [] : [shown];
+    })
+    .join('\n');
+}
+
 // Le début d'un mail, pour l'accueil : ce que son auteur a écrit, coupé à un mot. Ses lignes se suivent sur une seule
 // tant qu'elles se lisent dans le même sens ; un changement de sens (un paragraphe en hébreu dans un mail en français)
 // va à la ligne, pour que l'écran donne à chacune le sien. Une ligne sans lettre garde le sens de la précédente. Un mail

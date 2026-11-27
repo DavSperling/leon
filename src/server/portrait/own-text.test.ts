@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EXCERPT_CHARS, excerptOf, ownText } from './own-text';
+import { EXCERPT_CHARS, excerptOf, LINK_MAX_CHARS, ownText, shownText } from './own-text';
 
 // Mails inventés pour ces tests : aucune personne ni adresse réelle (domaines en .test).
 
@@ -301,5 +301,106 @@ describe('excerptOf : le début lisible d’un mail', () => {
       'שלום דוד, קיבלת את ההצעה? Merci de confirmer.',
     );
     expect(excerptOf('  \n ')).toBe('');
+  });
+});
+
+describe('shownText : le texte d’un mail tel que l’accueil le montre', () => {
+  // Une adresse réécrite par un filtre de sécurité : plusieurs centaines de caractères, illisible.
+  const REWRITTEN = `https://filtre.exemple.test/securelink/?url=http://www.exemple.test&key=${'eyJ'.padEnd(400, 'x')}`;
+  // Le texte brut d'un mail écrit en HTML dans Outlook : les images en « [cid:…] », l'adresse de chaque lien entre
+  // chevrons après son mot, « mailto: » après chaque adresse.
+  const outlook = mail(
+    'Bonjour,',
+    '',
+    'Le dossier est complet.',
+    '',
+    'Camille Renard',
+    'Service clients',
+    '[cid:image001.png@01DB2C3D.4E5F6A70]',
+    '12, rue des Lilas 69000 Lyon',
+    `www.exemple.test<${REWRITTEN}>`,
+    '[cid:image002.png@01DB2C3D.4E5F6A70]',
+    '',
+    '________________________________',
+    'De : noreply@exemple.test<mailto:noreply@exemple.test> <noreply@exemple.test<mailto:noreply@exemple.test>>',
+    'À : Service clients <clients@exemple.test<mailto:clients@exemple.test>>',
+    'Email déclarant : paul@exemple.test<mailto:paul@exemple.test>',
+  );
+
+  it('retire les renvois d’images, l’adresse illisible d’un lien et les « mailto: » qui répètent l’adresse', () => {
+    expect(shownText(outlook)).toBe(
+      mail(
+        'Bonjour,',
+        '',
+        'Le dossier est complet.',
+        '',
+        'Camille Renard',
+        'Service clients',
+        '12, rue des Lilas 69000 Lyon',
+        'www.exemple.test',
+        '',
+        '________________________________',
+        'De : noreply@exemple.test <noreply@exemple.test>',
+        'À : Service clients <clients@exemple.test>',
+        'Email déclarant : paul@exemple.test',
+      ),
+    );
+  });
+
+  it('une adresse entre chevrons qui répète le mot d’avant part, courte ou non', () => {
+    expect(
+      shownText('Voir https://exemple.test/tarifs<https://exemple.test/tarifs> ce soir.'),
+    ).toBe('Voir https://exemple.test/tarifs ce soir.');
+    expect(shownText('Notre site : www.exemple.test<http://www.exemple.test/>')).toBe(
+      'Notre site : www.exemple.test',
+    );
+    expect(shownText('Écrivez à paul@exemple.test <mailto:Paul@Exemple.test>.')).toBe(
+      'Écrivez à paul@exemple.test.',
+    );
+  });
+
+  it('garde ce qui se lit : un lien court sous un mot, une adresse qu’un nom ne dit pas, une adresse écrite en clair', () => {
+    for (const kept of [
+      'Notre grille <https://exemple.test/tarifs> est à jour.',
+      'Écrivez à Camille<mailto:camille@exemple.test>.',
+      `Le lien en clair : ${REWRITTEN}`,
+      'Un crochet [à compléter] et un chevron <non fermé',
+      '',
+    ]) {
+      expect(shownText(kept)).toBe(kept);
+    }
+  });
+
+  it('une adresse trop longue pour se lire part, son mot reste ; à la limite, elle reste', () => {
+    const at = (length: number) => `https://exemple.test/${'a'.repeat(length - 21)}`;
+    expect(at(LINK_MAX_CHARS)).toHaveLength(LINK_MAX_CHARS);
+    expect(shownText(`Cliquez ici <${at(LINK_MAX_CHARS)}> pour valider.`)).toBe(
+      `Cliquez ici <${at(LINK_MAX_CHARS)}> pour valider.`,
+    );
+    expect(shownText(`Cliquez ici <${at(LINK_MAX_CHARS + 1)}> pour valider.`)).toBe(
+      'Cliquez ici pour valider.',
+    );
+  });
+
+  it('une image liée part avec son lien ; une ligne vidée disparaît, les lignes vides du mail restent', () => {
+    expect(
+      shownText(mail('Bonjour,', '', '[cid:logo.png@01DB]<https://exemple.test>', '', 'À demain.')),
+    ).toBe(mail('Bonjour,', '', '', 'À demain.'));
+    expect(shownText('Le plan [cid:plan.png@01DB] est joint.')).toBe('Le plan  est joint.');
+    // les fins de ligne de Windows
+    expect(shownText('Bonjour,\r\n[cid:a.png@01DB]\r\nÀ demain.')).toBe('Bonjour,\r\nÀ demain.');
+  });
+
+  it('l’extrait de la carte part du texte montré : ni renvoi d’image, ni adresse de lien', () => {
+    const excerpt = excerptOf(
+      shownText(mail('[cid:logo.png@01DB]', 'Bonjour,', `Voir le site<${REWRITTEN}>.`)),
+    );
+    expect(excerpt).toBe('Bonjour, Voir le site.');
+  });
+
+  it('lit vite un texte piégé', () => {
+    const start = performance.now();
+    shownText(`${'<https://'.repeat(20_000)}${'[cid:'.repeat(20_000)}`);
+    expect(performance.now() - start).toBeLessThan(500);
   });
 });

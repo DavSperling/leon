@@ -3,9 +3,10 @@
 -- elle rend la connexion due tout de suite, et la relève habituelle lit la réunion.
 
 -- Une alerte par connexion, à son adresse : Fathom ne dit pas à quelle clé une alerte appartient. `id` : l'identifiant
--- que Fathom lui a donné, rendu une seule fois (il n'en donne pas la liste), gardé pour la retirer un jour.
--- `empreinte` : le sha256 du jeton de son adresse, jamais gardé en clair.
--- Pas de suppression par l'appli : une connexion supprimée emporte son alerte (cascade).
+-- que Fathom lui a donné, rendu une seule fois (il n'en donne pas la liste), gardé pour la retirer avec la connexion ;
+-- « en-creation » tant que sa réponse n'a pas été lue. `empreinte` : le sha256 du jeton de son adresse, jamais gardé en
+-- clair. La ligne est posée avant la demande à Fathom, et seul un refus net de Fathom la retire : une alerte créée chez
+-- lui a toujours la sienne. Une connexion supprimée emporte son alerte (cascade).
 create table alertes_fathom (
   connection_id uuid primary key,
   tenant_id uuid not null,
@@ -24,7 +25,8 @@ create policy tenant_connection on alertes_fathom to leon_app
   with check (tenant_id = app_tenant() and exists (
     select 1 from connections c where c.tenant_id = alertes_fathom.tenant_id
       and c.id = alertes_fathom.connection_id));
-grant select, insert on alertes_fathom to leon_app;
+grant select, insert, delete on alertes_fathom to leon_app;
+grant update (id) on alertes_fathom to leon_app;
 
 -- La seule lecture hors RLS : une alerte reçue sans session ni jeton d'API. Seule l'empreinte du jeton de son adresse
 -- compte ; elle rend la connexion due tout de suite si elle est active : en pause, elle attend sa reprise, et en

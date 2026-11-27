@@ -1,15 +1,19 @@
 import { createHash } from 'node:crypto';
-import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { deleteConnectionAction } from '@/app/(app)/connections/actions';
+import { requireUserContext } from '@/server/auth/session';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { adminPool } from '@/test/db';
 import { type FakeRoute, fakeFetch } from '@/test/fake-fetch';
 import { createTestTenant } from '@/test/fixtures';
-import { createConnection } from '../connections';
+import { createConnection, setConnectionPaused } from '../connections';
 import { runConnectorSync } from '../sync';
 import { fathomConnector } from './connector';
 import { keepFathomAlerted, WEBHOOKS_PATH } from './webhook';
 
 vi.mock('@/server/pipeline/queue');
+vi.mock('@/server/auth/session', () => ({ requireUserContext: vi.fn() }));
+vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 
 // Une organisation neuve par test : on n'asserte que sur nos propres connexions (base de test partagée).
 
@@ -58,7 +62,7 @@ async function alertOf(connectionId: string) {
 
 const emptyPage: FakeRoute = { url: MEETINGS, json: { limit: 10, next_cursor: null, items: [] } };
 // Ce que rend Fathom à la création : l'id et le secret, une seule fois.
-const created = (id: string): FakeRoute => ({
+const created = (id: string | number): FakeRoute => ({
   method: 'POST',
   url: WEBHOOKS,
   status: 201,
@@ -77,6 +81,10 @@ const created = (id: string): FakeRoute => ({
 const bodyOf = (call: { body: unknown } | undefined) => call?.body as Record<string, unknown>;
 
 describe('keepFathomAlerted : l’alerte par laquelle Fathom prévient Leon', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('à la première relève réussie, la crée avec la clé de la personne, à une adresse propre à la connexion, et n’en garde que l’empreinte', async () => {
     const connection = await fathomConnection();
     const fetchImpl = fakeFetch([emptyPage, created('wh-1')]);
@@ -113,7 +121,8 @@ describe('keepFathomAlerted : l’alerte par laquelle Fathom prévient Leon', ()
   it('chaque connexion a sa propre adresse : Fathom ne dit pas à quelle clé une alerte appartient', async () => {
     const first = await fathomConnection();
     const second = await fathomConnection();
-    const fetchImpl = fakeFetch([created('wh-a'), created('wh-b')]);
+    // La seconde reçoit un id en nombre, gardé en texte.
+    const fetchImpl = fakeFetch([created('wh-a'), created(42)]);
 
     await keepFathomAlerted(paul, first, READY, { fetchImpl, publicUrl: PUBLIC });
     await keepFathomAlerted(paul, second, READY, { fetchImpl, publicUrl: PUBLIC });
@@ -121,7 +130,7 @@ describe('keepFathomAlerted : l’alerte par laquelle Fathom prévient Leon', ()
     const urls = fetchImpl.calls.map((call) => bodyOf(call).destination_url);
     expect(new Set(urls).size).toBe(2);
     expect((await alertOf(first.id))?.id).toBe('wh-a');
-    expect((await alertOf(second.id))?.id).toBe('wh-b');
+    expect((await alertOf(second.id))?.id).toBe('42');
   });
 
   it('redemande sans les valeurs des offres Équipe quand Fathom les refuse (400)', async () => {
@@ -138,30 +147,60 @@ describe('keepFathomAlerted : l’alerte par laquelle Fathom prévient Leon', ()
     expect((await alertOf(connection.id))?.id).toBe('wh-2');
   });
 
-  it('une erreur de Fathom n’arrête pas la relève, et la suivante réessaie', async () => {
-    const connection = await fathomConnection();
-    const rejected: FakeRoute = { method: 'POST', url: WEBHOOKS, status: 403, json: {} };
-    const fetchImpl = fakeFetch([emptyPage, rejected]);
-    const job = { connectionId: connection.id, tenantId: paul.tenantId, userId: paul.userId };
+  it.each([403, 429])(
+    'un refus net de Fathom (%i) n’arrête pas la relève : la ligne part, et la relève suivante redemande',
+    async (status) => {
+      const connection = await fathomConnection();
+      const rejected: FakeRoute = { method: 'POST', url: WEBHOOKS, status, json: {} };
+      const fetchImpl = fakeFetch([emptyPage, rejected]);
+      const job = { connectionId: connection.id, tenantId: paul.tenantId, userId: paul.userId };
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
-    const result = await runConnectorSync(job, {
-      getConnector: () => fathomConnector,
-      fetchImpl,
-      publicUrl: PUBLIC,
-    });
+      const result = await runConnectorSync(job, {
+        getConnector: () => fathomConnector,
+        fetchImpl,
+        publicUrl: PUBLIC,
+      });
 
-    expect(result).toBe('ok');
-    const { rows } = await adminPool.query<{ status: string; last_error: string | null }>(
-      'select status, last_error from connections where id = $1',
-      [connection.id],
-    );
-    expect(rows[0]).toEqual({ status: 'active', last_error: null });
-    expect(await alertOf(connection.id)).toBeUndefined();
+      expect(result).toBe('ok');
+      const { rows } = await adminPool.query<{ status: string; last_error: string | null }>(
+        'select status, last_error from connections where id = $1',
+        [connection.id],
+      );
+      expect(rows[0]).toEqual({ status: 'active', last_error: null });
+      expect(await alertOf(connection.id)).toBeUndefined();
 
-    const again = fakeFetch([created('wh-3')]);
-    await keepFathomAlerted(paul, connection, READY, { fetchImpl: again, publicUrl: PUBLIC });
-    expect((await alertOf(connection.id))?.id).toBe('wh-3');
-  });
+      const again = fakeFetch([created('wh-3')]);
+      await keepFathomAlerted(paul, connection, READY, { fetchImpl: again, publicUrl: PUBLIC });
+      expect((await alertOf(connection.id))?.id).toBe('wh-3');
+    },
+  );
+
+  // Fathom a peut-être créé l'alerte : la ligne garde l'empreinte de son adresse, et rien n'est redemandé.
+  it.each<[string, FakeRoute]>([
+    ['une réponse illisible', { method: 'POST', url: WEBHOOKS, status: 201, text: 'pas du json' }],
+    ['une réponse sans id', { method: 'POST', url: WEBHOOKS, status: 201, json: { id: null } }],
+    ['un 5xx', { method: 'POST', url: WEBHOOKS, status: 502, json: {} }],
+  ])(
+    'après %s, garde la ligne en création : pas de second POST, une seule erreur journalisée',
+    async (_name, answer) => {
+      const connection = await fathomConnection();
+      const logged = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      const fetchImpl = fakeFetch([answer]);
+
+      await keepFathomAlerted(paul, connection, READY, { fetchImpl, publicUrl: PUBLIC });
+      const jeton = String(bodyOf(fetchImpl.calls[0]).destination_url).split('/').at(-1) ?? '';
+      expect(await alertOf(connection.id)).toEqual({ id: 'en-creation', empreinte: sha256(jeton) });
+
+      const next = fakeFetch([]);
+      await keepFathomAlerted(paul, connection, READY, { fetchImpl: next, publicUrl: PUBLIC });
+
+      expect(fetchImpl.calls).toHaveLength(1);
+      expect(next.calls).toHaveLength(0);
+      expect(logged).toHaveBeenCalledTimes(1);
+      expect(logged).toHaveBeenCalledWith('[leon]', 'fathom.webhook_failed', expect.any(String));
+    },
+  );
 
   it('ne fait rien sans adresse https (en local), ni pour un autre outil', async () => {
     const connection = await fathomConnection();
@@ -178,5 +217,79 @@ describe('keepFathomAlerted : l’alerte par laquelle Fathom prévient Leon', ()
 
     expect(fetchImpl.calls).toHaveLength(0);
     expect(await alertOf(connection.id)).toBeUndefined();
+  });
+});
+
+describe('deleteConnectionAction : l’alerte se retire avec la connexion', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  // Une connexion Fathom qui a son alerte, créée comme en vrai, et la personne connectée qui la supprime.
+  async function alerted(webhookId: string) {
+    const connection = await fathomConnection();
+    const fetchImpl = fakeFetch([created(webhookId)]);
+    await keepFathomAlerted(paul, connection, READY, { fetchImpl, publicUrl: PUBLIC });
+    vi.mocked(requireUserContext).mockResolvedValue(paul);
+    return connection;
+  }
+
+  async function exists(connectionId: string) {
+    const { rows } = await adminPool.query('select 1 from connections where id = $1', [
+      connectionId,
+    ]);
+    return rows.length > 0;
+  }
+
+  const cleanupLogged = ['[leon]', 'fathom.webhook_cleanup_failed', expect.any(String)];
+
+  // 404 : la personne l'avait déjà retirée dans Fathom.
+  it.each([204, 404])(
+    'la retire chez Fathom avec la clé de la connexion, même en pause (Fathom répond %i)',
+    async (status) => {
+      const connection = await alerted('wh-9');
+      await setConnectionPaused(paul, connection.id, true);
+      const fathom = fakeFetch([{ method: 'DELETE', url: `${WEBHOOKS}/wh-9`, status }]);
+      vi.stubGlobal('fetch', fathom);
+      const logged = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+      await expect(deleteConnectionAction(connection.id)).resolves.toEqual({ ok: true });
+
+      expect(fathom.calls).toHaveLength(1);
+      expect(fathom.calls[0]?.headers['x-api-key']).toBe('cle-de-test');
+      expect(await exists(connection.id)).toBe(false);
+      expect(await alertOf(connection.id)).toBeUndefined();
+      expect(logged).not.toHaveBeenCalledWith(...cleanupLogged);
+    },
+  );
+
+  it('une erreur de Fathom n’empêche pas la suppression : un seul essai, journalisé sans la clé', async () => {
+    const connection = await alerted('wh-10');
+    const fathom = fakeFetch([{ method: 'DELETE', url: `${WEBHOOKS}/wh-10`, status: 500 }]);
+    vi.stubGlobal('fetch', fathom);
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    await expect(deleteConnectionAction(connection.id)).resolves.toEqual({ ok: true });
+
+    expect(fathom.calls).toHaveLength(1);
+    expect(await exists(connection.id)).toBe(false);
+    expect(logged).toHaveBeenCalledWith(...cleanupLogged);
+    expect(JSON.stringify(logged.mock.calls)).not.toContain('cle-de-test');
+  });
+
+  it('saute une alerte restée en création : aucun id à retirer chez Fathom', async () => {
+    const connection = await fathomConnection();
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const lost = fakeFetch([{ method: 'POST', url: WEBHOOKS, status: 502, json: {} }]);
+    await keepFathomAlerted(paul, connection, READY, { fetchImpl: lost, publicUrl: PUBLIC });
+    vi.mocked(requireUserContext).mockResolvedValue(paul);
+    const fathom = fakeFetch([]);
+    vi.stubGlobal('fetch', fathom);
+
+    await expect(deleteConnectionAction(connection.id)).resolves.toEqual({ ok: true });
+
+    expect(fathom.calls).toHaveLength(0);
+    expect(await exists(connection.id)).toBe(false);
   });
 });

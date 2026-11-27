@@ -196,7 +196,7 @@ Le relevé du 23/11 a été fait sur les formes seulement : champs techniques, n
 2. **Les 314 sessions déjà importées le 19/11 restent sur le serveur.** Seules les captures et les imports à venir changent.
 3. **Un appel `Workflow` se juge par les échanges des agents de son run**, comme T63 juge `Agent` et `Task`.
    - Sur le poste au 23/11, 62 des 232 runs seraient locaux. Mais aucune des 17 sessions qui lancent un workflow ne cesse d'être externe : chacune appelle un autre outil externe, comme `mcp__ccd_*`, `SendMessage`, un autre MCP ou `WebFetch`.
-   - Le constat des outils de l'app de bureau a été tranché le même jour (décision ci-dessus) : il ne change pas ce verdict, puisque ces sessions ont aussi d'autres causes.
+   - Le constat des outils de l'app de bureau a été tranché le même jour (décision ci-dessus) : il ne change pas ce verdict, puisque ces sessions ont aussi d'autres causes. Revérifié le 27/11 avec les deux changements réunis : les 19 sessions qui appellent `Workflow` restent externes.
 
 ## Lots, et ce qu'ils changent au plan mémoire des sessions
 

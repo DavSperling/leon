@@ -1591,7 +1591,7 @@
         },
         "microsoft": {
           "title": "Microsoft 365",
-          "text": "Teams, OneDrive et SharePoint. Les mails et l’agenda Outlook sont déjà relevés."
+          "text": "Teams. Les mails et l’agenda Outlook, OneDrive et SharePoint sont déjà relevés."
         },
         "files": {
           "title": "Images et PDF scannés",
@@ -1682,7 +1682,7 @@
         },
         "microsoft": {
           "title": "Microsoft 365",
-          "text": "Teams, OneDrive, SharePoint."
+          "text": "Teams."
         },
         "files": {
           "title": "Images et PDF scannés",
@@ -1740,14 +1740,14 @@
       "notYetLead": "Mieux vaut le lire ici que le découvrir plus tard.",
       "ctaTitle": "Commencez par un outil, et vérifiez les droits vous-même.",
       "ctaText": "Créez un espace, branchez un outil, et regardez ce qui est visible de l’équipe et ce qui ne l’est pas.",
-      "whoLead": "Chaque élément relève de l’une ou de l’autre. Les mails, Google Drive et Slack peuvent être lus par qui les branche et, sur le site de Leon, par ses managers en remontant.",
+      "whoLead": "Chaque élément relève de l’une ou de l’autre. Les mails, Google Drive, OneDrive et Slack peuvent être lus par qui les branche et, sur le site de Leon, par ses managers en remontant.",
       "teamRows": {
         "docs": "Les tickets et les documents",
         "meetings": "Les transcriptions de réunion et les notes du CRM",
         "support": "Les conversations de support et les boîtes partagées"
       },
       "youRows": {
-        "mail": "Vos mails, votre Google Drive et votre Slack",
+        "mail": "Vos mails, votre Google Drive, votre OneDrive et votre Slack",
         "ai": "Vos conversations d’IA et vos sessions de code",
         "chats": "Vos discussions avec Leon et les notes que vous gardez"
       },

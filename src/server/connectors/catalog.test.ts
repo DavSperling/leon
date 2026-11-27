@@ -40,8 +40,8 @@ function catalogProblems(entry: Omit<CatalogEntry, 'en'>, connector: AnyConnecto
 describe('listCatalog', () => {
   const items = listCatalog();
 
-  it('rend les 42 outils, une fois chacun', () => {
-    expect(items).toHaveLength(42);
+  it('rend les 43 outils, une fois chacun', () => {
+    expect(items).toHaveLength(43);
     expect(items.map((item) => item.id).sort()).toEqual([...PROVIDER_IDS].sort());
   });
 
@@ -80,6 +80,7 @@ describe('listCatalog', () => {
       'Jira',
       'Miro',
       'monday.com',
+      'OneDrive / SharePoint',
       'Plane',
       'Productboard',
       'Shortcut',

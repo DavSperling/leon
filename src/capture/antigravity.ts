@@ -36,11 +36,14 @@ import type { CoulisseBloc, SessionFacts } from './api-contract';
 import { prepareTurnText, removeBlocks } from './prepare-turn-text';
 import { collecteur, finishBlocs, prepare, target } from './session-backstage';
 import {
+  type AgentActions,
   buildFacts,
+  type FactsRecord,
   isExternalCommand,
   newFactsRecord,
   recordCommand,
   recordFile,
+  recordToolError,
 } from './session-facts';
 import { stripLeonBlocks } from './strip-leon-blocks';
 import { isTypedTurn, type Turn } from './turn';
@@ -59,8 +62,8 @@ export type AntigravityFile = { path: string; mtime: Date };
 
 // Les sous-agents d'une session (T63 amendé le 17/11, chargés par la CLI : loadAntigravitySubagents) : `named`, pour
 // chaque conversation lue (la session comprise), les identifiants des sous-agents qu'elle nomme ; `transcripts`, la
-// conversation de chaque sous-agent qui se lit (son `transcript_full.jsonl`, jamais décodé). Ils décident de `externe`
-// et des coulisses, et donnent les tours de leurs messages à la session (antigravityReportTurns).
+// conversation de chaque sous-agent qui se lit (son `transcript_full.jsonl`, jamais décodé). Ils décident de `externe`,
+// des coulisses et de `commandes_agents`, et donnent les tours de leurs messages à la session (antigravityReportTurns).
 export type AntigravitySubagents = {
   named: ReadonlyMap<string, readonly string[]>;
   transcripts: ReadonlyMap<string, string>;
@@ -419,17 +422,8 @@ function isExternalSubagent(
   return steps === null || isExternal(id, steps, subagents, visited);
 }
 
-// `subagents` : les sous-agents de la session (loadAntigravitySubagents), qui ne décident que de `externe` ; sans eux,
-// un appel invoke_subagent rend la session externe.
-export function extractAntigravityFacts(
-  content: string,
-  file: AntigravityFile,
-  root: string | null,
-  brancheLue: string | null = null,
-  subagents?: AntigravitySubagents,
-): SessionFacts {
-  const record = newFactsRecord();
-  const steps = sessionSteps(content, file);
+// Les gestes des appels d'une conversation, dans `record` ; rend le nombre de commandes en erreur.
+function recordSteps(record: FactsRecord, steps: Step[], root: string | null): number {
   let errors = 0;
   for (const { name, args, result } of callsWithResults(steps)) {
     const commandLine = args?.CommandLine;
@@ -441,13 +435,54 @@ export function extractAntigravityFacts(
       recordCommand(record, commandLine, output, error);
       continue;
     }
-    // Une écriture en ERROR n'a rien écrit : les coulisses marquent l'appel `erreur` (statut).
-    if (READ_TOOLS.test(name) || result?.status === 'ERROR') continue;
+    // Un appel en ERROR n'a rien écrit : il compte sous son nom commun (T58), jamais avec son message.
+    if (result?.status === 'ERROR') {
+      recordToolError(record, TOOL_NAMES.get(name) ?? '[outil]');
+      continue;
+    }
+    if (READ_TOOLS.test(name)) continue;
     for (const key of ['TargetFile', 'AbsolutePath']) {
       const path = args?.[key];
       if (typeof path === 'string') recordFile(record, path, root);
     }
   }
+  return errors;
+}
+
+// Les relevés des sous-agents finis d'une conversation et des leurs (T58), chaque conversation lue une seule fois
+// (`visited`) : leurs commandes et leurs outils en erreur seulement. Un sous-agent qui n'a pas fini ne donne rien.
+function subagentActions(
+  id: string,
+  subagents: AntigravitySubagents | undefined,
+  visited: Set<string>,
+  agents: AgentActions[] = [],
+): AgentActions[] {
+  for (const child of subagents?.named.get(id) ?? []) {
+    if (visited.has(child)) continue;
+    visited.add(child);
+    const steps = finishedSubagent(subagents?.transcripts.get(child));
+    if (steps === null) continue;
+    const record = newFactsRecord();
+    recordSteps(record, steps, null);
+    const debut = steps.find((step) => step.created_at)?.created_at ?? null;
+    agents.push({ debut, commandes: record.commands, outils: record.toolErrors });
+    subagentActions(child, subagents, visited, agents);
+  }
+  return agents;
+}
+
+// `subagents` : les sous-agents de la session (loadAntigravitySubagents), qui décident de `externe` et, finis, donnent
+// `commandes_agents` ; sans eux, un appel invoke_subagent rend la session externe.
+export function extractAntigravityFacts(
+  content: string,
+  file: AntigravityFile,
+  root: string | null,
+  brancheLue: string | null = null,
+  subagents?: AntigravitySubagents,
+): SessionFacts {
+  const record = newFactsRecord();
+  const steps = sessionSteps(content, file);
+  const errors = recordSteps(record, steps, root);
   const conversation = conversationOf(file.path);
   const session = parseAntigravitySession(content, file);
   const dates = steps.flatMap((step) => (step.created_at ? [step.created_at] : []));
@@ -459,6 +494,7 @@ export function extractAntigravityFacts(
     echanges: session?.turns.filter(isTypedTurn).length ?? 0,
     start: dates[0] ?? null,
     end: dates.at(-1) ?? file.mtime.toISOString(),
+    agents: subagentActions(conversation, subagents, new Set([conversation])),
   });
 }
 

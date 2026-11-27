@@ -360,6 +360,7 @@ describe('Antigravity 2.31.0 (annexe 11)', () => {
       ],
       taches: [],
       erreurs: 1,
+      outils_en_erreur: [{ outil: 'webview_browser', nombre: 1 }], // celui du navigateur, sous-agent fini
       externe: true,
       echanges: 2,
       debut: '2026-11-13T11:45:00Z',
@@ -532,6 +533,130 @@ describe('Antigravity 2.31.0 (annexe 11)', () => {
         true,
       );
       expect(externe(etape(1, { type: 'PLANNER_RESPONSE', tool_calls: ['read_file'] }))).toBe(true);
+    });
+  });
+
+  describe('les outils en erreur et les commandes des sous-agents (T58)', () => {
+    const faits = (contenu: string, sa?: AntigravitySubagents) =>
+      extractAntigravityFacts(contenu, FICHIER, ESSAI, null, sa);
+    // Un sous-agent fini dont chaque appel a le statut donné.
+    const finiAvec = (...calls: [[string, unknown], string][]) =>
+      [
+        etape(0, { source: 'SYSTEM', type: 'SYSTEM_MESSAGE', content: 'Tâche.' }),
+        ...calls.flatMap(([call, status], index) => [
+          appels(2 * index + 1, call),
+          resultat(2 * index + 2, status),
+        ]),
+        fin(2 * calls.length + 1),
+      ].join('\n');
+
+    it('un outil en ERROR compte sous son nom commun, un outil inconnu sous [outil], sans aucun texte d’erreur', () => {
+      const relevé = faits(
+        [
+          appels(
+            1,
+            ['write_to_file', { TargetFile: `${ESSAI}/a.ts`, CodeContent: 'x' }],
+            ['replace_file_content', { TargetFile: `${ESSAI}/b.ts` }],
+            ['outil_inconnu', { x: 1 }],
+            ['read_file', { Path: `${ESSAI}/c.txt` }],
+            ['run_command', { CommandLine: 'pnpm test' }],
+          ),
+          resultat(2, 'ERROR', 'Disque plein : erreur secrète'),
+          resultat(3, 'ERROR', 'Disque plein : erreur secrète'),
+          resultat(4, 'ERROR', 'Disque plein : erreur secrète'),
+          resultat(5, 'DONE'),
+          resultat(6, 'ERROR', 'Disque plein : erreur secrète'),
+          appels(7, ['replace_file_content', { TargetFile: `${ESSAI}/b.ts` }]),
+          resultat(8, 'ERROR', 'Disque plein : erreur secrète'),
+        ].join('\n'),
+      );
+
+      expect(relevé.outils_en_erreur).toEqual([
+        { outil: 'Edit', nombre: 2 },
+        { outil: 'Write', nombre: 1 },
+        { outil: '[outil]', nombre: 1 },
+      ]);
+      // La commande en erreur reste dans `commandes` et `erreurs` : elle n'est pas un outil en erreur.
+      expect(relevé.commandes).toEqual([{ texte: 'pnpm test', erreur: true, suite: false }]);
+      expect(relevé.erreurs).toBe(1);
+      expect(JSON.stringify(relevé)).not.toContain('secrète');
+      expect(SessionFactsSchema.safeParse(relevé).success).toBe(true);
+    });
+
+    it('sans outil en erreur, ni sous-agent qui lance une commande : aucune des deux clés', () => {
+      const relevé = faits(LANCE, sousAgents({ [S]: [R] }, { [R]: RECHERCHE }));
+      expect(relevé).not.toHaveProperty('outils_en_erreur');
+      expect(relevé).not.toHaveProperty('commandes_agents');
+    });
+
+    it('la commande d’un sous-agent fini arrive dans commandes_agents ; la tête ne change pas', () => {
+      const agent = finiAvec(
+        [['run_command', { CommandLine: 'pnpm test:db; echo fini' }], 'ERROR'],
+        [['write_to_file', { TargetFile: `${ESSAI}/agent.ts`, CodeContent: 'x' }], 'DONE'],
+      );
+      const relevé = faits(LANCE, sousAgents({ [S]: [R] }, { [R]: agent }));
+
+      expect(relevé.commandes_agents).toEqual([
+        { agent: 1, texte: 'pnpm', erreur: true, suite: true },
+      ]);
+      // Ses fichiers ne sont pas ceux de la session ; la tête n'a lancé aucune commande.
+      expect(relevé.fichiers).toEqual([]);
+      expect(relevé.commandes).toEqual([]);
+      expect(relevé.erreurs).toBe(0);
+      expect(SessionFactsSchema.safeParse(relevé).success).toBe(true);
+    });
+
+    it('les sous-agents se rangent par leur première heure, un sous-agent de sous-agent compris', () => {
+      const tard = sousAgent(['run_command', { CommandLine: 'git status' }]).replaceAll(
+        TS,
+        '2026-11-06T11:00:00Z',
+      );
+      const relais = sousAgent(
+        ['invoke_subagent', { Prompt: 'Va plus loin.' }],
+        ['run_command', { CommandLine: 'pnpm lint' }],
+      );
+      const relevé = faits(LANCE, sousAgents({ [S]: [G], [G]: [R] }, { [G]: tard, [R]: relais }));
+
+      expect(relevé.commandes_agents).toEqual([
+        { agent: 1, texte: 'pnpm lint', erreur: false, suite: false },
+        { agent: 2, texte: 'git status', erreur: false, suite: false },
+      ]);
+    });
+
+    it('une conversation revue n’est lue qu’une fois', () => {
+      const agent = finiAvec(
+        [['invoke_subagent', { Prompt: 'Encore.' }], 'DONE'],
+        [['run_command', { CommandLine: 'pnpm test' }], 'DONE'],
+        [['outil_inconnu', {}], 'ERROR'],
+      );
+      // Nommé deux fois par la session, nommé par lui-même et par l'autre sous-agent.
+      const relevé = faits(
+        LANCE,
+        sousAgents({ [S]: [R, R, G], [R]: [R, G], [G]: [R] }, { [R]: agent, [G]: agent }),
+      );
+
+      expect(relevé.commandes_agents).toEqual([
+        { agent: 1, texte: 'pnpm test', erreur: false, suite: false },
+        { agent: 2, texte: 'pnpm test', erreur: false, suite: false },
+      ]);
+      expect(relevé.outils_en_erreur).toEqual([{ outil: '[outil]', nombre: 2 }]);
+    });
+
+    it.each([
+      [
+        'qui n’a pas rendu la main',
+        coupe(sousAgent(['run_command', { CommandLine: 'pnpm test' }])),
+      ],
+      ['dont la conversation ne se retrouve pas', undefined],
+      [
+        'dont une ligne est illisible',
+        illisible(sousAgent(['run_command', { CommandLine: 'ls' }])),
+      ],
+    ])('un sous-agent %s ne donne rien', (_cas, contenu) => {
+      const transcripts: Record<string, string> = contenu === undefined ? {} : { [R]: contenu };
+      const relevé = faits(LANCE, sousAgents({ [S]: [R] }, transcripts));
+      expect(relevé).not.toHaveProperty('commandes_agents');
+      expect(relevé).not.toHaveProperty('outils_en_erreur');
     });
   });
 });

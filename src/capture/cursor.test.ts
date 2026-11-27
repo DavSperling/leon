@@ -224,4 +224,38 @@ describe('extractCursorFacts', () => {
     );
     expect(faits.commandes).toEqual([{ texte: 'psql', erreur: false, suite: false }]);
   });
+
+  // T58 : le transcript de Cursor n'écrit aucune sortie d'outil, et rien ne relie un sous-agent à son fichier.
+  it('jamais de outils_en_erreur ni de commandes_agents, même avec un sous-agent ou un outil inconnu', () => {
+    const faits = extractCursorFacts(
+      line(
+        'assistant',
+        tool('Task', { prompt: 'Lance pnpm test.' }),
+        tool('OutilInconnu', {}),
+        tool('Shell', { command: 'pnpm test' }),
+      ),
+      FILE,
+      RACINE,
+    );
+    expect(faits).not.toHaveProperty('outils_en_erreur');
+    expect(faits).not.toHaveProperty('commandes_agents');
+  });
+
+  it('suite est posé sur ses commandes, comme chez les autres', () => {
+    const faits = extractCursorFacts(
+      line(
+        'assistant',
+        tool('Shell', { command: 'cd x && pnpm test' }),
+        tool('Shell', { command: 'pnpm test > out.txt 2>&1' }),
+        tool('run_terminal_cmd', { command: 'pnpm test 2>&1 | tail' }),
+      ),
+      FILE,
+      RACINE,
+    );
+    expect(faits.commandes).toEqual([
+      { texte: 'cd', erreur: false, suite: true },
+      { texte: 'pnpm test', erreur: false, suite: false },
+      { texte: 'pnpm test', erreur: false, suite: true },
+    ]);
+  });
 });

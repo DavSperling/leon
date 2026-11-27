@@ -24,6 +24,7 @@ import { normalizeItem } from './normalize';
 import { ensureFreshTokens, OAuthRefusedError } from './oauth';
 import { connectorHttp } from './pipedream';
 import { CONNECTOR_QUEUES, type ConnectorSyncJob } from './queue';
+import { keepTrelloWebhooks } from './trello/webhooks';
 import type { AnyConnector } from './types';
 
 // Un passage lit au plus 200 éléments : le premier passage d'un gros dépôt se fait en plusieurs fois.
@@ -264,6 +265,8 @@ export async function runConnectorSync(job: ConnectorSyncJob, deps: SyncDeps): P
   await rememberAccountKey(ctx, fresh, deps, ready);
   // Les abonnements par lesquels Microsoft prévient Leon dès que quelque chose arrive, sous la même réservation.
   await keepNotified(ctx, fresh, ready.connector, deps);
+  // Trello : un webhook par tableau ouvert, pour une connexion par bouton (trello/webhooks.ts).
+  await keepTrelloWebhooks(ctx, fresh, ready.connector, deps);
   await finishSync(ctx, connection.id, connection.lockedAt, { kind: 'ok', again });
   // La relève d'une boîte a pu apporter un mail qui attend une réponse : un passage de l'agent « Brouillons de
   // réponse » pour qui l'a branchée, si elle lui a dit oui. Pas tant qu'il reste à lire (« soon ») : Outlook lit la

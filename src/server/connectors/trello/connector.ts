@@ -12,6 +12,7 @@ import {
   touchedCards,
 } from './cursor';
 import { toItem } from './map';
+import { trelloOAuth } from './oauth';
 
 // Doc lue le 15/10/2026 :
 //   https://developer.atlassian.com/cloud/trello/guides/rest-api/api-introduction/
@@ -39,8 +40,18 @@ import { toItem } from './map';
 // la doc n'en donne pas d'exemple) ; que le paramètre `actions` d'une carte accepte plusieurs types ;
 // le code rendu pour une carte inaccessible. Limites connues : un commentaire modifié n'est pas
 // repéré avant la prochaine action de la carte (l'action updateComment n'est pas listable) ; au-delà
-// de 1000 commentaires sur une carte, seuls les plus récents sont lus ; la liste d'un tableau n'est
-// pas dans le texte du tour (elle est dans `origin.list`).
+// de 1000 commentaires sur une carte, seuls les plus récents sont lus.
+//
+// Ajouts du 27/11/2026, doc lue ce jour-là :
+//   https://developer.atlassian.com/cloud/trello/rest/api-group-cards/ (GET /1/cards/{id} : `members` et
+//     `member_fields` rendent les membres avec la carte, sans requête de plus ; droit read:board:trello)
+//   https://developer.atlassian.com/cloud/trello/guides/rest-api/object-definitions/ (carte : `due`, `dueComplete`,
+//     `labels`, un tableau d'objets d'étiquette ; membre : `fullName`, « s'il est public »)
+//   le bouton (OAuth 2.0, Bearer) : voir oauth.ts ; les webhooks : voir webhooks.ts.
+// Une connexion par bouton s'authentifie par son jeton d'accès, que le socle renouvelle ; `verify` rend
+// l'identifiant du membre (`accountKey`), que « Reconnecter » compare : le libellé compte les tableaux et change.
+// Non vérifié : que `member_fields` accepte `fullName` (la référence n'en liste aucune valeur) ; la forme de
+// `labels` (l'exemple de la référence la confond avec `idLabels` : on suit la définition des objets).
 
 const CARDS_PER_PAGE = 50;
 
@@ -48,7 +59,24 @@ const Credential = z
   .string()
   .trim()
   .regex(/^[A-Za-z0-9_-]{1,200}$/);
-const ConfigSchema = z.object({ apiKey: Credential, token: Credential });
+// Deux façons de se brancher : la clé et le jeton collés (une connexion sans `authMode` est à clé) ou le
+// bouton, dont le socle OAuth tient les jetons. Un `z.object` raffiné : le catalogue lit `.shape`.
+const ConfigSchema = z
+  .object({
+    authMode: z.enum(['key', 'oauth']).default('key'),
+    apiKey: Credential.optional(),
+    token: Credential.optional(),
+    accessToken: z.string().min(1).optional(),
+    refreshToken: z.string().nullable().optional(),
+    expiresAt: z.string().nullable().optional(),
+  })
+  .superRefine((config, ctx) => {
+    const needed =
+      config.authMode === 'oauth' ? (['accessToken'] as const) : (['apiKey', 'token'] as const);
+    for (const field of needed) {
+      if (!config[field]) ctx.addIssue({ code: 'custom', path: [field], message: 'Required' });
+    }
+  });
 type Config = z.infer<typeof ConfigSchema>;
 
 async function listNames(trello: TrelloClient, boardId: string): Promise<Map<string, string>> {
@@ -111,13 +139,15 @@ export const trelloConnector: Connector<Config> = {
   secretFields: ['token'],
   hosts: () => ['api.trello.com'],
   minIntervalMs: 150,
+  oauth: trelloOAuth,
 
   async verify(config: Config, http: ConnectorHttp) {
     const trello = trelloClient(config, http);
     const me = await trello.account();
     const count = (await trello.boards()).length;
     const name = me.fullName?.trim() || me.username;
-    return { account: `${name} (@${me.username}), ${count} board${count > 1 ? 's' : ''}` };
+    const account = `${name} (@${me.username}), ${count} board${count > 1 ? 's' : ''}`;
+    return { account, accountKey: me.id };
   },
 
   sync(config: Config, state: SyncState, http: ConnectorHttp) {

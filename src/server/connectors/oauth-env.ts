@@ -20,6 +20,7 @@ export const OAUTH_APP_KEYS = [
   'PRODUCTBOARD',
   'MICROSOFT',
   'GOOGLE',
+  'TRELLO',
 ] as const;
 export type OAuthAppKey = (typeof OAUTH_APP_KEYS)[number];
 
@@ -46,6 +47,7 @@ const PAIRS: Record<OAuthAppKey, () => Pair> = {
   ],
   MICROSOFT: () => [process.env.LEON_OAUTH_MICROSOFT_ID, process.env.LEON_OAUTH_MICROSOFT_SECRET],
   GOOGLE: () => [process.env.LEON_OAUTH_GOOGLE_ID, process.env.LEON_OAUTH_GOOGLE_SECRET],
+  TRELLO: () => [process.env.LEON_OAUTH_TRELLO_ID, process.env.LEON_OAUTH_TRELLO_SECRET],
 };
 
 // Une chaîne vide vaut une variable absente ; une paire incomplète est ignorée.

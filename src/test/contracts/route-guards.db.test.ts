@@ -31,6 +31,7 @@ const PUBLIC = [
   /^\/api\/v1\/connexions\/oauth\//,
   /^\/api\/oauth\/(clients|jeton)$/, // liste fermée : une route OAuth de plus se garde, ou s'ajoute ici à la main
   /^\/api\/microsoft\/notifications$/,
+  /^\/api\/trello\/webhooks\/:token$/, // les alertes de Trello : la signature de chacune en fait foi
 ];
 
 const isPublic = (path: string) => PUBLIC.some((pattern) => pattern.test(path));

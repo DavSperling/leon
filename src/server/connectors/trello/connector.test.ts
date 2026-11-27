@@ -1,11 +1,13 @@
 import { randomBytes } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
+import type { z } from 'zod';
 import { collect, type FakeRoute, testHttp } from '@/test/fake-fetch';
 import { listCatalog } from '../catalog';
 import { ConnectorAuthError, ConnectorHttpError } from '../http';
 import { normalizeItem } from '../normalize';
 import { getConnector } from '../registry';
 import type { ConnectorItem, SyncPage } from '../types';
+import { trelloCatalog } from './catalog';
 import { trelloConnector } from './connector';
 import actionsBoardA from './fixtures/actions-board-a.json';
 import actionsBoardB from './fixtures/actions-board-b.json';
@@ -17,11 +19,19 @@ import cardC5 from './fixtures/card-c5.json';
 import listsBoardA from './fixtures/lists-board-a.json';
 import listsBoardB from './fixtures/lists-board-b.json';
 import member from './fixtures/member.json';
+import { trelloOAuth } from './oauth';
 
 // Clé et jeton générés à l'exécution : aucun secret, même d'exemple, dans le dépôt.
 const KEY = `cle-${randomBytes(12).toString('hex')}`;
 const TOKEN = `jeton-${randomBytes(24).toString('hex')}`;
-const config = { apiKey: KEY, token: TOKEN };
+const config = { authMode: 'key' as const, apiKey: KEY, token: TOKEN };
+const ACCESS = `acces-${randomBytes(24).toString('hex')}`;
+const OAUTH_CONFIG = {
+  authMode: 'oauth' as const,
+  accessToken: ACCESS,
+  refreshToken: `renouv-${randomBytes(12).toString('hex')}`,
+  expiresAt: '2026-11-27T10:00:00.000Z',
+};
 const SINCE = new Date('2026-09-15T00:00:00Z');
 
 const API = 'https://api.trello.com/1';
@@ -65,11 +75,16 @@ function firstPassRoutes(): FakeRoute[] {
 
 async function runSync(
   routes: FakeRoute[],
-  overrides: { cursor?: string | null; since?: Date } = {},
+  overrides: {
+    cursor?: string | null;
+    since?: Date;
+    config?: typeof config | typeof OAUTH_CONFIG;
+  } = {},
 ) {
-  const { http, calls } = testHttp(trelloConnector, config, routes);
+  const used = overrides.config ?? config;
+  const { http, calls } = testHttp(trelloConnector, used, routes);
   const state = { cursor: overrides.cursor ?? null, since: overrides.since ?? SINCE };
-  const pages = await collect(trelloConnector.sync(config, state, http));
+  const pages = await collect(trelloConnector.sync(used, state, http));
   return { pages, calls };
 }
 
@@ -102,9 +117,44 @@ describe('trello : configuration', () => {
     }
   });
 
+  it('accepte la forme du bouton, avec ou sans échéance', () => {
+    expect(schema.parse(OAUTH_CONFIG)).toEqual(OAUTH_CONFIG);
+    const noExpiry = { ...OAUTH_CONFIG, refreshToken: null, expiresAt: null };
+    expect(schema.parse(noExpiry)).toEqual(noExpiry);
+  });
+
+  it('refuse un bouton sans jeton d’accès, et une clé sans clé ni jeton', () => {
+    expect(schema.safeParse({ authMode: 'oauth' }).success).toBe(false);
+    expect(schema.safeParse({ ...OAUTH_CONFIG, accessToken: '' }).success).toBe(false);
+    expect(schema.safeParse({ authMode: 'oauth', apiKey: KEY, token: TOKEN }).success).toBe(false);
+    expect(schema.safeParse({ authMode: 'key', accessToken: ACCESS }).success).toBe(false);
+    expect(schema.safeParse({ authMode: 'autre', apiKey: KEY, token: TOKEN }).success).toBe(false);
+  });
+
+  it('garde un schéma d’objet que le catalogue sait lire (.shape)', () => {
+    const shape = (schema as unknown as z.ZodObject).shape;
+    expect(Object.keys(shape).sort()).toEqual([
+      'accessToken',
+      'apiKey',
+      'authMode',
+      'expiresAt',
+      'refreshToken',
+      'token',
+    ]);
+  });
+
   it('fixe l’hôte et le champ à chiffrer', () => {
     expect(trelloConnector.hosts(config)).toEqual(['api.trello.com']);
+    // Les jetons du bouton rejoignent les secrets par le socle : ils ne figurent pas ici.
     expect(trelloConnector.secretFields).toEqual(['token']);
+  });
+
+  it('déclare le bouton, et garde la clé avec son aide', () => {
+    expect(trelloConnector.oauth).toBe(trelloOAuth);
+    expect(trelloCatalog.oauthHelp?.trim()).toBeTruthy();
+    expect(trelloCatalog.en.oauthHelp?.trim()).toBeTruthy();
+    expect(trelloCatalog.keyAccepted).not.toBe(false);
+    expect(trelloCatalog.keyHelp).toBeTruthy();
   });
 
   it('respecte la limite de 100 requêtes par 10 secondes de chaque jeton', () => {
@@ -126,7 +176,11 @@ describe('trello : verify', () => {
 
     const result = await trelloConnector.verify(config, http);
 
-    expect(result).toEqual({ account: 'Marie Durand (@mariedurand), 2 boards' });
+    // L'identifiant du membre, que « Reconnecter » compare : le libellé, lui, change avec les tableaux.
+    expect(result).toEqual({
+      account: 'Marie Durand (@mariedurand), 2 boards',
+      accountKey: member.id,
+    });
     expect(calls.map((call) => pathOf(call.url))).toEqual([
       '/1/members/me',
       '/1/members/me/boards',
@@ -149,7 +203,10 @@ describe('trello : verify', () => {
 
     const result = await trelloConnector.verify(config, http);
 
-    expect(result).toEqual({ account: 'mariedurand (@mariedurand), 1 board' });
+    expect(result).toEqual({
+      account: 'mariedurand (@mariedurand), 1 board',
+      accountKey: member.id,
+    });
   });
 
   it('refuse un jeton rejeté, sans reprendre la clé ni le jeton dans le message', async () => {
@@ -200,18 +257,20 @@ describe('trello : sync, premier passage', () => {
     }
   });
 
-  it('demande chaque carte avec sa description, ses commentaires et sa création', async () => {
+  it('demande chaque carte avec son état, ses membres, ses commentaires et sa création', async () => {
     const { calls } = await runSync(firstPassRoutes());
 
     const card = calls.find((call) => pathOf(call.url) === `/1/cards/${C1}`);
     expect(paramsOf(card?.url)).toEqual({
-      fields: 'name,desc,url,shortUrl,idList',
+      fields: 'name,desc,url,shortUrl,idList,due,dueComplete,labels',
+      members: 'true',
+      member_fields: 'fullName',
       actions: 'commentCard,createCard',
       actions_limit: '1000',
     });
   });
 
-  it('rend une carte avec sa description puis ses commentaires, du plus ancien au plus récent', async () => {
+  it('rend une carte avec sa ligne d’état, sa description puis ses commentaires, du plus ancien au plus récent', async () => {
     const { pages } = await runSync(firstPassRoutes());
 
     expect(itemsOf(pages).find((item) => item.externalId === `card:${C1}`)).toEqual({
@@ -222,6 +281,13 @@ describe('trello : sync, premier passage', () => {
       updatedAt: C1_AT,
       origin: { board: 'Site Acme', list: 'En cours' },
       turns: [
+        {
+          externalId: 'etat',
+          role: 'document',
+          author: { name: null, email: null },
+          text: 'Liste : En cours · Échéance : 2026-10-31 16:00 UTC · Étiquettes : Urgent · Membres : Marie Durand, Paul Martin',
+          ts: C1_AT,
+        },
         {
           externalId: 'body',
           role: 'document',
@@ -247,23 +313,64 @@ describe('trello : sync, premier passage', () => {
     });
   });
 
-  it('rend une carte sans description avec ses seuls commentaires', async () => {
+  it('rend une carte sans description avec sa ligne d’état puis ses commentaires', async () => {
     const { pages } = await runSync(firstPassRoutes());
 
     const item = itemsOf(pages).find((candidate) => candidate.externalId === `card:${C2}`);
     expect(item?.origin).toEqual({ board: 'Site Acme', list: 'À faire' });
     expect(item?.updatedAt).toBe('2026-10-11T16:20:00.500Z');
-    expect(item?.turns.map((turn) => [turn.externalId, turn.role, turn.author.name])).toEqual([
-      ['comment:6710f0000000000000000005', 'participant', 'Paul Martin'],
+    expect(
+      item?.turns.map((turn) => [turn.externalId, turn.role, turn.author.name, turn.text]),
+    ).toEqual([
+      ['etat', 'document', null, 'Liste : À faire'],
+      [
+        'comment:6710f0000000000000000005',
+        'participant',
+        'Paul Martin',
+        'Je propose de comparer trois offres avant jeudi.',
+      ],
     ]);
   });
 
-  it('rend une carte sans texte sans tours, pour que le curseur avance', async () => {
+  it('garde une carte qui n’a que son titre par son seul tour d’état', async () => {
     const { pages } = await runSync(firstPassRoutes());
 
     const item = itemsOf(pages).find((candidate) => candidate.externalId === `card:${C3}`);
     expect(item).toMatchObject({ title: 'Carte à trier', updatedAt: '2026-10-12T08:00:00.000Z' });
-    expect(item?.turns).toEqual([]);
+    expect(item?.turns).toEqual([
+      {
+        externalId: 'etat',
+        role: 'document',
+        author: { name: null, email: null },
+        text: 'Liste : En cours',
+        ts: '2026-10-12T08:00:00.000Z',
+      },
+    ]);
+  });
+
+  it('écrit une échéance tenue, et laisse une échéance illisible et les étiquettes sans nom', async () => {
+    const variant = {
+      ...cardC1,
+      desc: '',
+      due: '2026-10-31T16:00:00.000Z',
+      dueComplete: true,
+      labels: [{ name: '  ' }, { name: 'Client' }],
+      members: [{ fullName: ' Marie Durand ' }, { fullName: null }],
+    };
+    const unreadable = { ...variant, due: 'bientôt', labels: [], members: [] };
+    const textOf = async (card: unknown) => {
+      const routes = firstPassRoutes().map((route) =>
+        route.url === `${API}/cards/${C1}` ? { ...route, json: card } : route,
+      );
+      const { pages } = await runSync(routes);
+      const item = itemsOf(pages).find((candidate) => candidate.externalId === `card:${C1}`);
+      return item?.turns.find((turn) => turn.externalId === 'etat')?.text;
+    };
+
+    expect(await textOf(variant)).toBe(
+      'Liste : En cours · Échéance : 2026-10-31 16:00 UTC (terminée) · Étiquettes : Client · Membres : Marie Durand',
+    );
+    expect(await textOf(unreadable)).toBe('Liste : En cours');
   });
 
   it('rend les cartes de la plus anciennement à la plus récemment modifiée, une page par tableau', async () => {
@@ -341,6 +448,9 @@ describe('trello : sync, premier passage', () => {
       { board: 'Site Acme' },
       { board: 'Site Acme' },
     ]);
+    // Sans liste ni rien d'autre, une carte qui n'a que son titre n'a pas de tours : le curseur avance.
+    const bare = itemsOf(pages).find((item) => item.externalId === `card:${C3}`);
+    expect(bare?.turns).toEqual([]);
   });
 
   it('rend un auteur sans nom quand le membre est inconnu, et le nom d’utilisateur à défaut', async () => {
@@ -361,7 +471,11 @@ describe('trello : sync, premier passage', () => {
     );
 
     const item = itemsOf(pages).find((candidate) => candidate.externalId === `card:${C2}`);
-    expect(item?.turns.map((turn) => turn.author.name)).toEqual([null, 'paulmartin']);
+    expect(item?.turns.map((turn) => [turn.externalId, turn.author.name])).toEqual([
+      ['etat', null],
+      ['body', null],
+      ['comment:6710f0000000000000000005', 'paulmartin'],
+    ]);
   });
 
   it('lit les pages d’actions suivantes, à partir de la plus ancienne action reçue', async () => {
@@ -441,6 +555,25 @@ describe('trello : sync, premier passage', () => {
     expect(calls.filter((call) => pathOf(call.url).endsWith('/lists'))).toHaveLength(1);
   });
 
+  it('une carte déplacée ne change que son tour d’état : la description garde son empreinte', async () => {
+    const storedIds = async (card: unknown) => {
+      const routes = firstPassRoutes().map((route) =>
+        route.url === `${API}/cards/${C1}` ? { ...route, json: card } : route,
+      );
+      const item = itemsOf((await runSync(routes)).pages).find(
+        (candidate) => candidate.externalId === `card:${C1}`,
+      );
+      return normalizeItem(item as ConnectorItem, 'trello')?.turns.map((turn) => turn.externalId);
+    };
+
+    const before = await storedIds(cardC1);
+    const after = await storedIds({ ...cardC1, idList: '5f2b3c4d5e6f7a8b9c0d11a3' }); // « Terminé »
+
+    expect(after?.[0]).not.toBe(before?.[0]);
+    expect(after?.[0]).toMatch(/^etat#/);
+    expect(after?.slice(1)).toEqual(before?.slice(1));
+  });
+
   it('rend des éléments que le socle accepte, avec des dates ISO canoniques', async () => {
     const { pages } = await runSync(firstPassRoutes());
 
@@ -467,6 +600,44 @@ describe('trello : sync, premier passage', () => {
     ).catch((error: unknown) => error);
 
     expect(await failure).toBeInstanceOf(ConnectorAuthError);
+  });
+});
+
+describe('trello : connexion par le bouton', () => {
+  it('verify envoie le jeton d’accès en « Bearer », jamais par l’adresse', async () => {
+    const { http, calls } = testHttp(trelloConnector, OAUTH_CONFIG, [
+      { url: `${API}/members/me`, json: member },
+      { url: `${API}/members/me/boards`, json: boards },
+    ]);
+
+    const result = await trelloConnector.verify(OAUTH_CONFIG, http);
+
+    expect(result).toEqual({
+      account: 'Marie Durand (@mariedurand), 2 boards',
+      accountKey: member.id,
+    });
+    expect(calls).toHaveLength(2);
+    for (const call of calls) {
+      expect(call.headers.authorization).toBe(`Bearer ${ACCESS}`);
+      expect(call.url).not.toContain(ACCESS);
+    }
+  });
+
+  it('sync envoie le jeton d’accès en « Bearer » à chaque requête', async () => {
+    const { pages, calls } = await runSync(firstPassRoutes(), { config: OAUTH_CONFIG });
+
+    expect(idsOf(pages)).toHaveLength(4);
+    for (const call of calls) expect(call.headers.authorization).toBe(`Bearer ${ACCESS}`);
+  });
+
+  it('rend un jeton refusé par un 401 (le socle renouvelle sur ce statut)', async () => {
+    const { http } = testHttp(trelloConnector, OAUTH_CONFIG, [
+      { url: `${API}/members/me`, status: 401, text: 'invalid token' },
+    ]);
+
+    await expect(trelloConnector.verify(OAUTH_CONFIG, http)).rejects.toBeInstanceOf(
+      ConnectorAuthError,
+    );
   });
 });
 

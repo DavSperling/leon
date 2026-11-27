@@ -20,6 +20,8 @@ export const trelloCatalog: CatalogEntry = {
   ],
   keyHelp:
     'Sur trello.com/apps/admin : créez un Power-Up, générez sa clé d’API (onglet d’authentification), puis obtenez un jeton en lecture seule avec le lien indiqué sous le champ « Jeton ».',
+  oauthHelp:
+    'Trello vous demande d’autoriser Leon sur votre compte. Leon lit les cartes et les commentaires de vos tableaux ouverts ; l’accès permet aussi de créer et de modifier des cartes.',
   docsUrl: 'https://developer.atlassian.com/cloud/trello/guides/rest-api/authorization/',
   triedForReal: false,
   en: {
@@ -36,5 +38,7 @@ export const trelloCatalog: CatalogEntry = {
     },
     keyHelp:
       'At trello.com/apps/admin: create a Power-Up, generate its API key (authentication tab), then get a read-only token with the link shown under the “Token” field.',
+    oauthHelp:
+      'Trello asks you to authorize Leon on your account. Leon reads the cards and comments of your open boards; the access also allows creating and editing cards.',
   },
 };

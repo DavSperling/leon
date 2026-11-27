@@ -28,8 +28,26 @@ function speechTurns(meeting: Meeting): ConnectorTurn[] {
   return mergeSpeakerTurns(turns.filter((turn) => turn.text !== ''));
 }
 
+type ActionItem = NonNullable<Meeting['action_items']>[number];
+
+// « - À faire : Prévenir le client (Paul Martin, paul@acme.test, à 00:01:02) » : où en est l'action, ce qu'elle dit,
+// à qui Fathom la confie et quand elle a été dite.
+function actionLine(action: ActionItem): string {
+  const assignee = [action.assignee?.name, action.assignee?.email].map((part) => part?.trim());
+  const at = action.recording_timestamp ? `à ${action.recording_timestamp}` : '';
+  const details = [...assignee, at].filter(Boolean).join(', ');
+  const state = action.completed ? 'Faite' : 'À faire';
+  return `- ${state} : ${action.description.trim()}${details ? ` (${details})` : ''}`;
+}
+
+// Le résumé de Fathom et ses actions à mener, en un tour document, avec ou sans transcription.
 function summaryTurns(meeting: Meeting, updatedAt: string): ConnectorTurn[] {
-  const text = meeting.default_summary?.markdown_formatted?.trim();
+  const summary = meeting.default_summary?.markdown_formatted?.trim();
+  const actions = (meeting.action_items ?? [])
+    .filter((action) => action.description.trim() !== '')
+    .map(actionLine);
+  const list = actions.length > 0 ? `Actions à mener :\n${actions.join('\n')}` : '';
+  const text = [summary, list].filter(Boolean).join('\n\n');
   if (!text) return [];
   const by = meeting.recorded_by;
   const author = { name: by?.name ?? null, email: by?.email ?? null };
@@ -44,13 +62,14 @@ function participants(meeting: Meeting, turns: ConnectorTurn[]): string {
   return [...new Set(names.filter(Boolean))].join(', ');
 }
 
-// null quand Fathom n'a ni transcription ni résumé (réunion pas encore traitée, ou sans texte).
+// null quand Fathom n'a ni transcription, ni résumé, ni action (réunion pas encore traitée, ou sans texte).
 export function toItem(meeting: Meeting): ConnectorItem | null {
   const updatedAt = new Date(meeting.created_at).toISOString();
   const speech = speechTurns(meeting);
-  const turns = speech.length > 0 ? speech : summaryTurns(meeting, updatedAt);
+  const turns = [...speech, ...summaryTurns(meeting, updatedAt)];
   if (turns.length === 0) return null;
-  const names = participants(meeting, turns);
+  // Sans transcription, l'auteur du résumé tient lieu de locuteur.
+  const names = participants(meeting, speech.length > 0 ? speech : turns);
   return {
     externalId: `meeting:${meeting.recording_id}`,
     nature: 'reunion',

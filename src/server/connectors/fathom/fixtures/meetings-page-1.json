@@ -109,7 +109,24 @@
         "template_name": "general",
         "markdown_formatted": "## Résumé\n- Dupont veut une démonstration avant le 20 novembre."
       },
-      "action_items": null,
+      "action_items": [
+        {
+          "description": "Planifier la démonstration avec Dupont",
+          "user_generated": true,
+          "completed": true,
+          "recording_timestamp": "00:12:30",
+          "recording_playback_url": "https://fathom.video/calls/123456790?timestamp=750",
+          "assignee": { "name": null, "email": null, "team": null }
+        },
+        {
+          "description": "  ",
+          "user_generated": false,
+          "completed": false,
+          "recording_timestamp": "00:20:00",
+          "recording_playback_url": "https://fathom.video/calls/123456790?timestamp=1200",
+          "assignee": { "name": "Marie Durand", "email": "marie@acme.test", "team": "Produit" }
+        }
+      ],
       "calendar_invitees": [
         {
           "name": "Marie Durand",

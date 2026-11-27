@@ -81,7 +81,7 @@ describe('verify', () => {
 });
 
 describe('sync : premier passage', () => {
-  it('demande tout ce qui est créé depuis since, avec transcription et résumé', async () => {
+  it('demande tout ce qui est créé depuis since, avec transcription, résumé et actions à mener', async () => {
     const { calls } = await run([list(single())]);
 
     const query = params(calls[0]?.url);
@@ -89,10 +89,11 @@ describe('sync : premier passage', () => {
     expect(query.get('created_after')).toBe('2026-09-15T00:00:00.000Z');
     expect(query.get('include_transcript')).toBe('true');
     expect(query.get('include_summary')).toBe('true');
+    expect(query.get('include_action_items')).toBe('true');
     expect(query.has('cursor')).toBe(false);
   });
 
-  it('rend une réunion : prises de parole regroupées par locuteur, datées depuis le début de l’enregistrement', async () => {
+  it('rend une réunion : prises de parole regroupées par locuteur, datées depuis le début de l’enregistrement, puis le résumé et les actions à mener', async () => {
     const { pages } = await run([list(page1), list(page2)]);
 
     const item = items(pages)[0];
@@ -126,10 +127,20 @@ describe('sync : premier passage', () => {
         text: 'Merci Paul, on fait le point vendredi.',
         ts: '2026-10-12T09:31:41.000Z',
       },
+      {
+        externalId: 'summary',
+        role: 'document',
+        author: { name: 'Marie Durand', email: 'marie@acme.test' },
+        text: [
+          '## Résumé\n- La livraison passe au 3 novembre.\n- Paul prévient le client.',
+          'Actions à mener :\n- À faire : Prévenir le client du nouveau calendrier (Paul Martin, paul@acme.test, à 00:01:02)',
+        ].join('\n\n'),
+        ts: '2026-10-12T09:00:00.000Z',
+      },
     ]);
   });
 
-  it('sans transcription, rend le résumé de l’outil en un tour document daté de la réunion', async () => {
+  it('sans transcription, rend le résumé et les actions en un tour document daté de la réunion', async () => {
     const { pages } = await run([list(page1), list(page2)]);
 
     const item = items(pages)[1];
@@ -144,7 +155,11 @@ describe('sync : premier passage', () => {
         externalId: 'summary',
         role: 'document',
         author: { name: 'Marie Durand', email: 'marie@acme.test' },
-        text: '## Résumé\n- Dupont veut une démonstration avant le 20 novembre.',
+        // Une action faite, sans personne désignée ; celle sans description n'est pas rendue.
+        text: [
+          '## Résumé\n- Dupont veut une démonstration avant le 20 novembre.',
+          'Actions à mener :\n- Faite : Planifier la démonstration avec Dupont (à 00:12:30)',
+        ].join('\n\n'),
         ts: '2026-10-13T14:30:00.000Z',
       },
     ]);
@@ -170,15 +185,28 @@ describe('sync : premier passage', () => {
     const empty = { speaker: { display_name: 'Marie' }, text: '  ', timestamp: '00:00:01' };
     const talk = { speaker: { display_name: 'Paul' }, text: 'Oui.', timestamp: '00:00:02' };
     const { pages } = await run([
-      list(single(meeting({ calendar_invitees: [], transcript: [empty, talk] }))),
+      list(
+        single(
+          meeting({
+            calendar_invitees: [],
+            transcript: [empty, talk],
+            default_summary: null,
+            action_items: null,
+          }),
+        ),
+      ),
     ]);
 
     expect(items(pages)[0]?.turns.map((turn) => turn.text)).toEqual(['Oui.']);
     expect(items(pages)[0]?.origin).toEqual({ participants: 'Paul' });
   });
 
-  it('ne rend pas une réunion sans transcription ni résumé, ancienne ou non', async () => {
-    const blank = { transcript: [], default_summary: { markdown_formatted: '  ' } };
+  it('ne rend pas une réunion sans transcription, ni résumé, ni action, ancienne ou non', async () => {
+    const blank = {
+      transcript: [],
+      default_summary: { markdown_formatted: '  ' },
+      action_items: [],
+    };
     const old = meeting({ ...blank, recording_id: 1, created_at: '2026-10-01T09:00:00Z' });
     const fresh = meeting({ ...blank, recording_id: 2, created_at: '2026-10-15T10:00:00Z' });
 
@@ -266,6 +294,7 @@ describe('sync : réunion pas encore traitée', () => {
     created_at: '2026-10-15T10:00:00Z',
     transcript: null,
     default_summary: null,
+    action_items: null,
   });
 
   it('retient le départ juste avant une réunion récente sans texte, pour la relire plus tard', async () => {
@@ -278,15 +307,28 @@ describe('sync : réunion pas encore traitée', () => {
     expect(finalAfter(pages)).toBe('2026-10-15T09:59:59.000Z');
   });
 
-  it('la rend au passage suivant, quand son texte est arrivé', async () => {
+  it('la rend au passage suivant, quand son résumé est arrivé', async () => {
     const first = await run([list(single(pending))]);
-    const ready = { ...pending, transcript: page2.items[0]?.transcript };
+    const ready = {
+      ...pending,
+      transcript: page2.items[0]?.transcript,
+      default_summary: page1.items[0]?.default_summary,
+    };
 
     const { pages, calls } = await run([list(single(ready))], first.pages.at(-1)?.cursor);
 
     expect(params(calls[0]?.url).get('created_after')).toBe('2026-10-15T09:59:59.000Z');
     expect(items(pages).map((item) => item.externalId)).toEqual(['meeting:99']);
     expect(finalAfter(pages)).toBe('2026-10-15T10:00:00.000Z');
+  });
+
+  it('rend une réunion récente déjà transcrite mais sans résumé, et la relit jusqu’à son résumé', async () => {
+    const transcribed = { ...pending, transcript: page2.items[0]?.transcript };
+
+    const { pages } = await run([list(single(transcribed))]);
+
+    expect(items(pages).map((item) => item.turns.length)).toEqual([2]);
+    expect(finalAfter(pages)).toBe('2026-10-15T09:59:59.000Z');
   });
 
   it('abandonne une réunion restée sans texte plus de six heures', async () => {

@@ -5,7 +5,7 @@ import { z } from 'zod';
 //   after : le created_after de tout le parcours ;
 //   next  : le curseur de page de Fathom, pour reprendre au milieu (nul au début et à la fin) ;
 //   max   : la création la plus récente déjà rendue ;
-//   hold  : la création de la plus ancienne réunion récente encore sans texte.
+//   hold  : la création de la plus ancienne réunion récente encore sans résumé.
 // Le départ ne bouge qu'à la fin du parcours, jamais page après page.
 const isoDate = z.iso.datetime();
 const WalkSchema = z.object({
@@ -16,7 +16,7 @@ const WalkSchema = z.object({
 });
 export type Walk = z.infer<typeof WalkSchema>;
 
-// Une réunion sans texte depuis moins de six heures est sans doute en cours de traitement chez Fathom.
+// Une réunion sans résumé depuis moins de six heures est sans doute en cours de traitement chez Fathom.
 const GRACE_MS = 6 * 3600 * 1000;
 
 export function startWalk(cursor: string | null, since: Date): Walk {
@@ -30,7 +30,7 @@ export function startWalk(cursor: string | null, since: Date): Walk {
   }
 }
 
-// created : date de création canonique (ISO, Z) ; ready : la réunion a du texte.
+// created : date de création canonique (ISO, Z) ; ready : Fathom a rendu son résumé.
 export function advance(
   walk: Walk,
   meetings: Array<{ created: string; ready: boolean }>,

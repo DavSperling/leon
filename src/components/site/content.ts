@@ -778,7 +778,7 @@ export const READS: Record<ProviderId, string> = {
     'Votre OneDrive et les bibliothèques des sites SharePoint que vous pouvez ouvrir : fichiers PDF, Word, Excel, PowerPoint et texte.',
   granola: 'Les réunions : la transcription, ou le résumé quand il n’y en a pas.',
   fathom:
-    'Les réunions que le titulaire de la clé a enregistrées ou reçues en partage : la transcription, ou le résumé à défaut.',
+    'Les réunions que le titulaire de la clé a enregistrées ou reçues en partage, dès qu’elles sont prêtes et sans réglage : la transcription, le résumé et les actions à mener.',
   fireflies: 'Les réunions transcrites auxquelles le titulaire de la clé a accès.',
   tldv: 'Les réunions auxquelles le titulaire de la clé a assisté, avec leur transcription.',
   circleback: 'Les réunions du titulaire de la clé, pas celles qu’on lui a seulement partagées.',
@@ -1465,7 +1465,7 @@ const READS_EN: Record<ProviderId, string> = {
     'Your OneDrive and the document libraries of the SharePoint sites you can open: PDF, Word, Excel, PowerPoint and text files.',
   granola: 'Meetings: the transcript, or the summary when there is none.',
   fathom:
-    'Meetings the key’s owner recorded or was shared: the transcript, or the summary when there is none.',
+    'Meetings the key’s owner recorded or was shared, as soon as they’re ready and with no setup: the transcript, the summary and the action items.',
   fireflies: 'Transcribed meetings the key’s owner has access to.',
   tldv: 'Meetings the key’s owner attended, with their transcript.',
   circleback: 'Meetings of the key’s owner, not those only shared with them.',

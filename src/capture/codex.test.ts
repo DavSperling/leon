@@ -1437,7 +1437,7 @@ describe('Codex : les faits pour le rêve (T58)', () => {
     expect(sans).not.toHaveProperty('commandes_agents');
   });
 
-  it('à l’ancien format, un patch en échec compte sous Edit', () => {
+  it('à l’ancien format, un patch en échec compte une fois sous Edit', () => {
     const contenu = [
       JSON.stringify({
         timestamp: '2026-01-02T09:00:00.000Z',
@@ -1461,7 +1461,7 @@ describe('Codex : les faits pour le rêve (T58)', () => {
       }),
     ].join('\n');
     const lus = faits(contenu);
-    expect(lus).toMatchObject({ outils_en_erreur: [{ outil: 'Edit', nombre: 2 }], erreurs: 2 });
+    expect(lus).toMatchObject({ outils_en_erreur: [{ outil: 'Edit', nombre: 1 }], erreurs: 2 });
     expect(JSON.stringify(lus)).not.toContain(MESSAGE);
   });
 

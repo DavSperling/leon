@@ -4,6 +4,7 @@ import { READ_FIRST_MARK } from './api-contract';
 import {
   type AgentActions,
   buildAgentCommands,
+  errorToolName,
   extractAgentActions,
   extractClaudeCodeFacts,
   isChainedCommand,
@@ -900,6 +901,13 @@ describe('isChainedCommand (la suite, D39 amendé le 27/11)', () => {
     'a\\>&b',
     'curl https://x.example/?a=1&b=2',
     'pnpm test\u0000; echo fini',
+    // Un guillemet ou un antislash dans un commentaire ne cache pas le saut de ligne.
+    "cd x # let's go\npnpm test # it's ok",
+    "pnpm install # don't touch\npnpm test # it's fine",
+    'pnpm build # see docs \\\npnpm test',
+    'cd x # the "a\npnpm test # b"',
+    // « $$ » est le numéro du processus : le « ' » qui suit ouvre une chaîne simple, pas « $'…' ».
+    "echo $$'\\'; rm -rf y #'",
   ])('« %s » est une suite', (command) => {
     expect(isChainedCommand(command)).toBe(true);
   });
@@ -969,6 +977,17 @@ describe('outils_en_erreur', () => {
       ...noms.slice(0, 15).map((outil) => ({ outil, nombre: 1 })),
     ]);
     expect(SessionFactsSchema.safeParse(faits).success).toBe(true);
+  });
+
+  it('un nom d’outil qui a la forme d’une clé est caché, et le rejouer ne le change pas', () => {
+    const contenu = [appel('k1', 'AKIAIOSFODNN7EXAMPLE', {}), enErreur('k1', 'x')].join('\n');
+    expect(extractClaudeCodeFacts(contenu, RACINE).outils_en_erreur).toEqual([
+      { outil: '[outil]', nombre: 1 },
+    ]);
+    // La réception rejoue la même règle : le poste et le serveur rangent le même nom.
+    for (const nom of ['AKIAIOSFODNN7EXAMPLE', 'mcp__linear__get_issue', 'Edit', 'hors forme']) {
+      expect(errorToolName(errorToolName(nom))).toBe(errorToolName(nom));
+    }
   });
 
   it('sans outil en erreur, la clé est absente', () => {

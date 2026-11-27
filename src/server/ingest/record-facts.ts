@@ -2,10 +2,10 @@ import { and, eq, sql } from 'drizzle-orm';
 import { type RetraitRequest, type SessionFactsPayload, TEXTE_MAX } from '@/capture/api-contract';
 import { maskSecrets } from '@/capture/mask-secrets';
 import {
+  errorToolName,
   factText,
   HOME_OR_VARIABLE,
   recheckCommand,
-  reduceToolName,
   type SessionFacts,
 } from '@/capture/session-facts';
 import type { CodeSessionKind } from '@/capture/turn';
@@ -34,12 +34,13 @@ export const isRepoPath = (path: string): boolean =>
 // hors du dépôt est retiré (isRepoPath).
 function cleanFacts(faits: SessionFacts): SessionFacts {
   const { outils_en_erreur, commandes_agents, ...base } = faits;
-  // Les noms repassent par reduceToolName ; ceux qui se réduisent au même s'additionnent (jamais plus d'entrées qu'à
-  // l'envoi, donc la borne tient).
+  // Les noms repassent par errorToolName (réduits, `[outil]` pour un nom en forme de secret) ; ceux qui se réduisent au
+  // même s'additionnent (jamais plus d'entrées qu'à l'envoi, donc la borne tient), sans dépasser l'entier que relit le
+  // schéma.
   const outils = new Map<string, number>();
   for (const { outil, nombre } of outils_en_erreur ?? []) {
-    const name = reduceToolName(outil);
-    outils.set(name, (outils.get(name) ?? 0) + nombre);
+    const name = errorToolName(outil);
+    outils.set(name, Math.min((outils.get(name) ?? 0) + nombre, Number.MAX_SAFE_INTEGER));
   }
   const agents = (commandes_agents ?? []).map((command) => ({
     ...command,

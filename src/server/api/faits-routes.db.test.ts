@@ -528,6 +528,29 @@ describe('POST /api/v1/faits', () => {
       });
     });
 
+    it('outils_en_erreur : un nom en forme de clé est caché, et une somme trop grande reste lisible', async () => {
+      const { response, stored } = await post(
+        facts({
+          outils_en_erreur: [
+            { outil: 'AKIAIOSFODNN7EXAMPLE', nombre: 1 },
+            { outil: 'mcp__linear__a', nombre: Number.MAX_SAFE_INTEGER },
+            { outil: 'mcp:linear', nombre: Number.MAX_SAFE_INTEGER },
+          ],
+        }),
+      );
+      expect(response.status).toBe(202);
+      expect(JSON.stringify(stored?.metadata)).not.toContain('AKIA');
+      expect(stored?.metadata).toMatchObject({
+        faits: {
+          outils_en_erreur: [
+            { outil: '[outil]', nombre: 1 },
+            { outil: 'mcp:linear', nombre: Number.MAX_SAFE_INTEGER },
+          ],
+        },
+      });
+      expect(SessionFactsSchema.safeParse(stored?.metadata.faits).success).toBe(true);
+    });
+
     it('outils_en_erreur : 20 entrées passent, 21 ou un nombre à 0 donnent 400', async () => {
       const entries = (n: number) =>
         Array.from({ length: n }, (_, i) => ({ outil: `outil${i}`, nombre: 1 }));

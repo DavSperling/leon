@@ -613,10 +613,9 @@ function readLine(
     }
     const applied = !typed ? PatchApplyEndSchema.safeParse(line.payload) : null;
     if (payload.data.type === 'patch_apply_end' && applied?.success) {
-      if (!applied.data.success) {
-        reading.errors += 1;
-        recordToolError(reading.record, 'Edit');
-      } else {
+      // La sortie de l'appel apply_patch a déjà compté l'échec sous Edit.
+      if (!applied.data.success) reading.errors += 1;
+      else {
         for (const path of Object.keys(applied.data.changes)) {
           recordFile(reading.record, fromCwd(reading.cwd, path), reading.root);
         }

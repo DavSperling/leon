@@ -151,10 +151,11 @@ export async function loadCodexSubagents(
 // souvent des dizaines de Mo (621 Mo pour la plus grosse session du poste au 23/11), et le crochet de fin le relit
 // (Claude Code n'envoie la session qu'à ce crochet). Un agent lancé sans fichier n'a encore rien fait ; si le journal
 // le dit fini, ou si le journal ne se lit pas, le run n'est pas jugé : son appel restera externe. La dernière ligne
-// d'un fichier, pas encore finie d'écrire (sans retour à la ligne), n'est pas lue : le run peut encore tourner. Un run cité deux fois (une reprise) est lu une fois.
-// Au premier run externe ou non jugé, la lecture s'arrête : la session est externe, et les appels suivants, hors de
-// l'ensemble, le sont aussi. Sans `readdir`, rien n'est lu.
-// shortcut: les runs qui suivent un run externe ne sont pas relevés, à revoir si l'essai réel le montre.
+// d'un fichier, pas encore finie d'écrire (sans retour à la ligne), n'est pas lue : le run peut encore tourner. Un run
+// cité deux fois (une reprise) est lu une fois. Au premier run externe ou non jugé, la lecture s'arrête : la session
+// est externe, et les appels suivants, hors de l'ensemble, le sont aussi. Sans `readdir`, rien n'est lu.
+// shortcut: les runs qui suivent un run externe, et dans un run externe les agents qui suivent son premier agent
+// externe, ne sont pas relevés ; à revoir si l'essai réel le montre.
 const RUN_ID = /^wf_[a-z0-9-]{1,64}$/;
 const AGENT_ID = /^[a-z0-9]{1,64}$/;
 const RunResultSchema = z.object({

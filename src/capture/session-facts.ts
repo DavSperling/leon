@@ -211,7 +211,10 @@ const unclosed = (word: string) =>
 const CHAIN = /[\n;]|(?<!>)\||(?<![<>])&(?!>)/;
 type Commande = { texte: string; erreur: boolean; suite: boolean };
 export function isChainedCommand(command: string): boolean {
-  const rest = command.replaceAll('\u0000', '').trim().replace(QUOTED_PARTS, 'x');
+  const text = command.replaceAll('\u0000', '').trim();
+  // QUOTED ne connaît ni le commentaire (son « ' » ou son « \ » final mangerait le saut de ligne) ni « $$' ».
+  if ((text.includes('\n') && /(?:^|\s)#/.test(text)) || text.includes("$$'")) return true;
+  const rest = text.replace(QUOTED_PARTS, 'x');
   return /["']/.test(rest) || CHAIN.test(rest);
 }
 
@@ -432,9 +435,16 @@ export const newFactsRecord = (): FactsRecord => ({
   toolErrors: new Map(),
 });
 
-// Un outil qui n'est pas une commande a échoué : son nom réduit, jamais son message.
+// Le nom rangé d'un outil en erreur : réduit (reduceToolName, qui ne masque rien), et caché comme un nom hors forme
+// s'il a celle d'un secret. Rejouable : la réception le repasse (cleanFacts) et retrouve le même nom.
+export function errorToolName(name: string): string {
+  const reduced = reduceToolName(name);
+  return factText(reduced) === reduced ? reduced : HIDDEN_TOOL;
+}
+
+// Un outil qui n'est pas une commande a échoué : son nom rangé, jamais son message.
 export function recordToolError(record: FactsRecord, name: string): void {
-  const outil = reduceToolName(name);
+  const outil = errorToolName(name);
   record.toolErrors.set(outil, (record.toolErrors.get(outil) ?? 0) + 1);
 }
 

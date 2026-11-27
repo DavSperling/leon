@@ -634,7 +634,10 @@
         "creer_ticket": "Créer un ticket dans {repo}.",
         "modifier_ticket": "Modifier le ticket #{number} de {repo}.",
         "relancer_execution": "Relancer l’exécution #{run} de {repo}.",
-        "annuler_execution": "Annuler l’exécution #{run} de {repo}."
+        "annuler_execution": "Annuler l’exécution #{run} de {repo}.",
+        "linear_creer_ticket": "Créer un ticket dans l’équipe Linear {team}.",
+        "trello_creer_carte": "Créer une carte dans la liste {list} du tableau Trello {board}.",
+        "notion_creer_page": "Créer une page dans la base Notion {database}."
       },
       "confirm": {
         "creer_branche": "Créer la branche",
@@ -650,7 +653,10 @@
         "creer_ticket": "Créer le ticket",
         "modifier_ticket": "Modifier le ticket",
         "relancer_execution": "Relancer l’exécution",
-        "annuler_execution": "Annuler l’exécution"
+        "annuler_execution": "Annuler l’exécution",
+        "linear_creer_ticket": "Créer le ticket",
+        "trello_creer_carte": "Créer la carte",
+        "notion_creer_page": "Créer la page"
       },
       "details": {
         "asked": "Votre demande",
@@ -670,7 +676,11 @@
         "failed": "Jobs en échec seulement",
         "lines": "Lignes supprimées",
         "body": "Texte",
-        "diff": "Changements"
+        "diff": "Changements",
+        "project": "Projet",
+        "priority": "Priorité",
+        "assignee": "Assigné",
+        "due": "Échéance"
       },
       "values": {
         "open": "Ouvert",
@@ -683,7 +693,11 @@
         "COMMENT": "Commenter",
         "oui": "Oui",
         "non": "Non",
-        "none": "Aucun"
+        "none": "Aucun",
+        "urgente": "Urgente",
+        "haute": "Haute",
+        "moyenne": "Moyenne",
+        "basse": "Basse"
       },
       "rerunWarning": "Relancer une exécution peut exécuter du code et déployer.",
       "defaultBranchWarning": "Écrit directement sur la branche par défaut, sans PR.",
@@ -694,7 +708,7 @@
       "waiting": "Rien n’est fait tant que vous ne confirmez pas.",
       "running": "En cours…",
       "done": "Fait.",
-      "open": "Voir sur GitHub",
+      "open": "Voir sur {tool}",
       "cancelled": "Annulée : rien n’a été fait.",
       "expired": "Expirée : redemandez à Leon pour repartir de l’état actuel.",
       "lost": "Votre choix n’a pas pu être enregistré. Réessayez.",
@@ -707,6 +721,16 @@
         "conflit": "Conflit : l’élément a changé depuis la proposition, ou l’action n’est plus possible. Redemandez à Leon.",
         "refus": "GitHub a refusé l’action (une règle du dépôt, ou une valeur qu’il n’accepte pas).",
         "incertain": "GitHub n’a pas répondu à temps : l’action a peut-être été faite. Vérifiez sur GitHub avant de redemander."
+      },
+      "toolErrors": {
+        "droits": "{tool} refuse l’écriture : reconnectez {tool} dans Connexions en autorisant l’écriture.",
+        "existe": "Cet élément existe déjà sur {tool}.",
+        "introuvable": "{tool} ne trouve plus l’équipe, la liste ou la base visée.",
+        "connexion": "Votre connexion {tool} est à reconnecter dans Connexions.",
+        "echec": "{tool} n’a pas pu faire cette action. Vérifiez sur {tool} avant de redemander.",
+        "conflit": "Conflit : l’élément a changé sur {tool} depuis la proposition. Redemandez à Leon.",
+        "refus": "{tool} a refusé l’action (une valeur qu’il n’accepte pas).",
+        "incertain": "{tool} n’a pas répondu à temps : l’action a peut-être été faite. Vérifiez sur {tool} avant de redemander."
       }
     },
     "visibleTo": "Visible par",

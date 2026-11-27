@@ -19,11 +19,28 @@ export const ACTION_KINDS = [
   'github.modifier_ticket',
   'github.relancer_execution',
   'github.annuler_execution',
+  // Les écritures dans les autres outils (discussion/ticket-actions.ts), par le même circuit.
+  'linear.creer_ticket',
+  'trello.creer_carte',
+  'notion.creer_page',
 ] as const;
 export type ActionKind = (typeof ACTION_KINDS)[number];
-// Le nom d'une action sans son préfixe : la clé de ses textes (une clé de traduction n'a pas de « . »).
-export type ActionName = ActionKind extends `github.${infer Name}` ? Name : never;
-export const actionName = (kind: ActionKind) => kind.slice('github.'.length) as ActionName;
+// Le nom d'une action, la clé de ses textes (une clé de traduction n'a pas de « . ») : sans préfixe pour GitHub, le
+// premier outil, avec le sien pour les autres, car github.creer_ticket et linear.creer_ticket ne disent pas la même chose.
+type NameOf<Kind> = Kind extends `github.${infer Name}`
+  ? Name
+  : Kind extends `${infer Tool}.${infer Name}`
+    ? `${Tool}_${Name}`
+    : never;
+export type ActionName = NameOf<ActionKind>;
+export const actionName = (kind: ActionKind) =>
+  (kind.startsWith('github.')
+    ? kind.slice('github.'.length)
+    : kind.replace('.', '_')) as ActionName;
+// L'outil où l'action écrit : son préfixe.
+type ToolOf<Kind> = Kind extends `${infer Tool}.${string}` ? Tool : never;
+export type ActionTool = ToolOf<ActionKind>;
+export const actionTool = (kind: ActionKind) => kind.slice(0, kind.indexOf('.')) as ActionTool;
 
 // Les paramètres de chaque action, toutes valeurs en texte : ceux qu'elle doit porter et ceux qu'elle peut porter.
 // Une autre clé est refusée (validParams côté serveur) et écartée (parseActionView), comme `content` (SERVER_ONLY).
@@ -58,6 +75,13 @@ export const ACTION_KEYS: Record<ActionKind, { required: string[]; optional: str
   ),
   'github.relancer_execution': keys(['repo', 'run', 'name', 'failed'], ['branch']),
   'github.annuler_execution': keys(['repo', 'run', 'name'], ['branch']),
+  // Le nom montré sur la carte (team, project…) et, à côté, l'identifiant écrit au clic (teamId, projectId…).
+  'linear.creer_ticket': keys(
+    ['team', 'teamId', 'title', 'body'],
+    ['project', 'projectId', 'priority', 'assignee', 'assigneeId'],
+  ),
+  'trello.creer_carte': keys(['board', 'list', 'listId', 'title', 'body'], ['due']),
+  'notion.creer_page': keys(['database', 'dataSourceId', 'titleProperty', 'title', 'body']),
 };
 
 // proposee → en-cours (le clic, une seule fois) → faite ou echouee ; ou annulee.

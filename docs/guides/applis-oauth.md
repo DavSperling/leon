@@ -40,7 +40,7 @@ Une **connexion publique** (OAuth). Une connexion interne n'a pas de bouton : so
 - **Où créer** : https://app.notion.com/developers/connections (aussi https://www.notion.so/developers) › nouvelle connexion publique.
 - **Nom** : « Leon ».
 - **Adresse de retour**, dans « Redirect URI(s) » de la configuration OAuth : `http://localhost:3000/api/v1/connexions/oauth/notion/retour`
-- **Droits** (capacités à cocher dans la connexion) : lire le contenu (« Read content »), lire les commentaires (« Read comments »), lire les informations des utilisateurs, adresses e-mail comprises (« Read user information including email addresses ») ; en écriture, demandée d'avance : mettre à jour et insérer du contenu, insérer des commentaires. Leon ne demande aucun paramètre `scope` : l'utilisateur choisit les pages à partager pendant l'autorisation.
+- **Droits** (capacités à cocher dans la connexion) : lire le contenu (« Read content »), lire les commentaires (« Read comments »), lire les informations des utilisateurs, adresses e-mail comprises (« Read user information including email addresses ») ; en écriture : mettre à jour et insérer du contenu (Leon s'en sert pour créer une page dans une base, après le clic de l'utilisateur dans une discussion), insérer des commentaires (demandé d'avance). Leon ne demande aucun paramètre `scope` : l'utilisateur choisit les pages à partager pendant l'autorisation.
 - **Installation** : « Installation scope » sur « Any workspace » (**ne se change plus après la création**).
 - **Pages demandées** : pour une connexion publique, Notion demande le nom et le site de l'entreprise, une page de confidentialité, des conditions d'utilisation et un e-mail de support (à vérifier), et un logo.
 - **Variables** : `LEON_OAUTH_NOTION_ID` = « OAuth client ID », `LEON_OAUTH_NOTION_SECRET` = « OAuth client secret », tous deux dans l'onglet « Configuration ».
@@ -51,7 +51,7 @@ Une **connexion publique** (OAuth). Une connexion interne n'a pas de bouton : so
 - **Où créer** : https://linear.app/settings/api/applications/new (Réglages › API › Applications OAuth). Tous les administrateurs de l'espace où elle est créée y ont accès : mieux vaut la créer dans un espace dédié que dans l'espace de travail de l'équipe.
 - **Nom** : « Leon ». Linear demande aussi un nom et une adresse de développeur (l'entreprise et son site) et une icône.
 - **Adresse de retour**, dans « Callback URLs » : `http://localhost:3000/api/v1/connexions/oauth/linear/retour`
-- **Droits** : aucune case. Leon demande `read` et `write` dans l'adresse d'autorisation, au nom de l'utilisateur (l'écriture est demandée d'avance).
+- **Droits** : aucune case. Leon demande `read` et `write` dans l'adresse d'autorisation, au nom de l'utilisateur (l'écriture sert à créer un ticket, après le clic de l'utilisateur dans une discussion).
 - **Pages demandées** : aucune d'après la documentation lue.
 - **Variables** : `LEON_OAUTH_LINEAR_ID` = le « Client ID » donné à la création, `LEON_OAUTH_LINEAR_SECRET` = le secret de la même page (« Rotate secret » pour en changer).
 - **Pour que d'autres comptes l'utilisent** : la distribution de l'appli doit être **publique** (réglage `private` ou `public`, privé par défaut ; case « Public » du formulaire, à vérifier). Privée, l'appli ne s'installe que dans l'espace où elle a été créée.

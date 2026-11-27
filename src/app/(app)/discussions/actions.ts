@@ -17,8 +17,8 @@ import {
   citationDetails,
   withCitationDetails,
 } from '@/server/discussion/citation-sources';
+import { decideAction } from '@/server/discussion/decide-action';
 import { createDiscussion, deleteDiscussion, getDiscussion } from '@/server/discussion/discussions';
-import { decideAction } from '@/server/discussion/github-actions';
 import { logError } from '@/server/log';
 
 // Ouvrir une discussion : depuis la page Discussions (une question), ou depuis la réponse en tête de la barre

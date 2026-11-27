@@ -58,14 +58,18 @@ describe('createSourceNumbering', () => {
 // Un outil que l'API refuserait est un défaut du code (anthropic-llm.ts) : la liste de la discussion passe la
 // même vérification que celle de chaque appel.
 describe('les outils de la discussion', () => {
-  const tools = discussionTools(CTX, {
-    embedder: null,
-    budget: { chars: 40_000 },
-    numbering: createSourceNumbering(),
-  });
+  const deps = { embedder: null, budget: { chars: 40_000 }, numbering: createSourceNumbering() };
+  // Avec les créations dans Linear, Trello et Notion, offertes à qui a branché ces outils (ticket-actions.ts).
+  const tools = discussionTools(CTX, { ...deps, tickets: ['linear', 'trello', 'notion'] });
 
-  it('sont chercher, lire, activite et les outils GitHub', () => {
-    expect(tools.map((tool) => tool.name)).toEqual([
+  it('sont chercher, lire, activite, les outils GitHub, puis les créations des outils branchés', () => {
+    const names = tools.map((tool) => tool.name);
+
+    expect(discussionTools(CTX, deps).map((tool) => tool.name)).toEqual(names.slice(0, -3));
+    expect(discussionTools(CTX, { ...deps, tickets: ['notion'] }).at(-1)?.name).toBe(
+      'creer_page_notion',
+    );
+    expect(names).toEqual([
       'chercher',
       'lire',
       'activite',
@@ -85,6 +89,9 @@ describe('les outils de la discussion', () => {
       'modifier_ticket_github',
       'relancer_execution_github',
       'annuler_execution_github',
+      'creer_ticket_linear',
+      'creer_carte_trello',
+      'creer_page_notion',
     ]);
   });
 

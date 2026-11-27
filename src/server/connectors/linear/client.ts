@@ -167,3 +167,76 @@ export async function fetchProjectUpdates(
   );
   return data.projectUpdates;
 }
+
+// --- Les écritures de la discussion ---------------------------------------------------------------------------------
+// Leon ne crée un ticket qu'après le clic de l'utilisateur (discussion/ticket-actions.ts) : les recherches préparent la
+// proposition ; la création ne se rejoue jamais (`once`), car une réponse perdue ne doit pas doubler le ticket.
+// Doc lue le 27/11/2026 :
+//   https://linear.app/developers/graphql (la mutation issueCreate et sa réponse, les requêtes teams et users)
+//   https://github.com/linear/linear/blob/master/packages/sdk/src/schema.graphql : IssueCreateInput (teamId, title,
+//     description en markdown, projectId, priority de 1 = urgente à 4 = basse, assigneeId), TeamFilter (key, name,
+//     or), UserFilter (email ; les comptes désactivés sont exclus), team(id) { projects(filter) },
+//     StringComparator.eqIgnoreCase, Issue.url.
+
+const TEAMS_QUERY = `query Teams($name: String!) {
+  teams(first: 2, filter: { or: [{ key: { eqIgnoreCase: $name } }, { name: { eqIgnoreCase: $name } }] }) {
+    nodes { id name }
+  }
+}`;
+const TEAM_PROJECTS_QUERY = `query TeamProjects($teamId: String!, $name: String!) {
+  team(id: $teamId) { projects(first: 2, filter: { name: { eqIgnoreCase: $name } }) { nodes { id name } } }
+}`;
+const USERS_QUERY = `query Users($email: String!) {
+  users(first: 2, filter: { email: { eqIgnoreCase: $email } }) { nodes { id } }
+}`;
+const ISSUE_CREATE = `mutation IssueCreate($input: IssueCreateInput!) {
+  issueCreate(input: $input) { issue { url } }
+}`;
+
+// Deux résultats au plus : un seul est attendu, un second dit que le nom désigne plusieurs éléments.
+const named2 = z.object({ nodes: z.array(named.extend({ id: z.string() })) });
+
+export async function findTeams(http: ConnectorHttp, authorization: string, name: string) {
+  const schema = z.object({ teams: named2 });
+  return (await graphql(http, authorization, TEAMS_QUERY, { name }, schema)).teams.nodes;
+}
+
+export async function findTeamProjects(
+  http: ConnectorHttp,
+  authorization: string,
+  teamId: string,
+  name: string,
+) {
+  const schema = z.object({ team: z.object({ projects: named2 }) });
+  const data = await graphql(http, authorization, TEAM_PROJECTS_QUERY, { teamId, name }, schema);
+  return data.team.projects.nodes;
+}
+
+export async function findUsers(http: ConnectorHttp, authorization: string, email: string) {
+  const schema = z.object({ users: z.object({ nodes: z.array(z.object({ id: z.string() })) }) });
+  return (await graphql(http, authorization, USERS_QUERY, { email }, schema)).users.nodes;
+}
+
+export type IssueInput = {
+  teamId: string;
+  title: string;
+  description?: string;
+  projectId?: string;
+  priority?: number;
+  assigneeId?: string;
+};
+
+// L'adresse du ticket créé.
+export async function createIssue(
+  http: ConnectorHttp,
+  authorization: string,
+  input: IssueInput,
+): Promise<string> {
+  const once: ConnectorHttp = {
+    ...http,
+    json: (request, schema) => http.json({ ...request, once: true }, schema),
+  };
+  const schema = z.object({ issueCreate: z.object({ issue: z.object({ url: z.string() }) }) });
+  return (await graphql(once, authorization, ISSUE_CREATE, { input }, schema)).issueCreate.issue
+    .url;
+}

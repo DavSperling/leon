@@ -61,8 +61,8 @@ const ConfigSchema = z
   });
 type Config = z.infer<typeof ConfigSchema>;
 
-// Le jeton qui part dans l'en-tête ; le schéma garantit qu'il est là.
-const bearer = (config: Config) =>
+// Le jeton qui part dans l'en-tête ; le schéma garantit qu'il est là. Exporté pour les écritures de la discussion.
+export const bearer = (config: Config) =>
   (config.authMode === 'oauth' ? config.accessToken : config.token) ?? '';
 
 // Pages lues avant d'enregistrer le curseur : un plantage refait au pire ce lot.

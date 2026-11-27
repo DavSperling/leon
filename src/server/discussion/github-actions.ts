@@ -24,28 +24,21 @@ import {
   refused,
 } from './github-tool';
 import { lineDiff, linesOf } from './line-diff';
-import {
-  type ActionRow,
-  cancelAction,
-  claimAction,
-  finishAction,
-  type Outcome,
-  proposeAction,
-  readAction,
-  type TimedAction,
-} from './proposed-actions';
+import { type ActionRow, type Outcome, proposeAction } from './proposed-actions';
 
 // Toutes les écritures GitHub de la discussion (lots 7 à 10 de docs/specs/2026-10-26-github-acces-complet.md), une
 // entrée de SPECS par action. Règles communes :
 // - Un outil ne fait que PROPOSER : il lit GitHub, vérifie, enregistre l'action (proposed-actions.ts) et la montre
-//   sous la réponse. Seul decideAction(…, 'confirmer'), appelé par le clic de l'utilisateur, l'exécute : une fois, avec
-//   la connexion de l'auteur de la proposition, jamais celle d'un autre membre.
+//   sous la réponse. Seul decideAction(…, 'confirmer') (decide-action.ts), appelé par le clic de l'utilisateur,
+//   l'exécute : une fois, avec la connexion de l'auteur de la proposition, jamais celle d'un autre membre.
 // - Les paramètres sont revérifiés, par clé, à la proposition et à l'exécution (validParams) : ils viennent en partie
-//   de GitHub et finissent dans une adresse de l'API, sur la carte et devant le modèle.
+//   de GitHub et finissent dans une adresse de l'API, sur la carte et devant le modèle. Les règles par clé valent aussi
+//   pour les écritures Linear, Trello et Notion (ticket-actions.ts), qui suivent le même circuit.
 // - Une erreur ne garde qu'un code (ActionError), jamais le texte de GitHub.
 // - Aucune action ne supprime une release, une exécution, un artefact ou un cache, ni ne lance ou n'active un workflow.
 
 type Github = GithubClient;
+type GithubKind = Extract<ActionKind, `github.${string}`>;
 // Ce que prepare rend : les seules clés données.
 type Prepared = Record<string, string>;
 
@@ -84,11 +77,11 @@ const plain = (rule: (value: string) => boolean) => (value: string) =>
 // Ce qui ne tient pas sur une ligne montrée telle quelle : contrôles, sauts, format invisible, moitiés de paire.
 const UNSAFE = /[\p{Cc}\p{Cs}\u2028\u2029]|(?!\u200D)\p{Cf}/u;
 // Au plus `max` unités sans couper une paire de substitution (la règle de la clé compte ces unités).
-const cut = (text: string, max: number) => {
+export const cut = (text: string, max: number) => {
   const end = text.charCodeAt(max - 1);
   return text.slice(0, end >= 0xd800 && end <= 0xdbff ? max - 1 : max);
 };
-const safeLine = (text: string, max: number) =>
+export const safeLine = (text: string, max: number) =>
   cut(text.split(UNSAFE).join(' ').replace(/\s+/g, ' ').trim(), max).trim();
 const between = (min: number, max: number) => (value: string) =>
   value.length >= min && value.length <= max;
@@ -117,6 +110,18 @@ const login = () =>
 const ASKED_MAX = 300;
 const title = (value: string) => plain(between(1, 256))(value) && oneLine(value);
 const yesNo = oneOf('oui', 'non');
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const isUuid = (value: string) => UUID.test(value);
+const EMAIL = /^[^\s@<>,;"]{1,64}@[^\s@<>,;"]+\.[^\s@<>,;"]+$/;
+// Une date réelle, AAAA-MM-JJ (le 30 février n'en est pas une).
+const isDay = (value: string) => {
+  const day = new Date(`${value}T00:00:00Z`);
+  return (
+    /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+    !Number.isNaN(day.getTime()) &&
+    day.toISOString().startsWith(value)
+  );
+};
 
 const RULES = {
   repo: (value) => REPO_PATTERN.test(value),
@@ -149,11 +154,27 @@ const RULES = {
   asked: (value) => between(1, ASKED_MAX)(value) && !UNSAFE.test(value),
   // « oui » : l'écriture va sur la branche par défaut, sans PR.
   default: yesNo,
+  // Linear, Trello et Notion (ticket-actions.ts) : le nom montré sur la carte, puis l'identifiant écrit au clic.
+  team: title,
+  project: title,
+  board: title,
+  list: title,
+  database: title,
+  teamId: isUuid,
+  projectId: isUuid,
+  assigneeId: isUuid,
+  dataSourceId: isUuid,
+  listId: (value) => /^[0-9a-f]{24}$/i.test(value),
+  // La colonne titre d'une base Notion, par son identifiant : court et sans contrôle (« title », « %3AUPp »).
+  titleProperty: (value) => between(1, 100)(value) && !UNSAFE.test(value),
+  priority: oneOf('urgente', 'haute', 'moyenne', 'basse'),
+  assignee: (value) => value.length <= 254 && EMAIL.test(value) && !UNSAFE.test(value),
+  due: isDay,
 } satisfies Record<string, (value: string) => boolean>;
 
 // Les paramètres d'une action vérifiée : toute clé se lit comme du texte. Une clé facultative absente est vide
 // (undefined) : le code la teste, il ne la suppose jamais.
-type Params = Record<keyof typeof RULES, string>;
+export type Params = Record<keyof typeof RULES, string>;
 
 // La première clé qui ne passe pas (manquante, inconnue ou invalide), ou null : les paramètres d'une action ne se
 // lisent jamais sans être passés ici, à la proposition comme à l'exécution.
@@ -207,7 +228,7 @@ const csv = (items: string[] | null | undefined) => items?.join(',');
 const toList = (value: string | undefined) =>
   value === undefined ? undefined : value === '' ? [] : value.split(',');
 // Les paramètres donnés : une valeur absente reste absente.
-const given = (entries: Record<string, string | null | undefined>): Prepared =>
+export const given = (entries: Record<string, string | null | undefined>): Prepared =>
   Object.fromEntries(
     Object.entries(entries).filter((entry): entry is [string, string] => entry[1] != null),
   );
@@ -293,7 +314,7 @@ async function currentFile(
   }
 }
 
-export const SPECS: Record<ActionKind, Spec> = {
+export const SPECS: Record<GithubKind, Spec> = {
   'github.creer_branche': spec({
     tool: 'creer_branche_github',
     description:
@@ -895,14 +916,15 @@ const HTTP_ERRORS: Record<number, ActionError> = {
   422: 'refus',
 };
 
-function errorCode(error: unknown, id: string): ActionError {
+// Partagé avec les écritures Linear, Trello et Notion (ticket-actions.ts), journalisées sous leur propre nom.
+export function errorCode(error: unknown, id: string, log = 'action.github'): ActionError {
   if (error instanceof ActionFailure) return error.code;
   if (error instanceof OAuthRefusedError) return 'connexion';
   if (error instanceof ConnectorAuthError) return error.status === 403 ? 'droits' : 'connexion';
   const code = error instanceof ConnectorHttpError ? HTTP_ERRORS[error.status ?? 0] : undefined;
   if (code) return code;
-  logError('action.github', error, { action: id });
-  // Une écriture (jamais rejouée) partie sans réponse (délai, réseau), à laquelle GitHub a répondu par une panne, ou
+  logError(log, error, { action: id });
+  // Une écriture (jamais rejouée) partie sans réponse (délai, réseau), à laquelle l'outil a répondu par une panne, ou
   // dont la réponse est illisible : elle a peut-être été faite. L'utilisateur la vérifie avant de redemander.
   if (
     error instanceof ConnectorHttpError &&
@@ -914,32 +936,19 @@ function errorCode(error: unknown, id: string): ActionError {
 }
 
 // Écrire chez GitHub avec la connexion de l'auteur, celle de la proposition. Rien du texte de GitHub n'est gardé.
-async function executeAction(ctx: TenantContext, row: ActionRow, deps: LiveDeps): Promise<Outcome> {
+export async function executeGithubAction(
+  ctx: TenantContext,
+  row: ActionRow,
+  deps: LiveDeps,
+): Promise<Outcome> {
   if (!validParams(row.kind, row.params)) return failed('echec');
   try {
     const connection = (await myGithubConnections(ctx)).find((c) => c.id === row.connectionId);
     if (!connection) return failed('connexion');
     const { github } = await openGithub(ctx, connection, deps);
-    return { url: await SPECS[row.kind].execute(github, row.params), error: null };
+    const spec = SPECS[row.kind as GithubKind];
+    return { url: await spec.execute(github, row.params), error: null };
   } catch (error) {
     return failed(errorCode(error, row.id));
   }
-}
-
-const UuidSchema = z.uuid();
-
-// Annuler, ou confirmer et exécuter. Seule une action encore proposée (et pas expirée) change : un second clic,
-// ou un clic sur l'action d'un autre (invisible), rend l'action telle qu'elle est, ou null.
-export async function decideAction(
-  ctx: TenantContext,
-  id: string,
-  decision: 'confirmer' | 'annuler',
-  deps: LiveDeps = {},
-): Promise<TimedAction | null> {
-  if (!UuidSchema.safeParse(id).success) return null;
-  if (decision === 'annuler') return cancelAction(ctx, id);
-  if (decision !== 'confirmer') return null;
-  const claimed = await claimAction(ctx, id);
-  if (!claimed) return readAction(ctx, id);
-  return finishAction(ctx, id, await executeAction(ctx, claimed, deps));
 }

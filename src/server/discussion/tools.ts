@@ -26,6 +26,7 @@ import type { ContextTurn, SourceHit, SourceInfo } from '@/server/search/types';
 import { actionTools } from './github-actions';
 import { githubReadTool } from './github-read';
 import { type GithubToolDeps, githubReposTool } from './github-tool';
+import { type TicketProvider, ticketTools } from './ticket-actions';
 
 // Les outils de l'agent de discussion (T11) : chercher, lire, activite. Ils ne passent que par les fonctions de la
 // recherche (D4 du plan du deuxième jet), toujours sous les droits de l'utilisateur : l'agent ne voit que ce
@@ -112,6 +113,9 @@ export type DiscussionToolDeps = {
   budget: { chars: number };
   // Partagée avec l'agent, qui en tire les citations de la réponse. Une numérotation neuve sans elle.
   numbering?: SourceNumbering;
+  // Les outils où l'utilisateur a branché sa propre connexion (myTicketProviders) : seuls ceux-là ont leur outil de
+  // création (ticket-actions.ts). Aucun sans elle.
+  tickets?: readonly TicketProvider[];
   // Les outils GitHub : la discussion où ils proposent une action, l'agent qui la montre ; fetchImpl pour les tests.
 } & Pick<GithubToolDeps, 'discussionId' | 'onAction' | 'asked' | 'fetchImpl'>;
 
@@ -340,5 +344,6 @@ export function discussionTools(ctx: TenantContext, deps: DiscussionToolDeps): A
     githubReposTool(ctx, github),
     githubReadTool(ctx, github),
     ...actionTools(ctx, github),
+    ...ticketTools(ctx, github, deps.tickets ?? []),
   ] as AgentTool[];
 }

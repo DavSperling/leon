@@ -767,9 +767,9 @@ export const READS: Record<ProviderId, string> = {
   outlook:
     'La boîte de réception, les éléments envoyés et l’agenda. Votre admin Microsoft accepte Leon une fois pour l’entreprise.',
   teams:
-    'Les messages des canaux de vos équipes, privés et partagés compris, une fois par jour. Votre admin Microsoft accepte Leon une fois pour l’entreprise.',
+    'Les messages des canaux de vos équipes, privés et partagés compris, dès qu’ils arrivent. Votre admin Microsoft accepte Leon une fois pour l’entreprise.',
   teamschats:
-    'Vos conversations Teams et les transcriptions des réunions Teams de votre agenda, une fois par jour. Votre admin Microsoft accepte Leon une fois pour l’entreprise.',
+    'Vos conversations Teams, dès qu’un message arrive, et les transcriptions des réunions Teams de votre agenda. Votre admin Microsoft accepte Leon une fois pour l’entreprise.',
   slack:
     'Les messages des canaux que votre compte Slack peut voir. Jamais les messages privés ni les conversations de groupe.',
   drive:
@@ -1454,9 +1454,9 @@ const READS_EN: Record<ProviderId, string> = {
   outlook:
     'Inbox, sent items and calendar. Your Microsoft admin approves Leon once for the company.',
   teams:
-    'Messages from the channels of your teams, private and shared ones included, once a day. Your Microsoft admin approves Leon once for the company.',
+    'Messages from the channels of your teams, private and shared ones included, as they arrive. Your Microsoft admin approves Leon once for the company.',
   teamschats:
-    'Your Teams chats and the transcripts of the Teams meetings in your calendar, once a day. Your Microsoft admin approves Leon once for the company.',
+    'Your Teams chats, as messages arrive, and the transcripts of the Teams meetings in your calendar. Your Microsoft admin approves Leon once for the company.',
   slack:
     'Messages from the channels your Slack account can see. Never direct messages or group chats.',
   drive:

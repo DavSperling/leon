@@ -6,6 +6,7 @@ import { normalizeItem } from '../normalize';
 import { getConnector } from '../registry';
 import type { AnyConnector, SyncPage } from '../types';
 import { teamsChatsConnector, teamsConnector } from './connector';
+import { changedPlace, EVERYWHERE, MEETINGS_KEY } from './daily';
 import { transcriptItem } from './map';
 import { teamsChatsOAuth, teamsOAuth } from './oauth';
 
@@ -61,9 +62,15 @@ const param = (url: string | undefined, name: string) => new URL(url ?? '').sear
 const cursorOf = (pages: SyncPage[]) => JSON.parse(pages.at(-1)?.cursor ?? 'null');
 const ids = (pages: SyncPage[]) => pages.flatMap((page) => page.items.map((i) => i.externalId));
 
-async function run(connector: AnyConnector, routes: FakeRoute[], cursor: string | null = null) {
+async function run(
+  connector: AnyConnector,
+  routes: FakeRoute[],
+  cursor: string | null = null,
+  signaled?: string[],
+) {
   const { http, calls } = testHttp(connector, config, routes);
-  const pages = await collect(connector.sync(config, { cursor, since: SINCE }, http));
+  const state = { cursor, since: SINCE, ...(signaled && { signaled }) };
+  const pages = await collect(connector.sync(config, state, http));
   return { pages, calls, paths: calls.map((call) => call.url.split('?')[0]) };
 }
 
@@ -395,6 +402,85 @@ describe('teamsConnector.sync : une lecture par jour au plus', () => {
   });
 });
 
+describe('teamsConnector.sync : ce que Microsoft signale (0098)', () => {
+  it('relit tout de suite un canal signalé, depuis sa dernière lecture, sans relire la liste', async () => {
+    const first = await run(teamsConnector, firstPass());
+    vi.setSystemTime(new Date('2026-10-15T09:00:00Z'));
+    const fresh = generalPage();
+    fresh.value = [
+      { ...message('1760518600000', '2026-10-15T08:56:40Z', 'Nouveau fil.'), replies: [] },
+      ...fresh.value,
+    ];
+
+    const { paths, pages } = await run(
+      teamsConnector,
+      [{ url: MESSAGES(GENERAL), json: fresh }],
+      first.pages.at(-1)?.cursor,
+      [GENERAL],
+    );
+
+    expect(paths).toEqual([MESSAGES(GENERAL)]);
+    expect(ids(pages)).toEqual([`thread:${GENERAL}/1760518600000`]);
+    expect(cursorOf(pages)).toMatchObject({
+      signaled: [],
+      read: { [GENERAL]: '2026-10-15T09:00:00.000Z' },
+    });
+  });
+
+  it('garde le signal dès la première page : un passage qui échoue ensuite ne le perd pas', async () => {
+    const first = await run(teamsConnector, firstPass());
+    const { http } = testHttp(teamsConnector, config, [
+      { url: MESSAGES(GENERAL), status: 400, json: { error: { code: 'BadRequest' } } },
+    ]);
+    const cursor = first.pages.at(-1)?.cursor ?? null;
+    const pages: SyncPage[] = [];
+
+    await expect(async () => {
+      const state = { cursor, since: SINCE, signaled: [GENERAL] };
+      for await (const page of teamsConnector.sync(config, state, http)) pages.push(page);
+    }).rejects.toThrow();
+
+    expect(cursorOf(pages).signaled).toEqual([GENERAL]);
+  });
+
+  it('un canal signalé que la liste ne connaît pas la fait relire, une fois par heure au plus', async () => {
+    const first = await run(teamsConnector, firstPass());
+    const left = '19:parti@thread.tacv2'; // un canal qui n'est plus dans la liste relue
+    vi.setSystemTime(new Date('2026-10-15T08:30:00Z'));
+    const early = await run(teamsConnector, [], first.pages.at(-1)?.cursor, [DEVIS, left]);
+    expect(early.calls).toEqual([]);
+    expect(cursorOf(early.pages).signaled).toEqual([DEVIS, left]);
+
+    vi.setSystemTime(new Date('2026-10-15T09:01:00Z'));
+    const { paths, pages } = await run(
+      teamsConnector,
+      [...listing([GENERAL, DEVIS]), { url: MESSAGES(DEVIS), json: { value: [] } }],
+      early.pages.at(-1)?.cursor,
+    );
+
+    expect(paths[0]).toBe(`${GRAPH}/me/joinedTeams`);
+    // Le canal du matin n'est pas relu : seul le canal signalé l'est.
+    expect(paths.filter((path) => path?.endsWith('/messages'))).toEqual([MESSAGES(DEVIS)]);
+    expect(cursorOf(pages).signaled).toEqual([]);
+  });
+
+  it('« * » (des notifications perdues) relit la liste et chaque canal', async () => {
+    const first = await run(teamsConnector, firstPass());
+    vi.setSystemTime(new Date('2026-10-15T08:10:00Z'));
+
+    const { paths, pages } = await run(
+      teamsConnector,
+      [...listing(), { url: MESSAGES(GENERAL), json: { value: [] } }],
+      first.pages.at(-1)?.cursor,
+      [EVERYWHERE],
+    );
+
+    expect(paths[0]).toBe(`${GRAPH}/me/joinedTeams`);
+    expect(paths.at(-1)).toBe(MESSAGES(GENERAL));
+    expect(cursorOf(pages).signaled).toEqual([]);
+  });
+});
+
 describe('teamsConnector.sync : canaux privés et partagés, et qui en est membre', () => {
   const HOST = '6f1c2b8e-0d4a-4c3b-9e5f-7a8b9c0d1e2f'; // l'équipe d'une autre entreprise
   const PAIE = '19:paie@thread.tacv2';
@@ -699,6 +785,25 @@ describe('teamsChatsConnector.sync', () => {
     // L'agenda repart un jour plus tôt : une transcription prête après la lecture de la veille.
     expect(param(calls[4]?.url, 'startDateTime')).toBe('2026-10-14T07:55:00Z');
   });
+
+  it('relit tout de suite une conversation signalée, et les réunions pour une transcription, rien d’autre', async () => {
+    const first = await run(teamsChatsConnector, routes());
+    vi.setSystemTime(new Date('2026-10-15T08:20:00Z'));
+
+    const { calls, paths, pages } = await run(
+      teamsChatsConnector,
+      [
+        { url: CHAT(GROUP), json: { value: [] } },
+        { url: CALENDAR, json: { value: [] } },
+      ],
+      first.pages.at(-1)?.cursor,
+      [GROUP, MEETINGS_KEY],
+    );
+
+    expect(paths).toEqual([CHAT(GROUP), CALENDAR]);
+    expect(param(calls[0]?.url, '$filter')).toBe('lastModifiedDateTime gt 2026-10-15T07:55:00Z');
+    expect(cursorOf(pages).signaled).toEqual([]);
+  });
 });
 
 describe('teamsChatsConnector.sync : transcriptions des réunions', () => {
@@ -896,5 +1001,48 @@ describe('teamsChatsConnector.sync : transcriptions des réunions', () => {
       },
     ]);
     expect(transcriptItem(event(), transcript(), 'WEBVTT\n\n')).toBeNull();
+  });
+});
+
+describe('Teams et Teams Chat : les abonnements demandés à Microsoft (0098)', () => {
+  it('Teams Chat suit les conversations de la personne et les transcriptions des réunions qu’elle organise', () => {
+    expect(teamsChatsConnector.watchFor?.('u-paul', null)).toEqual([
+      { resource: '/users/u-paul/chats/getAllMessages', changeType: 'created,updated,deleted' },
+      { resource: 'users/u-paul/onlineMeetings/getAllTranscripts', changeType: 'created' },
+    ]);
+    expect(teamsChatsConnector.watchFor?.(null, null)).toEqual([]);
+  });
+
+  it('Teams suit chaque canal de la liste du jour, un seul abonnement par appli', async () => {
+    const first = await run(teamsConnector, [
+      ...listing([GENERAL, DEVIS]),
+      { url: MESSAGES(GENERAL), json: { value: [] } },
+      { url: MESSAGES(DEVIS), json: { value: [] } },
+    ]);
+
+    const channel = (id: string) => ({
+      resource: `/teams/${TEAM}/channels/${id}/messages`,
+      changeType: 'created,updated,deleted',
+      onePerApp: true,
+    });
+    expect(teamsConnector.watchFor?.('u-paul', first.pages.at(-1)?.cursor ?? null)).toEqual([
+      channel(GENERAL),
+      channel(DEVIS),
+    ]);
+    expect(teamsConnector.watchFor?.('u-paul', null)).toEqual([]);
+  });
+
+  it('lit où Teams a changé dans la ressource de la notification', () => {
+    expect(changedPlace(`chats('${ONE}')/messages('1612289765949')`, null)).toBe(ONE);
+    expect(
+      changedPlace(`teams('${TEAM}')/channels('${GENERAL}')/messages('1612293113399')`, undefined),
+    ).toBe(GENERAL);
+    expect(changedPlace("users/u-paul/onlineMeetings('MSo1')/transcripts('MSM')", null)).toBe(
+      MEETINGS_KEY,
+    );
+    expect(changedPlace(null, 'missed')).toBe(EVERYWHERE);
+    expect(changedPlace(null, 'subscriptionRemoved')).toBe(EVERYWHERE);
+    expect(changedPlace(`chats('${ONE}')/messages('1')`, 'reauthorizationRequired')).toBeNull();
+    expect(changedPlace('Users/u-1/Messages/m-1', null)).toBeNull();
   });
 });

@@ -18,6 +18,8 @@ const NotificationsSchema = z.object({
       subscriptionId: z.string().min(1).max(200),
       clientState: z.string().max(128).nullish(),
       lifecycleEvent: z.string().max(100).nullish(),
+      // Teams : où le changement a eu lieu (la conversation, le canal), relu tout de suite (0098).
+      resource: z.string().max(1000).nullish(),
     }),
   ),
 });

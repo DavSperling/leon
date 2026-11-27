@@ -3,7 +3,16 @@ import { logError } from '@/server/log';
 import { ConnectorAuthError, type ConnectorHttp } from '../http';
 import type { Audience, Connector, ConnectorItem } from '../types';
 import { type TeamsClient, teamsClient } from './client';
-import { DAY, daily, gone, type Listing, type Place, type Reader } from './daily';
+import {
+  DAY,
+  daily,
+  gone,
+  type Listing,
+  MEETINGS_KEY,
+  type Place,
+  placesOf,
+  type Reader,
+} from './daily';
 import {
   changedAt,
   chatDays,
@@ -65,8 +74,11 @@ import type { Channel, Event, Root } from './schemas';
 //   - Un canal partagé hébergé dans une autre entreprise se lit avec le jeton de la personne, de notre annuaire : la doc
 //     ne dit pas si cela suffit (seuls les droits d'application exigent l'annuaire hôte). Un canal, une équipe ou une
 //     conversation refusés sont passés, le journal ne dit que le refus.
-//   - Une fois par jour et par lieu au plus (daily.ts) : plus souvent, il faudrait des abonnements de Graph, qui
-//     demandent une adresse publique en https pour les recevoir.
+//   - Une fois par jour et par lieu au plus (daily.ts), sauf ce que Microsoft signale par une notification
+//     (microsoft-notifications.ts, 0098) : un abonnement par canal de la liste du jour (en droits délégués, il n'en
+//     existe pas pour tous les canaux d'une personne), un pour toutes les conversations de la personne, un pour les
+//     transcriptions des réunions qu'elle organise. Les réunions où elle n'est qu'invitée restent lues une fois par
+//     jour : il faudrait un abonnement par réunion, pris avant qu'elle commence.
 //   - Les transcriptions : getAllTranscripts (toutes les réunions d'un coup) n'existe qu'en droits d'application, et
 //     Leon agit toujours au nom de la personne. Les réunions se trouvent donc dans l'agenda, par le lien Teams de
 //     chaque événement, une fois par jour comme un lieu de plus ; une réunion personnelle, privée ou confidentielle
@@ -194,9 +206,9 @@ const threads = (client: TeamsClient): Reader =>
     } while (next);
   };
 
-// Les réunions de l'agenda : un lieu de plus, à côté des conversations, lu une fois par jour comme elles. Aucune
-// conversation n'a cette clé (les leurs commencent par « 19: »).
-const MEETINGS: Place = { key: 'reunions', parent: null, name: 'Réunions Teams', origin: {} };
+// Les réunions de l'agenda : un lieu de plus, à côté des conversations, lu une fois par jour comme elles, et dès
+// qu'une transcription d'une réunion qu'organise la personne est prête.
+const MEETINGS: Place = { key: MEETINGS_KEY, parent: null, name: 'Réunions Teams', origin: {} };
 
 // Les conversations de la personne, et qui est dans chacune. La liste ne rend que 25 membres par conversation, sans le
 // début de leur historique : ils se lisent à part, sauf à deux (chacun y voit tout).
@@ -307,10 +319,28 @@ export const teamsConnector: Connector<Config> = {
   oauth: teamsOAuth,
   memberAccess: true,
   verify,
-  sync(config, { cursor, since }, http) {
+  sync(config, { cursor, since, signaled }, http) {
     const client = teamsClient(config, http);
-    return daily(cursor, since, () => channelListing(client), threads(client));
+    return daily(cursor, since, () => channelListing(client), threads(client), signaled);
   },
+  // Doc lue le 27/11/2026 : https://learn.microsoft.com/en-us/graph/teams-changenotifications-chatmessage (un canal,
+  // ChannelMessage.Read.All en délégué ; un seul abonnement par appli et par canal, 10 000 pour toute l'organisation,
+  // toutes applis confondues). Les canaux de la liste lue au passage précédent.
+  // shortcut: un abonnement par canal, renouvelé avec chaque jeton (environ une heure) : une centaine de requêtes par
+  // heure pour cent canaux. Au-delà de quelques centaines de canaux suivis, passer à /teams/getAllMessages, en droits
+  // d'application (l'accord de l'administrateur pour ces droits-là).
+  watchFor: (_accountKey, cursor) =>
+    placesOf(cursor).flatMap((place) =>
+      place.parent
+        ? [
+            {
+              resource: `/teams/${place.parent}/channels/${place.key}/messages`,
+              changeType: 'created,updated,deleted',
+              onePerApp: true,
+            },
+          ]
+        : [],
+    ),
 };
 
 export const teamsChatsConnector: Connector<Config> = {
@@ -323,8 +353,21 @@ export const teamsChatsConnector: Connector<Config> = {
   privateRaw: true, // un élément sans lieu resterait à qui branche ; tous en ont un
   memberAccess: true,
   verify,
-  sync(config, { cursor, since }, http) {
+  sync(config, { cursor, since, signaled }, http) {
     const client = teamsClient(config, http);
-    return daily(cursor, since, () => chatListing(client), chatsAndMeetings(client));
+    return daily(cursor, since, () => chatListing(client), chatsAndMeetings(client), signaled);
+  },
+  // Doc lue le 27/11/2026 : https://learn.microsoft.com/en-us/graph/teams-changenotifications-chatmessage (toutes
+  // les conversations d'une personne, Chat.Read en délégué) et
+  // https://learn.microsoft.com/en-us/graph/teams-changenotifications-callrecording-and-calltranscript (les
+  // transcriptions des réunions qu'elle organise, OnlineMeetingTranscript.Read.All ; prévenu seulement si
+  // l'abonnement précède la transcription ; refusé en 403 quand l'administrateur a fermé les transcriptions à Graph).
+  watchFor: (accountKey) => {
+    if (!accountKey) return [];
+    const user = encodeURIComponent(accountKey);
+    return [
+      { resource: `/users/${user}/chats/getAllMessages`, changeType: 'created,updated,deleted' },
+      { resource: `users/${user}/onlineMeetings/getAllTranscripts`, changeType: 'created' },
+    ];
   },
 };

@@ -59,7 +59,13 @@ export type Audience =
 
 // `depotsEquipe` (GitHub seulement, décision D) : les dépôts d'équipe de l'organisation, `github.com/owner/repo`
 // en minuscules. Absent vaut vide : rien n'est relevé.
-export type SyncState = { cursor: string | null; since: Date; depotsEquipe?: string[] };
+// `signaled` (Teams) : les lieux que Microsoft a signalés depuis le passage précédent (0098), à relire tout de suite.
+export type SyncState = {
+  cursor: string | null;
+  since: Date;
+  depotsEquipe?: string[];
+  signaled?: readonly string[];
+};
 // `removed` : les externalId d'éléments déjà relevés à retirer (un événement d'agenda devenu privé).
 // `removedTurns` : les externalId de tours à retirer, cherchés dans tous les éléments de l'outil et du créateur (un
 // message supprimé dans un fil) : seulement pour un outil dont l'identifiant de tour est unique hors de son élément
@@ -145,10 +151,15 @@ export type Connector<Config> = {
   // Microsoft Graph prévient Leon de chaque changement de ces ressources, et la relève suit tout de suite
   // (microsoft-notifications.ts).
   watch?: readonly GraphWatch[];
+  // Les mêmes, quand elles dépendent du compte (`accountKey` de la connexion) ou de ce que la relève a lu (son
+  // curseur) : les conversations d'une personne, les canaux de sa liste du jour.
+  watchFor?(accountKey: string | null, cursor: string | null): readonly GraphWatch[];
 };
 export type AnyConnector = Connector<Record<string, unknown>>;
 // `resource` : le chemin suivi, ex. « /me/mailFolders('inbox')/messages » ; `changeType` : « created », « updated »…
-export type GraphWatch = { resource: string; changeType: string };
+// `onePerApp` : Microsoft n'accepte qu'un abonnement par appli à cette ressource (un canal) ; celui de la connexion
+// d'un collègue suffit.
+export type GraphWatch = { resource: string; changeType: string; onePerApp?: boolean };
 
 // La partie publique d'un connecteur, lue par l'interface (aucun code serveur).
 export type CatalogField = {

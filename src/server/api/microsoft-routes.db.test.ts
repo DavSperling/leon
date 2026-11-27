@@ -35,11 +35,15 @@ beforeEach(async () => {
 // Une connexion Outlook relevée dans un quart d'heure, et son abonnement au secret `secret-<id>`.
 async function watchedConnection(
   name: string,
-  input: { status?: 'active' | 'paused' | 'error'; nextSyncAt?: Date | null } = {},
+  input: {
+    status?: 'active' | 'paused' | 'error';
+    nextSyncAt?: Date | null;
+    provider?: 'outlook' | 'teamschats';
+  } = {},
 ) {
   const subscriptionId = abo(name);
   const id = await seedConnection(paul, {
-    provider: 'outlook',
+    provider: input.provider ?? 'outlook',
     status: input.status ?? 'active',
     nextSyncAt: input.nextSyncAt === undefined ? LATER : input.nextSyncAt,
   });
@@ -141,6 +145,22 @@ describe('POST /api/microsoft/notifications', () => {
     expect((await stateOf(paused))?.due).toBeNull();
     expect((await stateOf(failing))?.due).toBe(false);
     expect(enqueueDueSyncs).not.toHaveBeenCalled();
+  });
+
+  it('une notification de Teams dit aussi où relire, pour la relève qui suit (0098)', async () => {
+    const id = await watchedConnection('6', { provider: 'teamschats' });
+    const chat = `19:${mark}@unq.gbl.spaces`;
+
+    const response = await notify([
+      { ...change(abo('6'), `secret-${abo('6')}`), resource: `chats('${chat}')/messages('1')` },
+    ]);
+
+    expect(response.status).toBe(202);
+    const { rows } = await adminPool.query<{ cle: string }>(
+      'select cle from lieux_signales where connection_id = $1',
+      [id],
+    );
+    expect(rows.map((row) => row.cle)).toEqual([chat]);
   });
 
   it('refuse un corps illisible', async () => {

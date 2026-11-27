@@ -14,7 +14,7 @@ import {
   sendBrouillon,
   trashMail,
   withdrawBrouillon,
-  withdrawRelances,
+  withdrawStale,
 } from './brouillon-depot';
 
 vi.mock('@/server/pipeline/queue');
@@ -832,8 +832,9 @@ describe('withdrawBrouillon : un brouillon écarté quitte ses brouillons Gmail'
   );
 });
 
-// Une relance déposée devient inutile quand son fil bouge : elle quitte Gmail au passage suivant de l'agent.
-describe('withdrawRelances : une relance devenue inutile quitte ses brouillons Gmail', () => {
+// Un brouillon déposé devient inutile quand le fil de sa relance bouge, ou quand elle a répondu elle-même au mail reçu :
+// il quitte Gmail au passage suivant de l'agent.
+describe('withdrawStale : un brouillon devenu inutile quitte ses brouillons Gmail', () => {
   const deleteRoute = (over: Partial<FakeRoute> = {}): FakeRoute => ({
     method: 'DELETE',
     url: proxied(`${GMAIL}/drafts/`),
@@ -843,6 +844,12 @@ describe('withdrawRelances : une relance devenue inutile quitte ses brouillons G
   // Une relance déposée (« r/1 » chez Gmail) dans sa boîte branchée par Pipedream.
   async function deposited(ctx: TenantContext): Promise<string> {
     const id = await relanced(ctx, RELANCE, EVERYONE, { connectionId: await gmailOf(ctx) });
+    await adminPool.query(`update brouillons set brouillon_gmail = 'r/1' where id = $1`, [id]);
+    return id;
+  }
+  // Un brouillon de réponse au mail de Léa, déposé (« r/1 » chez Gmail) dans sa boîte branchée par Pipedream.
+  async function depositedReply(ctx: TenantContext): Promise<string> {
+    const { id } = await drafted(ctx, COMPLET, { connectionId: await gmailOf(ctx) });
     await adminPool.query(`update brouillons set brouillon_gmail = 'r/1' where id = $1`, [id]);
     return id;
   }
@@ -874,7 +881,7 @@ describe('withdrawRelances : une relance devenue inutile quitte ses brouillons G
       const fetchImpl = fakeFetch([TOKEN, deleteRoute()]);
       const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      await withdrawRelances(julie, { fetchImpl });
+      await withdrawStale(julie, { fetchImpl });
 
       const paid = fetchImpl.calls.filter((call) => call.url.includes('/proxy/'));
       expect(paid.map((call) => call.method)).toEqual(['DELETE']);
@@ -889,7 +896,58 @@ describe('withdrawRelances : une relance devenue inutile quitte ses brouillons G
       expect(errors).not.toHaveBeenCalled();
       // Plus rien à retirer ensuite.
       const again = fakeFetch([]);
-      await withdrawRelances(julie, { fetchImpl: again });
+      await withdrawStale(julie, { fetchImpl: again });
+      expect(again.calls).toHaveLength(0);
+    },
+  );
+
+  // Les messages relevés après le mail de Léa, construits au moment du test : après ce mail, écrit il y a une heure.
+  it.each([
+    [
+      'elle a répondu à Léa depuis sa boîte',
+      () => [sent(ago(HOUR / 2), 'Bonjour Léa, voici le devis.')],
+    ],
+    [
+      'elle a répondu en mettant Léa en copie',
+      () => [
+        sent(
+          ago(HOUR / 2),
+          'Paul, je te laisse envoyer le devis à Léa.',
+          ['paul@acme.test'],
+          [LEA],
+        ),
+      ],
+    ],
+    [
+      'elle a répondu, puis Léa a récrit',
+      () => [
+        sent(ago(HOUR / 2), 'Bonjour Léa, voici le devis.'),
+        received(ago(HOUR / 4), 'Merci Julie, je regarde.'),
+      ],
+    ],
+  ])(
+    '%s : son brouillon de réponse déposé quitte Gmail, une requête DELETE et aucune autre, puis Leon l’oublie',
+    async (_, after) => {
+      const [julie] = await team();
+      const id = await depositedReply(julie);
+      for (const turn of after()) await move(julie, id, turn);
+      const fetchImpl = fakeFetch([TOKEN, deleteRoute()]);
+      const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await withdrawStale(julie, { fetchImpl });
+
+      const paid = fetchImpl.calls.filter((call) => call.url.includes('/proxy/'));
+      expect(paid.map((call) => call.method)).toEqual(['DELETE']);
+      expect(target(paid[0])).toBe(`${GMAIL}/drafts/r%2F1`);
+      expect(await stored(id)).toMatchObject({
+        brouillonGmail: null,
+        texte: COMPLET,
+        ecarteLe: null,
+        envoyeLe: null,
+      });
+      expect(errors).not.toHaveBeenCalled();
+      const again = fakeFetch([]);
+      await withdrawStale(julie, { fetchImpl: again });
       expect(again.calls).toHaveLength(0);
     },
   );
@@ -901,7 +959,7 @@ describe('withdrawRelances : une relance devenue inutile quitte ses brouillons G
     const fetchImpl = fakeFetch([TOKEN, deleteRoute({ status: 404 })]);
     const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    await withdrawRelances(julie, { fetchImpl });
+    await withdrawStale(julie, { fetchImpl });
 
     expect(fetchImpl.calls.map((call) => call.method)).toEqual(['POST', 'DELETE']);
     expect(await stored(id)).toMatchObject({ brouillonGmail: null });
@@ -940,11 +998,18 @@ describe('withdrawRelances : une relance devenue inutile quitte ses brouillons G
       },
     ],
     [
-      'un brouillon de réponse dans un fil qui a bougé : hors de ce morceau',
+      'un brouillon de réponse quand Léa a récrit, sans réponse d’elle',
       async (julie) => {
-        const { id } = await drafted(julie, COMPLET, { connectionId: await gmailOf(julie) });
-        await adminPool.query(`update brouillons set brouillon_gmail = 'r/1' where id = $1`, [id]);
+        const id = await depositedReply(julie);
         await move(julie, id);
+        return [julie, id];
+      },
+    ],
+    [
+      'un brouillon de réponse quand elle a transféré le mail à un collègue',
+      async (julie) => {
+        const id = await depositedReply(julie);
+        await move(julie, id, sent(ago(HOUR / 2), 'Paul, peux-tu regarder ?', ['paul@acme.test']));
         return [julie, id];
       },
     ],
@@ -975,7 +1040,7 @@ describe('withdrawRelances : une relance devenue inutile quitte ses brouillons G
     const fetchImpl = fakeFetch([]);
     const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    await withdrawRelances(who, { fetchImpl });
+    await withdrawStale(who, { fetchImpl });
 
     expect(fetchImpl.calls).toHaveLength(0);
     expect((await stored(id))?.brouillonGmail).toBe(before);
@@ -991,12 +1056,12 @@ describe('withdrawRelances : une relance devenue inutile quitte ses brouillons G
       const fetchImpl = fakeFetch([TOKEN, deleteRoute({ status })]);
       const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      await expect(withdrawRelances(julie, { fetchImpl })).resolves.toBeUndefined();
+      await expect(withdrawStale(julie, { fetchImpl })).resolves.toBeUndefined();
 
       expect(fetchImpl.calls.filter((call) => call.method === 'DELETE')).toHaveLength(1);
       expect(await stored(id)).toMatchObject({ brouillonGmail: 'r/1', ecarteLe: null });
       expect(errors.mock.calls.map((args) => args[1])).toEqual([
-        'brouillons.relance_withdraw_failed',
+        'brouillons.stale_withdraw_failed',
       ]);
       expect(JSON.parse(String(errors.mock.calls[0]?.[2]))).toEqual({
         userId: julie.userId,

@@ -1952,9 +1952,7 @@ describe('writeBrouillons : un brouillon complet va aussi dans ses brouillons Gm
     expect(calls).toHaveLength(1);
     expect(fetchImpl.calls.map((call) => call.method)).toEqual(['POST', 'DELETE']);
     expect(await relanceDraft(id)).toBe('r-relance');
-    expect(errors.mock.calls.map((args) => args[1])).toEqual([
-      'brouillons.relance_withdraw_failed',
-    ]);
+    expect(errors.mock.calls.map((args) => args[1])).toEqual(['brouillons.stale_withdraw_failed']);
     expect(JSON.stringify(errors.mock.calls)).not.toMatch(/Devis|Bonjour|Léa|@/);
   });
 });

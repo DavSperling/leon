@@ -8,9 +8,11 @@ const LABEL = PROVIDER_LABELS.linear;
 const ENDPOINT = 'https://api.linear.app/graphql';
 
 export const PAGE_SIZE = 50;
-// 50 tickets × 50 commentaires restent sous la limite de complexité d'une requête (10 000 points,
-// environ 6 600 ici). Au-delà de 50 commentaires, le ticket sort avec ceux que l'outil rend.
+// 50 tickets × (50 commentaires et 10 labels) restent sous la limite de complexité d'une requête
+// (10 000 points, environ 7 300 ici). Au-delà de 50 commentaires, le ticket sort avec ceux que l'outil rend.
 const COMMENTS_MAX = 50;
+// shortcut: au-delà de 10 labels, le ticket ne garde que les 10 premiers ; à relever si une équipe en met plus.
+const LABELS_MAX = 10;
 
 // Où en est le parcours d'un type d'éléments : les éléments modifiés après `from`, rendus du plus
 // récent au plus ancien ; `after` est la position dans le parcours, `top` la modification la plus
@@ -19,13 +21,25 @@ export type Stream = { from: string; top: string | null; after: string | null };
 
 const ACCOUNT_QUERY = 'query Account { viewer { id name } organization { id name } }';
 
+// L'essentiel d'un ticket (map.ts) : son état, son assigné, sa priorité, ses labels, son cycle et son échéance.
+// Doc lue le 27/11/2026 :
+//   https://github.com/linear/linear/blob/master/packages/sdk/src/schema.graphql (schéma public) : Issue.state
+//     (WorkflowState!, son nom), assignee (User, null si personne), priority (0 = aucune, 1 = urgente, 2 = haute,
+//     3 = moyenne, 4 = basse), dueDate (TimelessDate, AAAA-MM-JJ, null sans échéance), cycle (null hors cycle ;
+//     number, et name facultatif), labels (IssueLabelConnection, name) ;
+//   https://linear.app/developers/rate-limiting : 0,1 point par champ et 1 par objet, multipliés par la taille de
+//     page d'une liste (50 par défaut).
 const ISSUES_QUERY = `query Issues($first: Int!, $after: String, $filter: IssueFilter) {
   issues(first: $first, after: $after, filter: $filter, orderBy: updatedAt) {
     nodes {
-      id identifier title description url updatedAt
+      id identifier title description url updatedAt priority dueDate
       creator { name email }
       team { name }
       project { name }
+      state { name }
+      assignee { name }
+      cycle { number name }
+      labels(first: ${LABELS_MAX}) { nodes { name } }
       comments(first: ${COMMENTS_MAX}) { nodes { id body createdAt user { name email } } }
     }
     pageInfo { hasNextPage endCursor }
@@ -49,9 +63,15 @@ const issue = z.object({
   description: z.string().nullable(),
   url: z.string(),
   updatedAt: z.string(),
+  priority: z.number(),
+  dueDate: z.string().nullable(),
   creator: user,
   team: named,
   project: named.nullable(),
+  state: named,
+  assignee: named.nullable(),
+  cycle: z.object({ number: z.number(), name: z.string().nullable() }).nullable(),
+  labels: z.object({ nodes: z.array(named) }),
   comments: z.object({
     nodes: z.array(z.object({ id: z.string(), body: z.string(), createdAt: z.string(), user })),
   }),

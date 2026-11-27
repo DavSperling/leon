@@ -11,18 +11,39 @@ const author = (user: LinearUser): ConnectorTurn['author'] => ({
 const byDate = (a: { createdAt: string }, b: { createdAt: string }) =>
   Date.parse(a.createdAt) - Date.parse(b.createdAt);
 
-// Un ticket sans description ni commentaire n'est pas rendu : son titre seul n'apprend rien.
+// La priorité de Linear est un nombre ; 0, « aucune », n'est pas écrite.
+const PRIORITIES: Record<number, string> = { 1: 'Urgente', 2: 'Haute', 3: 'Moyenne', 4: 'Basse' };
+
+// L'essentiel du ticket en une ligne, avec les seuls champs remplis : « État : En cours · Assigné : … · Priorité :
+// Haute · Labels : bug · Cycle : 12 · Échéance : 2026-12-03 ».
+function stateLine(issue: LinearIssue): string {
+  const labels = issue.labels.nodes.map((label) => label.name).join(', ');
+  const cycle = issue.cycle && (issue.cycle.name || String(issue.cycle.number));
+  const priority = PRIORITIES[issue.priority];
+  return [
+    issue.state.name && `État : ${issue.state.name}`,
+    issue.assignee?.name && `Assigné : ${issue.assignee.name}`,
+    priority && `Priorité : ${priority}`,
+    labels && `Labels : ${labels}`,
+    cycle && `Cycle : ${cycle}`,
+    issue.dueDate && `Échéance : ${issue.dueDate}`,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
+
+// Le corps est la ligne d'état puis la description : un ticket qui n'a qu'un titre garde sa ligne d'état.
 export function issueToItem(issue: LinearIssue): ConnectorItem | null {
   const turns: ConnectorTurn[] = [];
-  const description = issue.description?.trim();
+  const body = [stateLine(issue), issue.description?.trim()].filter(Boolean).join('\n\n');
   // Le corps vaut à la date de la dernière modification du ticket.
-  if (description) {
+  if (body) {
     const { creator, updatedAt } = issue;
     turns.push({
       externalId: 'body',
       role: 'document',
       author: author(creator),
-      text: description,
+      text: body,
       ts: updatedAt,
     });
   }

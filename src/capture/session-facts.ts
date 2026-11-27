@@ -96,6 +96,11 @@ const LOCAL_TOOLS = new Set([
   'Grep',
   'LS',
   'TodoWrite',
+  // Le plan, le récapitulatif et les chapitres de l'app de bureau : l'app n'y répond que par ses propres messages
+  // (décision d'Amos du 23/11, D36). Noms exacts : tout autre mcp__ccd_* reste externe.
+  'mcp__ccd_turn__update_plan',
+  'mcp__ccd_turn__wrap_up',
+  'mcp__ccd_session__mark_chapter',
   'TaskCreate',
   'TaskUpdate',
   'TaskList',

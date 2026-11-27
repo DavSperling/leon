@@ -153,7 +153,10 @@ async function alignPlaces(
   connection: ConnectionRef,
   audiences: Audience[],
 ): Promise<void> {
-  for (const audience of audiences) {
+  // Dans l'ordre des clés : aligner_lieu garde la ligne du lieu jusqu'à la fin de la transaction, et deux collègues
+  // relevés en même temps, qui listent les mêmes lieux dans un ordre différent, s'interbloqueraient.
+  const ordered = [...audiences].sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
+  for (const audience of ordered) {
     const place = normalizeAudience(audience, connection.provider);
     if (!place) continue;
     const members = place.team ? [] : place.members;

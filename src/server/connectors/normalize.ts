@@ -325,7 +325,7 @@ function validDate(value: string): Date | null {
 // comme dans un jsonb, et dans un jsonb la moitié isolée d'un emoji (JSON.stringify l'écrit
 // « \ud83d », le jsonb la rejette ; un text la reçoit en U+FFFD). Un seul élément qui en porte une
 // ferait échouer l'insertion, donc le passage entier, à chaque relève.
-function clean(value: string): string {
+export function clean(value: string): string {
   return value.replaceAll('\u0000', '').toWellFormed();
 }
 

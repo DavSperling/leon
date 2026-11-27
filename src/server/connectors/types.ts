@@ -48,11 +48,15 @@ export type ConnectorItem = {
 // en minuscules. Absent vaut vide : rien n'est relevé.
 export type SyncState = { cursor: string | null; since: Date; depotsEquipe?: string[] };
 // `removed` : les externalId d'éléments déjà relevés à retirer (un événement d'agenda devenu privé).
+// `removedTurns` : les externalId de tours à retirer, cherchés dans tous les éléments de l'outil et du créateur (un
+// message supprimé dans un fil) : seulement pour un outil dont l'identifiant de tour est unique hors de son élément
+// (message:<canal>/<id> de Teams). Un élément resté sans tour part aussi.
 // `depotsConfirmes` (GitHub) : les dépôts d'équipe que la connexion a pu lire à ce passage, même forme.
 export type SyncPage = {
   items: ConnectorItem[];
   cursor: string;
   removed?: string[];
+  removedTurns?: string[];
   depotsConfirmes?: string[];
 };
 

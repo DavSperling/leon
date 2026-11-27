@@ -12,7 +12,7 @@ import {
 } from '@/server/ingest/ingest-turns';
 import { textArray } from '@/server/search/filters-sql';
 import { unlinkSources } from '@/server/sessions/thread-links';
-import type { NormalizedItem } from './normalize';
+import { type NormalizedItem, turnStem } from './normalize';
 
 export type ConnectionRef = {
   id: string;
@@ -168,4 +168,23 @@ export async function removeConnectorItems(
   });
   await unlinkSources(ctx.tenantId, ids);
   return removed;
+}
+
+// Retire des tours précis (un message supprimé dans un fil Teams), par la fonction de 0095, dans les sources de l'outil
+// et du créateur de la connexion ; une source restée sans tour part aussi, et quitte les fils qui la reliaient (T42).
+// `turnIds` sont ceux de l'outil : la fonction retrouve leurs parts rangées (racine, empreinte). Rend le nombre de
+// tours retirés.
+export async function removeConnectorTurns(
+  ctx: TenantContext,
+  connection: ConnectionRef,
+  turnIds: string[],
+): Promise<number> {
+  const result = await withTenant(ctx, (tx) =>
+    tx.execute<{ retires: number; vides: string[] }>(
+      sql`select * from retirer_tours_connexion(${connection.id}, ${textArray(turnIds.map(turnStem))})`,
+    ),
+  );
+  const [row] = result.rows;
+  await unlinkSources(ctx.tenantId, row?.vides ?? []);
+  return row?.retires ?? 0;
 }

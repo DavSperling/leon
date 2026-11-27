@@ -18,7 +18,7 @@ import {
   UnreadableSecretError,
 } from './connections';
 import { ConnectorAuthError, ConnectorHttpError } from './http';
-import { ingestConnectorItems, removeConnectorItems } from './ingest-items';
+import { ingestConnectorItems, removeConnectorItems, removeConnectorTurns } from './ingest-items';
 import { normalizeItem } from './normalize';
 import { ensureFreshTokens, OAuthRefusedError } from './oauth';
 import { connectorHttp } from './pipedream';
@@ -98,6 +98,7 @@ async function readPages(
       if (items.length > 0)
         await ingestConnectorItems(ctx, { ...connection, privateRaw: connector.privateRaw }, items);
       if (page.removed?.length) await removeConnectorItems(ctx, connection, page.removed);
+      if (page.removedTurns?.length) await removeConnectorTurns(ctx, connection, page.removedTurns);
       const { id, lockedAt } = connection;
       const { cursor, depotsConfirmes } = page;
       if (!(await saveSyncProgress(ctx, id, lockedAt, cursor, items.length, depotsConfirmes)))

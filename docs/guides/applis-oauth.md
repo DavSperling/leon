@@ -207,7 +207,7 @@ Une seule appli pour Outlook, OneDrive et SharePoint, et Teams, décrite dans `s
   - pour tous : `offline_access`, `User.Read` ;
   - Outlook : `Mail.ReadWrite`, `Mail.Send`, `Calendars.ReadWrite`, `MailboxSettings.Read` ;
   - OneDrive et SharePoint : `Files.ReadWrite.All`, `Sites.ReadWrite.All` ;
-  - Teams (les canaux) : `Team.ReadBasic.All`, `Channel.ReadBasic.All`, `ChannelMember.Read.All`, `ChannelMessage.Read.All`, `ChannelMessage.Send` (`ChannelMember.Read.All` ajouté le 27/11/2026 : les membres de chaque canal, pour savoir quels collègues le voient ; à ajouter dans Entra, puis redonner l'accord de l'administrateur) ;
+  - Teams (les canaux) : `Team.ReadBasic.All`, `Channel.ReadBasic.All`, `ChannelMember.Read.All`, `ChannelMessage.Read.All`, `ChannelMessage.Send` (`ChannelMember.Read.All` ajouté le 27/11/2026, au code et dans Entra : les membres de chaque canal, pour savoir quels collègues le voient ; un administrateur qui avait déjà donné son accord à Teams doit le redonner) ;
   - Teams Chat (les conversations et les réunions) : `Chat.ReadWrite`, `ChatMessage.Send`, `OnlineMeetings.ReadWrite`, `OnlineMeetingTranscript.Read.All`, `OnlineMeetingRecording.Read.All`, `OnlineMeetingArtifact.Read.All`, et `Calendars.ReadWrite`, déjà déclaré pour Outlook : Leon trouve les réunions Teams dans l'agenda, puis lit leurs transcriptions.
 
   Jamais `MailboxSettings.ReadWrite` : c'est aussi le droit des règles de la boîte, qui peuvent transférer le courrier vers une autre adresse (la réponse d'absence en dépend aussi). Jamais de droit « Application » : Leon agit toujours au nom de la personne branchée. Dans votre propre annuaire, « Grant admin consent » évite l'écran d'accord à vos comptes.

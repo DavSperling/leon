@@ -8,7 +8,7 @@ import {
   fetchProjectUpdates,
   type Stream,
 } from './client';
-import { issueToItem, projectUpdateToItem } from './map';
+import { type Converted, issueToItem, projectUpdateToItem } from './map';
 import { linearOAuth } from './oauth';
 
 // Doc lue le 15/10/2026 :
@@ -32,6 +32,10 @@ import { linearOAuth } from './oauth';
 // ressource secondaire à part. Les mises à jour de projet, elles, se lisent à part : un 403 y est
 // ignoré pour ne pas bloquer les tickets.
 // Au-delà de 50 commentaires, un ticket sort avec les 50 que l'outil rend.
+// Équipes privées (lu le 27/10/2026 dans le schéma public) : `Team.visibility` vaut public, private
+// (vue de ses seuls membres) ou restricted (dans le périmètre d'une équipe privée) ; `Team.private` est
+// déprécié. Seuls les tickets et les mises à jour de projet des équipes publiques sont rendus, les
+// autres sont retirés (voir map.ts).
 //
 // Non vérifié (aucune clé réelle) : le sens exact de l'ordre de `orderBy: updatedAt` (supposé du
 // plus récent au plus ancien ; le parcours reste juste dans l'autre sens, il refait seulement des
@@ -39,7 +43,9 @@ import { linearOAuth } from './oauth';
 // ou HTTP 400 avec extensions.type = « authentication error » : les deux sont reconnus) ; la
 // complexité exacte de la requête (calculée à la main, environ 6 600 points) ; ce que fait l'outil
 // d'un curseur `after` dont l'élément a été modifié ou supprimé entre deux relèves ; si les
-// réponses à un commentaire sont dans `comments` ou seulement dans `children` (non lues ici).
+// réponses à un commentaire sont dans `comments` ou seulement dans `children` (non lues ici) ; si
+// passer une équipe en privée change la date de modification de ses tickets (sinon, ceux déjà
+// relevés restent visibles de l'équipe Leon jusqu'à leur prochaine modification).
 
 // Deux façons de se brancher : la clé personnelle (une connexion sans `authMode` est à clé) ou le
 // bouton, dont le socle OAuth tient les jetons. Un `z.object` raffiné : le catalogue lit `.shape`.
@@ -86,15 +92,22 @@ function newest(dates: Array<string | null>): string | null {
   );
 }
 
-type Fetched = { items: ConnectorItem[]; latest: string | null; next: string | null };
+type Fetched = {
+  items: ConnectorItem[];
+  removed: string[];
+  latest: string | null;
+  next: string | null;
+};
 type Page<N> = { nodes: N[]; pageInfo: { hasNextPage: boolean; endCursor: string | null } };
 
 function summarize<N extends { updatedAt: string }>(
   page: Page<N>,
-  convert: (node: N) => ConnectorItem | null,
+  convert: (node: N) => Converted,
 ): Fetched {
+  const converted = page.nodes.map(convert);
   return {
-    items: page.nodes.flatMap((node) => convert(node) ?? []),
+    items: converted.filter((c): c is ConnectorItem => c !== null && !('removed' in c)),
+    removed: converted.flatMap((c) => (c !== null && 'removed' in c ? [c.removed] : [])),
     // Aussi pour un élément sans texte, qui n'est pas rendu : il a été vu.
     latest: newest(page.nodes.map((node) => node.updatedAt)),
     next: page.pageInfo.hasNextPage ? page.pageInfo.endCursor : null,
@@ -147,8 +160,11 @@ export const linearConnector: Connector<Config> = {
         const before = JSON.stringify(state);
         state = { ...state, [key]: moved };
         const after = JSON.stringify(state);
-        // Une page sans élément ne se rend que si elle fait avancer le curseur.
-        if (page.items.length > 0 || after !== before) yield { items: page.items, cursor: after };
+        // Une page sans élément ni retrait ne se rend que si elle fait avancer le curseur.
+        if (page.items.length > 0 || page.removed.length > 0 || after !== before) {
+          const removed = page.removed.length > 0 ? { removed: page.removed } : {};
+          yield { items: page.items, cursor: after, ...removed };
+        }
         if (page.next === null) break;
       }
     }

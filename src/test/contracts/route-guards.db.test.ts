@@ -21,11 +21,16 @@ import { app } from '@/server/api/app';
 // sans jeton ni session, par nature, puisqu'il n'a encore rien. Ses routes ont leurs propres contrôles (adresses de
 // retour de la liste fermée L11, code signé à usage unique et PKCE, 4 puis 8 Ko d'entrée) ; leurs cas sont dans
 // oauth-routes.db.test.ts, et api-contract.db.test.ts garde les deux routes (400 à un POST sans corps valide, ni 401 ni 404).
+//
+// Les notifications de Microsoft Graph (POST /api/microsoft/notifications) arrivent sans jeton ni session : seul le
+// clientState de chacune, comparé en base à l'empreinte de son abonnement, la fait compter, et elle ne fait que rendre
+// une connexion due. Ses cas sont dans microsoft-routes.db.test.ts.
 const PUBLIC = [
   /^\/api\/health$/,
   /^\/api\/auth\//,
   /^\/api\/v1\/connexions\/oauth\//,
   /^\/api\/oauth\/(clients|jeton)$/, // liste fermée : une route OAuth de plus se garde, ou s'ajoute ici à la main
+  /^\/api\/microsoft\/notifications$/,
 ];
 
 const isPublic = (path: string) => PUBLIC.some((pattern) => pattern.test(path));

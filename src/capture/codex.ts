@@ -36,6 +36,7 @@ import type { CoulisseBloc, SessionFacts } from './api-contract';
 import { prepareTurnText } from './prepare-turn-text';
 import { collecteur, finishBlocs, prepare, target } from './session-backstage';
 import {
+  type AgentActions,
   buildFacts,
   type FactsRecord,
   HOME_OR_VARIABLE,
@@ -45,6 +46,7 @@ import {
   newFactsRecord,
   recordCommand,
   recordFile,
+  recordToolError,
   reduceToolName,
   replaceTasks,
 } from './session-facts';
@@ -66,7 +68,7 @@ export type CodexSession = {
 };
 
 // Les sous-agents d'une session (T63 amendé le 17/11, chargés par la CLI : loadCodexSubagents) : l'identifiant du fil
-// de chaque sous-agent → le contenu de son rollout. Ils ne décident que de `externe` et des coulisses.
+// de chaque sous-agent → le contenu de son rollout. Ils décident de `externe`, des coulisses et de `commandes_agents`.
 export type CodexSubagents = ReadonlyMap<string, string>;
 
 const TITLE_FROM_TEXT_MAX = 80;
@@ -436,6 +438,7 @@ type Reading = {
   visited: Set<string>; // les fils déjà jugés, la session comprise
   spawned: number; // les appels spawn_agent
   started: number; // leurs éléments SubAgentActivity démarrés
+  agents: AgentActions[]; // les relevés des sous-agents finis, partagés avec ceux qu'ils lancent
 };
 
 // L'élément de tour d'une ligne `item_completed`, ou null.
@@ -480,13 +483,13 @@ export function codexSubagentThreads(content: string): string[] {
 
 // Un sous-agent rend la session externe si l'on ne sait pas tout ce qu'il a fait (finishedSubagent), ou si l'un de ses
 // éléments propres l'est, par la même règle que la session, ses propres sous-agents compris. Un fil revu n'apporte rien
-// de plus : s'il était externe, la session l'est déjà.
+// de plus : s'il était externe, la session l'est déjà. Un sous-agent fini laisse aussi son relevé dans `agents` (T58).
 function isExternalSubagent(thread: string, parent: Reading): boolean {
   if (parent.visited.has(thread)) return false;
   parent.visited.add(thread);
   const lines = finishedSubagent(parent.subagents?.get(thread));
   if (lines === null) return true;
-  // Ses gestes ne sont pas ceux de la session : seul `external` sert.
+  // Ses gestes ne sont pas ceux de la session : seuls `external`, ses commandes et ses outils en erreur servent.
   const reading: Reading = {
     ...parent,
     record: newFactsRecord(),
@@ -497,6 +500,11 @@ function isExternalSubagent(thread: string, parent: Reading): boolean {
   };
   const calls = new Map<string, CodexCall>();
   for (const line of lines) readLine(reading, line, true, calls);
+  parent.agents.push({
+    debut: lines[0]?.timestamp ?? null,
+    commandes: reading.record.commands,
+    outils: reading.record.toolErrors,
+  });
   return isExternal(reading);
 }
 
@@ -517,12 +525,20 @@ const fromCwd = (cwd: string, path: string) =>
 
 // Un élément de tour typé par Codex (historique paginé).
 function readItem(reading: Reading, item: Item): void {
+  // Relevé avant les retours : un appel MCP en erreur compte, qu'il soit vers Leon ou rende la session externe.
+  if (item.type === 'McpToolCall' && statut(item) === 'erreur')
+    recordToolError(
+      reading.record,
+      typeof item.server === 'string' ? `mcp:${item.server}` : '[outil]',
+    );
   if (item.type === 'McpToolCall' && reading.leonMcp && isLeonLocalCall(item)) return;
   if (item.type === 'SubAgentActivity') {
     const started = StartedSchema.safeParse(item);
     if (started.success) {
       reading.started += 1;
-      reading.external ||= isExternalSubagent(started.data.agent_thread_id, reading);
+      // Toujours lu, même une session déjà externe : son relevé va dans commandes_agents.
+      const external = isExternalSubagent(started.data.agent_thread_id, reading);
+      reading.external ||= external;
     } else if (item.kind !== 'completed') reading.external = true; // une forme non relevée
     return;
   }
@@ -558,6 +574,7 @@ function readItem(reading: Reading, item: Item): void {
     const { changes, status } = parsed.data;
     if (status && status !== 'completed') {
       if (status === 'failed') reading.errors += 1;
+      recordToolError(reading.record, 'Edit'); // le nom commun des coulisses (itemCalls)
       return;
     }
     for (const [path, change] of Object.entries(changes)) {
@@ -596,8 +613,10 @@ function readLine(
     }
     const applied = !typed ? PatchApplyEndSchema.safeParse(line.payload) : null;
     if (payload.data.type === 'patch_apply_end' && applied?.success) {
-      if (!applied.data.success) reading.errors += 1;
-      else {
+      if (!applied.data.success) {
+        reading.errors += 1;
+        recordToolError(reading.record, 'Edit');
+      } else {
         for (const path of Object.keys(applied.data.changes)) {
           recordFile(reading.record, fromCwd(reading.cwd, path), reading.root);
         }
@@ -639,8 +658,10 @@ function readLine(
   const exitCode = exitCodeOf(text);
   const error = (exitCode ?? 0) !== 0;
   if (answered.name === 'apply_patch') {
-    if (error || /^\s*(?:error|failed)\b/i.test(text)) reading.errors += 1;
-    else
+    if (error || /^\s*(?:error|failed)\b/i.test(text)) {
+      reading.errors += 1;
+      recordToolError(reading.record, 'Edit');
+    } else
       for (const path of patchFiles(answered))
         recordFile(reading.record, fromCwd(reading.cwd, path), reading.root);
     return;
@@ -656,8 +677,8 @@ function readLine(
 // moment de la capture, prise seulement quand le rollout n'en porte pas (hors dépôt git au démarrage, ou avant le
 // premier commit).
 // `leonMcp` : le serveur `leon` de la configuration de Codex est celui de la connexion (leon-mcp.ts).
-// `subagents` : les sous-agents de la session (loadCodexSubagents), qui ne décident que de `externe` ; sans eux, un
-// sous-agent rend la session externe.
+// `subagents` : les sous-agents de la session (loadCodexSubagents), qui décident de `externe` et, finis, donnent
+// `commandes_agents` ; sans eux, un sous-agent rend la session externe.
 // shortcut: une branche lue à la capture n'est marquée comme telle que dans le code : C1 n'a pas de champ pour le dire,
 // en ajouter un (le serveur d'abord) si le bloc doit la distinguer.
 export function extractCodexFacts(
@@ -682,6 +703,7 @@ export function extractCodexFacts(
     visited: new Set(meta ? [meta.id] : []),
     spawned: 0,
     started: 0,
+    agents: [],
   };
   const calls = new Map<string, CodexCall>();
   let start: string | null = null;
@@ -701,6 +723,7 @@ export function extractCodexFacts(
     echanges: session?.turns.filter(isTypedTurn).length ?? 0,
     start,
     end,
+    agents: reading.agents,
   });
 }
 

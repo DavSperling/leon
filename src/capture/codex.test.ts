@@ -1357,3 +1357,168 @@ describe('extractCodexBackstage', () => {
     expect(ids).toEqual(['1:consigne', '2']);
   });
 });
+
+// --- T58 : les outils en erreur, la suite, les commandes des sous-agents ---------------------------------------------
+
+describe('Codex : les faits pour le rêve (T58)', () => {
+  beforeEach(() => {
+    ordinal = 1;
+  });
+  const MESSAGE = 'message témoin 7f3a';
+  const faits = (contenu: string, sa?: CodexSubagents, leonMcp = false) =>
+    extractCodexFacts(contenu, RACINE, null, leonMcp, sa);
+  // Le premier session_meta d'un sous-agent porte l'heure de son début.
+  const debutA = (contenu: string, heure: string) =>
+    contenu.replace('2026-11-06T09:00:00.000Z', `2026-11-06T${heure}.000Z`);
+
+  it('suite se lit sur le script du shell, une commande mot à mot sur ses mots ; la commande réduite ne change pas', () => {
+    const contenu = session(
+      commande('cd src && pnpm test'),
+      element({
+        type: 'CommandExecution',
+        id: 'g',
+        command: ['git', 'commit', '-m', 'a; b && c'],
+        source: 'agent',
+        status: 'completed',
+        exit_code: 0,
+        aggregated_output: '',
+      }),
+      commande('pnpm test 2>&1'),
+    );
+    expect(faits(contenu).commandes).toEqual([
+      { texte: 'cd', erreur: false, suite: true },
+      { texte: 'git commit', erreur: false, suite: false },
+      { texte: 'pnpm test', erreur: false, suite: false },
+    ]);
+  });
+
+  it('un outil MCP en erreur compte sous mcp:<serveur>, un FileChange en échec sous Edit, sans aucun texte d’erreur', () => {
+    const contenu = session(
+      element({
+        type: 'McpToolCall',
+        id: 'm1',
+        server: 'linear',
+        tool: 'get_issue',
+        arguments: { id: MESSAGE },
+        status: 'failed',
+        error: { message: MESSAGE },
+      }),
+      element({ type: 'McpToolCall', id: 'm2', server: 'linear', tool: 'x', status: 'completed' }),
+      element({ type: 'McpToolCall', id: 'm3', server: 'linear', tool: 'y', status: 'failed' }),
+      element({
+        type: 'FileChange',
+        id: 'p',
+        changes: { [`${RACINE}/a.ts`]: { type: 'add', content: MESSAGE } },
+        status: 'failed',
+      }),
+    );
+    const lus = faits(contenu);
+    expect(lus).toMatchObject({
+      outils_en_erreur: [
+        { outil: 'mcp:linear', nombre: 2 },
+        { outil: 'Edit', nombre: 1 },
+      ],
+      externe: true,
+      erreurs: 1,
+    });
+    expect(JSON.stringify(lus)).not.toContain(MESSAGE);
+    expect(SessionFactsSchema.safeParse(lus).success).toBe(true);
+  });
+
+  it('l’outil local de Leon en erreur compte sous mcp:leon sans rendre la session externe ; sans erreur, le champ est absent', () => {
+    const fil = (status: string) =>
+      session(element({ type: 'McpToolCall', id: 'm', server: 'leon', tool: 'thread', status }));
+    expect(faits(fil('failed'), undefined, true)).toMatchObject({
+      outils_en_erreur: [{ outil: 'mcp:leon', nombre: 1 }],
+      externe: false,
+    });
+    const sans = faits(fil('completed'), undefined, true);
+    expect(sans).not.toHaveProperty('outils_en_erreur');
+    expect(sans).not.toHaveProperty('commandes_agents');
+  });
+
+  it('à l’ancien format, un patch en échec compte sous Edit', () => {
+    const contenu = [
+      JSON.stringify({
+        timestamp: '2026-01-02T09:00:00.000Z',
+        type: 'session_meta',
+        payload: { id: 'ancien', cwd: RACINE, source: 'cli' },
+      }),
+      JSON.stringify({
+        timestamp: '2026-01-02T09:00:01.000Z',
+        type: 'response_item',
+        payload: { type: 'custom_tool_call', name: 'apply_patch', call_id: 'c1', input: '' },
+      }),
+      JSON.stringify({
+        timestamp: '2026-01-02T09:00:02.000Z',
+        type: 'response_item',
+        payload: { type: 'custom_tool_call_output', call_id: 'c1', output: `error: ${MESSAGE}` },
+      }),
+      JSON.stringify({
+        timestamp: '2026-01-02T09:00:03.000Z',
+        type: 'event_msg',
+        payload: { type: 'patch_apply_end', success: false, changes: {}, stderr: MESSAGE },
+      }),
+    ].join('\n');
+    const lus = faits(contenu);
+    expect(lus).toMatchObject({ outils_en_erreur: [{ outil: 'Edit', nombre: 2 }], erreurs: 2 });
+    expect(JSON.stringify(lus)).not.toContain(MESSAGE);
+  });
+
+  it('les commandes d’un sous-agent fini arrivent dans commandes_agents avec leur suite ; la tête ne change pas', () => {
+    const fils = sousAgent(L, [
+      commande('cd src && pnpm test'),
+      commande('ls', { exit_code: 1 }),
+      element({ type: 'McpToolCall', id: 'm', server: 'linear', tool: 'x', status: 'failed' }),
+      element({
+        type: 'FileChange',
+        id: 'p',
+        changes: { [`${RACINE}/fils.ts`]: { type: 'add' } },
+        status: 'completed',
+      }),
+      element({ type: 'Plan', id: 'pl', text: 'x' }),
+    ]);
+    const tete = session(commande('git status'), ...lance(L));
+    const lus = faits(tete, sousAgents({ [L]: fils }));
+    expect(lus).toMatchObject({
+      commandes: [{ texte: 'git status', erreur: false, suite: false }],
+      commandes_agents: [
+        { agent: 1, texte: 'cd', erreur: false, suite: true },
+        { agent: 1, texte: 'ls', erreur: true, suite: false },
+      ],
+      outils_en_erreur: [{ outil: 'mcp:linear', nombre: 1 }],
+      fichiers: [],
+      erreurs: 0,
+    });
+    expect(SessionFactsSchema.safeParse(lus).success).toBe(true);
+    // La tête seule : les mêmes faits, sans les champs des agents.
+    const { commandes_agents, outils_en_erreur, ...reste } = lus;
+    expect(reste).toEqual(faits(tete));
+  });
+
+  it('un sous-agent non fini ou absent ne donne rien', () => {
+    const fils = sousAgent(L, [commande('ls')]);
+    for (const sa of [sousAgents({ [L]: coupe(fils) }), sousAgents({}), undefined]) {
+      expect(faits(session(...lance(L)), sa)).not.toHaveProperty('commandes_agents');
+    }
+  });
+
+  it('un sous-agent de sous-agent n’est lu qu’une fois ; les agents se rangent par leur début', () => {
+    const relais = debutA(sousAgent(L, [commande('pwd'), ...lance(G), ...lance(G)]), '09:30:00');
+    const petit = debutA(sousAgent(G, [commande('cat b.txt')]), '09:10:00');
+    expect(faits(session(...lance(L)), sousAgents({ [L]: relais, [G]: petit }))).toMatchObject({
+      commandes_agents: [
+        { agent: 1, texte: 'cat', erreur: false, suite: false },
+        { agent: 2, texte: 'pwd', erreur: false, suite: false },
+      ],
+    });
+  });
+
+  it('une session déjà externe relève quand même les commandes de ses sous-agents', () => {
+    const contenu = session(element({ type: 'WebSearch', id: 'w' }), ...lance(L));
+    expect(faits(contenu, sousAgents({ [L]: sousAgent(L, [commande('ls')]) }))).toMatchObject({
+      externe: true,
+      commandes_agents: [{ agent: 1, texte: 'ls', erreur: false, suite: false }],
+    });
+  });
+});

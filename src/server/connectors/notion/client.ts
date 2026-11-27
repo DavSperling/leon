@@ -38,10 +38,8 @@ const Page = z.object({
   created_by: Reference.nullish(),
   last_edited_by: Reference.nullish(),
   parent: z.object({ type: z.string() }).catchall(z.unknown()).nullish(),
-  // Le titre est la propriété de type « title » ; les autres propriétés ne sont pas lues.
-  properties: z
-    .record(z.string(), z.object({ type: z.string(), title: z.unknown().optional() }))
-    .nullish(),
+  // Le titre est la propriété de type « title » ; la valeur d'une propriété est sous la clé de son type (map.ts).
+  properties: z.record(z.string(), z.object({ type: z.string() }).catchall(z.unknown())).nullish(),
 });
 
 // Le contenu d'un bloc est sous la clé de son type (block.paragraph, block.to_do…).

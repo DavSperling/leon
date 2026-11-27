@@ -16,6 +16,9 @@ import { notionOAuth } from './oauth';
 //   https://developers.notion.com/reference/block (types de blocs)
 //   https://developers.notion.com/reference/request-limits (3 requêtes par seconde en moyenne)
 //   https://developers.notion.com/reference/capabilities et .../guides/get-started/authorization
+// Doc lue le 27/11/2026 : https://developers.notion.com/reference/page-property-values (la valeur de chaque type
+//   de propriété, null ou [] quand elle est vide ; une personne peut n'avoir que son identifiant ; 25 personnes au
+//   plus par propriété dans la page).
 //
 // Choix. La recherche n'a pas de filtre « modifié depuis » : on la lit de la plus récente à la plus
 // ancienne et on s'arrête à la première page antérieure au curseur (ou à since), puis on rend les
@@ -32,15 +35,23 @@ import { notionOAuth } from './oauth';
 // informations des utilisateurs » (403) : pas de commentaires, auteur inconnu (le commentaire garde
 // le nom affiché que Notion donne).
 //
-// Non lu : les propriétés des lignes de base de données ; les commentaires résolus (la doc : seuls
+// Une ligne de base garde, en une ligne et dans un tour à part (« proprietes »), ses propriétés remplies de type
+// statut, sélection, sélection multiple, personnes (leurs noms), date, case à cocher, nombre et texte court (map.ts) ;
+// une ligne sans corps mais avec un titre et des propriétés est gardée.
+//
+// Notion prévient aussi Leon d'un changement (webhooks) : l'alerte avance la relève, au plus tôt une minute après le
+// début de la précédente, et ce passage lit le nouveau (src/server/api/notion-routes.ts, migration 0100). Une minute
+// pas encore close est relue au passage suivant (`settled`) : une deuxième modification dans la minute de notre
+// lecture n'est pas perdue.
+//
+// Non lu : les autres propriétés des lignes de base ; les commentaires résolus (la doc : seuls
 // les non résolus sont rendus) et ceux d'un passage précis (ils sont sur le bloc, pas sur la page) ;
 // les blocs de réunion (meeting_notes) autrement que par leurs enfants ; les blocs synchronisés.
 // Non vérifié : un jeton d'accès personnel (la doc dit qu'il agit au nom de son créateur, sans
 // partage de pages) ; l'arrondi à la minute de last_edited_time (non confirmé par la doc lue, le
-// curseur le prévoit) ; une page modifiée deux fois dans la même minute, de part et d'autre de
-// notre lecture, garde sa première version jusqu'à la modification suivante ; un résultat
-// de recherche partiel (seulement id) sans la capacité « Lire le contenu » : il est refusé par le
-// schéma, « Unexpected response » ; un essai en réel.
+// curseur le prévoit) ; un résultat de recherche partiel (seulement id) sans la capacité « Lire le contenu » : il
+// est refusé par le schéma, « Unexpected response » ; que la recherche rende le nom des personnes d'une propriété
+// (sinon, une requête par personne et par passage, comme pour les auteurs) ; un essai en réel.
 
 // Deux façons de se brancher : la clé collée (`token`), ou le bouton (`accessToken` et ce que
 // `notionOAuth.toConfig` rend). Une connexion sans `authMode` est à clé. Les jetons du bouton
@@ -87,6 +98,15 @@ const toMark = (mark: z.infer<typeof MarkSchema>): Mark => ({
 });
 const fromMark = (mark: Mark) => ({ at: new Date(mark.at).toISOString(), ids: [...mark.ids] });
 
+// Notion date une page à la minute. Tant que la minute du repère n'est pas close depuis une minute (la marge couvre
+// l'écart d'horloge), une page peut encore y changer après notre lecture : le repère ne nomme alors aucune page, et
+// celles de cette minute sont relues au passage suivant. Un même texte donne le même tour (normalize.ts).
+// shortcut: une minute ouverte est relue en entier ; des centaines de pages importées dans la même minute le sont
+// deux fois, à revoir si une importation de ce genre arrive.
+const OPEN_MINUTE_MS = 2 * 60_000;
+const settled = (mark: Mark): Mark =>
+  mark.at > Date.now() - OPEN_MINUTE_MS ? { at: mark.at, ids: new Set() } : mark;
+
 // Un repère (passages suivants), un remplissage en cours, ou null : curseur absent ou illisible, le
 // remplissage part de since.
 function readCursor(cursor: string | null): Mark | Fill | null {
@@ -132,7 +152,7 @@ function markAfter(done: NotionPage[], previous: Mark): string {
   const at = editedAt(last);
   const ids = new Set(previous.at === at ? previous.ids : []);
   for (const page of done) if (editedAt(page) === at) ids.add(page.id);
-  return JSON.stringify({ at: new Date(at).toISOString(), ids: [...ids] });
+  return JSON.stringify(fromMark(settled({ at, ids })));
 }
 
 // Le repère qui ajoute `page` : une date plus récente (`newer`) ou plus ancienne le remplace.
@@ -186,7 +206,8 @@ async function* fill(
         const item = await pageToItem(api, authors, page);
         if (item !== null) items.push(item);
         upto = extend(upto, page, false);
-        top = extend(top, page, true);
+        // Jugée à sa lecture, pas à la fin : un remplissage finit parfois des heures après avoir lu la plus récente.
+        top = settled(extend(top, page, true));
       }
       yield { items, cursor: last && end === fresh.length ? finished() : position() };
     }

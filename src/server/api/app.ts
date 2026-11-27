@@ -14,6 +14,7 @@ import { ingestRoutes } from './ingest-routes';
 import { mcpRoutes } from './mcp-routes';
 import { microsoftRoutes } from './microsoft-routes';
 import { notesRoutes } from './notes-routes';
+import { notionRoutes } from './notion-routes';
 import { oauthRoutes } from './oauth-routes';
 import { readRoutes } from './read-routes';
 import { reminderRoutes } from './reminder-routes';
@@ -49,5 +50,7 @@ app.route('/oauth', oauthRoutes);
 app.route('/v1/connexions/oauth', createOAuthRoutes({ getConnector }));
 // Les notifications de Microsoft Graph : publiques, le clientState de chacune en fait foi.
 app.route('/microsoft', microsoftRoutes);
+// Les alertes de Notion : publiques, la signature de chacune (X-Notion-Signature) en fait foi.
+app.route('/notion', notionRoutes);
 app.notFound((c) => c.json({ error: 'Introuvable' }, 404));
 app.onError(handleApiError);

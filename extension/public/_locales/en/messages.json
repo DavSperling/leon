@@ -1,0 +1,6 @@
+{
+  "extName": { "message": "Leon" },
+  "extDescription": {
+    "message": "Sends your claude.ai and ChatGPT conversations to Leon (leonmemory.com) so you can find them again by search."
+  }
+}

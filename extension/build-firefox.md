@@ -1,8 +1,6 @@
 # Building the Leon extension for Firefox
 
-This archive holds the sources of the Leon extension (`extension/`), the shared folder `src/capture/`, and the root `package.json`, `pnpm-lock.yaml` and `pnpm-workspace.yaml`. The extension is built with WXT and Vite, both open source and installed by pnpm.
-
-The extension imports only `src/capture/api-contract.ts`, `turn.ts`, `mask-secrets.ts` and `prepare-turn-text.ts`. The other files in `src/capture/` are used by Leon's command-line tool and server, and are not bundled into the extension.
+This archive holds the sources of the Leon extension (`extension/`), the four files it imports from the shared folder `src/capture/` (`api-contract.ts`, `turn.ts`, `mask-secrets.ts` and `prepare-turn-text.ts`), and the root `package.json`, `pnpm-lock.yaml` and `pnpm-workspace.yaml`. The extension is built with WXT and Vite, both open source and installed by pnpm.
 
 ## Requirements
 

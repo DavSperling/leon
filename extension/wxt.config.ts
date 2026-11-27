@@ -19,6 +19,8 @@ export default defineConfig({
     // en sont exclus par WXT. La liste nomme des sortes de fichiers, pas des dossiers entiers : une réponse
     // enregistrée (.json, .sse), une note (.md) ou une clé (.pem) posée à côté reste dehors. public/ part en
     // entier : WXT le copie tout dans le paquet (resolve-config.mjs:66), rien de neuf ne part chez Mozilla.
+    // De src/capture, seuls les fichiers que l'extension importe : le reste sert à la CLI et au serveur.
+    // zip-sources.test.ts suit les imports et échoue si la construction lit un fichier qui n'est pas ici.
     // shortcut: WXT ramasse ce qui est sur le disque, suivi par Git ou non, donc un .ts, .html ou .css non suivi
     // part encore ; construire les zips envoyés à Mozilla depuis une copie propre (git archive).
     sourcesRoot: fileURLToPath(new URL('..', import.meta.url)),
@@ -26,12 +28,13 @@ export default defineConfig({
       'extension/{assets,entrypoints,lib}/**/*.{ts,html,css}',
       'extension/public/**',
       'extension/{tsconfig.json,wxt.config.ts,build-firefox.md}',
-      'src/capture/*.ts',
+      'src/capture/{api-contract,mask-secrets,prepare-turn-text,turn}.ts',
       'package.json',
       'pnpm-lock.yaml',
       'pnpm-workspace.yaml',
     ],
-    excludeSources: ['**/fixtures/**'],
+    // memory-store.ts ne sert qu'aux tests.
+    excludeSources: ['**/fixtures/**', 'extension/lib/memory-store.ts'],
   },
   // Le code partagé vit dans ../src/capture (décision D1).
   vite: () => ({ server: { fs: { allow: ['..'] } } }),

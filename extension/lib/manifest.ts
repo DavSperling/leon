@@ -2,9 +2,9 @@ import type { UserManifest } from 'wxt';
 import { hostPermissionsFor } from './permissions';
 
 // La même pour les deux cibles. Chez Mozilla, un numéro ne sert qu'une fois : on monte d'un cran à chaque envoi.
-const VERSION = '0.9.0';
+const VERSION = '1.0.0';
 
-// L'identifiant de Leon chez Mozilla : à confirmer par Amos avant le premier envoi, il ne change plus ensuite.
+// L'identifiant de Leon chez Mozilla, confirmé par Amos le 24/11 et envoyé le 27/11 : il ne change plus.
 const GECKO_ID = 'leon@leonmemory.com';
 
 // Le manifeste d'une cible de WXT (-b chrome ou -b firefox), pour un serveur Leon donné.
@@ -16,9 +16,10 @@ export function manifestFor({
   browser: string;
 }): UserManifest {
   const manifest: UserManifest = {
-    name: 'Leon',
-    // En anglais, la langue de base : le manifeste n'a pas de traduction.
-    description: 'Captures your claude.ai and chatgpt.com conversations into your team’s memory.',
+    // Textes dans public/_locales/<langue>/messages.json ; l'anglais sert à défaut (default_locale).
+    name: '__MSG_extName__',
+    description: '__MSG_extDescription__',
+    default_locale: 'en',
     version: VERSION,
     permissions: ['storage', 'alarms'],
     host_permissions: hostPermissionsFor(serverUrl),

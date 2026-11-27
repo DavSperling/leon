@@ -10,6 +10,7 @@ const CONSENT_FINGERPRINTS: Record<number, string> = {
   2: '48c5422c0a2afb2ac9e9949a77245510f0c446a222dfd632f564601086d1256a',
   3: '2c419f5f6d1069a928e862959ae9aba505c7e6a49b4076d1c880ea4fde79d256',
   4: '901567f4b573e8d4cb9302ae4c5a2ad486c9bea343899ec6b01055a6fad3a91b',
+  5: '3e0e4df4fc6b1a717a87dfa6c9f92c24aa617145d850615ac8348966f573bd49',
 };
 
 // Le texte lisible de la section #consent de la page d'options : sans balises, espaces regroupées.

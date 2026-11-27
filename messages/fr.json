@@ -250,7 +250,7 @@
     "groupMembers": "Membres",
     "following": "Ce que vous suivez",
     "seeAll": "Voir aussi son privé",
-    "seeAllHelp": "Allumé, vous lisez aussi ce que {name} ne partage pas : mails, Slack et documents privés, ici et dans la recherche ; conversations avec les IA, sessions de code et notes, dans la recherche seulement. Ses discussions avec Leon restent privées.",
+    "seeAllHelp": "Allumé, vous lisez aussi ce que {name} ne partage pas : mails, Slack, conversations Teams et documents privés, ici et dans la recherche ; conversations avec les IA, sessions de code et notes, dans la recherche seulement. Ses discussions avec Leon restent privées.",
     "documents": "Documents",
     "followFailed": "Le choix n’a pas été enregistré. Réessayez.",
     "activity": "Activité récente",
@@ -1531,7 +1531,7 @@
       "noSource": "sans source",
       "rule3Title": "Leon voit ce que vous voyez. Rien de plus.",
       "rule3Mark": "Rien de plus.",
-      "rule3Lead": "Chaque réponse n’est faite que de ce que la personne qui demande peut ouvrir. Vos mails, votre Slack, votre Drive et vos conversations d’IA peuvent être lus par vous et, sur le site de Leon, par vos managers en remontant.",
+      "rule3Lead": "Chaque réponse n’est faite que de ce que la personne qui demande peut ouvrir. Vos mails, votre Slack, vos conversations Teams, votre Drive et vos conversations d’IA peuvent être lus par vous et, sur le site de Leon, par vos managers en remontant.",
       "rightsGroup": "Qui pose la question",
       "askedBy": "Demandé par {name}",
       "connTitle": "{count} connecteurs. Rien à migrer.",
@@ -1591,7 +1591,7 @@
         },
         "microsoft": {
           "title": "Microsoft 365",
-          "text": "Teams. Les mails et l’agenda Outlook, OneDrive et SharePoint sont déjà relevés."
+          "text": "Les mails et l’agenda Outlook, OneDrive, SharePoint, et Teams avec les transcriptions de ses réunions, sont déjà relevés."
         },
         "files": {
           "title": "Images et PDF scannés",
@@ -1682,7 +1682,7 @@
         },
         "microsoft": {
           "title": "Microsoft 365",
-          "text": "Teams."
+          "text": "Outlook, OneDrive, SharePoint et Teams sont déjà relevés."
         },
         "files": {
           "title": "Images et PDF scannés",
@@ -1740,14 +1740,14 @@
       "notYetLead": "Mieux vaut le lire ici que le découvrir plus tard.",
       "ctaTitle": "Commencez par un outil, et vérifiez les droits vous-même.",
       "ctaText": "Créez un espace, branchez un outil, et regardez ce qui est visible de l’équipe et ce qui ne l’est pas.",
-      "whoLead": "Chaque élément relève de l’une ou de l’autre. Les mails, Google Drive, OneDrive et Slack peuvent être lus par qui les branche et, sur le site de Leon, par ses managers en remontant.",
+      "whoLead": "Chaque élément relève de l’une ou de l’autre. Les mails, Google Drive, OneDrive, Slack et les conversations Teams peuvent être lus par qui les branche et, sur le site de Leon, par ses managers en remontant.",
       "teamRows": {
         "docs": "Les tickets et les documents",
         "meetings": "Les transcriptions de réunion et les notes du CRM",
         "support": "Les conversations de support et les boîtes partagées"
       },
       "youRows": {
-        "mail": "Vos mails, votre Google Drive, votre OneDrive et votre Slack",
+        "mail": "Vos mails, votre Google Drive, votre OneDrive, votre Slack et vos conversations Teams",
         "ai": "Vos conversations d’IA et vos sessions de code",
         "chats": "Vos discussions avec Leon et les notes que vous gardez"
       },

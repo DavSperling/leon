@@ -161,6 +161,19 @@ const SECTIONS: LegalSection[] = [
           </li>
         </List>
         <p>
+          If you connect Teams or Teams Chat, Leon also asks now for full access to what each one
+          covers. Teams: read your teams, their channels and their messages, and post in channels.
+          Teams Chat: read, write and send messages in your chats, read and change your calendar,
+          and read and manage your Teams meetings, with their transcripts, recordings and other
+          meeting content. Teams and Teams Chat work only with a work or school account, once your
+          organization’s Microsoft administrator has approved Leon; meeting transcripts also need
+          your administrator to let apps read them.
+        </p>
+        <p>
+          Today, from Teams, Leon imports the messages of the standard channels of public teams.
+          From Teams Chat, it imports your one-on-one, group and meeting chats, and the transcripts
+          of the Teams meetings in your calendar, except meetings marked personal, private or
+          confidential; it checks Teams for new content at most once a day, as Microsoft requires.
           Leon does not send, change or delete anything in your Microsoft account. We will update
           this policy before it does. Microsoft alerts Leon as soon as email arrives, you send email
           or your calendar changes, so that Leon imports it right away; these alerts contain no
@@ -169,11 +182,12 @@ const SECTIONS: LegalSection[] = [
         <p>
           Leon uses this data in the same way and within the same limits as data from Google,
           described above: only to provide its features to you, private to you in Leon, never sold,
-          never used for advertising or to train AI models.
+          never used for advertising or to train AI models. The one exception is Teams channel
+          messages: as in Teams, everyone in your Leon workspace can read them.
         </p>
         <p>
-          You can disconnect Outlook or OneDrive at any time in Leon. With a personal account, you
-          can also remove Leon’s access from your{' '}
+          You can disconnect Outlook, OneDrive, Teams or Teams Chat at any time in Leon. With a
+          personal account, you can also remove Leon’s access from your{' '}
           <A href="https://account.live.com/consent/Manage">Microsoft account</A>; with a work or
           school account, your Microsoft administrator can remove it for the whole organization.
         </p>
@@ -287,7 +301,7 @@ const SECTIONS: LegalSection[] = [
         <li>
           Disconnecting a tool stops new imports. What was already imported stays until it is
           deleted. Write to <Contact /> and we will delete the content imported from your own
-          accounts, such as your Gmail, Google Drive or Outlook, within 30 days.
+          accounts, such as your Gmail, Google Drive, Outlook or Teams, within 30 days.
         </li>
         <li>
           Database backups are kept for 7 days, so deleted data can remain in a backup for up to 7

@@ -50,6 +50,7 @@ import { getConnector } from './registry';
 import { sentryCatalog } from './sentry/catalog';
 import { shortcutCatalog } from './shortcut/catalog';
 import { slackCatalog } from './slack/catalog';
+import { teamsCatalog, teamsChatsCatalog } from './teams/catalog';
 import { tldvCatalog } from './tldv/catalog';
 import { trelloCatalog } from './trello/catalog';
 import type { AnyConnector, CatalogEntry } from './types';
@@ -66,7 +67,7 @@ export type CatalogItem = Omit<CatalogEntry, 'keyAccepted' | 'en'> & {
   oauthReady: boolean;
   keyAccepted: boolean; // la clé collée reste possible
   oauthPreFields: string[]; // champs non secrets à remplir avant le clic
-  // Lien d'accord de l'administrateur (Outlook, OneDrive). L'identifiant d'une appli n'est pas un secret ;
+  // Lien d'accord de l'administrateur (Outlook, OneDrive, Teams, Teams Chat). L'identifiant d'une appli n'est pas un secret ;
   // son secret ne sort jamais d'ici.
   adminConsentUrl: string | null;
 };
@@ -115,6 +116,8 @@ export const CATALOG_ENTRIES: Record<ProviderId, CatalogEntry> = {
   drive: driveCatalog,
   slack: slackCatalog,
   onedrive: onedriveCatalog,
+  teams: teamsCatalog,
+  teamschats: teamsChatsCatalog,
 };
 
 // Les textes de l'entrée dans la langue demandée : l'anglais vient du bloc `en`, tout autre code garde

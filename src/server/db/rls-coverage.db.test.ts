@@ -34,6 +34,7 @@ const DELETE_ALLOWED = [
   'brouillons', // seule deleteAccount les efface, avec le reste de la personne (0080)
   'membres_groupe', // un administrateur retire quelqu'un d'un groupe libre (0055)
   'reporting_lines', // un administrateur détache un membre de son manager (0054)
+  'alertes_fathom', // un refus net de Fathom retire la ligne posée avant la création de l'alerte (0102)
 ];
 
 const TENANT_TABLES = `

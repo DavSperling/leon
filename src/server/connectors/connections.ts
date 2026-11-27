@@ -348,6 +348,23 @@ export async function deleteConnection(ctx: TenantContext, id: string): Promise<
   return rows.length > 0;
 }
 
+// La configuration déchiffrée d'une connexion qu'on peut supprimer, même en pause ou branchée par un autre membre :
+// de quoi retirer chez l'outil, juste avant la suppression, ce que Leon y a créé (l'alerte de Fathom). Côté serveur
+// seulement ; nulle si la connexion n'existe pas ou n'est pas gérable. Un secret illisible lève, sans le secret.
+export async function loadManageableConfig(
+  ctx: TenantContext,
+  id: string,
+): Promise<Record<string, unknown> | null> {
+  const [row] = await withTenant(ctx, (tx) =>
+    tx
+      .select({ config: connections.config, secret: connections.secret })
+      .from(connections)
+      .where(and(eq(connections.id, id), manageable(ctx))),
+  );
+  if (!row) return null;
+  return { ...row.config, ...parseSecrets(decryptSecret(row.secret, aadOf(ctx.tenantId, id))) };
+}
+
 // Les connexions d'un outil que l'utilisateur a branchées lui-même, secrets compris : un outil de la
 // discussion lit en direct avec SON compte, jamais avec celui d'un autre membre (spec GitHub, décision 3).
 // Une connexion en pause est écartée : la pause vaut aussi pour la lecture en direct. Un secret

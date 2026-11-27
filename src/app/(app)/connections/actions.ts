@@ -26,6 +26,7 @@ import {
   shareConnection,
 } from '@/server/connectors/connections';
 import { connectorsKey } from '@/server/connectors/crypto';
+import { fathomAlertOf, forgetFathomAlert } from '@/server/connectors/fathom/webhook';
 import {
   ConnectorAuthError,
   ConnectorHttpError,
@@ -210,13 +211,16 @@ export async function shareConnectionAction(id: string, partage: string): Promis
   return manage(id, (ctx, uuid) => shareConnection(ctx, uuid, parsed.data));
 }
 
-// Une connexion Pipedream supprimée : Pipedream oublie aussi le compte et ses jetons.
+// Une connexion Pipedream supprimée : Pipedream oublie aussi le compte et ses jetons. Une connexion Fathom : son
+// alerte est retirée chez Fathom, sans quoi il enverrait sans fin les actions à mener des réunions.
 export async function deleteConnectionAction(id: string): Promise<{ ok: boolean }> {
   return manage(id, async (ctx, uuid) => {
     const stored = (await listConnections(ctx)).find((view) => view.id === uuid);
+    const alert = stored?.provider === 'fathom' ? await fathomAlertOf(ctx, uuid) : null;
     const deleted = await deleteConnection(ctx, uuid);
     if (deleted && stored?.config.authMode === 'pipedream')
       await forgetPipedreamUser(stored.config.externalUserId);
+    if (deleted && alert) await forgetFathomAlert(alert);
     return deleted;
   });
 }

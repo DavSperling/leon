@@ -26,6 +26,16 @@ const MeetingSchema = z.object({
     )
     .nullish(),
   default_summary: z.object({ markdown_formatted: z.string().nullish() }).nullish(),
+  action_items: z
+    .array(
+      z.object({
+        description: z.string(),
+        completed: z.boolean(),
+        assignee: person.nullish(),
+        recording_timestamp: z.string().nullish(), // HH:MM:SS depuis le début de l'enregistrement
+      }),
+    )
+    .nullish(),
   calendar_invitees: z.array(person).nullish(),
   recorded_by: person.nullish(),
 });

@@ -10,6 +10,11 @@ import { toItem } from './map';
 //   https://developers.fathom.ai/api-overview.md (limites : 60 appels par minute, 30 pour les
 //   requêtes avec transcription ou résumé, 429 avec Retry-After)
 //   https://developers.fathom.ai/faq.md (clé : User Settings › API Access, toutes les offres)
+// Doc lue le 27/11/2026 :
+//   https://developers.fathom.ai/api-reference/openapi.yaml (include_action_items sur GET /meetings ; ActionItem :
+//   description, completed, assignee avec name et email, recording_timestamp en HH:MM:SS)
+//   https://developers.fathom.ai/faq.md (« no post-call summary means no webhook » : l'alerte de Fathom attend le
+//   résumé, webhook.ts)
 //
 // Pas d'intervalle minimal entre requêtes : une relève s'arrête à 200 éléments, donc à une vingtaine
 // de pages de 10 réunions, sous la limite de 30 ; un 429 est repris par le client HTTP (Retry-After).
@@ -20,12 +25,16 @@ import { toItem } from './map';
 //     créée avant le curseur, n'est pas vue ;
 //   - l'ordre de la liste n'est pas documenté : voir cursor.ts ;
 //   - aucun point d'accès ne dit qui est le propriétaire de la clé : verify ne rend pas de nom ;
-//   - transcription absente : le résumé de Fathom devient un tour document ; ni l'un ni l'autre :
-//     la réunion n'est pas rendue.
+//   - le résumé de Fathom et ses actions à mener forment un tour document, à côté de la transcription ;
+//     sans aucun des trois, la réunion n'est pas rendue ;
+//   - une réunion récente sans résumé est relue aux passages suivants (six heures au plus, cursor.ts),
+//     pour que son résumé et ses actions arrivent, et que la relève qui suit l'alerte la trouve encore.
 //
 // Non vérifié (aucun appel réel) : l'ordre de la liste ; created_after inclusif ou exclusif ; qu'un
 // curseur de page reste valable d'une relève à l'autre ; que Fathom liste une réunion avant la fin
-// de son traitement ; que les horodatages de la transcription partent du début de l'enregistrement.
+// de son traitement (sinon une réunion traitée après une autre, créée plus tard, peut être sautée) ;
+// que la transcription arrive avant le résumé, et les actions à mener avec lui ; que les horodatages
+// de la transcription partent du début de l'enregistrement.
 
 const configSchema = z.object({ apiKey: z.string().trim().min(1) });
 type Config = z.infer<typeof configSchema>;
@@ -50,13 +59,14 @@ export const fathomConnector: Connector<Config> = {
         cursor: walk.next ?? undefined,
         include_transcript: true,
         include_summary: true,
+        include_action_items: true,
       });
       const converted = page.items.map((meeting) => ({
         created: new Date(meeting.created_at).toISOString(),
+        ready: Boolean(meeting.default_summary?.markdown_formatted?.trim()),
         item: toItem(meeting),
       }));
-      const ready = converted.map(({ created, item }) => ({ created, ready: item !== null }));
-      walk = advance(walk, ready, page.next_cursor || null);
+      walk = advance(walk, converted, page.next_cursor || null);
       const items = converted.flatMap(({ item }) => (item === null ? [] : [item]));
       yield { items, cursor: JSON.stringify(walk) };
     } while (walk.next !== null);

@@ -20,6 +20,8 @@ export type HttpRequest = {
   // Une écriture qu'on ne rejoue pas : une limite de débit, un 5xx ou une réponse perdue échouent tout de suite,
   // car la requête a pu aboutir.
   once?: true;
+  // Un appel que la personne attend (le retrait d'une alerte à la suppression) : plus court que TIMEOUT_MS.
+  timeoutMs?: number;
 };
 
 export type ConnectorHttp = {
@@ -244,7 +246,7 @@ export function createConnectorHttp(input: {
         headers,
         body,
         redirect: 'manual',
-        signal: AbortSignal.timeout(TIMEOUT_MS),
+        signal: AbortSignal.timeout(request.timeoutMs ?? TIMEOUT_MS),
       });
       const { status } = response;
       if (!request.acceptStatus?.includes(status) && !(status >= 200 && status < 300)) {

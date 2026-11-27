@@ -31,6 +31,9 @@ const PUBLIC = [
   /^\/api\/v1\/connexions\/oauth\//,
   /^\/api\/oauth\/(clients|jeton)$/, // liste fermée : une route OAuth de plus se garde, ou s'ajoute ici à la main
   /^\/api\/microsoft\/notifications$/,
+  // Les alertes de Fathom (fathom/webhook.ts) : seul le jeton de leur adresse, comparé en base à son empreinte, les
+  // fait compter, et elles ne font que rendre une connexion due. Leurs cas sont dans fathom-routes.db.test.ts.
+  /^\/api\/fathom\/webhooks\/:jeton$/,
 ];
 
 const isPublic = (path: string) => PUBLIC.some((pattern) => pattern.test(path));

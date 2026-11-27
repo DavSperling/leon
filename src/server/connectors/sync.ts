@@ -17,6 +17,7 @@ import {
   saveSyncProgress,
   UnreadableSecretError,
 } from './connections';
+import { keepFathomAlerted } from './fathom/webhook';
 import { ConnectorAuthError, ConnectorHttpError } from './http';
 import { ingestConnectorItems, removeConnectorItems, removeConnectorTurns } from './ingest-items';
 import { keepNotified, takeSignaled } from './microsoft-notifications';
@@ -264,6 +265,8 @@ export async function runConnectorSync(job: ConnectorSyncJob, deps: SyncDeps): P
   await rememberAccountKey(ctx, fresh, deps, ready);
   // Les abonnements par lesquels Microsoft prévient Leon dès que quelque chose arrive, sous la même réservation.
   await keepNotified(ctx, fresh, ready.connector, deps);
+  // L'alerte par laquelle Fathom prévient Leon dès qu'une réunion est prête, créée une fois.
+  await keepFathomAlerted(ctx, fresh, ready, deps);
   await finishSync(ctx, connection.id, connection.lockedAt, { kind: 'ok', again });
   // La relève d'une boîte a pu apporter un mail qui attend une réponse : un passage de l'agent « Brouillons de
   // réponse » pour qui l'a branchée, si elle lui a dit oui. Pas tant qu'il reste à lire (« soon ») : Outlook lit la

@@ -346,6 +346,10 @@ function addresses(list: string[] | undefined): string[] {
   return [...kept];
 }
 
+// La racine de l'identifiant rangé d'un tour : `racine#empreinte`, ou `racine:n#empreinte` pour la n-ième part d'un
+// texte découpé. removeConnectorTurns retrouve les tours par elle.
+export const turnStem = (externalId: string): string => head(clean(externalId), ID_MAX - ID_ROOM);
+
 function normalizeTurn(turn: ConnectorTurn, ts: Date): NormalizedTurn[] {
   const masked = maskSecrets(clean(turn.text));
   const capped =
@@ -353,7 +357,7 @@ function normalizeTurn(turn: ConnectorTurn, ts: Date): NormalizedTurn[] {
       ? head(masked, TURN_TEXT_CAP - TRUNCATION_MARK.length) + TRUNCATION_MARK
       : masked;
   const parts = splitText(capped, CONNECTOR_TURN_MAX);
-  const stem = head(clean(turn.externalId), ID_MAX - ID_ROOM);
+  const stem = turnStem(turn.externalId);
   const recipientsTo = addresses(turn.recipients?.to);
   const recipientsCc = addresses(turn.recipients?.cc);
   return parts.flatMap((part, index) => {

@@ -1,8 +1,8 @@
 import type { ConnectorItem, ConnectorTurn } from '../types';
 import type { Card, CardAction } from './client';
 
-// De la réponse de Trello à un élément du socle : une ligne d'état puis la description font le tour
-// `document`, daté de la dernière action ; chaque commentaire garde sa propre date.
+// De la réponse de Trello à un élément du socle : la ligne d'état puis la description sont deux tours `document`,
+// datés de la dernière action ; chaque commentaire garde sa propre date.
 
 const nameOf = (member: CardAction['memberCreator']): string | null =>
   member?.fullName?.trim() || member?.username || null;
@@ -57,15 +57,28 @@ export function toItem(input: {
   const { board, list, card, updatedAt } = input;
   const actions = card.actions ?? [];
   const creator = actions.find((action) => action.type === 'createCard')?.memberCreator;
-  // Une carte sans description garde sa ligne d'état : souvent, le titre et elle sont toute la carte.
-  const text = [stateLine(list, card), card.desc?.trim()].filter(Boolean).join('\n\n');
-  const body: ConnectorTurn[] = text
+  // La ligne d'état a son propre tour : un tour gardé porte l'empreinte de son texte (normalize.ts), et une carte
+  // déplacée ne doit pas recopier sa description. Une carte qui n'a que son titre garde ce seul tour.
+  const state = stateLine(list, card);
+  const etat: ConnectorTurn[] = state
+    ? [
+        {
+          externalId: 'etat',
+          role: 'document',
+          author: { name: null, email: null },
+          text: state,
+          ts: updatedAt,
+        },
+      ]
+    : [];
+  const description = card.desc?.trim();
+  const body: ConnectorTurn[] = description
     ? [
         {
           externalId: 'body',
           role: 'document',
           author: { name: nameOf(creator), email: null },
-          text,
+          text: description,
           ts: updatedAt,
         },
       ]
@@ -83,6 +96,6 @@ export function toItem(input: {
     url: card.url ?? card.shortUrl ?? null,
     updatedAt,
     origin: list ? { board, list } : { board },
-    turns: [...body, ...comments],
+    turns: [...etat, ...body, ...comments],
   };
 }

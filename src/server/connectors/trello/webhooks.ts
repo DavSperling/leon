@@ -10,9 +10,9 @@ import { connectorHttp } from '../pipedream';
 import type { AnyConnector } from '../types';
 import { type TrelloClient, trelloClient } from './client';
 
-// Trello prévient Leon dès que quelque chose change dans un tableau : l'alerte rend la connexion due tout de suite
-// (webhook_trello, 0101) et la relève lit le nouveau comme d'habitude, au lieu d'attendre son quart d'heure. Leon ne
-// lit rien de l'alerte elle-même. Seulement pour une connexion par bouton : Trello signe ses alertes avec le secret de
+// Trello prévient Leon dès que quelque chose change dans un tableau : l'alerte rend la connexion due, au plus une
+// minute après le début de sa relève précédente (webhook_trello, 0101), et la relève lit le nouveau comme d'habitude,
+// au lieu d'attendre son quart d'heure. Leon ne lit rien de l'alerte elle-même. Seulement pour une connexion par bouton : Trello signe ses alertes avec le secret de
 // l'appli OAuth de Leon. Une connexion par clé n'a pas de webhook, et sa relève reste celle du quart d'heure.
 //
 // Doc lue le 27/11/2026 :

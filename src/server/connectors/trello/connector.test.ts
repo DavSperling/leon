@@ -270,7 +270,7 @@ describe('trello : sync, premier passage', () => {
     });
   });
 
-  it('rend une carte avec sa description puis ses commentaires, du plus ancien au plus récent', async () => {
+  it('rend une carte avec sa ligne d’état, sa description puis ses commentaires, du plus ancien au plus récent', async () => {
     const { pages } = await runSync(firstPassRoutes());
 
     expect(itemsOf(pages).find((item) => item.externalId === `card:${C1}`)).toEqual({
@@ -282,10 +282,17 @@ describe('trello : sync, premier passage', () => {
       origin: { board: 'Site Acme', list: 'En cours' },
       turns: [
         {
+          externalId: 'etat',
+          role: 'document',
+          author: { name: null, email: null },
+          text: 'Liste : En cours · Échéance : 2026-10-31 16:00 UTC · Étiquettes : Urgent · Membres : Marie Durand, Paul Martin',
+          ts: C1_AT,
+        },
+        {
           externalId: 'body',
           role: 'document',
           author: { name: 'Marie Durand', email: null },
-          text: "Liste : En cours · Échéance : 2026-10-31 16:00 UTC · Étiquettes : Urgent · Membres : Marie Durand, Paul Martin\n\nObjectif : une page d'accueil plus claire.\n\n- Nouveau texte de présentation\n- Photos de l'équipe\n\nÉchéance : fin octobre.",
+          text: "Objectif : une page d'accueil plus claire.\n\n- Nouveau texte de présentation\n- Photos de l'équipe\n\nÉchéance : fin octobre.",
           ts: C1_AT,
         },
         {
@@ -315,7 +322,7 @@ describe('trello : sync, premier passage', () => {
     expect(
       item?.turns.map((turn) => [turn.externalId, turn.role, turn.author.name, turn.text]),
     ).toEqual([
-      ['body', 'document', 'Marie Durand', 'Liste : À faire'],
+      ['etat', 'document', null, 'Liste : À faire'],
       [
         'comment:6710f0000000000000000005',
         'participant',
@@ -325,14 +332,14 @@ describe('trello : sync, premier passage', () => {
     ]);
   });
 
-  it('garde une carte qui n’a que son titre par sa ligne d’état', async () => {
+  it('garde une carte qui n’a que son titre par son seul tour d’état', async () => {
     const { pages } = await runSync(firstPassRoutes());
 
     const item = itemsOf(pages).find((candidate) => candidate.externalId === `card:${C3}`);
     expect(item).toMatchObject({ title: 'Carte à trier', updatedAt: '2026-10-12T08:00:00.000Z' });
     expect(item?.turns).toEqual([
       {
-        externalId: 'body',
+        externalId: 'etat',
         role: 'document',
         author: { name: null, email: null },
         text: 'Liste : En cours',
@@ -356,7 +363,8 @@ describe('trello : sync, premier passage', () => {
         route.url === `${API}/cards/${C1}` ? { ...route, json: card } : route,
       );
       const { pages } = await runSync(routes);
-      return itemsOf(pages).find((item) => item.externalId === `card:${C1}`)?.turns[0]?.text;
+      const item = itemsOf(pages).find((candidate) => candidate.externalId === `card:${C1}`);
+      return item?.turns.find((turn) => turn.externalId === 'etat')?.text;
     };
 
     expect(await textOf(variant)).toBe(
@@ -463,7 +471,11 @@ describe('trello : sync, premier passage', () => {
     );
 
     const item = itemsOf(pages).find((candidate) => candidate.externalId === `card:${C2}`);
-    expect(item?.turns.map((turn) => turn.author.name)).toEqual([null, 'paulmartin']);
+    expect(item?.turns.map((turn) => [turn.externalId, turn.author.name])).toEqual([
+      ['etat', null],
+      ['body', null],
+      ['comment:6710f0000000000000000005', 'paulmartin'],
+    ]);
   });
 
   it('lit les pages d’actions suivantes, à partir de la plus ancienne action reçue', async () => {
@@ -541,6 +553,25 @@ describe('trello : sync, premier passage', () => {
       id: cardId(50),
     });
     expect(calls.filter((call) => pathOf(call.url).endsWith('/lists'))).toHaveLength(1);
+  });
+
+  it('une carte déplacée ne change que son tour d’état : la description garde son empreinte', async () => {
+    const storedIds = async (card: unknown) => {
+      const routes = firstPassRoutes().map((route) =>
+        route.url === `${API}/cards/${C1}` ? { ...route, json: card } : route,
+      );
+      const item = itemsOf((await runSync(routes)).pages).find(
+        (candidate) => candidate.externalId === `card:${C1}`,
+      );
+      return normalizeItem(item as ConnectorItem, 'trello')?.turns.map((turn) => turn.externalId);
+    };
+
+    const before = await storedIds(cardC1);
+    const after = await storedIds({ ...cardC1, idList: '5f2b3c4d5e6f7a8b9c0d11a3' }); // « Terminé »
+
+    expect(after?.[0]).not.toBe(before?.[0]);
+    expect(after?.[0]).toMatch(/^etat#/);
+    expect(after?.slice(1)).toEqual(before?.slice(1));
   });
 
   it('rend des éléments que le socle accepte, avec des dates ISO canoniques', async () => {

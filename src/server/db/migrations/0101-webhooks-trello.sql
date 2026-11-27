@@ -28,15 +28,21 @@ create policy tenant_connection on webhooks_trello to leon_app
 grant select, insert on webhooks_trello to leon_app;
 
 -- La seule lecture hors RLS : une alerte reçue sans session, dont la signature de Trello a déjà été vérifiée. Rend la
--- connexion du jeton, pour que Leon réponde 410 à un jeton inconnu, et la rend due tout de suite si elle est active :
--- en pause, elle attend sa reprise, et en erreur, son prochain essai. Rend des identifiants seulement, comme
--- notifications_microsoft.
+-- connexion du jeton, pour que Leon réponde 410 à un jeton inconnu, et la rend due si elle est active : en pause, elle
+-- attend sa reprise, et en erreur, son prochain essai. Rend des identifiants seulement, comme notifications_microsoft.
+-- Trello envoie une alerte par action sur le tableau : la relève suit au plus une minute après le début de la
+-- précédente, et jamais plus tard qu'une échéance déjà demandée depuis ce début (least ignore le null). L'échéance
+-- tombe toujours après last_sync_started_at : la fin d'une relève en cours la garde (requestedDuringSync).
 create function webhook_trello(empreinte_recue bytea) returns table (connection_id uuid)
 language sql volatile security definer set search_path = public, pg_temp as $$
   with connue as (
     select w.tenant_id, w.connection_id from webhooks_trello w where w.empreinte = empreinte_recue
   ), due as (
-    update connections c set next_sync_at = now(), updated_at = now()
+    update connections c
+       set next_sync_at = least(
+             greatest(now(), coalesce(c.last_sync_started_at, '-infinity') + interval '1 minute'),
+             case when c.next_sync_at > c.last_sync_started_at then c.next_sync_at end),
+           updated_at = now()
       from connue k
      where c.tenant_id = k.tenant_id and c.id = k.connection_id and c.status = 'active'
   )

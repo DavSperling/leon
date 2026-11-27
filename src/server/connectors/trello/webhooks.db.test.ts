@@ -174,6 +174,63 @@ describe('keepTrelloWebhooks : un webhook par tableau ouvert, pour une connexion
   });
 });
 
+describe('markTrelloAlert : une relève par minute au plus', () => {
+  // Une connexion par bouton au webhook de jeton connu, avec ses dates de relève (décalages par rapport à maintenant).
+  async function watched(lastSyncStarted: string | null, nextSync: string) {
+    const { id } = await buttonConnection();
+    const token = randomUUID();
+    await adminPool.query(
+      `insert into webhooks_trello (id, tenant_id, connection_id, tableau, empreinte)
+       values ($1, $2, $3, $4, sha256(convert_to($5, 'UTF8')))`,
+      [hook(token), paul.tenantId, id, BOARD_A, token],
+    );
+    await adminPool.query(
+      `update connections set last_sync_started_at = now() + $2::interval,
+         next_sync_at = now() + $3::interval where id = $1`,
+      [id, lastSyncStarted, nextSync],
+    );
+    return { id, token };
+  }
+
+  async function scheduleOf(id: string) {
+    const { rows } = await adminPool.query<{ due: boolean; afterStart: number | null }>(
+      `select next_sync_at <= now() as due,
+              extract(epoch from next_sync_at - last_sync_started_at)::float as "afterStart"
+         from connections where id = $1`,
+      [id],
+    );
+    return rows[0];
+  }
+
+  it('une alerte sans relève récente rend la connexion due tout de suite', async () => {
+    const idle = await watched('-20 minutes', '10 minutes');
+    const never = await watched(null, '10 minutes');
+
+    expect(await markTrelloAlert(idle.token)).toBe(true);
+    expect(await markTrelloAlert(never.token)).toBe(true);
+
+    expect((await scheduleOf(idle.id))?.due).toBe(true);
+    expect((await scheduleOf(never.id))?.due).toBe(true);
+  });
+
+  it('une alerte 10 s après le début d’une relève la reporte à une minute après ce début', async () => {
+    // L'échéance qui a lancé la relève est passée, et antérieure à son début.
+    const syncing = await watched('-10 seconds', '-11 seconds');
+
+    await markTrelloAlert(syncing.token);
+
+    expect(await scheduleOf(syncing.id)).toEqual({ due: false, afterStart: 60 });
+  });
+
+  it('une échéance plus proche, déjà demandée depuis le début de la relève, reste', async () => {
+    const asked = await watched('-10 seconds', '-5 seconds');
+
+    await markTrelloAlert(asked.token);
+
+    expect(await scheduleOf(asked.id)).toEqual({ due: true, afterStart: 5 });
+  });
+});
+
 describe('runConnectorSync : une relève Trello réussie pose ses webhooks', () => {
   it('relève les tableaux, puis crée les webhooks sous la même réservation', async () => {
     const connection = await buttonConnection();

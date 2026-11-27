@@ -61,7 +61,7 @@ const VERIFY_EMAIL: EmailCopy = {
   ignore: 'verifyEmailIgnore',
 };
 
-// La langue de la personne, lue dans sa requête (cookie `leon-locale`) ; l'anglais hors requête.
+// La langue de la personne, lue dans sa requête (son compte, sinon le cookie `leon-locale`) ; l'anglais hors requête.
 async function requesterLocale(): Promise<Locale> {
   try {
     return localeOf(await getLocale());
@@ -131,6 +131,9 @@ export const auth = betterAuth({
   // Better Auth l'appelle à la création du compte, à sa liaison et à chaque connexion par un fournisseur ; le SSO
   // seul est contrôlé ici.
   user: {
+    // Sa langue choisie (0094) vient avec la session : l'écran la lit à chaque requête sans autre lecture
+    // (i18n/request.ts). Elle ne s'écrit que par setLocaleAction, jamais à l'inscription.
+    additionalFields: { locale: { type: 'string', required: false, input: false } },
     validateUserInfo: async ({ user, source }) =>
       source.sso && (await outsideSsoDomain(source.sso.providerId, user.email))
         ? {

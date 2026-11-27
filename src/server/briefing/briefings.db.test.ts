@@ -10,7 +10,7 @@ import { adminDb, adminPool } from '@/test/db';
 import { createTestUser } from '@/test/fixtures';
 import { dropTeams, emailOf, newTeam, seedIndexed } from '@/test/seed-indexed';
 import { seedRun } from '@/test/seed-search';
-import { readAbout, saveAbout } from './about';
+import { readAbout, readLocale, saveAbout, saveLocale } from './about';
 import {
   BRIEFING_DAILY_CAP,
   BRIEFING_DISMISSED_MAX,
@@ -641,5 +641,42 @@ describe('saveAbout', () => {
     await expect(saveAbout(alice, 'x'.repeat(501))).rejects.toThrow();
     await saveAbout(alice, null);
     expect(await readAbout(alice.userId)).toBeNull();
+  });
+});
+
+describe('saveLocale', () => {
+  it('garde la langue avec le compte, périme ses seuls points, et le point suivant s’écrit dans cette langue', async () => {
+    const mine = await seedProject(alice);
+    await refreshBriefing(alice, mine.project, { llm: writes(['Premier point [1].']) });
+    const theirs = await seedProject(bob);
+    await refreshBriefing(bob, theirs.project, { llm: writes(['Point de Bob [1].']) });
+    expect(await readLocale(alice.userId)).toBeNull();
+
+    await saveLocale(alice, 'fr');
+
+    expect(await readLocale(alice.userId)).toBe('fr');
+    expect(await readLocale(bob.userId)).toBeNull();
+    expect((await rowOf(alice, mine.project))?.stale).toBe(true);
+    expect((await rowOf(bob, theirs.project))?.stale).toBe(false);
+
+    // Sans langue choisie, ce point se serait écrit en anglais (rien de reconnu dans si peu de mots) : son compte décide.
+    const llm = writes(['Second point [1].']);
+    await refreshBriefing(alice, mine.project, { llm });
+    const sent = llm.calls[0]?.messages.map((message) => message.content).join('\n') ?? '';
+    expect(sent.startsWith("Écris ta réponse en français : c'est la langue de son compte.\n")).toBe(
+      true,
+    );
+
+    // La même langue choisie de nouveau ne périme rien : un point refait coûte un appel au modèle.
+    await saveLocale(alice, 'fr');
+    expect((await rowOf(alice, mine.project))?.stale).toBe(false);
+    await saveLocale(alice, 'en');
+    expect(await readLocale(alice.userId)).toBe('en');
+    expect((await rowOf(alice, mine.project))?.stale).toBe(true);
+
+    // La base n'accepte que les langues de l'écran.
+    await expect(
+      adminPool.query('update "user" set locale = $2 where id = $1', [alice.userId, 'de']),
+    ).rejects.toThrow();
   });
 });

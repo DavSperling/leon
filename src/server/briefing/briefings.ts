@@ -14,7 +14,7 @@ import { createReferenceFilter } from '@/server/llm/references';
 import { logError } from '@/server/log';
 import { recordReads } from '@/server/memory/read-log';
 import { textArray } from '@/server/search/filters-sql';
-import { readAbout } from './about';
+import { readAbout, readLocale } from './about';
 import { buildBriefingPrompt, renderBriefing, renderEmptyBriefing } from './briefing-prompt';
 import {
   BRIEFING_DAYS,
@@ -119,6 +119,7 @@ export async function refreshBriefing(
       await readAbout(ctx.userId),
       await readOnboardingMember(ctx),
       await readDismissed(ctx, project),
+      await readLocale(ctx.userId),
     );
     const body = await writeBody(deps.llm, prompt).catch(async (error) => {
       // Fournisseur injoignable : rien n'est payé, le créneau du jour est rendu (0091) et la file reprendra.

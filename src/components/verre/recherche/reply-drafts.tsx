@@ -873,8 +873,10 @@ const NO_GESTURES = {
  * L'entrée du bas de « À vous » : ses mails que Leon a jugés sans réponse à donner (portrait/sans-reponse.ts), comptés
  * d'une phrase, et « Les voir », qui ouvre leur panneau : la liste à gauche, le mail à droite, et pour chacun
  * « Préparer une réponse », avec ses indications facultatives (Leon l'écrit alors dans la pile), ou « Supprimer le
- * mail » (la corbeille de sa boîte Gmail, après confirmation). Un geste passe au mail suivant, sans attendre que
- * l'Accueil soit relu, et le compte suit. Rien quand il n'y en a aucun. Aucun appel au modèle pour les montrer.
+ * mail » (la corbeille de sa boîte Gmail, après confirmation). Au pied, « Terminé » : elle a vu ce mail et n'en fera
+ * rien ; il sort de la liste, sans que rien ne bouge dans sa boîte, et l'entrée ne le compte plus (sans cela, les mails
+ * vus s'y empileraient). Un geste passe au mail suivant, sans attendre que l'Accueil soit relu, et le compte suit ;
+ * « Terminé » sur le dernier ferme le panneau. Rien quand il n'y en a aucun. Aucun appel au modèle pour les montrer.
  */
 function QuietMails({ sansReponse, max }: { sansReponse: HomeSansReponse[]; max: number }) {
   const t = useTranslations('draftQuestions');
@@ -920,7 +922,7 @@ function QuietMails({ sansReponse, max }: { sansReponse: HomeSansReponse[]; max:
     mail: PanelMail,
     start: TransitionStartFunction,
     call: () => Promise<Result>,
-    said: string,
+    said: string | null,
   ) =>
     start(async () => {
       setFailed(false);
@@ -928,13 +930,19 @@ function QuietMails({ sansReponse, max }: { sansReponse: HomeSansReponse[]; max:
       setAsked(null);
       if ('error' in result && result.error !== 'introuvable') return setFailed(true);
       if ('error' in result) toast.error(t('quiet.gone'));
-      else toast.success(said);
+      else if (said) toast.success(said);
       dispatch({ type: 'close', mails, key: mail.key, id: null });
+      // « Terminé » sur le dernier mail : plus rien à montrer, le panneau se ferme
+      if (said === null && mails.length === 1) setOpen(false);
     });
 
   // « Supprimer le mail », confirmé ou sans redemander : le mail part à la corbeille de sa boîte Gmail.
   const trash = (mail: PanelMail) =>
     close(mail, startDiscarding, () => trashMailAction(mail.id), t('trash.done'));
+  // « Terminé » : vu, rien à en faire. Sa ligne s'écarte, comme par « Écarter » dans la pile : le mail sort de la
+  // liste, et Leon ne le relira pas ; rien ne bouge dans sa boîte. Sans mot : le mail qui s'en va le dit assez.
+  const seen = (mail: PanelMail) =>
+    close(mail, startDiscarding, () => discardBrouillonAction(mail.id), null);
 
   if (sansReponse.length === 0 && !open) return null;
   return (
@@ -1016,7 +1024,7 @@ function QuietMails({ sansReponse, max }: { sansReponse: HomeSansReponse[]; max:
             : null
         }
         foot={
-          mails.length > 1 ? (
+          shown ? (
             <>
               {index > 0 && (
                 <Button
@@ -1038,6 +1046,16 @@ function QuietMails({ sansReponse, max }: { sansReponse: HomeSansReponse[]; max:
                   {t('nextMail')}
                 </Button>
               )}
+              {/* « Terminé », à droite comme dans tout panneau, rappelle le mail qu'il fait partir ; sur un téléphone,
+                  où les trois ne tiennent pas en ligne, il prend la sienne en entier */}
+              <Button
+                className={cn('max-sm:basis-full', index === mails.length - 1 && 'ml-auto')}
+                aria-describedby={shown.key}
+                disabled={working}
+                onClick={() => seen(shown)}
+              >
+                {c('done')}
+              </Button>
             </>
           ) : (
             <PanelClose asChild>

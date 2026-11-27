@@ -91,7 +91,7 @@ export function panelMails(
 
 // Ses mails que Leon a jugés sans réponse à donner (portrait/sans-reponse.ts), que l'entrée du bas de « À vous » compte
 // et que son panneau montre, dans l'ordre où l'Accueil les a lus (les plus récents d'abord). Sans ceux qu'un geste a
-// fait partir ici : supprimé, ou sa réponse demandée, que Leon écrit alors dans la pile.
+// fait partir ici : vu (« Terminé »), supprimé, ou sa réponse demandée, que Leon écrit alors dans la pile.
 export const quietMails = (sansReponse: HomeSansReponse[], done: Done): PanelMail[] =>
   sansReponse
     .map(

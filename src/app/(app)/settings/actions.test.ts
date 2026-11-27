@@ -8,12 +8,13 @@ import { createInvitationLink, setMemberPlacement, setNotesRefused } from '@/ser
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
 import {
   getSession,
+  getUserContext,
   hasPassword,
   requireUserContext,
   signedInRecently,
   signOutCurrentUser,
 } from '@/server/auth/session';
-import { saveAbout } from '@/server/briefing/about';
+import { saveAbout, saveLocale } from '@/server/briefing/about';
 import { setDepotEquipe } from '@/server/connectors/github/depots-equipe';
 import { forgetPipedreamUser } from '@/server/connectors/pipedream';
 import { sendDeletionEmails } from '@/server/email/account-deleted';
@@ -65,6 +66,7 @@ import {
 
 vi.mock('@/server/auth/session', () => ({
   requireUserContext: vi.fn(),
+  getUserContext: vi.fn(),
   getSession: vi.fn(),
   signedInRecently: vi.fn(),
   hasPassword: vi.fn(),
@@ -92,7 +94,11 @@ vi.mock('@/server/auth/members', () => ({
   setMemberPlacement: vi.fn(),
   setNotesRefused: vi.fn(),
 }));
-vi.mock('@/server/briefing/about', () => ({ ABOUT_MAX_CHARS: 500, saveAbout: vi.fn() }));
+vi.mock('@/server/briefing/about', () => ({
+  ABOUT_MAX_CHARS: 500,
+  saveAbout: vi.fn(),
+  saveLocale: vi.fn(async () => {}),
+}));
 // La vraie classe est dans un module qui ouvre la base : la copie suffit à `instanceof`, puisque les actions et le
 // test lisent la même.
 vi.mock('@/server/auth/delete-account', () => ({
@@ -279,11 +285,36 @@ describe('setLocaleAction', () => {
       expect.objectContaining({ httpOnly: true }),
     );
     expect(revalidatePath).toHaveBeenCalledWith('/', 'layout');
+    // personne n'est connecté (le site, la connexion) : rien ne s'écrit en base
+    expect(saveLocale).not.toHaveBeenCalled();
 
     vi.clearAllMocks();
     await setLocaleAction(localeForm('de'));
     expect(cookies).not.toHaveBeenCalled();
     expect(setCookie).not.toHaveBeenCalled();
+    expect(saveLocale).not.toHaveBeenCalled();
+  });
+
+  it('connectée, garde aussi la langue avec son compte : elle la retrouve à chaque connexion', async () => {
+    vi.mocked(getUserContext).mockResolvedValue(ctx);
+
+    await setLocaleAction(localeForm('fr'));
+
+    expect(saveLocale).toHaveBeenCalledWith(ctx, 'fr');
+    expect(setCookie).toHaveBeenCalledWith('leon-locale', 'fr', expect.anything());
+  });
+
+  it('une base en panne ne refuse pas le choix : le cookie le tient, et la panne est notée', async () => {
+    vi.mocked(getUserContext).mockResolvedValue(ctx);
+    vi.mocked(saveLocale).mockRejectedValueOnce(new Error('base injoignable'));
+
+    await expect(setLocaleAction(localeForm('en'))).resolves.toBeUndefined();
+
+    expect(setCookie).toHaveBeenCalledWith('leon-locale', 'en', expect.anything());
+    expect(logError).toHaveBeenCalledWith('langue.enregistrer', expect.any(Error), {
+      userId: ctx.userId,
+    });
+    expect(revalidatePath).toHaveBeenCalledWith('/', 'layout');
   });
 });
 

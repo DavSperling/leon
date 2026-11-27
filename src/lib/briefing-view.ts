@@ -18,15 +18,6 @@ const plain = (text: string) =>
     .replace(/\s+/g, ' ')
     .trim();
 
-/**
- * Le fait du jour, écrit sous le bonjour de l'Accueil : la première ligne sourcée de « What changed ». Une partie
- * sans rien de neuf (« Nothing to report. ») ne cite rien : pas de fait.
- */
-export const briefingFact = (sections: BriefingSection[]): BriefingLine | null =>
-  sections
-    .find((section) => section.title === 'What changed')
-    ?.lines.find((line) => line.refs.length > 0) ?? null;
-
 // Une ligne lue, avec les morceaux du Markdown qui la portent (sa puce et ses lignes de suite) : de quoi l'ôter.
 type ParsedLine = BriefingLine & { spans: [number, number][] };
 

@@ -22,7 +22,6 @@ import { SearchResults } from '@/components/verre/recherche/search-results';
 import { WeekCalendar } from '@/components/verre/recherche/week-calendar';
 import { SearchSyntax } from '@/components/verre/recherche/welcome';
 import { parisTime } from '@/lib/agenda';
-import { briefingFact } from '@/lib/briefing-view';
 import { dayPart } from '@/lib/day-part';
 import { formatDateTime } from '@/lib/verre/format';
 import { agendaIsStale, readWeek } from '@/server/agenda/agenda';
@@ -119,7 +118,7 @@ const optional = <T,>(what: string, read: Promise<T>) =>
   });
 
 /**
- * L'Accueil : le bonjour et le fait du jour, la ligne des agents « Brouillons de réponse » et « Relances » quand ils ont
+ * L'Accueil : le bonjour, la ligne des agents « Brouillons de réponse » et « Relances » quand ils ont
  * quelque chose pour elle, le champ où l'on demande et ses questions à essayer, puis le point du matin (s'il y en a un) et, à côté, le
  * calendrier de la semaine et la proposition « About you ».
  */
@@ -162,8 +161,7 @@ async function Home({ ctx }: { ctx: TenantContext }) {
   const aside = Boolean(week) || Boolean(suggestion);
 
   return (
-    // group/home : le fait du jour et sa ligne dans le point se répondent quand on pointe l'un (home.tsx)
-    <div className="group/home @container w-full shell:pt-5">
+    <div className="@container w-full shell:pt-5">
       {/* La pile de l'agent : le bonjour et le champ au-dessus ; à droite, la semaine, le point du matin et « About
           you », ou le texte d'un mail quand elle clique « Voir le mail ». Toujours montée : quand le dernier mail s'en
           va, son panneau reste ouvert pour le dire. */}
@@ -175,12 +173,7 @@ async function Home({ ctx }: { ctx: TenantContext }) {
         max={REPONSE_MAX_CHARS}
         lead={
           <>
-            <Greeting
-              name={name}
-              serverPart={dayPart(now.getHours())}
-              fact={first && briefingFact(first.sections)}
-              sources={first ? viewOf(first) : undefined}
-            />
+            <Greeting name={name} serverPart={dayPart(now.getHours())} />
             <HomeAsk canAsk={modelAvailable} />
             {questions.length > 0 && (
               <div className="mt-3">
@@ -197,7 +190,8 @@ async function Home({ ctx }: { ctx: TenantContext }) {
               )}
               {first && (
                 <Section id="point" title={t('briefing.title')} className="mt-0">
-                  <div className="grid gap-6">
+                  {/* minmax(0,1fr) : le nom long d'un dossier se coupe, il n'élargit pas les feuilles hors de la colonne */}
+                  <div className="grid grid-cols-[minmax(0,1fr)] gap-6">
                     {shown.map((point) => (
                       <BriefingSheet
                         // un autre point (refait, autre projet) : les lignes retirées sur la page repartent de zéro
@@ -207,7 +201,11 @@ async function Home({ ctx }: { ctx: TenantContext }) {
                           <>
                             {/* un seul point : pas besoin de dire de quel dossier il parle */}
                             {shown.length > 1 && (
-                              <span className="truncate font-semibold text-fg">
+                              // un nom long est coupé : l'infobulle le dit en entier
+                              <span
+                                title={pointLabel(point) ?? undefined}
+                                className="truncate font-semibold text-fg"
+                              >
                                 {pointLabel(point) ?? t('briefing.folder')}
                               </span>
                             )}

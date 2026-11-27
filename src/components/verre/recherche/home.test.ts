@@ -6,7 +6,7 @@ import { TooltipProvider } from '@/components/verre';
 import en from '../../../../messages/en.json';
 import { BriefingSheet, type BriefingSourceView, Greeting, HomeAsk } from './home';
 
-// L'Accueil rendu côté serveur (pas de DOM ici) : ce que le point du matin, le fait du jour et le champ doivent porter.
+// L'Accueil rendu côté serveur (pas de DOM ici) : ce que le point du matin, le bonjour et le champ doivent porter.
 
 // Les actions du serveur ne sont pas appelées au rendu : leurs modules (base, session) ne se chargent pas ici.
 vi.mock('@/app/(app)/actions', () => ({
@@ -98,11 +98,6 @@ describe('BriefingSheet', () => {
     );
   });
 
-  it('marque la ligne du fait du jour (la première ligne sourcée de « What changed »), et elle seule', () => {
-    expect(sheet.match(/data-fact="true"/g)).toHaveLength(1);
-    expect(lineOf(sheet, 'Sophie moved')).toContain('data-fact="true"');
-  });
-
   it('chaque ligne a sa croix « c’est réglé », nommée, au-dessus du bouton de la ligne', () => {
     const crosses = sheet.match(/<button[^>]*aria-label="Settled: remove this line"[^>]*>/g) ?? [];
     expect(crosses).toHaveLength(4);
@@ -137,17 +132,14 @@ describe('BriefingSheet', () => {
 });
 
 describe('Greeting', () => {
-  it('dit bonjour à l’heure donnée, et le fait du jour dessous quand il y en a un', () => {
-    const plain = html(h(Greeting, { name: 'Julie', serverPart: 'morning' }));
-    expect(plain).toContain('>Good morning, Julie.</h1>');
-    expect(plain).not.toContain('data-fact');
-
-    const withFact = html(
-      h(Greeting, { name: null, serverPart: 'evening', fact: CHANGED, sources: SOURCES }),
+  it('dit bonjour à l’heure donnée, avec ou sans prénom, et rien dessous', () => {
+    const named = html(h(Greeting, { name: 'Julie', serverPart: 'morning' }));
+    expect(named).toContain('>Good morning, Julie.</h1>');
+    // plus de phrase du point sous le bonjour : elle répétait une ligne du point du matin, sans pouvoir s'enlever
+    expect(named).toMatch(/<\/h1><\/header>$/);
+    expect(html(h(Greeting, { name: null, serverPart: 'evening' }))).toContain(
+      '>Good evening.</h1>',
     );
-    expect(withFact).toContain('>Good evening.</h1>');
-    expect(withFact).toContain('data-fact="true"');
-    expect(withFact).toContain('aria-label="Source 3: Ticket 3"');
   });
 });
 

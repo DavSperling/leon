@@ -35,6 +35,7 @@ import { setManager, setManagersSeeAll } from '@/server/auth/organisation';
 import { authAttemptAllowed } from '@/server/auth/rate-limit';
 import {
   getSession,
+  getUserContext,
   hasPassword,
   requestHeaders,
   requireUserContext,
@@ -43,7 +44,7 @@ import {
 } from '@/server/auth/session';
 import { registerSso, removeSso, SsoInputSchema, verifySsoDomain } from '@/server/auth/sso';
 import type { TenantContext } from '@/server/auth/tenant-context';
-import { ABOUT_MAX_CHARS, saveAbout } from '@/server/briefing/about';
+import { ABOUT_MAX_CHARS, saveAbout, saveLocale } from '@/server/briefing/about';
 import { setDepotEquipe } from '@/server/connectors/github/depots-equipe';
 import { forgetPipedreamUser } from '@/server/connectors/pipedream';
 import { RESEND_BATCH_MAX, sendDeletionEmails } from '@/server/email/account-deleted';
@@ -68,6 +69,9 @@ import { prepareReply } from '@/server/portrait/sans-reponse';
 import { requestFicheBuild } from '@/server/portrait/screen';
 import { clean } from '@/server/portrait/synthese-prompt';
 
+// La langue choisie : dans le cookie de ce navigateur (le site et la connexion le lisent, sans session), et, pour une
+// personne connectée, avec son compte (0094). Sans cela elle repassait en anglais sur un autre navigateur ou une fois
+// ses cookies effacés. Une panne de la base ne refuse pas le choix : le cookie le tient ici, et elle est notée.
 export async function setLocaleAction(formData: FormData): Promise<void> {
   const locale = z.enum(locales).safeParse(formData.get('locale'));
   if (!locale.success) return;
@@ -78,6 +82,11 @@ export async function setLocaleAction(formData: FormData): Promise<void> {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
   });
+  const ctx = await getUserContext();
+  if (ctx)
+    await saveLocale(ctx, locale.data).catch((error) =>
+      logError('langue.enregistrer', error, { userId: ctx.userId }),
+    );
   revalidatePath('/', 'layout');
 }
 
@@ -818,6 +827,7 @@ export async function answerAgentAction(input: {
 
 // « Écarter », depuis le panneau de l'accueil, un brouillon de réponse prêt ou une demande de Leon : la ligne ne se montre
 // plus, et le brouillon que Leon avait déposé dans ses brouillons Gmail en est retiré (portrait/brouillon-depot.ts).
+// « Terminé », sur un mail que Leon a jugé sans réponse à donner, écarte sa ligne de même : il sort de la liste.
 // Celle d'un autre, ou déjà écartée, est « introuvable ». Rien n'est envoyé. `resteDansGmail` : Leon n'a pas pu le
 // retirer de sa boîte, et l'écran le lui dit.
 export async function discardBrouillonAction(

@@ -1,4 +1,5 @@
 import { and, eq, isNull, sql } from 'drizzle-orm';
+import type { Locale } from '@/i18n/request';
 import type { TenantContext } from '@/server/auth/tenant-context';
 import { db } from '@/server/db/client';
 import { users } from '@/server/db/schema/auth';
@@ -14,6 +15,25 @@ export const ABOUT_MAX_CHARS = 500;
 export async function readAbout(userId: string): Promise<string | null> {
   const [row] = await db.select({ about: users.about }).from(users).where(eq(users.id, userId));
   return row?.about ?? null;
+}
+
+// La langue que la personne a choisie, gardée avec son compte (0094) : son point du matin s'écrit dans cette langue,
+// quelle que soit celle de ses sessions et de ses mails. Null : jamais choisie.
+export async function readLocale(userId: string): Promise<Locale | null> {
+  const [row] = await db.select({ locale: users.locale }).from(users).where(eq(users.id, userId));
+  return row?.locale ?? null;
+}
+
+// Garde la langue avec le compte : l'écran la retrouve à chaque connexion, sur tout navigateur (i18n/request.ts). Ses
+// points du matin, écrits dans l'ancienne, sont à refaire ; la même langue choisie de nouveau ne périme rien (un point
+// refait coûte un appel au modèle).
+export async function saveLocale(ctx: TenantContext, locale: Locale): Promise<void> {
+  const changed = await db
+    .update(users)
+    .set({ locale, updatedAt: new Date() })
+    .where(and(eq(users.id, ctx.userId), sql`${users.locale} is distinct from ${locale}`))
+    .returning({ id: users.id });
+  if (changed.length > 0) await markBriefingsStale(ctx);
 }
 
 // Marque périmés les points de la personne, et refait dans 30 minutes ceux dont elle a lu la version actuelle dans la

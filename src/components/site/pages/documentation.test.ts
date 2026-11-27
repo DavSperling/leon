@@ -281,7 +281,9 @@ describe('la page Documentation', () => {
       const start = source.indexOf('const CONSENT_LINES = [');
       const block = source.slice(start, source.indexOf('\n];', start));
       const quoted = [...block.matchAll(/`([^`]+)`/g)].map((match) => match[1]);
-      const tools = /developer tools such as (.+?);/.exec(block)?.[1]?.split(/, | or /);
+      const tools = /developer tools such as (.+?)(?:;|, and whether)/
+        .exec(block)?.[1]
+        ?.split(/, | or /);
       expect(quoted).toEqual(['claude -p', '--bare', '!', '/', '!']);
       expect(tools).toEqual(['git', 'gh', 'pnpm', 'docker']);
 

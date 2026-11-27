@@ -73,10 +73,10 @@ En technologies, rien de neuf : tout tient dans la stack du deuxième jet. Ni ba
 Aujourd'hui, la capture ne garde que des textes (`TURN_ROLES` : `user`, `assistant`, `document`, `participant`, dans `src/capture/turn.ts`). Les commandes lancées et les fichiers écrits sont perdus. On garde donc, par session, des faits extraits par le code, bornés, rangés dans `sources.metadata.faits` sous l'ACL de la session :
 
 - **les fichiers écrits** : `Edit`, `Write`, `MultiEdit` et `NotebookEdit` dans Claude Code ; dans Codex, ses évènements de fichiers modifiés ;
-- **les commandes lancées**, réduites à leur exécutable, et à leur sous-commande pour git, gh, pnpm et quelques autres, avec leur statut. Jamais une option : un mot de passe passé en option ne part pas ;
+- **les commandes lancées**, réduites à leur exécutable, et à leur sous-commande pour git, gh, pnpm et quelques autres, avec leur statut et le fait qu'une commande en enchaîne plusieurs, celles des sous-agents et des agents de workflow comprises. Jamais une option : un mot de passe passé en option ne part pas ;
 - **git** : la branche, les commits, `git push` et `gh pr create`, d'où le numéro de la PR (et `pr-link`, que Claude Code écrit déjà) ;
 - **la liste de tâches de l'agent**, quand il en tient une (`TodoWrite`, ou `TaskCreate` et `TaskUpdate` selon la version de Claude Code) : c'est « ce qui reste à faire », sans modèle ;
-- **les erreurs d'outils**, et une marque « externe » quand la session a lu du web, du MCP, un sous-agent ou une commande réseau.
+- **les erreurs d'outils**, le nom de chaque outil en échec avec son nombre (un outil MCP par le nom de son serveur seulement, jamais le message d'erreur ; rien chez Cursor), et une marque « externe » quand la session a lu du web, du MCP, un sous-agent ou une commande réseau.
 
 Les secrets sont masqués avant tout le reste (`maskSecrets`), sur le poste puis de nouveau à la réception.
 

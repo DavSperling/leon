@@ -39,9 +39,8 @@ import { parseClaudeCodeSession } from '../capture/claude-code';
 import { extractBackstage } from '../capture/session-backstage';
 import {
   type AgentActions,
-  extractAgentActions,
   extractClaudeCodeFacts,
-  isExternalWorkflowAgent,
+  readWorkflowAgent,
 } from '../capture/session-facts';
 import type { Turn } from '../capture/turn';
 import type { Outil } from './hook-commands';
@@ -225,12 +224,13 @@ async function capture(stdin: string, deps: CaptureDeps): Promise<void> {
       dirs: root === null ? [start] : [start, root],
       url: deps.mcpUrl,
     });
-    // Après leonMcp : les agents d'un run se jugent à la lecture, par la règle de la session. Chacun est aussi relevé
-    // pour `commandes_agents` ; seul son relevé reste en mémoire, jamais le contenu du run.
+    // Après leonMcp : les agents d'un run se jugent à la lecture, par la règle de la session. La même lecture relève
+    // chacun pour `commandes_agents` ; seul son relevé reste en mémoire, jamais le contenu du run.
     const workflowAgents: AgentActions[] = [];
     const workflows = await loadWorkflowRuns(input.transcript_path, content, deps, (agent) => {
-      workflowAgents.push(extractAgentActions(agent));
-      return isExternalWorkflowAgent(agent, leonMcp, subagents);
+      const { external, actions } = readWorkflowAgent(agent, leonMcp, subagents);
+      workflowAgents.push(actions);
+      return external;
     });
     const faits = extractClaudeCodeFacts(
       content,

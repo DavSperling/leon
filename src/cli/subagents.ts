@@ -147,7 +147,7 @@ export async function loadCodexSubagents(
 // l'appel porte `toolUseResult.runId` et `transcriptDir`, le dossier du run :
 // `<dossier du fichier>/<session>/subagents/workflows/<runId>`, où <session> est celle du fichier, ou celle dont une
 // session reprise recopie l'historique. Il n'est lu que s'il a exactement cette forme. Les agents sont ceux que nomme son
-// `journal.jsonl`, chacun passé à `externalAgent` (isExternalWorkflowAgent) dès qu'il est lu, puis oublié : un run pèse
+// `journal.jsonl`, chacun passé à `externalAgent` (readWorkflowAgent) dès qu'il est lu, puis oublié : un run pèse
 // souvent des dizaines de Mo (621 Mo pour la plus grosse session du poste au 23/11), et le crochet de fin le relit
 // (Claude Code n'envoie la session qu'à ce crochet). Un agent lancé sans fichier n'a encore rien fait ; si le journal
 // le dit fini, ou si le journal ne se lit pas, le run n'est pas jugé : son appel restera externe. La dernière ligne

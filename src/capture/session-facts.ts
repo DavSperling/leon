@@ -89,7 +89,7 @@ const GIT_COMMIT = new RegExp(String.raw`\bgit${GIT_OPTIONS}\s+commit\b`);
 // Workflow, tout mcp__* hors des outils locaux de Leon, tout nom inconnu). Aucune commande `leon` n'est une commande
 // réseau (D36). Un appel Agent ou Task se juge sur les échanges de son sous-agent, par la même règle (T63 :
 // isExternalSubagent) ; sans eux, il rend la session externe. Un appel Workflow, sur ceux des agents de son run
-// (décision d'Amos du 23/11 : isExternalWorkflowAgent).
+// (décision d'Amos du 23/11 : readWorkflowAgent).
 const LOCAL_TOOLS = new Set([
   'Read',
   'Write',
@@ -344,7 +344,7 @@ function isExternalCall({ name, input }: Call, leonMcp: boolean): boolean {
 // `.jsonl` de son sous-agent (annexe 08, chargés par la CLI : subagents.ts).
 export type Subagents = ReadonlyMap<string, string>;
 // Les appels Workflow d'une session dont le run ne la rend pas externe, par l'`id` de leur bloc tool_use (jugés par la
-// CLI à la lecture, agent par agent, avec isExternalWorkflowAgent : loadWorkflowRuns).
+// CLI à la lecture, agent par agent, avec readWorkflowAgent : loadWorkflowRuns).
 export type Workflows = ReadonlySet<string>;
 
 // La règle du rapport final (T63, annexe 08) : un sous-agent a rendu son rapport quand la dernière ligne de
@@ -372,48 +372,57 @@ function isExternalAnyCall(
 // la forme connue, ou pas de rapport final (la dernière ligne de conversation n'est pas un message assistant fini par
 // end_turn : coupé, ou encore en cours). Une ligne d'un autre type se saute, quelle que soit sa forme. Toutes ses lignes
 // portent isSidechain. `report` faux, pour un agent de workflow, le rapport final n'est pas demandé
-// (isExternalWorkflowAgent).
+// (readWorkflowAgent). Avec `sink`, la même traversée fait aussi le relevé de l'agent, et va alors jusqu'au bout du
+// fichier : un appel externe ne l'arrête plus.
 function isExternalSubagent(
   content: string,
   leonMcp: boolean,
   subagents: Subagents | undefined,
   visited: Set<string>,
   report = true,
+  sink?: AgentSink,
 ): boolean {
   let finished = false;
+  let external = false;
   for (const raw of content.split('\n')) {
     if (raw.trim() === '') continue;
     let json: unknown;
     try {
       json = JSON.parse(raw);
     } catch {
-      return true;
+      // pas du JSON : `json` reste indéfini, donc sans type
     }
     const kind = LineTypeSchema.safeParse(json);
-    if (!kind.success) return true;
-    if (kind.data.type !== 'user' && kind.data.type !== 'assistant') continue;
+    const conversation =
+      kind.success && (kind.data.type === 'user' || kind.data.type === 'assistant');
+    if (kind.success && !conversation && !sink) continue;
     const parsed = LineSchema.safeParse(json);
-    if (!parsed.success) return true;
+    if (!parsed.success) {
+      if (kind.success && !conversation) continue;
+      // Pas du JSON, sans type, ou ligne de conversation hors de la forme connue : échec fermé.
+      if (!sink) return true;
+      external = true;
+      continue;
+    }
     const line = parsed.data;
+    if (sink) sink.debut ??= line.timestamp ?? null;
+    if (!conversation) continue;
     finished = isFinalReport(line);
     const blocks = Array.isArray(line.message?.content) ? line.message.content : [];
     for (const block of blocks) {
       const call = ToolUseSchema.safeParse(block);
-      if (call.success && isExternalAnyCall(call.data, leonMcp, subagents, visited)) return true;
+      if (call.success) {
+        sink?.calls.set(call.data.id, call.data);
+        if (!external && isExternalAnyCall(call.data, leonMcp, subagents, visited)) {
+          if (!sink) return true;
+          external = true;
+        }
+      }
+      if (sink) recordResultBlock(sink.record, block, sink.calls, null);
     }
   }
-  return report && !finished;
+  return external || (report && !finished);
 }
-
-// Un agent d'un run de workflow (décision d'Amos du 23/11), par la règle de isExternalSubagent sans le rapport final : il
-// compte par ses appels, fini ou non. Le run est lancé en tâche de fond, son texte n'entre dans la session qu'à sa
-// notification de fin, et `externe`, une fois vrai, le reste (record-facts.ts) : exiger le rapport au crochet du tour qui
-// le lance rendrait externes toutes ces sessions. Le crochet du tour qu'ouvre la notification rejuge tous les agents.
-export const isExternalWorkflowAgent = (
-  content: string,
-  leonMcp: boolean,
-  subagents?: Subagents,
-): boolean => isExternalSubagent(content, leonMcp, subagents, new Set(), false);
 
 // Ce que les appels d'outils d'une session apprennent, avant les bornes de C1 (buildFacts). Commun aux lecteurs des
 // outils de code : chacun lit son format, et passe ici ses commandes, ses fichiers et ses tâches.
@@ -567,28 +576,29 @@ export type AgentActions = {
 };
 export const COMMANDES_PAR_AGENT = 20;
 
-// Le relevé d'un fichier d'agent de Claude Code, par la mécanique de la tête sur un relevé neuf. Toutes ses lignes
-// portent isSidechain : rien n'est sauté.
-export function extractAgentActions(content: string): AgentActions {
-  const calls = new Map<string, Call>();
-  const record = newFactsRecord();
-  let debut: string | null = null;
-  for (const raw of content.split('\n')) {
-    const line = parseLine(raw);
-    if (!line) continue;
-    debut ??= line.timestamp ?? null;
-    for (const block of messageBlocks(line)) {
-      const call = ToolUseSchema.safeParse(block);
-      if (call.success) calls.set(call.data.id, call.data);
-      recordResultBlock(record, block, calls, null);
-    }
-  }
-  return {
-    debut,
-    commandes: record.commands.slice(-COMMANDES_PAR_AGENT),
-    outils: record.toolErrors,
-  };
+// Ce que la traversée d'un fichier d'agent relève en plus de le juger (isExternalSubagent), par la mécanique de la tête
+// sur un relevé neuf : ses appels, ses commandes et ses outils en erreur, et l'heure de sa première ligne horodatée.
+type AgentSink = { record: FactsRecord; calls: Map<string, Call>; debut: string | null };
+
+// Un agent d'un run de workflow (décision d'Amos du 23/11), lu une seule fois : un run pèse des dizaines de Mo, et le
+// crochet de fin n'a que 15 s. `external` suit la règle de isExternalSubagent sans le rapport final : il compte par ses
+// appels, fini ou non. Le run est lancé en tâche de fond, son texte n'entre dans la session qu'à sa notification de fin,
+// et `externe`, une fois vrai, le reste (record-facts.ts) : exiger le rapport au crochet qui suit son lancement rendrait
+// externes toutes ces sessions. `actions` : son relevé pour `commandes_agents`, entier même s'il est externe.
+export function readWorkflowAgent(
+  content: string,
+  leonMcp: boolean,
+  subagents?: Subagents,
+): { external: boolean; actions: AgentActions } {
+  const sink: AgentSink = { record: newFactsRecord(), calls: new Map(), debut: null };
+  const external = isExternalSubagent(content, leonMcp, subagents, new Set(), false, sink);
+  const commandes = sink.record.commands.slice(-COMMANDES_PAR_AGENT);
+  return { external, actions: { debut: sink.debut, commandes, outils: sink.record.toolErrors } };
 }
+
+// Le relevé seul d'un fichier d'agent, par la même traversée : celui d'un sous-agent, que isExternalAnyCall a déjà jugé.
+export const extractAgentActions = (content: string): AgentActions =>
+  readWorkflowAgent(content, false).actions;
 
 // Les commandes des agents d'une session et les outils en erreur, tête comprise. Les agents se rangent par leur première
 // heure (sans heure, en dernier, dans l'ordre reçu), gardent chacun leurs 20 dernières commandes, puis les 100 dernières
@@ -693,6 +703,8 @@ export function extractClaudeCodeFacts(
     echanges: parseClaudeCodeSession(content)?.turns.filter(isTypedTurn).length ?? 0,
     start,
     end,
+    // shortcut: un sous-agent est lu ici une seconde fois, après son jugement (isExternalAnyCall) ; réunir les deux
+    // lectures, comme pour un agent de workflow, si ses fichiers pèsent au crochet de fin.
     agents: [...(subagents?.values() ?? [])].map(extractAgentActions).concat(workflowAgents),
   });
 }

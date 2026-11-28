@@ -8,7 +8,7 @@ import {
   extractAgentActions,
   extractClaudeCodeFacts,
   isChainedCommand,
-  isExternalWorkflowAgent,
+  readWorkflowAgent,
   recheckCommand,
   reduceToolName,
   SessionFactsSchema,
@@ -645,7 +645,9 @@ describe('extractClaudeCodeFacts', () => {
   // Décision d'Amos du 23/11 : un appel Workflow se juge sur les échanges des agents de son run, par la règle de T63
   // sans le rapport final ; la CLI juge chaque agent à la lecture (loadWorkflowRuns). Formes relevées le 23/11 ;
   // fixtures inventées.
-  describe('l’agent d’un run de workflow (isExternalWorkflowAgent)', () => {
+  describe('l’agent d’un run de workflow (readWorkflowAgent)', () => {
+    const isExternalWorkflowAgent = (...args: Parameters<typeof readWorkflowAgent>) =>
+      readWorkflowAgent(...args).external;
     const SA = { isSidechain: true, agentId: 'a1b2c3d4e5f6a7b8c' };
     const consigne = JSON.stringify({ type: 'user', ...SA, message: { content: 'Consigne.' } });
     const geste = (id: string, name: string, input: unknown) => [
@@ -677,6 +679,23 @@ describe('extractClaudeCodeFacts', () => {
 
     it('une ligne illisible : externe', () => {
       expect(isExternalWorkflowAgent(agent('ceci n’est pas du JSON'), false)).toBe(true);
+    });
+
+    it('une seule lecture juge et relève : ni un appel externe ni une ligne illisible n’arrêtent le relevé', () => {
+      const contenu = agent(
+        ...geste('e1', 'WebFetch', { url: 'https://x.example' }),
+        ...geste('b1', 'Bash', { command: 'pnpm test' }),
+        'ceci n’est pas du JSON',
+        ...geste('b2', 'Bash', { command: 'pnpm lint && echo fini' }),
+      );
+      const { external, actions } = readWorkflowAgent(contenu, false);
+
+      expect(external).toBe(true);
+      expect(actions.commandes).toEqual([
+        { texte: 'pnpm test', erreur: false, suite: false },
+        { texte: 'pnpm lint', erreur: false, suite: true },
+      ]);
+      expect(actions).toEqual(extractAgentActions(contenu));
     });
 
     it('un sous-agent de l’agent, retrouvé, qui ne fait que lire : non externe ; un mcp__leon__thread, selon le serveur', () => {

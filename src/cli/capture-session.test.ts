@@ -662,6 +662,121 @@ describe("captureSessionFromHook : les faits de la session, si l'accord le perme
     });
   });
 
+  // T58 : les commandes des agents d'un run de workflow (loadWorkflowRuns), relevées par le rappel qui les juge.
+  describe('les agents de workflow de la session', () => {
+    const OWNER = '55555555-5555-4555-8555-555555555555';
+    const session = `/t/${OWNER}.jsonl`;
+    const RUN = `/t/${OWNER}/subagents/workflows/wf_1a2b3c4d-5e6`;
+    const sidechain = { isSidechain: true, agentId: 'a1b2c3d4e5f6a7b8c' };
+    const toolUse = (id: string, name: string, input: unknown) =>
+      line({
+        type: 'assistant',
+        ...sidechain,
+        message: { content: [{ type: 'tool_use', id, name, input }] },
+      });
+    const toolResult = (id: string, content: string, is_error = false) =>
+      line({
+        type: 'user',
+        ...sidechain,
+        message: { content: [{ type: 'tool_result', tool_use_id: id, content, is_error }] },
+      });
+    // Un agent qui lance une suite en échec, puis un outil de lecture en échec, et rend son StructuredOutput.
+    const agentFile = (command: string) =>
+      [
+        line({ type: 'user', ...sidechain, message: { content: 'Consigne.' } }),
+        toolUse('b1', 'Bash', { command }),
+        toolResult('b1', 'boom', true),
+        toolUse('g1', 'Grep', { pattern: 'x' }),
+        toolResult('g1', 'boom', true),
+        toolUse('so', 'StructuredOutput', { verdict: 'ok' }),
+        toolResult('so', 'ok'),
+      ].join('\n');
+    const journal = `${[
+      { type: 'started', agentId: 'a1' },
+      { type: 'result', agentId: 'a1' },
+    ]
+      .map((entry) => JSON.stringify(entry))
+      .join('\n')}\n`;
+    // Une session qui appelle Workflow (un appel par identifiant), chaque résultat pointant vers le même run.
+    const workflowSession = (...ids: string[]) =>
+      [
+        conversationLine(1, 'user', 'Lance le workflow'),
+        ...ids.flatMap((id, n) => [
+          conversationLine(2 + 2 * n, 'assistant', [
+            { type: 'tool_use', id, name: 'Workflow', input: { script: 'export const meta = {}' } },
+          ]),
+          line({
+            ...JSON.parse(
+              conversationLine(3 + 2 * n, 'user', [
+                { type: 'tool_result', tool_use_id: id, content: 'lancé' },
+              ]),
+            ),
+            toolUseResult: {
+              status: 'async_launched',
+              runId: 'wf_1a2b3c4d-5e6',
+              transcriptDir: RUN,
+            },
+          }),
+        ]),
+      ].join('\n');
+    const faitsOf = async (content: string, agent = agentFile('pnpm vitest; echo fini')) => {
+      const files: Record<string, string> = {
+        [session]: content,
+        [`${RUN}/journal.jsonl`]: journal,
+        [`${RUN}/agent-a1.jsonl`]: agent,
+      };
+      const facts = vi.fn<FactsSender>(async () => {});
+      const { deps } = makeDeps({
+        readFile: async (path) => {
+          const text = files[path];
+          if (text === undefined) throw Object.assign(new Error('absent'), { code: 'ENOENT' });
+          return text;
+        },
+        facts: { accord: 2, accordLe: ACCORD_LE, send: facts },
+      });
+      const readdir = async () => {
+        throw Object.assign(new Error('absent'), { code: 'ENOENT' });
+      };
+      const hook = JSON.stringify({ transcript_path: session, cwd: '/r' });
+      expect(await captureSessionFromHook(hook, { ...deps, readdir })).toBe(0);
+      return facts.mock.calls[0]?.[0].faits;
+    };
+
+    it('un run local : les commandes et les outils en erreur de son agent partent, la session reste locale', async () => {
+      const faits = await faitsOf(workflowSession('toolu_w'));
+
+      expect(faits?.externe).toBe(false);
+      expect(faits?.commandes_agents).toEqual([
+        { agent: 1, texte: 'pnpm', erreur: true, suite: true },
+      ]);
+      expect(faits?.outils_en_erreur).toEqual([{ outil: 'Grep', nombre: 1 }]);
+      // Jamais les gestes de l'agent dans ceux de la session.
+      expect(faits?.commandes).toEqual([]);
+    });
+
+    it('un agent externe : la session reste externe, comme avant', async () => {
+      const faits = await faitsOf(workflowSession('toolu_w'), agentFile('gh pr view 12'));
+
+      expect(faits?.externe).toBe(true);
+    });
+
+    it('un run cité par deux appels n’est relevé qu’une fois', async () => {
+      const faits = await faitsOf(workflowSession('toolu_w', 'toolu_v'));
+
+      expect(faits?.externe).toBe(false);
+      expect(faits?.commandes_agents).toHaveLength(1);
+      expect(faits?.outils_en_erreur).toEqual([{ outil: 'Grep', nombre: 1 }]);
+    });
+
+    it('une session sans workflow : les mêmes faits qu’avant, sans les nouveaux champs', async () => {
+      const content = await readFile(GESTES, 'utf8');
+      const faits = await faitsOf(content);
+
+      expect(faits).toEqual(extractClaudeCodeFacts(content, '/Users/demo/projets/leon'));
+      expect(faits).not.toHaveProperty('commandes_agents');
+    });
+  });
+
   it('des tours refusés : les faits ne partent pas', async () => {
     const facts = vi.fn<FactsSender>(async () => {});
     const { deps } = makeDeps({

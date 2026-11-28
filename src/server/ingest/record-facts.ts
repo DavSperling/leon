@@ -2,6 +2,7 @@ import { and, eq, sql } from 'drizzle-orm';
 import { type RetraitRequest, type SessionFactsPayload, TEXTE_MAX } from '@/capture/api-contract';
 import { maskSecrets } from '@/capture/mask-secrets';
 import {
+  errorToolName,
   factText,
   HOME_OR_VARIABLE,
   recheckCommand,
@@ -32,8 +33,21 @@ export const isRepoPath = (path: string): boolean =>
 // Une commande hors de la forme réduite est remplacée, et non refusée : un 400 perdrait toute la session. Un fichier
 // hors du dépôt est retiré (isRepoPath).
 function cleanFacts(faits: SessionFacts): SessionFacts {
+  const { outils_en_erreur, commandes_agents, ...base } = faits;
+  // Les noms repassent par errorToolName (réduits, `[outil]` pour un nom en forme de secret) ; ceux qui se réduisent au
+  // même s'additionnent (jamais plus d'entrées qu'à l'envoi, donc la borne tient), sans dépasser l'entier que relit le
+  // schéma.
+  const outils = new Map<string, number>();
+  for (const { outil, nombre } of outils_en_erreur ?? []) {
+    const name = errorToolName(outil);
+    outils.set(name, Math.min((outils.get(name) ?? 0) + nombre, Number.MAX_SAFE_INTEGER));
+  }
+  const agents = (commandes_agents ?? []).map((command) => ({
+    ...command,
+    texte: recheckCommand(command.texte),
+  }));
   return {
-    ...faits,
+    ...base,
     branche: faits.branche === null ? null : factText(faits.branche),
     prs: faits.prs.filter((pr) => maskSecrets(pr.repo) === pr.repo),
     fichiers: faits.fichiers.filter(isRepoPath).map((file) => factText(file)),
@@ -42,6 +56,11 @@ function cleanFacts(faits: SessionFacts): SessionFacts {
       texte: recheckCommand(command.texte),
     })),
     taches: faits.taches.map((task) => ({ ...task, texte: factText(task.texte, TEXTE_MAX) })),
+    // Un champ vide est absent : ni liste vide ni clé nulle.
+    ...(outils.size > 0 && {
+      outils_en_erreur: [...outils].map(([outil, nombre]) => ({ outil, nombre })),
+    }),
+    ...(agents.length > 0 && { commandes_agents: agents }),
   };
 }
 

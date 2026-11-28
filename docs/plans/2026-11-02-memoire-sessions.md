@@ -37,6 +37,8 @@
 | 15. Le rêve perso par règles | chaque nuit, sans modèle, des propositions de leçons et de clôture, que l'humain accepte ou rejette ; puis la mesure refaite. Depuis le 17/11 : deux règles de plus (D39 du nouveau plan) | T58 à T62 (idem) | suivante | 6 j |
 | 16. La lecture obligée | dans Claude Code, la première modification de fichier d'une session menée par l'humain attend que l'agent ait lu la mémoire (niveau 3), en option éteinte par défaut (usage `passage`) ; mesurée, et retirée de l'installation si la mesure échoue (D40 du nouveau plan) | T66 à T68 (idem) | suivante | 4 j |
 
+> **Amendé le 27/11 (décisions d'Amos du 27/11 pour le lot 15, nouveau plan) :** le lot 15 passe à environ 8 j (6 j d'origine, plus environ 2 j pour la capture des commandes des agents, T58) et le total à environ 64 jours. Les chiffres du tableau ne sont pas changés.
+
 Total : environ 57,5 jours, la somme du tableau, lot 1 compris (fait). Il était annoncé à 43 jours le 03/11 et à 54,5 jours le 04/11, un demi-jour au-dessus de la somme du tableau ; le 05/11 ajoute 0,5 j au lot 14 (T63), puis, après A16 du nouveau plan, 1,5 j au lot 12 (T64) et 1 j au lot 13 (T65), puis, après la relecture, 0,5 j au lot 14 (les appels d'outils réduits, T52), estimations du rédacteur, à confirmer. Amendé le 17/11 : 58 jours, avec 0,5 j de plus au lot 15 (deux règles du rêve, D39 du nouveau plan). Amendé le 20/11 : 62 jours, avec le lot 16 (4 j, la lecture obligée, D40 du nouveau plan), estimation du rédacteur, à confirmer.
 
 **Ordre (proposé le 03/11, voir A8 du plan de la mémoire à disposition) :** 1 (fait), 2, 3, 7, 6, 12, 13, 14, puis 4, 5, 8, 9 et 11, les lots 1 et 2 du plan de la CLI sans clone passant avant le lot 12. Chaque lot d'outil (4, 5, 8, 9) y ajoute le rappel, les commandes de lecture et la capture complète de son outil (D32 du nouveau plan) ; le MCP relève de #121.
@@ -266,6 +268,11 @@ type SessionFacts = {
 > **Amendé le 04/11 :** C1 gagne `outils_en_erreur: { outil: string; nombre: number }[]` (T58 du nouveau plan), relevé par les quatre lecteurs. `externe` ne compte plus les lectures de Leon retenues par D36 du nouveau plan (voir D17), ni un sous-agent qui ne lit que le dépôt : pour Claude Code dès le lot 14 (T63), pour les autres outils dans leur lot, après le tri de leur lecteur.
 >
 > **Amendé le 12/11 (décision 2 d'Amos pour le lot 14, dans le [nouveau plan](2026-11-03-memoire-a-disposition.md)) :** « dans leur lot » devient : dans la quatrième PR du lot 14, après un essai par outil.
+
+> **Amendé le 27/11 (décisions d'Amos du 27/11 pour le lot 15, dans le [nouveau plan](2026-11-03-memoire-a-disposition.md), T58) :** C1 gagne trois champs facultatifs, sans migration. Un champ vide est absent.
+> - `commandes` : chaque élément gagne `suite?: boolean` (amendé le 17/11 dans le nouveau plan seulement jusqu'ici) : vrai quand la commande en enchaîne plusieurs. Une redirection (`2>&1`, `&>`, `> fichier`) n'est pas une suite.
+> - `outils_en_erreur?: { outil: string; nombre: number }[]` (déjà noté le 04/11), 20 au plus. Chez Cursor, jamais : son transcript n'écrit aucune sortie d'outil.
+> - `commandes_agents?: { agent: number; texte: string; erreur: boolean; suite: boolean }[]`, 100 au plus : les commandes réduites des sous-agents et des agents de workflow, 20 par agent, numérotées de 1 à k. Sous l'accord de base. Elles servent au rêve seul.
 
 L'outil est le `kind` de C2.
 

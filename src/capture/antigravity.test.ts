@@ -169,9 +169,9 @@ describe('extractAntigravityFacts', () => {
       commits: ['5e6f7a8'],
       fichiers: ['src/capture/antigravity.ts'],
       commandes: [
-        { texte: 'git checkout', erreur: false },
-        { texte: 'pnpm vitest', erreur: true },
-        { texte: 'git commit', erreur: false },
+        { texte: 'git checkout', erreur: false, suite: false },
+        { texte: 'pnpm vitest', erreur: true, suite: false },
+        { texte: 'git commit', erreur: false, suite: false },
       ],
       taches: [],
       erreurs: 1,
@@ -246,8 +246,8 @@ describe('extractAntigravityFacts', () => {
       RACINE,
     );
     expect(faits.commandes).toEqual([
-      { texte: 'pnpm test', erreur: true },
-      { texte: 'git status', erreur: false },
+      { texte: 'pnpm test', erreur: true, suite: false },
+      { texte: 'git status', erreur: false, suite: false },
     ]);
     expect(faits.erreurs).toBe(1);
   });
@@ -354,12 +354,13 @@ describe('Antigravity 2.31.0 (annexe 11)', () => {
       commits: ['9a8b7c6'],
       fichiers: [],
       commandes: [
-        { texte: 'ls', erreur: false }, // échoue, mais l'appli ne l'écrit plus : DONE
-        { texte: 'git commit', erreur: false },
-        { texte: 'rm', erreur: true }, // refusée : ERROR
+        { texte: 'ls', erreur: false, suite: false }, // échoue, mais l'appli ne l'écrit plus : DONE
+        { texte: 'git commit', erreur: false, suite: false },
+        { texte: 'rm', erreur: true, suite: false }, // refusée : ERROR
       ],
       taches: [],
       erreurs: 1,
+      outils_en_erreur: [{ outil: 'webview_browser', nombre: 1 }], // celui du navigateur, sous-agent fini
       externe: true,
       echanges: 2,
       debut: '2026-11-13T11:45:00Z',
@@ -387,10 +388,10 @@ describe('Antigravity 2.31.0 (annexe 11)', () => {
     );
 
     expect(faits.commandes).toEqual([
-      { texte: 'pnpm test', erreur: true },
-      { texte: 'pnpm lint', erreur: true },
-      { texte: 'gh pr', erreur: false },
-      { texte: 'git status', erreur: false }, // sans étape de résultat
+      { texte: 'pnpm test', erreur: true, suite: false },
+      { texte: 'pnpm lint', erreur: true, suite: false },
+      { texte: 'gh pr', erreur: false, suite: false },
+      { texte: 'git status', erreur: false, suite: false }, // sans étape de résultat
     ]);
     expect(faits.erreurs).toBe(2);
     expect(faits.prs).toEqual([{ repo: 'demo/essai', numero: 12, par: 'gh-pr-create' }]);
@@ -408,8 +409,8 @@ describe('Antigravity 2.31.0 (annexe 11)', () => {
     );
 
     expect(faits.commandes).toEqual([
-      { texte: 'pnpm test', erreur: false },
-      { texte: 'pnpm lint', erreur: true },
+      { texte: 'pnpm test', erreur: false, suite: false },
+      { texte: 'pnpm lint', erreur: true, suite: false },
     ]);
   });
 
@@ -455,8 +456,8 @@ describe('Antigravity 2.31.0 (annexe 11)', () => {
     const blocs = extractAntigravityBackstage(contenu, FICHIER, ESSAI, sousAgents({}));
 
     expect(faits.commandes).toEqual([
-      { texte: 'pnpm test', erreur: false },
-      { texte: 'pnpm lint', erreur: true },
+      { texte: 'pnpm test', erreur: false, suite: false },
+      { texte: 'pnpm lint', erreur: true, suite: false },
     ]);
     expect(faits.erreurs).toBe(1);
     expect(blocs.map((bloc) => bloc.role === 'appel_outil' && [bloc.id, bloc.statut])).toEqual([
@@ -532,6 +533,130 @@ describe('Antigravity 2.31.0 (annexe 11)', () => {
         true,
       );
       expect(externe(etape(1, { type: 'PLANNER_RESPONSE', tool_calls: ['read_file'] }))).toBe(true);
+    });
+  });
+
+  describe('les outils en erreur et les commandes des sous-agents (T58)', () => {
+    const faits = (contenu: string, sa?: AntigravitySubagents) =>
+      extractAntigravityFacts(contenu, FICHIER, ESSAI, null, sa);
+    // Un sous-agent fini dont chaque appel a le statut donné.
+    const finiAvec = (...calls: [[string, unknown], string][]) =>
+      [
+        etape(0, { source: 'SYSTEM', type: 'SYSTEM_MESSAGE', content: 'Tâche.' }),
+        ...calls.flatMap(([call, status], index) => [
+          appels(2 * index + 1, call),
+          resultat(2 * index + 2, status),
+        ]),
+        fin(2 * calls.length + 1),
+      ].join('\n');
+
+    it('un outil en ERROR compte sous son nom commun, un outil inconnu sous [outil], sans aucun texte d’erreur', () => {
+      const relevé = faits(
+        [
+          appels(
+            1,
+            ['write_to_file', { TargetFile: `${ESSAI}/a.ts`, CodeContent: 'x' }],
+            ['replace_file_content', { TargetFile: `${ESSAI}/b.ts` }],
+            ['outil_inconnu', { x: 1 }],
+            ['read_file', { Path: `${ESSAI}/c.txt` }],
+            ['run_command', { CommandLine: 'pnpm test' }],
+          ),
+          resultat(2, 'ERROR', 'Disque plein : erreur secrète'),
+          resultat(3, 'ERROR', 'Disque plein : erreur secrète'),
+          resultat(4, 'ERROR', 'Disque plein : erreur secrète'),
+          resultat(5, 'DONE'),
+          resultat(6, 'ERROR', 'Disque plein : erreur secrète'),
+          appels(7, ['replace_file_content', { TargetFile: `${ESSAI}/b.ts` }]),
+          resultat(8, 'ERROR', 'Disque plein : erreur secrète'),
+        ].join('\n'),
+      );
+
+      expect(relevé.outils_en_erreur).toEqual([
+        { outil: 'Edit', nombre: 2 },
+        { outil: 'Write', nombre: 1 },
+        { outil: '[outil]', nombre: 1 },
+      ]);
+      // La commande en erreur reste dans `commandes` et `erreurs` : elle n'est pas un outil en erreur.
+      expect(relevé.commandes).toEqual([{ texte: 'pnpm test', erreur: true, suite: false }]);
+      expect(relevé.erreurs).toBe(1);
+      expect(JSON.stringify(relevé)).not.toContain('secrète');
+      expect(SessionFactsSchema.safeParse(relevé).success).toBe(true);
+    });
+
+    it('sans outil en erreur, ni sous-agent qui lance une commande : aucune des deux clés', () => {
+      const relevé = faits(LANCE, sousAgents({ [S]: [R] }, { [R]: RECHERCHE }));
+      expect(relevé).not.toHaveProperty('outils_en_erreur');
+      expect(relevé).not.toHaveProperty('commandes_agents');
+    });
+
+    it('la commande d’un sous-agent fini arrive dans commandes_agents ; la tête ne change pas', () => {
+      const agent = finiAvec(
+        [['run_command', { CommandLine: 'pnpm test:db; echo fini' }], 'ERROR'],
+        [['write_to_file', { TargetFile: `${ESSAI}/agent.ts`, CodeContent: 'x' }], 'DONE'],
+      );
+      const relevé = faits(LANCE, sousAgents({ [S]: [R] }, { [R]: agent }));
+
+      expect(relevé.commandes_agents).toEqual([
+        { agent: 1, texte: 'pnpm', erreur: true, suite: true },
+      ]);
+      // Ses fichiers ne sont pas ceux de la session ; la tête n'a lancé aucune commande.
+      expect(relevé.fichiers).toEqual([]);
+      expect(relevé.commandes).toEqual([]);
+      expect(relevé.erreurs).toBe(0);
+      expect(SessionFactsSchema.safeParse(relevé).success).toBe(true);
+    });
+
+    it('les sous-agents se rangent par leur première heure, un sous-agent de sous-agent compris', () => {
+      const tard = sousAgent(['run_command', { CommandLine: 'git status' }]).replaceAll(
+        TS,
+        '2026-11-06T11:00:00Z',
+      );
+      const relais = sousAgent(
+        ['invoke_subagent', { Prompt: 'Va plus loin.' }],
+        ['run_command', { CommandLine: 'pnpm lint' }],
+      );
+      const relevé = faits(LANCE, sousAgents({ [S]: [G], [G]: [R] }, { [G]: tard, [R]: relais }));
+
+      expect(relevé.commandes_agents).toEqual([
+        { agent: 1, texte: 'pnpm lint', erreur: false, suite: false },
+        { agent: 2, texte: 'git status', erreur: false, suite: false },
+      ]);
+    });
+
+    it('une conversation revue n’est lue qu’une fois', () => {
+      const agent = finiAvec(
+        [['invoke_subagent', { Prompt: 'Encore.' }], 'DONE'],
+        [['run_command', { CommandLine: 'pnpm test' }], 'DONE'],
+        [['outil_inconnu', {}], 'ERROR'],
+      );
+      // Nommé deux fois par la session, nommé par lui-même et par l'autre sous-agent.
+      const relevé = faits(
+        LANCE,
+        sousAgents({ [S]: [R, R, G], [R]: [R, G], [G]: [R] }, { [R]: agent, [G]: agent }),
+      );
+
+      expect(relevé.commandes_agents).toEqual([
+        { agent: 1, texte: 'pnpm test', erreur: false, suite: false },
+        { agent: 2, texte: 'pnpm test', erreur: false, suite: false },
+      ]);
+      expect(relevé.outils_en_erreur).toEqual([{ outil: '[outil]', nombre: 2 }]);
+    });
+
+    it.each([
+      [
+        'qui n’a pas rendu la main',
+        coupe(sousAgent(['run_command', { CommandLine: 'pnpm test' }])),
+      ],
+      ['dont la conversation ne se retrouve pas', undefined],
+      [
+        'dont une ligne est illisible',
+        illisible(sousAgent(['run_command', { CommandLine: 'ls' }])),
+      ],
+    ])('un sous-agent %s ne donne rien', (_cas, contenu) => {
+      const transcripts: Record<string, string> = contenu === undefined ? {} : { [R]: contenu };
+      const relevé = faits(LANCE, sousAgents({ [S]: [R] }, transcripts));
+      expect(relevé).not.toHaveProperty('commandes_agents');
+      expect(relevé).not.toHaveProperty('outils_en_erreur');
     });
   });
 });
@@ -1243,7 +1368,7 @@ describe('les valeurs des args entre guillemets (transcript.jsonl)', () => {
     const faits = extractAntigravityFacts(SESSION_CITEE, COURT, ESSAI, null, SA);
 
     expect(faits.fichiers).toEqual(['src/a.ts']);
-    expect(faits.commandes).toEqual([{ texte: 'pnpm test', erreur: false }]);
+    expect(faits.commandes).toEqual([{ texte: 'pnpm test', erreur: false, suite: false }]);
     expect(faits.externe).toBe(false);
   });
 
@@ -1330,7 +1455,7 @@ describe('les valeurs des args entre guillemets (transcript.jsonl)', () => {
     const MESSAGE = '"Trouvé : print(\\"a\\nb\\")"';
 
     expect(extractAntigravityFacts(contenu, FICHIER, ESSAI).commandes).toEqual([
-      { texte: '[commande]', erreur: false },
+      { texte: '[commande]', erreur: false, suite: false },
     ]);
     expect(
       extractAntigravityBackstage(contenu, FICHIER, ESSAI, sousAgents({})).find(

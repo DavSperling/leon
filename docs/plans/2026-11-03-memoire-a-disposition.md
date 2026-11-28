@@ -132,6 +132,8 @@ Ses réponses au questionnaire d'ouverture du lot 14. Elles priment sur le texte
 - **Le texte de base d'Antigravity** (`ANTIGRAVITY_CONSENT_LINES`) gagne « such as a subagent's report » dans la phrase sur les messages que l'outil écrit lui-même, comme celui de Cursor. Il n'est pas redemandé et la version d'accord ne monte pas : Leon n'a pas encore d'utilisateurs (dit par Amos le 17/11).
 - Le détail codé, et pourquoi ces tours restent hors du curseur de tours, sont dans l'amendement du 17/11 de T63.
 
+> **Amendé le 27/11 (décision d'Amos, T58) :** les commandes réduites et les outils en erreur des sous-agents et des agents de workflow partent désormais sous l'accord de base, dans les faits de leur session (`commandes_agents`, `outils_en_erreur`, C1 : voir l'amendement du 27/11 de T58). Ce n'est pas un doublon de ce qui part sous `coulisses` : la même commande relevée comme bloc `appel_outil` est un autre usage (la recherche), l'une sert au rêve seul, l'autre se retrouve à la demande. Le texte des sous-agents, lui, ne change pas : il ne part toujours qu'avec `coulisses`.
+
 ## Décision d'Amos du 17/11 pour le lot 15
 
 Après lecture de l'article d'Anthropic « The components of agent memory » (6/11), le rêve par règles gagne deux règles, toujours sans modèle (D39, C15, T60, T61, amendés le 17/11). L'article mesure son plus gros gain quand le rêve corrige une mémoire fausse, et il note que retenir les seuls échecs fait perdre une part du gain. Nos quatre règles voyaient l'âge d'une leçon, pas qu'elle ne sert plus, et ne retenaient que les échecs. Les seuils, les noms et les gabarits sont des choix du rédacteur.
@@ -198,6 +200,23 @@ Le relevé du 23/11 a été fait sur les formes seulement : champs techniques, n
    - Sur le poste au 23/11, 62 des 232 runs seraient locaux. Mais aucune des 17 sessions qui lancent un workflow ne cesse d'être externe : chacune appelle un autre outil externe, comme `mcp__ccd_*`, `SendMessage`, un autre MCP ou `WebFetch`.
    - Le constat des outils de l'app de bureau a été tranché le même jour (décision ci-dessus) : il ne change pas ce verdict, puisque ces sessions ont aussi d'autres causes. Revérifié le 27/11 avec les deux changements réunis : les 19 sessions qui appellent `Workflow` restent externes.
 
+## Décisions d'Amos du 27/11 pour le lot 15
+
+Ce sont ses réponses du 27/11, au moment de lancer le lot. Elles amendent D39, C1 et T58 (amendements du 27/11 ci-dessous), et elles priment sur le texte d'origine.
+
+1. **Le découpage.** Deux PR de code : la PR 1, la capture (T58) ; la PR 2, le rêve entier (T59 à T61). Puis T62 en documentation seule, au moins 14 jours après la mise en ligne de la PR 2.
+2. **Les PR de l'autre chantier sont passées d'abord.** #227, #228 et #230 ont été fusionnées le 27/11 ; T58 part de `main` après elles.
+3. **Les sous-agents : « le plus complet même si plus de travail ».** Les commandes réduites et les outils en erreur des sous-agents et des agents de workflow entrent dans les faits de leur session dès T58, sous l'accord de base (C1, `commandes_agents`).
+   - Effort : environ 2 j de plus. La capture fait environ 3 j, le lot environ 8 j, le total du chantier environ 64 j.
+4. **La redirection.** Amos a laissé trancher (« le plus complet, le plus propre, le plus pro »). Choix du rédacteur : une redirection (`2>&1`, `>&`, `&>`, `> fichier`) n'est pas une suite. Cela amende la règle de D39, qui comptait tout `&`.
+5. **Choix du rédacteur, à relire dans la PR :**
+   - la marque seule reconnaît l'arrêt de la lecture obligée (T58) : on ne lit pas `permissionDecision` ;
+   - chez Codex et Antigravity, un outil en erreur porte le nom commun de C10 ;
+   - `commandes_agents` et `outils_en_erreur` servent au rêve seul et n'entrent pas dans le texte condensé envoyé à un modèle (résumé, état du fil) ;
+   - la version de l'accord ne monte pas : ses textes sont corrigés pour rester exacts (monter couperait la capture de tous les postes jusqu'à un nouveau `leon setup`, et Leon n'a pas encore d'utilisateurs) ;
+   - la migration du lot (T59) prendra le premier numéro libre au moment de l'écrire (0090 est pris depuis le 24/11) ;
+   - le moment de la version avec modèle du rêve sera reposé à Amos à la fin du lot.
+
 ## Lots, et ce qu'ils changent au plan mémoire des sessions
 
 | Lot | Ce que ça change | Tâches | Effort |
@@ -207,6 +226,8 @@ Le relevé du 23/11 a été fait sur les formes seulement : champs techniques, n
 | 14. La capture complète | le raisonnement de l'agent et les échanges des sous-agents remontent, et se retrouvent à la demande. Depuis le 05/11 : un sous-agent qui ne lit que le dépôt ne rend plus la session externe (T63) ; après la relecture, les appels d'outils réduits remontent aussi (`appel_outil`, T52). Depuis le 12/11 : quatre PR, les trois premières pour Claude Code, la quatrième pour Codex, Cursor et Antigravity après un essai par outil ; le rapport d'un sous-agent capté sous l'accord de base (décisions d'Amos du 12/11 pour le lot 14). Depuis le 23/11 : un appel `Workflow` jugé par les agents de son run, et les sessions `sdk-py` sans tour de la personne écartées (décisions d'Amos du 23/11) | T50 à T52, T63 | 5,5 j (dont 0,5 j pour les appels d'outils et 0,5 j pour les agents de workflow, estimations du rédacteur, à confirmer) |
 | 15. Le rêve perso par règles | chaque nuit, sans modèle, Leon propose des leçons et la clôture des fils dormants, avec preuves et fréquence ; l'humain accepte ou rejette sur le site ; puis la mesure refaite. Depuis le 17/11 : une leçon dont la commande n'échoue plus, et ce qui a fait passer une commande | T58 à T62 | 6 j (5,5 j pour le rêve, dont 0,5 j pour les deux règles du 17/11, et 0,5 j pour T62) |
 | 16. La lecture obligée | dans Claude Code, la première modification de fichier d'une session menée par l'humain attend que l'agent ait lu la mémoire (niveau 3), en option éteinte par défaut, avec l'usage `passage` ; mesurée, et retirée de l'installation si la mesure échoue (décisions d'Amos du 20/11, D40) | T66 à T68 | 4 j (estimation du rédacteur, à confirmer) |
+
+> **Amendé le 27/11 (décisions d'Amos du 27/11 pour le lot 15) :** le lot 15 passe à environ 8 j (6 j d'origine, plus environ 2 j pour `commandes_agents`, `suite` et la capture des agents : la capture, T58, fait environ 3 j). Les chiffres du tableau ne sont pas changés.
 
 Changements au plan mémoire des sessions (le détail est dans ses « Amendements du 03/11 ») :
 - **Le lot 10 (RAG au premier prompt) est remplacé** par le lot 13 et par la lecture à la demande du lot 12. D18 n'a plus d'objet.
@@ -241,7 +262,7 @@ Amendé le 05/11 : 3 fusionné (#129), 7 fusionné (#134) ; le lot 6 vient ensui
 
 Amendé le 20/11 (choix du rédacteur) : le lot 16 vient avant le lot 15. Il est court, et sa mesure décide d'une option de l'installation. Le rêve ne dépend pas de lui, et T62 non plus : ses cas ne lisent pas les réglages de l'utilisateur.
 
-Total du chantier : environ 57,5 jours (amendé le 05/11, relecture), lot 1 compris (fait), la somme du tableau du plan mère. Ce sont les 42,5 jours du tableau du 03/11 (annoncés 43, un demi-jour de trop reporté depuis), plus 2,5 j au lot 12, 2,5 j au lot 13, 0,5 j au lot 6, 0,5 j au lot 11, 5,5 j pour le lot 15 (dont 0,5 j pour refaire la mesure, T62) et, le 05/11, 0,5 j au lot 14 (T63), puis, après A16, 1,5 j au lot 12 (T64) et 1 j au lot 13 (T65), puis, après la relecture, 0,5 j au lot 14 (les appels d'outils, T52), estimations du rédacteur, à confirmer. Amendé le 17/11 : 58 jours, avec 0,5 j de plus au lot 15 pour ses deux nouvelles règles (D39). La version avec modèle du rêve (environ 3 j) vient en plus, hors de ce total (amendé le 05/11 : QD1 tranchée oui par Amos). Amendé le 20/11 : 62 jours, avec le lot 16 (4 j, la lecture obligée, D40), estimation du rédacteur, à confirmer. Amendé le 23/11 : 62,5 jours, avec 0,5 j au lot 14 pour les agents de workflow (T63, décisions d'Amos du 23/11), estimation du rédacteur.
+Total du chantier : environ 57,5 jours (amendé le 05/11, relecture), lot 1 compris (fait), la somme du tableau du plan mère. Ce sont les 42,5 jours du tableau du 03/11 (annoncés 43, un demi-jour de trop reporté depuis), plus 2,5 j au lot 12, 2,5 j au lot 13, 0,5 j au lot 6, 0,5 j au lot 11, 5,5 j pour le lot 15 (dont 0,5 j pour refaire la mesure, T62) et, le 05/11, 0,5 j au lot 14 (T63), puis, après A16, 1,5 j au lot 12 (T64) et 1 j au lot 13 (T65), puis, après la relecture, 0,5 j au lot 14 (les appels d'outils, T52), estimations du rédacteur, à confirmer. Amendé le 17/11 : 58 jours, avec 0,5 j de plus au lot 15 pour ses deux nouvelles règles (D39). La version avec modèle du rêve (environ 3 j) vient en plus, hors de ce total (amendé le 05/11 : QD1 tranchée oui par Amos). Amendé le 20/11 : 62 jours, avec le lot 16 (4 j, la lecture obligée, D40), estimation du rédacteur, à confirmer. Amendé le 23/11 : 62,5 jours, avec 0,5 j au lot 14 pour les agents de workflow (T63, décisions d'Amos du 23/11), estimation du rédacteur. Amendé le 27/11 : environ 64 jours (62,5 j, plus environ 2 j au lot 15 pour la capture des agents, T58), estimation du rédacteur.
 
 Amendé le 05/11 : QD1 est tranchée par Amos, le résumé côté serveur est accepté et le lot 6 est lancé. Pour une session sans l'usage `resume`, ou sans modèle réglé, le lot 12 tient quand même : les sessions se rangent par clés (une session sans clé reste hors fil), les sources de connecteurs par clés et par proximité, et l'état est la liste déterministe (D23). Le lot 15 tient aussi : ses règles n'appellent aucun modèle.
 
@@ -533,6 +554,11 @@ Décisions du 04/11 (D33 à D39), qui amendent D21 à D27 et D30 comme dit en re
   - **Clore un fil** (`metadata.clos_le`) le retire du sommaire. Il reste lisible par `leon fil`, et se rouvre à la session suivante de sa branche.
   - **L'accord (proposé) :** aucun usage de plus. Rien ne sort de Leon, ni vers un modèle ni vers un fournisseur. Un interrupteur dans la section Mémoire des réglages coupe le rêve. Il est rangé dans `member` (C15).
   - **Ensuite :** la version avec modèle (environ 3 j) si David accepte QD1 (amendé le 05/11 : QD1 est tranchée oui par Amos, la condition est remplie ; le moment de cette version, hors du total, reste à fixer par Amos) ; le rêve d'équipe dans un lot suivant, une fois la hiérarchie des managers codée et une lecture à l'échelle de l'équipe conçue.
+  > **Amendé le 27/11 (décisions d'Amos du 27/11 pour le lot 15) :**
+  > - **La suite ne compte plus une redirection.** `2>&1`, `>&2`, `&>`, `>|` et `> fichier` ne font pas une suite : « pnpm test 2>&1 » est une commande seule. `;`, `&&`, `||`, `|`, `|&`, un `&` de fond et un saut de ligne en font toujours une (règle exacte : T58).
+  > - **Les trois règles de commandes** (`echec_repete`, `echec_disparu`, `reprise_repetee`) lisent aussi `commandes_agents` (C1). Chaque agent est une suite de commandes à part : une session touchée compte une fois, même si elle l'est par la tête et par un agent, et une reprise ne se cherche qu'à l'intérieur d'une même suite, jamais de la tête à un agent, ni d'un agent à un autre.
+  > - **Les limites** : 30 commandes pour la tête, 20 par agent, 100 par session pour les agents. Un remède qui passe d'un agent à un autre ne se verra pas. Les runs de workflow qui suivent un run externe, et dans un run externe les agents qui suivent son premier agent externe, ne sont pas relevés. Rien chez Cursor, dont le transcript n'écrit aucune sortie d'outil.
+  > - « Dans les quatre outils de code » vaut en fait pour trois : Claude Code, Codex et Antigravity. Cursor ne relève aucun `outils_en_erreur` (T58).
 
 Décision du 20/11 (D40), qui amende D28 et D31, et précise D25 et D30 :
 
@@ -1796,6 +1822,8 @@ Le résultat est noté dans une annexe de l'étude. Aucune vraie conversation n'
 >   - Antigravity : seule l'appli 2.31.0 est essayée (ni l'IDE, ni `agy`) ; une commande qui échoue reste `ok` quand l'appli n'écrit pas son code de sortie ; la forme d'un appel MCP et les noms des outils d'écriture de cette version ne sont pas vus ; une longue conversation en plusieurs morceaux non plus.
 >   - Le point laissé à Amos à la PR 3 tient toujours : beaucoup d'appels d'outils courts évincent les messages d'une recherche sans filtre.
 
+> **Amendé le 27/11 (décision d'Amos, T58) :** les commandes réduites et les outils en erreur des sous-agents et des agents de workflow partent désormais sous l'accord de base, dans les faits de leur session (`commandes_agents`, `outils_en_erreur`, C1 : voir l'amendement du 27/11 de T58). Ce n'est pas un doublon de ce qui part sous `coulisses` : la même commande relevée comme bloc `appel_outil` est un autre usage (la recherche), l'une sert au rêve seul, l'autre se retrouve à la demande. Le texte des sous-agents, lui, ne change pas : il ne part toujours qu'avec `coulisses`.
+
 **Fichiers :** `src/capture/session-backstage.ts` (nouveau : `extractBackstage`), ses tests et une fixture inventée, `src/cli/capture-session.ts`, `src/cli/import-claude-code.ts`, `src/cli/consent.ts` (usage `coulisses`).
 
 **Fait quand :**
@@ -1972,6 +2000,8 @@ Le résultat est noté dans une annexe de l'étude. Aucune vraie conversation n'
 
 Ajoutée le 05/11 (A14, D36). Effort : 0,5 j. Amendée le 23/11 : 0,5 j de plus (les agents de workflow).
 
+> **Amendé le 27/11 (décision d'Amos, T58) :** « rien de plus n'est envoyé » ne vaut plus pour les commandes. Les commandes réduites et les outils en erreur d'un sous-agent, et d'un agent de workflow, partent sous l'accord de base, dans `commandes_agents` et `outils_en_erreur` des faits de la session (voir l'amendement du 27/11 de T58). Les agents de workflow, que T52 ne relevait pas, y sont relevés. La consigne, le rapport et le texte du sous-agent ne changent pas. La même commande relevée sous `coulisses` n'est pas un doublon : ce sont deux usages.
+
 **Fichiers :** `src/capture/session-facts.ts` et son test, une fixture inventée dans la forme relevée par T50, `src/cli/import-claude-code.ts` (si T50 trouve les échanges des sous-agents dans des fichiers à part, la CLI les lit avec la session), `src/server/sessions/thread-state.test.ts`.
 
 **Fait quand :**
@@ -2017,6 +2047,49 @@ Chaque nuit, sans modèle, Leon relit la mémoire de chaque personne et lui prop
 > - Sans ça, trois sessions arrêtées en 14 jours feraient proposer une leçon sur `Edit` (`echec_repete`).
 > - `erreurs` (C1), lui, le compte : c'est un vrai refus, une fois par session.
 > - Test de plus, dans `session-facts.test.ts` : un `Edit` refusé avec la marque ne compte pas, un `Edit` en erreur sans elle compte.
+
+> **Amendé le 27/11 (décisions d'Amos du 27/11 pour le lot 15) :** T58 est la PR 1 du lot. Sans migration, C1 gagne trois champs facultatifs. Un champ vide est absent (ni liste vide, ni clé nulle) ; un fait d'avant reste valide, et une CLI ancienne continue d'envoyer sans eux. `commandes` reste la session de tête seule (30 au plus), `erreurs` reste son compte, et `commits`, `prs`, `fichiers`, `taches`, `externe` et `echanges` ne bougent pas.
+>
+> **La suite (D39, amendé).** `recordCommand` pose `suite` sur la commande brute, avant la réduction ; les quatre lecteurs passent par lui. Vrai quand la commande en enchaîne plusieurs. Règle prudente : dans le doute, vrai.
+> 1. On retire les caractères nuls, puis les blancs de début et de fin. Vrai tout de suite si la commande a un saut de ligne et un `#` en début de mot (un guillemet ou un `\` final dans un commentaire mangerait le saut de ligne à l'étape 2), ou si elle contient `$$'` (le numéro du processus suivi d'une chaîne simple, que `QUOTED` lirait `$'…'`). Relu le 27/11.
+> 2. On retire ce que `QUOTED` couvre déjà : les chaînes `$'…'`, `"…"`, `'…'`, et tout échappement `\x` (le saut de ligne échappé compris).
+> 3. S'il reste un guillemet simple ou double : guillemet non fermé, donc vrai.
+> 4. Sinon, vrai si le reste contient : un saut de ligne ; un `;` ; un `|` qui n'est pas précédé de `>` (`>|` est une redirection ; `|`, `||` et `|&` font des suites) ; un `&` qui n'est pas une redirection. Un `&` est une redirection quand le caractère d'avant est `>` ou `<` (`2>&1`, `>&2`, `<&3`, `>&-`), ou quand le caractère d'après est `>` (`&>`, `&>>`). Tout autre `&` (`&&`, `&` de fond) fait une suite.
+> 5. Sinon, faux.
+>
+> Faux : « pnpm test:db » ; « pnpm test 2>&1 » ; « pnpm test > out.txt 2>&1 » ; « pnpm test &> out.txt » ; « cmd >| f » ; « git commit -m "a; b" » ; « git commit -m "a && b | c" » ; « find . -exec rm {} \; ». Vrai : « pnpm test:db; echo fini » ; « cd x && pnpm test » ; « pnpm test 2>&1 | tail » ; « a || b » ; « sleep 5 & » ; « a 2>&1 & » ; une commande sur deux lignes ; un heredoc nu. Un opérateur dans une substitution `$(…)` hors guillemets compte comme une suite (prudence).
+>
+> **`outils_en_erreur`.**
+> - Un résultat d'outil en erreur, pour un outil qui n'est pas une commande (hors Bash chez Claude Code), compte 1 sous le nom de `reduceToolName` (`mcp:<serveur>`, le nom s'il a la forme d'un exécutable, sinon `[outil]`). Un nom qui a la forme d'un secret est rangé `[outil]` lui aussi (`errorToolName`), au poste comme à la réception : rejouer la règle ne change pas le nom. Jamais de message d'erreur, de sortie ni d'argument : un nom réduit et un nombre.
+> - Exception (D40) : un `Edit`, `Write`, `MultiEdit` ou `NotebookEdit` en erreur dont le texte du résultat contient `READ_FIRST_MARK`, n'importe où, ne compte pas. La marque seule suffit (choix du rédacteur : on ne lit pas `permissionDecision`). `erreurs`, lui, le compte toujours.
+> - À la construction des faits, on additionne la tête et les agents par nom réduit, on garde les 20 plus fréquents (à égalité, l'ordre alphabétique du nom), et le champ est absent s'il n'y a aucune erreur.
+> - **Codex** : un appel `McpToolCall` en erreur compte sous `mcp:<serveur>` ; un `FileChange` en échec et, à l'ancien format, un patch en échec comptent sous `Edit`, le nom commun que les coulisses utilisent déjà (choix du rédacteur). **Antigravity** : un appel qui n'est pas une commande et finit en `ERROR` compte sous son nom commun (`TOOL_NAMES`), sinon `[outil]`. **Cursor** : son transcript n'écrit aucune sortie d'outil, donc jamais de `outils_en_erreur`.
+>
+> **`commandes_agents`** (décision d'Amos : « le plus complet même si plus de travail »). Les commandes réduites des sous-agents et des agents de workflow d'une session entrent dans les faits de cette session, dans un champ à part, sous l'accord de base.
+> - Chaque agent est lu avec la mécanique de la tête (`recordResult` et `recordCommand`) sur un relevé neuf, jeté ensuite : on n'en garde que ses commandes (texte réduit, `erreur`, `suite`) et ses outils en erreur. Ses fichiers, ses tâches, ses commits et ses PR n'entrent jamais dans les faits de la tête.
+> - Chaque agent garde ses `COMMANDES_PAR_AGENT` = 20 dernières commandes, dans l'ordre de son fichier. Les agents se rangent par l'heure de leur première ligne horodatée (un agent sans heure passe en dernier, dans l'ordre de lecture). On garde les 100 dernières entrées (`COMMANDES_AGENTS_MAX`), donc celles des agents les plus récents, et on numérote les agents restants de 1 à k. Les entrées d'un même agent se suivent. Le numéro n'a aucun sens hors de la session.
+> - Deux fonctions dans `session-facts.ts`, réutilisées par les autres lecteurs : `extractAgentActions` (lit le contenu d'un fichier d'agent de Claude Code et rend son relevé) et `buildAgentCommands` (pure : trie, coupe, numérote et additionne les outils en erreur). Un agent de workflow est jugé et relevé dans la même lecture (`readWorkflowAgent`, qui remplace `isExternalWorkflowAgent` ; remarque de Codex sur la PR #285 : un run pèse des dizaines de Mo et le crochet de fin n'a que 15 s). Un sous-agent, lui, est encore lu deux fois (son jugement, puis son relevé).
+> - **Claude Code** : les sous-agents (la table déjà chargée par `loadSubagents`, à plat) et les agents de workflow (par le rappel déjà passé à `loadWorkflowRuns`, dans `capture-session.ts` et `import-claude-code.ts` ; on ne garde pas en mémoire le contenu des runs, seulement leurs relevés). Un même agent n'est relevé qu'une fois. Les arrêts anticipés de `loadWorkflowRuns` restent, avec une ligne `shortcut:` : les runs qui suivent un run externe ne sont pas relevés. Le saut des lignes `isSidechain` dans la tête reste. **Codex** : les sous-agents finis seulement. **Antigravity** : les sous-agents finis, chacun lu une seule fois. **Cursor** : rien.
+> - Limites à dire (D39) : 30 commandes pour la tête, 20 par agent, 100 par session pour les agents ; un remède qui passe d'un agent à un autre ne se verra pas ; les runs de workflow qui suivent un run externe, et dans un run externe les agents qui suivent son premier agent externe, ne sont pas relevés ; rien chez Cursor.
+>
+> **Le contrat (C1, `api-contract.ts`).** Schémas `.strict()`. Élément de `commandes` : `{ texte, erreur, suite?: boolean }`. `outils_en_erreur?: { outil: chaîne de 1 à COULISSE_OUTIL_MAX caractères, nombre: entier >= 1 }[]`, 20 au plus (`OUTILS_EN_ERREUR_MAX`). `commandes_agents?: { agent: entier de 1 à COMMANDES_AGENTS_MAX, texte (même borne que dans commandes), erreur: boolean, suite: boolean }[]`, 100 au plus (`COMMANDES_AGENTS_MAX`). Les constantes nouvelles vont à côté des bornes de C1 ; `COMMANDES_PAR_AGENT` vit côté capture, dans `session-facts.ts`.
+>
+> **La réception (`record-facts.ts`, `cleanFacts`).** Chaque nom d'`outils_en_erreur` repasse par `errorToolName` (`reduceToolName`, puis `[outil]` pour un nom en forme de secret) ; les doublons nés de la réduction s'additionnent ; la borne de 20 est réappliquée. Un nom hors forme devient `[outil]`, et `mcp__linear__get_issue` reçu brut est rangé `mcp:linear`. Chaque texte de `commandes_agents` repasse par `recheckCommand`, comme `commandes`. Une réponse d'erreur (400) ne recopie jamais une valeur reçue.
+>
+> **Pour le rêve seul (choix du rédacteur).** Ces champs n'entrent pas dans le texte condensé envoyé au modèle du résumé ni de l'état du fil (`condense.ts`, `thread-state.ts`) : un test le fige. Aucun lecteur existant des faits ne change de comportement.
+>
+> **L'accord.** Sa version ne monte pas (monter couperait la capture de tous les postes jusqu'à un nouveau `leon setup`, et Leon n'a pas encore d'utilisateurs). Ses textes sont corrigés pour rester exacts : la capture de base relève aussi les commandes réduites des sous-agents et des agents de workflow, le fait qu'une commande en enchaîne plusieurs, et le nom de chaque outil en échec avec son nombre (un outil MCP par le nom de son serveur ; jamais le message d'erreur).
+>
+> **Trois corrections du texte d'origine.**
+> - Le test de Cursor est impossible : son transcript n'écrit aucune sortie d'outil. Le test s'inverse : Cursor ne produit jamais `outils_en_erreur`, et un test le fige.
+> - `record-facts.ts` n'a pas de fichier de test à son nom : ses tests sont dans `src/server/api/faits-routes.db.test.ts`.
+> - « Le serveur avant la CLI » tient dans une seule PR : la CLI installée ne se met à jour que depuis le manifeste du serveur déployé, donc aucun poste n'envoie le champ avant que le serveur ne l'accepte.
+>
+> **Tests de plus.**
+> - `session-facts.test.ts` : les cas de `suite` ci-dessus, dont les redirections (faux) et « pnpm test 2>&1 | tail », « sleep 5 & », « a 2>&1 & » (vrai) ; un `Edit` refusé avec la marque ne compte pas, un `Edit` en erreur sans elle compte ; les outils en erreur de la tête et des agents s'additionnent, 20 au plus, à égalité par ordre alphabétique ; `commandes_agents` : 20 commandes par agent, 100 au plus, agents numérotés de 1 à k par l'heure de leur première ligne, un agent sans heure en dernier ; les fichiers, tâches, commits et PR d'un agent n'entrent pas dans les faits de la tête ; champ absent sans erreur ni commande d'agent.
+> - `codex.test.ts` : un `McpToolCall`, un `FileChange` et un patch (ancien format) en échec comptent ; les sous-agents finis seuls donnent des `commandes_agents`. `antigravity.test.ts` : un appel en `ERROR` compte sous son nom commun, sinon `[outil]` ; un sous-agent fini est lu une seule fois. `cursor.test.ts` : ni `outils_en_erreur` ni `commandes_agents`.
+> - `faits-routes.db.test.ts` : les trois champs sont acceptés et rangés ; un fait sans eux reste valide ; un champ inconnu ou hors borne est refusé en 400 sans recopier la valeur ; `mcp__linear__get_issue` reçu brut est rangé `mcp:linear` ; les doublons nés de la réduction s'additionnent.
+> - Un test fige que le texte condensé (`condense.ts`, `thread-state.ts`) ne porte ni `outils_en_erreur` ni `commandes_agents`.
 
 **Fichiers :** `src/capture/session-facts.ts` et son test, `src/capture/codex.ts`, `src/capture/cursor.ts` et `src/capture/antigravity.ts` (T18, T27, T32 du plan mère) et leurs tests, `src/capture/api-contract.ts` (C1, C2), `src/server/ingest/record-facts.ts` et son test, `src/server/api/faits-routes.db.test.ts`.
 

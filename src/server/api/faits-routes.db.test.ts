@@ -461,6 +461,165 @@ describe('POST /api/v1/faits', () => {
     });
   });
 
+  describe('les champs du rêve (T58) : suite, outils_en_erreur, commandes_agents', () => {
+    const agentCommand = (agent: number, texte = 'pnpm test') => ({
+      agent,
+      texte,
+      erreur: false,
+      suite: false,
+    });
+
+    async function post(faits: unknown) {
+      const { paul, paulToken } = await setup();
+      const body = { ...validBody(), faits };
+      const response = await apiRequest(API_PATHS.faits, { token: paulToken, body });
+      const [stored] = await storedMetadata(paul, body.external_id);
+      return { response, stored };
+    }
+
+    it('accepte et range les trois, et un fait qui n’en porte aucun ne gagne aucune clé', async () => {
+      const full = facts({
+        commandes: [{ texte: 'pnpm test', erreur: false, suite: true }],
+        outils_en_erreur: [{ outil: 'mcp:linear', nombre: 2 }],
+        commandes_agents: [agentCommand(1), { ...agentCommand(2, 'git status'), suite: true }],
+      });
+      const { response, stored } = await post(full);
+      expect(response.status).toBe(202);
+      expect(stored?.metadata).toMatchObject({ faits: full });
+      expect(SessionFactsSchema.safeParse(stored?.metadata.faits).success).toBe(true);
+
+      const { stored: plain } = await post(facts());
+      const keys = Object.keys((plain?.metadata.faits ?? {}) as object);
+      expect(keys).not.toContain('outils_en_erreur');
+      expect(keys).not.toContain('commandes_agents');
+    });
+
+    it('ne range ni liste vide ni clé nulle', async () => {
+      const { response, stored } = await post(
+        facts({ outils_en_erreur: [], commandes_agents: [] }),
+      );
+      expect(response.status).toBe(202);
+      const keys = Object.keys((stored?.metadata.faits ?? {}) as object);
+      expect(keys).not.toContain('outils_en_erreur');
+      expect(keys).not.toContain('commandes_agents');
+    });
+
+    it('outils_en_erreur : réduit chaque nom, et additionne ceux qui se réduisent au même', async () => {
+      const { response, stored } = await post(
+        facts({
+          outils_en_erreur: [
+            { outil: 'mcp__linear__get_issue', nombre: 1 },
+            { outil: 'mcp:linear', nombre: 2 },
+            { outil: 'Mon outil perso !', nombre: 1 },
+            { outil: 'mcp__nu', nombre: 3 },
+            { outil: 'Edit', nombre: 4 },
+          ],
+        }),
+      );
+      expect(response.status).toBe(202);
+      expect(stored?.metadata).toMatchObject({
+        faits: {
+          outils_en_erreur: [
+            { outil: 'mcp:linear', nombre: 3 },
+            { outil: '[outil]', nombre: 4 },
+            { outil: 'Edit', nombre: 4 },
+          ],
+        },
+      });
+    });
+
+    it('outils_en_erreur : un nom en forme de clé est caché, et une somme trop grande reste lisible', async () => {
+      const { response, stored } = await post(
+        facts({
+          outils_en_erreur: [
+            { outil: 'AKIAIOSFODNN7EXAMPLE', nombre: 1 },
+            { outil: 'mcp__linear__a', nombre: Number.MAX_SAFE_INTEGER },
+            { outil: 'mcp:linear', nombre: Number.MAX_SAFE_INTEGER },
+          ],
+        }),
+      );
+      expect(response.status).toBe(202);
+      expect(JSON.stringify(stored?.metadata)).not.toContain('AKIA');
+      expect(stored?.metadata).toMatchObject({
+        faits: {
+          outils_en_erreur: [
+            { outil: '[outil]', nombre: 1 },
+            { outil: 'mcp:linear', nombre: Number.MAX_SAFE_INTEGER },
+          ],
+        },
+      });
+      expect(SessionFactsSchema.safeParse(stored?.metadata.faits).success).toBe(true);
+    });
+
+    it('outils_en_erreur : 20 entrées passent, 21 ou un nombre à 0 donnent 400', async () => {
+      const entries = (n: number) =>
+        Array.from({ length: n }, (_, i) => ({ outil: `outil${i}`, nombre: 1 }));
+      expect((await post(facts({ outils_en_erreur: entries(20) }))).response.status).toBe(202);
+      const tooMany = await post(facts({ outils_en_erreur: entries(21) }));
+      expect(tooMany.response.status).toBe(400);
+      expect(await tooMany.response.json()).toEqual({
+        error: 'Invalid request',
+        issues: [{ path: 'faits.outils_en_erreur', code: 'too_big' }],
+      });
+      const zero = await post(facts({ outils_en_erreur: [{ outil: 'Edit', nombre: 0 }] }));
+      expect(zero.response.status).toBe(400);
+      expect(await zero.response.json()).toEqual({
+        error: 'Invalid request',
+        issues: [{ path: 'faits.outils_en_erreur.0.nombre', code: 'too_small' }],
+      });
+    });
+
+    it('commandes_agents : une commande hors de la forme réduite devient [commande]', async () => {
+      const { response, stored } = await post(
+        facts({
+          commandes_agents: [
+            agentCommand(1, 'mysql -pS3cret'),
+            agentCommand(1, 'git commit'),
+            agentCommand(2, 'curl -u a:S3cret https://acme.fr'),
+          ],
+        }),
+      );
+      expect(response.status).toBe(202);
+      expect(JSON.stringify(stored?.metadata)).not.toContain('S3cret');
+      expect(stored?.metadata).toMatchObject({
+        faits: {
+          commandes_agents: [
+            agentCommand(1, '[commande]'),
+            agentCommand(1, 'git commit'),
+            agentCommand(2, '[commande]'),
+          ],
+        },
+      });
+    });
+
+    it('commandes_agents : 101 entrées, un agent hors de 1 à 100, une suite absente ou une clé inconnue donnent 400, sans rien recopier', async () => {
+      const secret = 'S3cret-xyz';
+      const { suite: _suite, ...sansSuite } = agentCommand(1, secret);
+      const cases: Array<[unknown[], string, string]> = [
+        [
+          Array.from({ length: 101 }, () => agentCommand(1, secret)),
+          'faits.commandes_agents',
+          'too_big',
+        ],
+        [[agentCommand(0, secret)], 'faits.commandes_agents.0.agent', 'too_small'],
+        [[agentCommand(101, secret)], 'faits.commandes_agents.0.agent', 'too_big'],
+        [[sansSuite], 'faits.commandes_agents.0.suite', 'invalid_type'],
+        [
+          [{ ...agentCommand(1, secret), extra: secret }],
+          'faits.commandes_agents.0',
+          'unrecognized_keys',
+        ],
+      ];
+      for (const [commandes_agents, path, code] of cases) {
+        const { response } = await post(facts({ commandes_agents } as Partial<SessionFacts>));
+        expect(response.status).toBe(400);
+        const text = await response.text();
+        expect(text).not.toContain(secret);
+        expect(JSON.parse(text)).toEqual({ error: 'Invalid request', issues: [{ path, code }] });
+      }
+    });
+  });
+
   it('garde `fin` vrai une fois vu, et sa date : un rattrapage qui suit le SessionEnd ne les efface pas', async () => {
     const { paul, paulToken } = await setup();
     const first = { ...validBody(), fin: true };

@@ -552,6 +552,98 @@ describe('importClaudeCode : les faits de chaque session', () => {
     expect(factLines.every((line) => line.accord === 2)).toBe(true);
   });
 
+  // T58 : les commandes des agents d'un run de workflow, relevées par le rappel de loadWorkflowRuns.
+  describe('les agents de workflow de chaque session', () => {
+    const OWNER = '66666666-6666-4666-8666-666666666666';
+    const RUN = 'wf_1a2b3c4d-5e6';
+    const sidechain = { isSidechain: true, agentId: 'a1b2c3d4e5f6a7b8c' };
+    const entry = (n: number, type: 'user' | 'assistant', content: unknown, extra = {}) =>
+      JSON.stringify({
+        type,
+        uuid: `u-${n}`,
+        sessionId: OWNER,
+        timestamp: `2026-10-20T08:0${n}:00.000Z`,
+        cwd: '/Users/demo/projets/acme',
+        isSidechain: false,
+        message: { role: type, content },
+        ...extra,
+      });
+    const agentEntry = (type: 'user' | 'assistant', content: unknown) =>
+      JSON.stringify({ type, ...sidechain, message: { content } });
+    const callOf = (id: string, name: string, input: unknown) =>
+      agentEntry('assistant', [{ type: 'tool_use', id, name, input }]);
+    const resultOf = (id: string, content: string, is_error = false) =>
+      agentEntry('user', [{ type: 'tool_result', tool_use_id: id, content, is_error }]);
+    const launch = (n: number, id: string) => [
+      entry(n, 'assistant', [
+        { type: 'tool_use', id, name: 'Workflow', input: { script: 'export const meta = {}' } },
+      ]),
+      entry(n + 1, 'user', [{ type: 'tool_result', tool_use_id: id, content: 'lancé' }], {
+        toolUseResult: {
+          status: 'async_launched',
+          runId: RUN,
+          transcriptDir: join(projectDir, OWNER, 'subagents', 'workflows', RUN),
+        },
+      }),
+    ];
+    const write = async (...ids: string[]) => {
+      const dir = join(projectDir, OWNER, 'subagents', 'workflows', RUN);
+      await mkdir(dir, { recursive: true });
+      await writeFile(
+        join(dir, 'journal.jsonl'),
+        `${JSON.stringify({ type: 'started', agentId: 'a1' })}\n${JSON.stringify({ type: 'result', agentId: 'a1' })}\n`,
+      );
+      await writeFile(
+        join(dir, 'agent-a1.jsonl'),
+        [
+          agentEntry('user', 'Consigne.'),
+          callOf('b1', 'Bash', { command: 'git status' }),
+          resultOf('b1', 'boom', true),
+          callOf('so', 'StructuredOutput', { verdict: 'ok' }),
+          resultOf('so', 'ok'),
+        ].join('\n'),
+      );
+      const lines = [
+        entry(1, 'user', 'Lance le workflow'),
+        ...ids.flatMap((id, n) => launch(2 + 2 * n, id)),
+      ];
+      await writeFile(join(projectDir, `${OWNER}.jsonl`), `${lines.join('\n')}\n`);
+    };
+    const facts = async () => {
+      const { deps, facts: send } = makeFactsDeps();
+      await importClaudeCode(importOptions(), { ...deps, readdir: (path) => readdir(path) });
+      return factsOf(send).get(OWNER)?.faits;
+    };
+
+    it('relève les commandes de l’agent, sans rendre la session externe ni toucher à ses gestes', async () => {
+      await write('toolu_w');
+
+      const faits = await facts();
+
+      expect(faits?.externe).toBe(false);
+      expect(faits?.commandes_agents).toEqual([
+        { agent: 1, texte: 'git status', erreur: true, suite: false },
+      ]);
+      expect(faits?.commandes).toEqual([]);
+    });
+
+    it('un run cité par deux appels n’est relevé qu’une fois', async () => {
+      await write('toolu_w', 'toolu_v');
+
+      expect((await facts())?.commandes_agents).toHaveLength(1);
+    });
+
+    it('une session sans workflow : les mêmes faits qu’avant, sans le nouveau champ', async () => {
+      const { deps, facts: send } = makeFactsDeps();
+      await importClaudeCode(importOptions(), { ...deps, readdir: (path) => readdir(path) });
+
+      const acme = factsOf(send).get(ACME_SESSION)?.faits;
+      const content = await readFile(new URL('session-simple.jsonl', FIXTURES), 'utf8');
+      expect(acme).toEqual(extractClaudeCodeFacts(content, '/Users/demo/projets/acme'));
+      expect(acme).not.toHaveProperty('commandes_agents');
+    });
+  });
+
   // T52 : les coulisses suivent les faits de chaque session, seulement avec l'usage `coulisses`.
   describe('les coulisses, avec l’usage coulisses', () => {
     const SOUS_AGENTS = '55555555-5555-4555-8555-555555555555';

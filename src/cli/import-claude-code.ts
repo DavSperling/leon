@@ -14,8 +14,9 @@ import {
 import { type ClaudeCodeSession, parseClaudeCodeSession } from '../capture/claude-code';
 import { extractBackstage } from '../capture/session-backstage';
 import {
+  type AgentActions,
   extractClaudeCodeFacts,
-  isExternalWorkflowAgent,
+  readWorkflowAgent,
   type Subagents,
   type Workflows,
 } from '../capture/session-facts';
@@ -268,6 +269,7 @@ export async function sendSessionFacts(
     faits?: SessionFacts;
     subagents?: Subagents;
     workflows?: Workflows;
+    workflowAgents?: readonly AgentActions[];
   },
   options: Pick<ImportOptions, 'dryRun' | 'projectKey'> & { kind?: CodeSessionKind },
   deps: ImportDeps,
@@ -290,6 +292,7 @@ export async function sendSessionFacts(
         false,
         source.subagents,
         source.workflows,
+        source.workflowAgents,
       ),
     fin: source.fin,
   };
@@ -412,10 +415,13 @@ export async function importClaudeCode(
       const lecture = { readFile: (path: string) => readFile(path, 'utf8'), readdir: deps.readdir };
       const subagents = await loadSubagents(file, lecture);
       // `false` : l'import ne lit pas la configuration MCP (sendSessionFacts).
-      const workflows = await loadWorkflowRuns(file, content, lecture, (agent) =>
-        isExternalWorkflowAgent(agent, false, subagents),
-      );
-      const source = { content, root, fin, subagents, workflows };
+      const workflowAgents: AgentActions[] = [];
+      const workflows = await loadWorkflowRuns(file, content, lecture, (agent) => {
+        const { external, actions } = readWorkflowAgent(agent, false, subagents);
+        workflowAgents.push(actions);
+        return external;
+      });
+      const source = { content, root, fin, subagents, workflows, workflowAgents };
       const factsDeps = { ...deps, facts: { ...deps.facts, usages } };
       factsRefused = !(await sendSessionFacts(
         session,

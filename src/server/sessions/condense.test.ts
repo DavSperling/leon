@@ -40,6 +40,22 @@ function turn(overrides: Partial<CondenseTurn> = {}): CondenseTurn {
 const PR_12 = { repo: 'acme/leon', numero: 12, etat: 'merged' as const };
 
 describe('condenseSession', () => {
+  it('ne met jamais dans le condensé les champs du rêve : outils en erreur, commandes des agents, suite (T58)', () => {
+    const { texte } = condenseSession({
+      faits: facts({
+        commandes: [{ texte: 'pnpm test', erreur: false, suite: true }],
+        outils_en_erreur: [{ outil: 'mcp:serveur-rare', nombre: 3 }],
+        commandes_agents: [{ agent: 1, texte: 'git pushall', erreur: true, suite: false }],
+      }),
+      turns: [turn()],
+    });
+
+    expect(texte).toContain('<commande erreur="non">pnpm test</commande>');
+    expect(texte).not.toContain('serveur-rare');
+    expect(texte).not.toContain('pushall');
+    expect(texte).not.toContain('suite');
+  });
+
   it('met les faits, puis les tours dans l’ordre, chacun avec son id et qui parle', () => {
     const first = turn({ role: 'user', text: 'On passe à Better Auth.' });
     const second = turn({ role: 'assistant', text: 'Branché.' });
